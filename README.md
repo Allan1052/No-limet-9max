@@ -25,13 +25,39 @@ npm run dev      # sobe a interface (a partir da Etapa 7)
 | 0. Esqueleto | Projeto configurado | ✅ |
 | 1. Cartas + Avaliador | Baralho e avaliador de mãos de 7 cartas | ✅ |
 | 2. Equity (Monte Carlo) | Motor de equity mão vs mão / vs range | ✅ |
-| 3. Ranges pré-flop | Charts por posição/stack + ICM | ⏳ |
-| 4. Motor de jogo | Mesa, blinds, apostas, side pots, showdown | ⏳ |
-| 5. Decisão pós-flop | Pot odds, equity realizada, textura | ⏳ |
-| 6. Perfis de bot | LAG / TAG / nit / maníaco | ⏳ |
+| 3. Ranges pré-flop | Charts por posição/stack + ICM real | ✅ |
+| 4. Motor de jogo | Mesa, blinds, apostas, side pots, showdown | ✅ |
+| — Perfis de bot (base) | 8 perfis inspirados em MTT, aplicados ao pré-flop | ✅ |
+| 5. Decisão pós-flop | Pot odds, equity realizada, textura | ⏳ (próximo) |
+| 6. Perfis no pós-flop | c-bet/bluff por perfil | ⏳ |
 | 7. Interface 9-max | Mesa dark gold estilo GGPoker | ⏳ |
 | 8. Feedback pós-mão | Explicação de cada decisão | ⏳ |
-| 9. Polimento | ICM na UI, revisão de sessão | ⏳ |
+| 9. Polimento e extras | ver "Itens futuros" abaixo | ⏳ |
+
+### Perfis de bot (8, inspirados em estilos de MTT)
+
+Cada assento usa um perfil **inspirado** (não cópia) em um estilo conhecido,
+com parâmetros que modulam ranges de abertura, frequência de 3-bet/blefe,
+agressão, adaptação a stack e sensibilidade a ICM:
+
+| Perfil | Estilo | Traço principal |
+|--------|--------|-----------------|
+| Nik A. | Hyper-LAG (est. Astedt) | abre larguíssimo, 3-bet e c-bet constantes |
+| Chris M. | Sólido (est. Moorman) | equilibrado, sem desvios arriscados |
+| Seb S. | Técnico (est. Sikorski) | adaptável a profundidades de stack |
+| Mike A. | Agressivo (est. Addamo) | forte em spots complexos, agressivo |
+| Fed H. | Quase-GTO (est. Holz) | muito balanceado, pouco explorador |
+| Bryn K. | Maníaco (est. Kenney) | muito blefe, alta tolerância a risco |
+| Steve C. | TAG preciso (est. Chidwick) | abre fechado, poucos erros |
+| Dan S. | Disciplinado (est. Dan Smith) | racional, baixa variância |
+
+### Itens futuros combinados
+
+- Calculadora de ICM na interface (o modelo já existe em `ranges/icm.ts`).
+- Replayer de mãos com explicação da decisão ótima.
+- Estatísticas por sessão: VPIP, PFR, 3-bet%.
+- Suíte de testes rodando milhares de mãos simuladas.
+- Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
 
 ## Estrutura
 
