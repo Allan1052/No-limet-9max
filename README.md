@@ -59,9 +59,16 @@ agressão, adaptação a stack e sensibilidade a ICM:
 
 - ✅ Estatísticas por sessão: VPIP, PFR, 3-bet% (painel na interface).
 - ✅ Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
+- ✅ Replayer de mãos com a decisão ótima passo a passo.
+- ✅ Suíte de milhares de mãos simuladas (`npm run sim`).
 - Calculadora de ICM na interface (o modelo já existe em `ranges/icm.ts`).
-- Replayer de mãos com explicação da decisão ótima.
-- Suíte de testes rodando milhares de mãos simuladas.
+
+### Simulação em massa (`npm run sim`)
+
+Roda milhares de mãos headless e valida os perfis estatisticamente. Exemplo de
+saída (2500 mãos): o maníaco entra em ~22% dos potes e o TAG preciso em ~15%; os
+perfis agressivos demais perdem bb/100 para o campo, os balanceados ganham —
+como se espera. É soma zero entre eles (nenhuma ficha some).
 
 ## Estrutura
 
