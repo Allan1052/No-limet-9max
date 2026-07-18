@@ -296,3 +296,60 @@ table.stats td { text-align: right; padding: 3px 4px; color: var(--text); border
 table.stats td.pname { text-align: left; color: var(--text-dim); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 table.stats tr.hero-row td { color: var(--gold); font-weight: 700; }
 table.stats tr.hero-row td.pname { color: var(--gold); }
+
+/* ---- Replayer (overlay) ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.replay {
+  width: min(680px, 96vw);
+  background: linear-gradient(180deg, #171a11 0%, #10130c 100%);
+  border: 1px solid var(--gold-dim);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.replay-head { display: flex; align-items: center; justify-content: space-between; }
+.replay-head h3 { margin: 0; color: var(--gold); }
+.replay-board {
+  text-align: center;
+  background: radial-gradient(120% 120% at 50% 30%, var(--felt-1), var(--felt-2));
+  border: 1px solid #2a2c22;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.replay-board .board { min-height: 60px; }
+.replay-board .muted { color: var(--text-dim); font-size: 13px; }
+.replay-step {
+  background: #1a1d14;
+  border: 1px solid #2a2c22;
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-height: 96px;
+}
+.rs-line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.rs-street {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold-soft);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.rs-name { font-weight: 700; }
+.rs-cards { display: flex; gap: 3px; margin-left: auto; }
+.rs-action { font-size: 14px; margin-bottom: 6px; }
+.ok-tag { color: var(--good); font-weight: 700; font-size: 12px; }
+.bad-tag { color: var(--warn); font-weight: 700; font-size: 12px; }
+.rs-advice { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.replay-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.rs-counter { color: var(--text-dim); font-size: 12px; }

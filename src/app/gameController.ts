@@ -8,7 +8,7 @@
 // A interface só lê o estado e chama `heroAct` / `botStep` / `newHand`.
 // ---------------------------------------------------------------------------
 
-import { seededRng } from "../engine/cards";
+import { seededRng, type Card } from "../engine/cards";
 import {
   createTable,
   startHand,
@@ -35,6 +35,7 @@ import {
   type PlayerStats,
   type StatRow,
 } from "../feedback/stats";
+import type { HandHistory, ReplayEvent } from "./replay";
 
 export interface GameOptions {
   smallBlind?: number;
@@ -59,6 +60,9 @@ export class GameController {
   message = "Clique em “Nova mão” para começar.";
   lastActionLabel: Record<number, string> = {};
   stats: Record<number, PlayerStats> = {};
+  /** Histórico da mão anterior, para o replayer. */
+  lastHand: HandHistory | null = null;
+  private history: ReplayEvent[] = [];
   private perHand: Record<number, PerHandFlags> = {};
   private rng = Math.random;
   private handSeed = 1;
@@ -87,6 +91,7 @@ export class GameController {
     if (this.table.handOver && this.table.result) moveButton(this.table);
     this.feedback = [];
     this.lastActionLabel = {};
+    this.history = [];
     startHand(this.table, freshShuffledDeck(seededRng(this.handSeed++ * 2654435761)));
     // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
     for (const p of this.table.players) {
@@ -135,14 +140,31 @@ export class GameController {
     }
   }
 
-  private applyLabeled(action: Action): void {
+  private applyLabeled(action: Action, advice?: HeroAdvice | null): void {
     const seat = this.table.toAct;
     const la = legalActions(this.table);
+    const p = this.table.players[seat];
     // Estatísticas de pré-flop (antes de aplicar, para ler o estado da decisão).
     if (this.table.street === "preflop" && this.perHand[seat]) {
       const facingRaise = this.table.currentBet > this.table.bigBlind;
       recordPreflopAction(this.stats[seat], this.perHand[seat], action.type, facingRaise);
     }
+    // Recomendação da linha de base para o replayer (calcula se não veio pronta).
+    const ev = advice !== undefined ? advice : this.adviceForSeat(seat);
+    this.history.push({
+      street: STREET_LABEL[this.table.street] ?? this.table.street,
+      seat,
+      name: p.name,
+      isHero: p.isHero,
+      actionLabel: this.label(action, la),
+      actionType: action.type,
+      board: this.table.board.slice(),
+      pot: totalPot(this.table),
+      advice: ev
+        ? { action: ev.action, reason: ev.reason, equity: ev.equity, potOdds: ev.potOdds }
+        : undefined,
+    });
+
     this.lastActionLabel[seat] = this.label(action, la);
     applyAction(this.table, action);
     if (this.table.handOver) this.finishHand();
@@ -162,24 +184,30 @@ export class GameController {
   /** Aplica a ação do herói, avaliando-a antes contra a linha de base. */
   heroAct(action: Action): void {
     if (!this.isHeroTurn()) return;
-    const advice = this.computeHeroAdvice();
+    const advice = this.adviceForSeat(this.heroSeat);
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
       const heroType = action.type === "raise" ? "raise" : action.type;
       this.feedback.push(gradeDecision(streetLabel, heroType, advice));
     }
-    this.applyLabeled(action);
+    this.applyLabeled(action, advice);
   }
 
   /** Conselho da linha de base para a decisão atual do herói. */
   computeHeroAdvice(): HeroAdvice | null {
     if (!this.isHeroTurn()) return null;
+    return this.adviceForSeat(this.heroSeat);
+  }
+
+  /** Recomendação da linha de base (quase-GTO) para o assento que vai agir. */
+  private adviceForSeat(seat: number): HeroAdvice | null {
+    if (this.table.toAct !== seat || this.table.handOver) return null;
     if (this.table.street === "preflop") {
-      const ctx = preflopContextFor(this.table, this.heroSeat, BASELINE_PROFILE);
+      const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE);
       const d = preflopDecision(ctx);
       return { kind: "preflop", action: d.action, reason: d.reason };
     }
-    const ctx = postflopContextFor(this.table, this.heroSeat, BASELINE_PROFILE, this.rng, 2500);
+    const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500);
     const d = postflopDecision(ctx);
     return {
       kind: "postflop",
@@ -192,6 +220,23 @@ export class GameController {
 
   private finishHand(): void {
     this.phase = "handOver";
+    // Congela o histórico da mão para o replayer (modo estudo: revela cartas).
+    const holeCards: Record<number, Card[]> = {};
+    const names: Record<number, string> = {};
+    for (const p of this.table.players) {
+      if (p.holeCards.length > 0) holeCards[p.seat] = p.holeCards.slice();
+      names[p.seat] = p.name;
+    }
+    this.lastHand = {
+      events: this.history.slice(),
+      holeCards,
+      names,
+      heroSeat: this.heroSeat,
+      finalBoard: this.table.board.slice(),
+      buttonSeat: this.table.buttonSeat,
+      result: this.table.result,
+    };
+
     const r = this.table.result;
     const hero = this.table.players[this.heroSeat];
     const heroWin = r?.winningsBySeat[this.heroSeat] ?? 0;

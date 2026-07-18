@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useGame } from "./useGame";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
 import { StatsPanel } from "../ui/StatsPanel";
+import { Replayer } from "../ui/Replayer";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
   const { controller, heroAct, newHand, resetStats } = useGame();
+  const [replayOpen, setReplayOpen] = useState(false);
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -36,6 +39,13 @@ export function App() {
               <button className="btn primary" onClick={newHand}>
                 Nova mão
               </button>
+              <button
+                className="btn"
+                disabled={!controller.lastHand}
+                onClick={() => setReplayOpen(true)}
+              >
+                Rever mão
+              </button>
               <div className="message">{controller.message}</div>
             </div>
           ) : (
@@ -55,6 +65,10 @@ export function App() {
           <ProfilesLegend />
         </div>
       </div>
+
+      {replayOpen && controller.lastHand ? (
+        <Replayer hand={controller.lastHand} onClose={() => setReplayOpen(false)} />
+      ) : null}
     </div>
   );
 }
