@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { seededRng } from "../engine/cards";
 import { createTable, startHand, applyAction, freshShuffledDeck, moveButton } from "../game/engine";
 import type { TableState } from "../game/state";
-import { botPreflopAction, botPostflopActionPlaceholder } from "./preflopBot";
+import { botPreflopAction } from "./preflopBot";
+import { botPostflopAction } from "./postflopBot";
 import { PROFILES } from "./profiles";
 
 // Mesa 9-max: herói no assento 0 + os 8 perfis nos demais assentos.
@@ -14,14 +15,15 @@ function makeNineMax(stack = 3000): TableState {
   return createTable({ smallBlind: 25, bigBlind: 50 }, seats, 0);
 }
 
-function playHand(t: TableState): void {
+// `iters` baixo mantém os testes rápidos (o Monte Carlo roda a cada decisão).
+function playHand(t: TableState, rng: () => number = Math.random, iters = 400): void {
   let guard = 0;
   while (!t.handOver) {
     if (guard++ > 2000) throw new Error("mão não terminou");
     const seat = t.toAct;
     const action = t.street === "preflop"
       ? botPreflopAction(t, seat)
-      : botPostflopActionPlaceholder(t, seat);
+      : botPostflopAction(t, seat, rng, iters);
     applyAction(t, action);
   }
 }
@@ -40,13 +42,13 @@ describe("integração — mesa 9-max com os 8 perfis", () => {
     expect(total).toBe(3000 * 9);
   });
 
-  it("roda 300 mãos com os 8 perfis sem quebrar e conservando fichas", () => {
+  it("roda 150 mãos completas (pré + pós-flop) sem quebrar e conservando fichas", () => {
     const t = makeNineMax();
     const START = 3000 * 9;
-    for (let h = 0; h < 300; h++) {
+    for (let h = 0; h < 150; h++) {
       if (t.players.filter((p) => p.stack > 0).length < 2) break;
       startHand(t, freshShuffledDeck(seededRng(5000 + h)));
-      playHand(t);
+      playHand(t, seededRng(70000 + h), 250);
       const total = t.players.reduce((s, p) => s + p.stack, 0);
       expect(total).toBe(START);
       moveButton(t);

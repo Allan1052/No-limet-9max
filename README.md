@@ -28,9 +28,9 @@ npm run dev      # sobe a interface (a partir da Etapa 7)
 | 3. Ranges pré-flop | Charts por posição/stack + ICM real | ✅ |
 | 4. Motor de jogo | Mesa, blinds, apostas, side pots, showdown | ✅ |
 | — Perfis de bot (base) | 8 perfis inspirados em MTT, aplicados ao pré-flop | ✅ |
-| 5. Decisão pós-flop | Pot odds, equity realizada, textura | ⏳ (próximo) |
-| 6. Perfis no pós-flop | c-bet/bluff por perfil | ⏳ |
-| 7. Interface 9-max | Mesa dark gold estilo GGPoker | ⏳ |
+| 5. Decisão pós-flop | Pot odds, equity realizada, textura | ✅ |
+| 6. Perfis no pós-flop | c-bet/bluff por perfil | ✅ |
+| 7. Interface 9-max | Mesa dark gold estilo GGPoker | ⏳ (próximo) |
 | 8. Feedback pós-mão | Explicação de cada decisão | ⏳ |
 | 9. Polimento e extras | ver "Itens futuros" abaixo | ⏳ |
 
@@ -80,3 +80,19 @@ src/
   incluindo a "roda" (A-2-3-4-5) e straight flush.
 - **`engine/equity.ts`** — Monte Carlo: mão vs mão, mão vs range, mão vs
   aleatório e multiway. Validado contra números clássicos (AA vs KK ≈ 82%).
+
+### Cérebro pós-flop (`bots/`)
+
+Cada decisão pós-flop nasce da equity da mão (Monte Carlo, contra o range
+estimado do vilão no board atual) comparada com as pot odds, e é calibrada por
+textura de board, posição e perfil. Tudo com justificativa em texto — pronto
+para o sistema de feedback.
+
+Exemplo real (log do motor, board 8♦7♠4♣ → J♥):
+
+```
+Fed H. (Quase-GTO): APOSTA 135 — Mão de valor (equity 85% vs range): aposta 53% do pote.
+Steve C. (TAG preciso): CALL — Equity 34% paga as odds de 26%: paga.
+...turn...
+Fed H.: ALL-IN — Mão muito forte (equity 87% vs range): aumenta por valor.
+```

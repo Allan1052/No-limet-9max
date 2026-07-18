@@ -69,6 +69,8 @@ export interface TableState {
   toAct: number;
   /** Assento do último a apostar/aumentar nesta rua (-1 se ninguém). */
   lastAggressor: number;
+  /** Assento do agressor do pré-flop (quem levou a iniciativa; -1 se ninguém). */
+  preflopAggressor: number;
   /** Baralho restante (as próximas cartas a sair). */
   deck: Card[];
   handOver: boolean;

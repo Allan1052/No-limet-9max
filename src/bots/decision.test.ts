@@ -1,0 +1,118 @@
+import { describe, it, expect } from "vitest";
+import { cardsFromString, seededRng } from "../engine/cards";
+import { classifyBoard } from "./boardTexture";
+import { postflopDecision, type PostflopContext } from "./decision";
+import { profileById, BASELINE_PROFILE } from "./profiles";
+
+describe("textura de board", () => {
+  it("board seco tem wetness baixa", () => {
+    const t = classifyBoard(cardsFromString("Ks7d2c"));
+    expect(t.wetness).toBeLessThan(0.35);
+    expect(t.flushPossible).toBe(false);
+  });
+  it("board conectado e do mesmo naipe tem wetness alta", () => {
+    const t = classifyBoard(cardsFromString("9h8h7h"));
+    expect(t.wetness).toBeGreaterThan(0.6);
+    expect(t.flushPossible).toBe(true);
+    expect(t.connectedness).toBeGreaterThan(0.9);
+  });
+  it("detecta board pareado", () => {
+    expect(classifyBoard(cardsFromString("QsQh4d")).paired).toBe(true);
+  });
+});
+
+function ctx(over: Partial<PostflopContext>): PostflopContext {
+  return {
+    hand: cardsFromString("AsAd"),
+    board: cardsFromString("Ks7d2c"),
+    potSize: 100,
+    toCall: 0,
+    heroStack: 1000,
+    inPosition: true,
+    numOpponents: 1,
+    profile: BASELINE_PROFILE,
+    wasPreflopAggressor: true,
+    rng: seededRng(1),
+    equityIterations: 3000,
+    ...over,
+  };
+}
+
+describe("pós-flop — valor", () => {
+  it("mão muito forte aposta por valor quando passada a ação", () => {
+    // Trinca de ases em board seco: aposta.
+    const d = postflopDecision(ctx({ hand: cardsFromString("AsAd"), board: cardsFromString("Ah7d2c") }));
+    expect(d.action).toBe("bet");
+    expect(d.equity).toBeGreaterThan(0.8);
+  });
+
+  it("mão muito forte aumenta quando enfrenta aposta", () => {
+    const d = postflopDecision(ctx({
+      hand: cardsFromString("AsAd"),
+      board: cardsFromString("Ah7d2c"),
+      toCall: 50,
+    }));
+    expect(d.action).toBe("raise");
+  });
+});
+
+describe("pós-flop — pot odds", () => {
+  it("mão fraca sem odds folda contra aposta grande", () => {
+    // 7-2 em board de ases/reis: quase sem equity, aposta grande.
+    const d = postflopDecision(ctx({
+      hand: cardsFromString("7h2s"),
+      board: cardsFromString("AhKd9c"),
+      potSize: 100,
+      toCall: 90,
+      inPosition: false,
+      wasPreflopAggressor: false,
+    }));
+    expect(d.action).toBe("fold");
+  });
+
+  it("com odds boas o suficiente, paga", () => {
+    // Par bom contra aposta pequena: equity paga as odds baratas.
+    const d = postflopDecision(ctx({
+      hand: cardsFromString("KhKs"),
+      board: cardsFromString("Qh7d2c"),
+      potSize: 100,
+      toCall: 10, // odds baratíssimas (~9%)
+      inPosition: true,
+      wasPreflopAggressor: false,
+    }));
+    expect(["call", "raise"]).toContain(d.action);
+  });
+});
+
+describe("pós-flop — perfis diferenciam o blefe", () => {
+  it("o maníaco dá c-bet de blefe muito mais que o TAG preciso", () => {
+    // Mão sem valor (ar) em board seco, ação passada: mede frequência de aposta
+    // ao longo de muitas amostras aleatórias.
+    const kenney = profileById("kenney");
+    const chidwick = profileById("chidwick");
+
+    function betFrequency(profileId: ReturnType<typeof profileById>) {
+      let bets = 0;
+      const N = 160;
+      for (let i = 0; i < N; i++) {
+        const d = postflopDecision(ctx({
+          // Ás-alto sem projeto forte: equity fica estável na "zona de blefe"
+          // (acima do piso, abaixo do limiar de valor), onde o perfil decide.
+          hand: cardsFromString("AhTc"),
+          board: cardsFromString("Kc7h2d"),
+          toCall: 0,
+          profile: profileId,
+          wasPreflopAggressor: true,
+          rng: seededRng(1000 + i),
+          equityIterations: 600,
+        }));
+        if (d.action === "bet") bets++;
+      }
+      return bets / N;
+    }
+
+    const fKenney = betFrequency(kenney);
+    const fChidwick = betFrequency(chidwick);
+    expect(fKenney).toBeGreaterThan(fChidwick);
+  });
+});
