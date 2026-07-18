@@ -61,7 +61,7 @@ agressão, adaptação a stack e sensibilidade a ICM:
 - ✅ Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
 - ✅ Replayer de mãos com a decisão ótima passo a passo.
 - ✅ Suíte de milhares de mãos simuladas (`npm run sim`).
-- Calculadora de ICM na interface (o modelo já existe em `ranges/icm.ts`).
+- ✅ Calculadora de ICM na interface (aba "Calculadora ICM").
 
 ### Simulação em massa (`npm run sim`)
 

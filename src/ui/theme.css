@@ -353,3 +353,47 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .rs-advice { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 .replay-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 .rs-counter { color: var(--text-dim); font-size: 12px; }
+
+/* ---- Abas ---- */
+.tabs { display: flex; gap: 6px; }
+.tab {
+  background: transparent;
+  border: 1px solid #2a2c22;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.tab.active { color: #14170f; background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%); border-color: var(--gold); }
+
+/* ---- Calculadora ICM ---- */
+.icm { max-width: 820px; }
+.icm-cols { display: flex; gap: 12px; }
+.icm-cols .panel { flex: 1; }
+.icm-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.icm-lbl { font-size: 12px; color: var(--text-dim); min-width: 84px; }
+.icm input[type="number"] {
+  flex: 1;
+  background: #0f120b;
+  border: 1px solid #2a2c22;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  width: 80px;
+}
+.icm select {
+  background: #0f120b;
+  border: 1px solid #2a2c22;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin-left: 6px;
+}
+.icm-total { font-size: 12px; color: var(--gold-soft); margin-top: 8px; }
+.icm-spot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+.icm-result { display: flex; align-items: center; gap: 16px; }
+.icm-big { font-size: 40px; font-weight: 800; color: var(--gold); line-height: 1; }
+.icm-desc { font-size: 13px; color: var(--text); line-height: 1.5; }
