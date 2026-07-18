@@ -278,3 +278,21 @@ body {
 .legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
 
 .message { color: var(--gold); font-size: 13px; min-height: 18px; margin-top: 6px; }
+
+/* ---- Estatísticas ---- */
+.stats-head { display: flex; align-items: center; justify-content: space-between; }
+.btn.tiny { padding: 3px 8px; font-size: 11px; font-weight: 600; }
+table.stats { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+table.stats th {
+  color: var(--gold-soft);
+  font-weight: 600;
+  text-align: right;
+  padding: 3px 4px;
+  border-bottom: 1px solid #2a2c22;
+  font-size: 11px;
+}
+table.stats th:first-child { text-align: left; }
+table.stats td { text-align: right; padding: 3px 4px; color: var(--text); border-bottom: 1px solid #1e2018; }
+table.stats td.pname { text-align: left; color: var(--text-dim); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+table.stats tr.hero-row td { color: var(--gold); font-weight: 700; }
+table.stats tr.hero-row td.pname { color: var(--gold); }

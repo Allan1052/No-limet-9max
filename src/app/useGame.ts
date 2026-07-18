@@ -30,5 +30,9 @@ export function useGame(opts?: GameOptions) {
       g.newHand();
       force();
     },
+    resetStats: () => {
+      g.resetStats();
+      force();
+    },
   };
 }

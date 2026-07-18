@@ -57,11 +57,11 @@ agressão, adaptação a stack e sensibilidade a ICM:
 
 ### Itens futuros combinados
 
+- ✅ Estatísticas por sessão: VPIP, PFR, 3-bet% (painel na interface).
+- ✅ Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
 - Calculadora de ICM na interface (o modelo já existe em `ranges/icm.ts`).
 - Replayer de mãos com explicação da decisão ótima.
-- Estatísticas por sessão: VPIP, PFR, 3-bet%.
 - Suíte de testes rodando milhares de mãos simuladas.
-- Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
 
 ## Estrutura
 

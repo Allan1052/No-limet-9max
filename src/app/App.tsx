@@ -2,11 +2,12 @@ import { useGame } from "./useGame";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
+import { StatsPanel } from "../ui/StatsPanel";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
-  const { controller, heroAct, newHand } = useGame();
+  const { controller, heroAct, newHand, resetStats } = useGame();
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -49,6 +50,7 @@ export function App() {
         </div>
 
         <div className="sidebar">
+          <StatsPanel rows={controller.statRows()} onReset={resetStats} />
           <FeedbackPanel items={controller.feedback} />
           <ProfilesLegend />
         </div>

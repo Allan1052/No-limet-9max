@@ -26,6 +26,15 @@ import { BASELINE_PROFILE, PROFILES } from "../bots/profiles";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
 import { gradeDecision, type FeedbackItem, type HeroAdvice } from "../feedback/analyzer";
+import {
+  beginHand,
+  emptyStats,
+  recordPreflopAction,
+  toRow,
+  type PerHandFlags,
+  type PlayerStats,
+  type StatRow,
+} from "../feedback/stats";
 
 export interface GameOptions {
   smallBlind?: number;
@@ -49,6 +58,8 @@ export class GameController {
   feedback: FeedbackItem[] = [];
   message = "Clique em “Nova mão” para começar.";
   lastActionLabel: Record<number, string> = {};
+  stats: Record<number, PlayerStats> = {};
+  private perHand: Record<number, PerHandFlags> = {};
   private rng = Math.random;
   private handSeed = 1;
 
@@ -63,6 +74,7 @@ export class GameController {
       seats,
       0,
     );
+    for (const p of this.table.players) this.stats[p.seat] = emptyStats();
   }
 
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
@@ -76,8 +88,23 @@ export class GameController {
     this.feedback = [];
     this.lastActionLabel = {};
     startHand(this.table, freshShuffledDeck(seededRng(this.handSeed++ * 2654435761)));
+    // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
+    for (const p of this.table.players) {
+      if (p.status !== "out") this.perHand[p.seat] = beginHand(this.stats[p.seat]);
+    }
     this.phase = "playing";
     this.message = "";
+  }
+
+  /** Linhas de estatísticas (herói + bots) para exibição. */
+  statRows(): StatRow[] {
+    return this.table.players
+      .filter((p) => this.stats[p.seat])
+      .map((p) => toRow(p.seat, p.name, p.isHero, this.stats[p.seat]));
+  }
+
+  resetStats(): void {
+    for (const p of this.table.players) this.stats[p.seat] = emptyStats();
   }
 
   get pot(): number {
@@ -111,6 +138,11 @@ export class GameController {
   private applyLabeled(action: Action): void {
     const seat = this.table.toAct;
     const la = legalActions(this.table);
+    // Estatísticas de pré-flop (antes de aplicar, para ler o estado da decisão).
+    if (this.table.street === "preflop" && this.perHand[seat]) {
+      const facingRaise = this.table.currentBet > this.table.bigBlind;
+      recordPreflopAction(this.stats[seat], this.perHand[seat], action.type, facingRaise);
+    }
     this.lastActionLabel[seat] = this.label(action, la);
     applyAction(this.table, action);
     if (this.table.handOver) this.finishHand();
