@@ -30,9 +30,13 @@ npm run dev      # sobe a interface (a partir da Etapa 7)
 | — Perfis de bot (base) | 8 perfis inspirados em MTT, aplicados ao pré-flop | ✅ |
 | 5. Decisão pós-flop | Pot odds, equity realizada, textura | ✅ |
 | 6. Perfis no pós-flop | c-bet/bluff por perfil | ✅ |
-| 7. Interface 9-max | Mesa dark gold estilo GGPoker | ⏳ (próximo) |
-| 8. Feedback pós-mão | Explicação de cada decisão | ⏳ |
-| 9. Polimento e extras | ver "Itens futuros" abaixo | ⏳ |
+| 7. Interface 9-max | Mesa dark gold estilo GGPoker | ✅ |
+| 8. Feedback pós-mão | Explicação de cada decisão | ✅ |
+| 9. Polimento e extras | ver "Itens futuros" abaixo | ⏳ (próximo) |
+
+Agora dá para **jogar no navegador**: `npm install && npm run dev`, abra o
+endereço mostrado, clique em "Nova mão". Você joga contra os 8 perfis e recebe
+feedback de cada decisão sua ao final da mão.
 
 ### Perfis de bot (8, inspirados em estilos de MTT)
 

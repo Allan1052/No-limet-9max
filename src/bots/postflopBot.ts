@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
-import { postflopDecision } from "./decision";
+import { postflopDecision, type PostflopContext } from "./decision";
 import { legalActions } from "../game/betting";
 import { totalPot } from "../game/engine";
 import type { Action } from "../game/engine";
@@ -29,6 +29,34 @@ function isInPosition(t: TableState, seat: number): boolean {
   return true;
 }
 
+/** Monta o contexto pós-flop de um assento (reaproveitado pelo feedback). */
+export function postflopContextFor(
+  t: TableState,
+  seat: number,
+  profile: BotProfile,
+  rng: () => number = Math.random,
+  equityIterations?: number,
+): PostflopContext {
+  const p = t.players[seat];
+  const la = legalActions(t);
+  const inHand = inHandSeats(t);
+  const raisedPreflop = t.preflopAggressor >= 0;
+  return {
+    hand: p.holeCards,
+    board: t.board,
+    potSize: totalPot(t),
+    toCall: la.callAmount,
+    heroStack: p.stack,
+    inPosition: isInPosition(t, seat),
+    numOpponents: Math.max(1, inHand.length - 1),
+    profile,
+    wasPreflopAggressor: t.preflopAggressor === seat,
+    villainRangePct: raisedPreflop ? 0.32 : 0.5,
+    rng,
+    equityIterations,
+  };
+}
+
 export function botPostflopAction(
   t: TableState,
   seat: number,
@@ -38,31 +66,7 @@ export function botPostflopAction(
   const p = t.players[seat];
   const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
   const la = legalActions(t);
-
-  const inHand = inHandSeats(t);
-  const numOpponents = Math.max(1, inHand.length - 1);
-  const pot = totalPot(t);
-
-  // Range do vilão: mais estreito se houve aumento no pré-flop, mais largo se
-  // apenas se limpou o pote.
-  const raisedPreflop = t.preflopAggressor >= 0;
-  const villainRangePct = raisedPreflop ? 0.32 : 0.5;
-
-  const decision = postflopDecision({
-    hand: p.holeCards,
-    board: t.board,
-    potSize: pot,
-    toCall: la.callAmount,
-    heroStack: p.stack,
-    inPosition: isInPosition(t, seat),
-    numOpponents,
-    profile,
-    wasPreflopAggressor: t.preflopAggressor === seat,
-    villainRangePct,
-    rng,
-    equityIterations,
-  });
-
+  const decision = postflopDecision(postflopContextFor(t, seat, profile, rng, equityIterations));
   return toEngineAction(t, decision, la);
 }
 

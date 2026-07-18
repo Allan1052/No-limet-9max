@@ -13,7 +13,7 @@
 
 import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
 import { seatPositions } from "./seatPosition";
-import { preflopDecision } from "../ranges/preflop";
+import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { legalActions } from "../game/betting";
 import { totalPot } from "../game/engine";
 import type { Action } from "../game/engine";
@@ -55,11 +55,14 @@ function buildIcmSpot(t: TableState, seat: number, payouts?: number[]): IcmSpot 
   };
 }
 
-/** Decide a ação de um bot no PRÉ-FLOP. */
-export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = {}): Action {
+/** Monta o contexto pré-flop de um assento (reaproveitado pelo feedback). */
+export function preflopContextFor(
+  t: TableState,
+  seat: number,
+  profile: BotProfile,
+  ctx: BotContext = {},
+): PreflopContext {
   const p = t.players[seat];
-  const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
-  const la = legalActions(t);
   const positions = seatPositions(t);
   const heroPosition = positions.get(seat) ?? "MP";
 
@@ -67,7 +70,7 @@ export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = 
   const facingRaise = t.currentBet > t.bigBlind && t.lastAggressor >= 0;
   const raiserPosition = facingRaise ? positions.get(t.lastAggressor) : undefined;
 
-  const decision = preflopDecision({
+  return {
     heroPosition,
     hand: p.holeCards,
     effectiveBB: effectiveBB(t, seat),
@@ -75,8 +78,15 @@ export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = 
     raiserPosition,
     openSizeBB: facingRaise ? t.currentBet / t.bigBlind : undefined,
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
-  });
+  };
+}
 
+/** Decide a ação de um bot no PRÉ-FLOP. */
+export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = {}): Action {
+  const p = t.players[seat];
+  const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
+  const la = legalActions(t);
+  const decision = preflopDecision(preflopContextFor(t, seat, profile, ctx));
   return toEngineAction(t, decision.action, decision.sizeBB, la);
 }
 
