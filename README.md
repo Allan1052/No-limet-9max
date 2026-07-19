@@ -62,6 +62,21 @@ agressão, adaptação a stack e sensibilidade a ICM:
 - ✅ Replayer de mãos com a decisão ótima passo a passo.
 - ✅ Suíte de milhares de mãos simuladas (`npm run sim`).
 - ✅ Calculadora de ICM na interface (aba "Calculadora ICM").
+- ✅ Modo torneio (aba "Torneio").
+
+### Modo torneio (`tournament/`)
+
+Aba "Torneio": escolha buy-in (grade estilo GGPoker), nº de inscritos e o
+estágio (Início / Meio / Bolha / Mesa final). A partir disso, o jogo monta:
+- **blinds do nível** (sobem sozinhas a cada N mãos, e há um filtro clicável
+  para trocar de nível na hora);
+- **stacks desiguais** em torno da média do estágio (chip leaders e curtos,
+  como no real — não igual por jogador);
+- **premiação e escada de prêmios** (min-cash ≈ 1,5× o buy-in);
+- **ICM ativo** perto da bolha/mesa final → os bots apertam de verdade.
+
+Como os bots já adaptam a range à profundidade de stack e ao ICM, cada estágio
+muda o jogo automaticamente.
 
 ### Simulação em massa (`npm run sim`)
 

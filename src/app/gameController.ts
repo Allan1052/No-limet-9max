@@ -37,6 +37,15 @@ import {
 } from "../feedback/stats";
 import type { HandHistory, ReplayEvent } from "./replay";
 import { toBB } from "./format";
+import {
+  BLIND_LEVELS,
+  STAGES,
+  prizePool,
+  payoutLadder,
+  tablePayouts,
+  unevenStacks,
+  type Stage,
+} from "../tournament/structure";
 
 export interface GameOptions {
   smallBlind?: number;
@@ -44,6 +53,25 @@ export interface GameOptions {
   startingStack?: number;
   /** Prêmios do torneio (ativam o ICM nas decisões de all-in pós-flop). */
   payouts?: number[];
+}
+
+export interface TournamentConfig {
+  buyIn: number;
+  entrants: number;
+  stage: Stage;
+  /** Mãos por nível antes de as blinds subirem (0 = não sobem sozinhas). */
+  handsPerLevel?: number;
+}
+
+export interface TournamentState {
+  buyIn: number;
+  entrants: number;
+  stage: Stage;
+  levelIndex: number;
+  prizePool: number;
+  ladder: number[];
+  handsPerLevel: number;
+  handsThisLevel: number;
 }
 
 const STREET_LABEL: Record<string, string> = {
@@ -65,25 +93,76 @@ export class GameController {
   stats: Record<number, PlayerStats> = {};
   /** Histórico da mão anterior, para o replayer. */
   lastHand: HandHistory | null = null;
+  /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
+  tournament: TournamentState | null = null;
   private history: ReplayEvent[] = [];
   private perHand: Record<number, PerHandFlags> = {};
   private payouts?: number[];
+  private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
   private rng = Math.random;
   private handSeed = 1;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
     this.payouts = opts.payouts;
-    const seats = [
-      { name: "Você", stack, isHero: true },
-      ...PROFILES.map((p) => ({ name: p.name, stack, profileId: p.id })),
+    this.seatDefs = [
+      { name: "Você", isHero: true },
+      ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
     ];
+    const seats = this.seatDefs.map((s) => ({ ...s, stack }));
     this.table = createTable(
       { smallBlind: opts.smallBlind ?? 25, bigBlind: opts.bigBlind ?? 50 },
       seats,
       0,
     );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+  }
+
+  /**
+   * Configura (ou reconfigura) um torneio: define blinds do nível, stacks
+   * DESIGUAIS pela média do estágio, prêmios e ICM. Reinicia a sessão.
+   */
+  configureTournament(cfg: TournamentConfig): void {
+    const stageInfo = STAGES[cfg.stage];
+    const levelIndex = stageInfo.levelIndex;
+    const level = BLIND_LEVELS[levelIndex];
+    const pool = prizePool(cfg.buyIn, cfg.entrants);
+    const ladder = payoutLadder(cfg.entrants, pool);
+    this.payouts = tablePayouts(stageInfo.icm, ladder);
+
+    const avgChips = stageInfo.avgBB * level.bb;
+    const stacks = unevenStacks(avgChips, this.seatDefs.length, stageInfo.spread, this.rng, level.bb * 3);
+    const seats = this.seatDefs.map((s, i) => ({ ...s, stack: stacks[i] }));
+
+    this.table = createTable({ smallBlind: level.sb, bigBlind: level.bb, ante: level.ante }, seats, 0);
+    for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+    this.tournament = {
+      buyIn: cfg.buyIn,
+      entrants: cfg.entrants,
+      stage: cfg.stage,
+      levelIndex,
+      prizePool: pool,
+      ladder,
+      handsPerLevel: cfg.handsPerLevel ?? 10,
+      handsThisLevel: 0,
+    };
+    this.phase = "handOver";
+    this.lastHand = null;
+    this.feedback = [];
+    this.message = `Torneio configurado — ${stageInfo.label}. Clique em “Nova mão”.`;
+  }
+
+  /** Aplica um nível de blind (usado pelo filtro clicável e pela subida automática). */
+  setBlindLevel(levelIndex: number): void {
+    const idx = Math.max(0, Math.min(BLIND_LEVELS.length - 1, levelIndex));
+    const level = BLIND_LEVELS[idx];
+    this.table.smallBlind = level.sb;
+    this.table.bigBlind = level.bb;
+    this.table.ante = level.ante;
+    if (this.tournament) {
+      this.tournament.levelIndex = idx;
+      this.tournament.handsThisLevel = 0;
+    }
   }
 
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
@@ -94,10 +173,26 @@ export class GameController {
       return;
     }
     if (this.table.handOver && this.table.result) moveButton(this.table);
+    // Torneio: sobe o nível de blind a cada `handsPerLevel` mãos (simula o tempo).
+    let levelUp = false;
+    if (this.tournament && this.tournament.handsPerLevel > 0) {
+      this.tournament.handsThisLevel++;
+      if (
+        this.tournament.handsThisLevel > this.tournament.handsPerLevel &&
+        this.tournament.levelIndex < BLIND_LEVELS.length - 1
+      ) {
+        this.setBlindLevel(this.tournament.levelIndex + 1);
+        levelUp = true;
+      }
+    }
     this.feedback = [];
     this.lastActionLabel = {};
     this.history = [];
     startHand(this.table, freshShuffledDeck(seededRng(this.handSeed++ * 2654435761)));
+    if (levelUp) {
+      const lv = BLIND_LEVELS[this.tournament!.levelIndex];
+      this.message = `Nível subiu: blinds ${lv.sb}/${lv.bb}.`;
+    }
     // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
     for (const p of this.table.players) {
       if (p.status !== "out") this.perHand[p.seat] = beginHand(this.stats[p.seat]);
@@ -182,7 +277,7 @@ export class GameController {
     const seat = this.table.toAct;
     const action =
       this.table.street === "preflop"
-        ? botPreflopAction(this.table, seat)
+        ? botPreflopAction(this.table, seat, { payouts: this.payouts })
         : botPostflopAction(this.table, seat, this.rng, 1500, this.payouts);
     this.applyLabeled(action);
   }
@@ -209,7 +304,7 @@ export class GameController {
   private adviceForSeat(seat: number): HeroAdvice | null {
     if (this.table.toAct !== seat || this.table.handOver) return null;
     if (this.table.street === "preflop") {
-      const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE);
+      const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
       return { kind: "preflop", action: d.action, reason: d.reason };
     }

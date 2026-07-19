@@ -6,13 +6,14 @@ import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
 import { StatsPanel } from "../ui/StatsPanel";
 import { Replayer } from "../ui/Replayer";
 import { IcmCalculator } from "../ui/IcmCalculator";
+import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
-  const { controller, heroAct, newHand, resetStats } = useGame();
+  const { controller, heroAct, newHand, resetStats, startTournament, setLevel } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
-  const [view, setView] = useState<"play" | "icm">("play");
+  const [view, setView] = useState<"play" | "icm" | "torneio">("play");
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -37,6 +38,12 @@ export function App() {
             Jogar
           </button>
           <button
+            className={`tab ${view === "torneio" ? "active" : ""}`}
+            onClick={() => setView("torneio")}
+          >
+            Torneio
+          </button>
+          <button
             className={`tab ${view === "icm" ? "active" : ""}`}
             onClick={() => setView("icm")}
           >
@@ -48,9 +55,19 @@ export function App() {
 
       {view === "icm" ? (
         <IcmCalculator />
+      ) : view === "torneio" ? (
+        <TournamentSetup
+          onStart={(cfg) => {
+            startTournament(cfg);
+            setView("play");
+          }}
+        />
       ) : (
       <div className="layout">
         <div className="main">
+          {controller.tournament ? (
+            <TournamentHUD t={controller.tournament} onSetLevel={setLevel} />
+          ) : null}
           <PokerTable table={t} lastActionLabel={controller.lastActionLabel} />
 
           {controller.phase === "handOver" ? (

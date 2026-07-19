@@ -1,6 +1,6 @@
 // Hook React que embrulha o GameController e cuida do tempo dos bots.
 import { useEffect, useReducer, useRef } from "react";
-import { GameController, type GameOptions } from "./gameController";
+import { GameController, type GameOptions, type TournamentConfig } from "./gameController";
 import type { Action } from "../game/engine";
 
 export function useGame(opts?: GameOptions) {
@@ -32,6 +32,14 @@ export function useGame(opts?: GameOptions) {
     },
     resetStats: () => {
       g.resetStats();
+      force();
+    },
+    startTournament: (cfg: TournamentConfig) => {
+      g.configureTournament(cfg);
+      force();
+    },
+    setLevel: (idx: number) => {
+      g.setBlindLevel(idx);
       force();
     },
   };
