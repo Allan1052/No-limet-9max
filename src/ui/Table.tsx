@@ -36,7 +36,11 @@ export function PokerTable({
       <div className="felt" />
       <div className="table-label">Poker Sim · Estudo</div>
 
-      <Board board={table.board} pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)} />
+      <Board
+        board={table.board}
+        pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
+        bigBlind={table.bigBlind}
+      />
 
       {table.players.map((p) => {
         const pos = SEAT_POS[p.seat] ?? { top: "50%", left: "50%" };
@@ -47,6 +51,7 @@ export function PokerTable({
             acting={table.toAct === p.seat && !table.handOver}
             reveal={reveal}
             lastAction={lastActionLabel[p.seat]}
+            bigBlind={table.bigBlind}
             style={{ top: pos.top, left: pos.left }}
           />
         );

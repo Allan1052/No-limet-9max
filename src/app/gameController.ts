@@ -36,6 +36,7 @@ import {
   type StatRow,
 } from "../feedback/stats";
 import type { HandHistory, ReplayEvent } from "./replay";
+import { toBB } from "./format";
 
 export interface GameOptions {
   smallBlind?: number;
@@ -128,19 +129,20 @@ export class GameController {
     return legalActions(this.table);
   }
 
-  /** Rótulo legível de uma ação, com valores. */
+  /** Rótulo legível de uma ação, com valores em big blinds. */
   private label(action: Action, la: LegalActions): string {
+    const bb = this.table.bigBlind;
     switch (action.type) {
       case "fold":
         return "Fold";
       case "check":
         return "Check";
       case "call":
-        return `Call ${la.callAmount}`;
+        return `Call ${toBB(la.callAmount, bb)}`;
       case "allin":
         return "All-in";
       case "raise":
-        return la.callAmount > 0 ? `Raise ${action.to}` : `Aposta ${action.to}`;
+        return la.callAmount > 0 ? `Raise ${toBB(action.to, bb)}` : `Aposta ${toBB(action.to, bb)}`;
     }
   }
 
@@ -238,6 +240,7 @@ export class GameController {
       heroSeat: this.heroSeat,
       finalBoard: this.table.board.slice(),
       buttonSeat: this.table.buttonSeat,
+      bigBlind: this.table.bigBlind,
       result: this.table.result,
     };
 
@@ -245,7 +248,7 @@ export class GameController {
     const hero = this.table.players[this.heroSeat];
     const heroWin = r?.winningsBySeat[this.heroSeat] ?? 0;
     if (heroWin > 0) {
-      this.message = `Você ganhou ${heroWin} fichas.`;
+      this.message = `Você ganhou ${toBB(heroWin, this.table.bigBlind)}.`;
     } else if (hero.status === "folded") {
       this.message = "Você desistiu desta mão.";
     } else {

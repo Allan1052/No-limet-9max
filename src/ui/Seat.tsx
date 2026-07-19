@@ -1,6 +1,7 @@
 // Um assento na mesa: nome, estilo, stack, cartas, última ação.
 import { CardView, CardBack } from "./Card";
 import { profileById } from "../bots/profiles";
+import { toBB } from "../app/format";
 import type { PlayerState } from "../game/state";
 
 interface SeatProps {
@@ -8,10 +9,11 @@ interface SeatProps {
   acting: boolean;
   reveal: boolean; // mostrar as cartas (showdown)
   lastAction?: string;
+  bigBlind: number;
   style: React.CSSProperties;
 }
 
-export function Seat({ player, acting, reveal, lastAction, style }: SeatProps) {
+export function Seat({ player, acting, reveal, lastAction, bigBlind, style }: SeatProps) {
   if (player.status === "out") {
     return (
       <div className="seat" style={style}>
@@ -42,7 +44,7 @@ export function Seat({ player, acting, reveal, lastAction, style }: SeatProps) {
       <div className="pod">
         <div className="name">{player.name}</div>
         <div className="arch">{archetype}</div>
-        <div className="stack">{player.stack} fichas</div>
+        <div className="stack">{toBB(player.stack, bigBlind)}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (
             player.holeCards.map((c, i) => <CardView key={i} card={c} small />)

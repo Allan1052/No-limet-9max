@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { CardView } from "./Card";
 import { actionLabel } from "../feedback/analyzer";
+import { toBB } from "../app/format";
 import type { HandHistory } from "../app/replay";
 
 function optimalMatches(actionType: string, adviceAction: string): boolean {
@@ -34,7 +35,7 @@ export function Replayer({ hand, onClose }: { hand: HandHistory; onClose: () => 
 
         {/* Board + pote no momento do passo */}
         <div className="replay-board">
-          <div className="pot">Pote: {pot}</div>
+          <div className="pot">Pote: {toBB(pot, hand.bigBlind)}</div>
           <div className="board">
             {board.length === 0 ? (
               <span className="muted">(pré-flop, sem cartas na mesa)</span>
@@ -119,7 +120,7 @@ function describeResult(hand: HandHistory): string {
   if (!r) return "Mão encerrada.";
   const winners = Object.entries(r.winningsBySeat)
     .filter(([, v]) => v > 0)
-    .map(([seat, v]) => `${hand.names[Number(seat)]} (+${v})`);
+    .map(([seat, v]) => `${hand.names[Number(seat)]} (+${toBB(v, hand.bigBlind)})`);
   const kind = r.showdown ? "no showdown" : "sem showdown (todos desistiram)";
   return winners.length
     ? `Vencedor ${kind}: ${winners.join(", ")}.`

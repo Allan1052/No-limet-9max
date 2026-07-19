@@ -1,5 +1,6 @@
 // Controles do herói: Fold, Check/Call e Raise com slider.
 import { useEffect, useState } from "react";
+import { toBB } from "../app/format";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
 
@@ -7,11 +8,12 @@ interface ControlsProps {
   legal: LegalActions;
   active: boolean; // é a vez do herói?
   pot: number;
+  bigBlind: number;
   onAction: (a: Action) => void;
   hint?: string;
 }
 
-export function Controls({ legal, active, pot, onAction, hint }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction, hint }: ControlsProps) {
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
 
   // Reajusta o slider sempre que o spot muda.
@@ -45,7 +47,7 @@ export function Controls({ legal, active, pot, onAction, hint }: ControlsProps) 
           disabled={!active || !legal.canCall}
           onClick={() => onAction({ type: "call" })}
         >
-          Call {legal.callAmount}
+          Call {toBB(legal.callAmount, bigBlind)}
         </button>
       )}
 
@@ -64,7 +66,7 @@ export function Controls({ legal, active, pot, onAction, hint }: ControlsProps) 
           disabled={!canRaise}
           onChange={(e) => setRaiseTo(Number(e.target.value))}
         />
-        <span className="raise-amount">{raiseTo}</span>
+        <span className="raise-amount">{toBB(raiseTo, bigBlind)}</span>
       </div>
 
       <button

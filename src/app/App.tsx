@@ -72,6 +72,7 @@ export function App() {
               legal={la}
               active={heroTurn}
               pot={controller.pot}
+              bigBlind={t.bigBlind}
               onAction={heroAct}
               hint={hint}
             />

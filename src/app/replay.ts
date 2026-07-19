@@ -41,5 +41,6 @@ export interface HandHistory {
   heroSeat: number;
   finalBoard: Card[];
   buttonSeat: number;
+  bigBlind: number;
   result?: HandResult;
 }
