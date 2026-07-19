@@ -7,12 +7,12 @@ import type { TableState } from "../game/state";
 const SEAT_POS: Array<{ top: string; left: string }> = [
   { top: "90%", left: "50%" }, // 0 herói
   { top: "82%", left: "19%" }, // 1
-  { top: "52%", left: "5%" }, // 2
-  { top: "20%", left: "13%" }, // 3
+  { top: "52%", left: "9%" }, // 2
+  { top: "20%", left: "14%" }, // 3
   { top: "8%", left: "37%" }, // 4
   { top: "8%", left: "63%" }, // 5
-  { top: "20%", left: "87%" }, // 6
-  { top: "52%", left: "95%" }, // 7
+  { top: "20%", left: "86%" }, // 6
+  { top: "52%", left: "91%" }, // 7
   { top: "82%", left: "81%" }, // 8
 ];
 

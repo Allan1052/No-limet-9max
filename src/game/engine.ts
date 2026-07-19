@@ -71,6 +71,7 @@ export function createTable(
     toAct: -1,
     lastAggressor: -1,
     preflopAggressor: -1,
+    lastStreetAggressor: -1,
     deck: [],
     handOver: true,
     log: [],
@@ -148,6 +149,7 @@ export function startHand(t: TableState, deck: Card[]): TableState {
   t.currentBet = t.bigBlind;
   t.lastAggressor = -1; // o BB é forçado, não conta como "abertura"
   t.preflopAggressor = -1;
+  t.lastStreetAggressor = -1;
   t.log.push(`Botão no assento ${t.buttonSeat}. SB: ${t.players[sbSeat].name}, BB: ${t.players[bbSeat].name}.`);
 
   // Distribui 2 cartas para cada jogador ativo, começando após o botão.
@@ -306,6 +308,9 @@ function dealBoard(t: TableState, n: number): void {
 function advanceStreet(t: TableState): void {
   // Guarda quem levou a iniciativa no pré-flop antes de zerar o agressor da rua.
   if (t.street === "preflop") t.preflopAggressor = t.lastAggressor;
+  // Iniciativa para a próxima rua: quem apostou por último nesta. Se a rua
+  // passou "check-check", mantém a iniciativa anterior (o agressor não a perde).
+  if (t.lastAggressor >= 0) t.lastStreetAggressor = t.lastAggressor;
   resetForNewStreet(t);
   const next: Record<Street, Street> = {
     preflop: "flop",

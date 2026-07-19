@@ -116,3 +116,61 @@ describe("pós-flop — perfis diferenciam o blefe", () => {
     expect(fKenney).toBeGreaterThan(fChidwick);
   });
 });
+
+describe("pós-flop — barrel coerente (iniciativa)", () => {
+  it("com iniciativa aposta o ar com mais frequência que sem", () => {
+    function betFreq(hasInitiative: boolean) {
+      let bets = 0;
+      const N = 150;
+      for (let i = 0; i < N; i++) {
+        const d = postflopDecision(ctx({
+          hand: cardsFromString("AhTc"), // ar (ás-alto) em board seco
+          board: cardsFromString("Kc7h2d"),
+          toCall: 0,
+          hasInitiative,
+          wasPreflopAggressor: hasInitiative,
+          rng: seededRng(4000 + i),
+          equityIterations: 500,
+        }));
+        if (d.action === "bet") bets++;
+      }
+      return bets / N;
+    }
+    expect(betFreq(true)).toBeGreaterThan(betFreq(false));
+  });
+});
+
+describe("pós-flop — ICM aperta o all-in", () => {
+  it("um all-in que pagaria por pot odds vira fold sob pressão de ICM", () => {
+    // Confronto de bolha: pagar all-in deve exigir bem mais equity.
+    const bubble = {
+      stacks: [3000, 3000, 3000, 1000],
+      payouts: [50, 30, 20],
+      hero: 0,
+      villain: 1,
+      chips: 2900, // arriscar quase tudo na bolha → prêmio de risco alto
+    };
+    // Par médio dominado: paga um all-in barato por pot odds, mas não sob ICM.
+    const spot = () => ({
+      hand: cardsFromString("8h8d"),
+      board: cardsFromString("AhKd2c"),
+      potSize: 3000,
+      toCall: 500, // pagar = all-in (heroStack 500), pot odds baixas (~14%)
+      heroStack: 500,
+      inPosition: false,
+      numOpponents: 1,
+      profile: BASELINE_PROFILE,
+      wasPreflopAggressor: false,
+      villainRangePct: 0.4,
+      equityIterations: 5000,
+    });
+
+    const semIcm = postflopDecision({ ...spot(), rng: seededRng(77) });
+    const comIcm = postflopDecision({ ...spot(), rng: seededRng(77), icmSpot: bubble });
+
+    // Sem ICM, o preço baixo faz pagar; com ICM, a exigência sobe e folda.
+    expect(comIcm.requiredEquity).toBeGreaterThan(semIcm.requiredEquity);
+    expect(semIcm.action).not.toBe("fold");
+    expect(comIcm.action).toBe("fold");
+  });
+});

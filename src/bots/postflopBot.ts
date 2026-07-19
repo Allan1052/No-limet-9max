@@ -8,10 +8,45 @@
 
 import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
 import { postflopDecision, type PostflopContext } from "./decision";
+import { estimateVillainRangePct } from "./villainRange";
 import { legalActions } from "../game/betting";
 import { totalPot } from "../game/engine";
 import type { Action } from "../game/engine";
 import { inHandSeats, type TableState } from "../game/state";
+import type { IcmSpot } from "../ranges/icm";
+
+/** Monta um IcmSpot do confronto herói×vilão a partir do estado, se houver prêmios. */
+function buildPostflopIcmSpot(
+  t: TableState,
+  seat: number,
+  payouts?: number[],
+): IcmSpot | undefined {
+  if (!payouts || payouts.length === 0) return undefined;
+  const inPlay = t.players.filter((p) => p.status !== "out");
+  const stacks = inPlay.map((p) => p.stack + p.committed);
+  const seatsList = inPlay.map((p) => p.seat);
+  const heroIdx = seatsList.indexOf(seat);
+  if (heroIdx < 0) return undefined;
+  // Vilão: o último agressor (quem nos coloca em all-in), senão o maior stack.
+  let villainSeat = t.lastAggressor >= 0 && t.lastAggressor !== seat ? t.lastAggressor : -1;
+  if (villainSeat < 0) {
+    let best = -1;
+    for (const p of inPlay) if (p.seat !== seat && p.stack + p.committed > best) {
+      best = p.stack + p.committed;
+      villainSeat = p.seat;
+    }
+  }
+  const villainIdx = seatsList.indexOf(villainSeat);
+  if (villainIdx < 0 || villainIdx === heroIdx) return undefined;
+  const hero = t.players[seat];
+  return {
+    stacks,
+    payouts,
+    hero: heroIdx,
+    villain: villainIdx,
+    chips: Math.min(stacks[heroIdx], stacks[villainIdx], hero.stack + hero.committed),
+  };
+}
 
 /** Assentos ainda na mão (com cartas), na ordem de ação pós-flop (SB→BTN). */
 function postflopOrderIndex(seat: number, buttonSeat: number, n: number): number {
@@ -36,11 +71,11 @@ export function postflopContextFor(
   profile: BotProfile,
   rng: () => number = Math.random,
   equityIterations?: number,
+  payouts?: number[],
 ): PostflopContext {
   const p = t.players[seat];
   const la = legalActions(t);
   const inHand = inHandSeats(t);
-  const raisedPreflop = t.preflopAggressor >= 0;
   return {
     hand: p.holeCards,
     board: t.board,
@@ -51,7 +86,11 @@ export function postflopContextFor(
     numOpponents: Math.max(1, inHand.length - 1),
     profile,
     wasPreflopAggressor: t.preflopAggressor === seat,
-    villainRangePct: raisedPreflop ? 0.32 : 0.5,
+    // Iniciativa: apostou na rua anterior → dá barrel coerente.
+    hasInitiative: t.lastStreetAggressor === seat,
+    // Range do vilão que estreita rua a rua conforme a linha avança.
+    villainRangePct: estimateVillainRangePct(t, seat),
+    icmSpot: buildPostflopIcmSpot(t, seat, payouts),
     rng,
     equityIterations,
   };
@@ -62,11 +101,14 @@ export function botPostflopAction(
   seat: number,
   rng: () => number = Math.random,
   equityIterations?: number,
+  payouts?: number[],
 ): Action {
   const p = t.players[seat];
   const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
   const la = legalActions(t);
-  const decision = postflopDecision(postflopContextFor(t, seat, profile, rng, equityIterations));
+  const decision = postflopDecision(
+    postflopContextFor(t, seat, profile, rng, equityIterations, payouts),
+  );
   return toEngineAction(t, decision, la);
 }
 

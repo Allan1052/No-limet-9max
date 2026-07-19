@@ -1,0 +1,30 @@
+// ---------------------------------------------------------------------------
+// Estimativa da largura do range do vilão, que ESTREITA rua a rua.
+//
+// No pré-flop, um pote aberto com raise dá um range mais estreito que um pote
+// limpado. A cada rua que o vilão continua (e mais ainda quando ELE aposta), o
+// range aperta: quem paga flop, turn e river com força tende a ter mão feita.
+//
+// É uma heurística transparente (não rastreamos o range combo a combo de cada
+// oponente), mas captura o efeito central: quanto mais fundo e mais agressiva a
+// linha, mais forte o range que resta — o que muda bastante a equity estimada.
+// ---------------------------------------------------------------------------
+
+import type { TableState } from "../game/state";
+
+export function estimateVillainRangePct(t: TableState, heroSeat: number): number {
+  // Base: houve aumento no pré-flop (range mais forte) ou só limparam?
+  let pct = t.preflopAggressor >= 0 ? 0.3 : 0.5;
+
+  // Aperto acumulado por rua alcançada (continuar custa; sobra o mais forte).
+  if (t.board.length >= 5) pct *= 0.85 * 0.75 * 0.7; // river
+  else if (t.board.length === 4) pct *= 0.85 * 0.75; // turn
+  else if (t.board.length === 3) pct *= 0.85; // flop
+
+  // Se há uma aposta na nossa frente AGORA, o vilão está representando força.
+  const hero = t.players[heroSeat];
+  const toCall = t.currentBet - hero.committed;
+  if (toCall > 0) pct *= 0.7;
+
+  return Math.max(0.06, Math.min(0.6, pct));
+}

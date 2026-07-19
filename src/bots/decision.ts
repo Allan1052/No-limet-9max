@@ -22,6 +22,7 @@ import { equityHandVsRange } from "../engine/equity";
 import type { BotProfile } from "./profiles";
 import { buildTopRange } from "../ranges/build";
 import { rangeCombos } from "../ranges/types";
+import { requiredEquityToCall, type IcmSpot } from "../ranges/icm";
 import { classifyBoard, type BoardTexture } from "./boardTexture";
 
 export type PostflopAct = "check" | "bet" | "call" | "raise" | "fold";
@@ -38,8 +39,12 @@ export interface PostflopContext {
   profile: BotProfile;
   /** O herói foi o agressor do pré-flop (leva iniciativa de c-bet)? */
   wasPreflopAggressor: boolean;
+  /** O herói apostou na rua anterior (tem iniciativa para dar barrel)? */
+  hasInitiative?: boolean;
   /** Largura estimada do range do vilão (0..1). Default 0.45. */
   villainRangePct?: number;
+  /** Contexto de ICM: se pagar for all-in, a equity exigida sobe perto da bolha. */
+  icmSpot?: IcmSpot;
   rng?: () => number;
   equityIterations?: number;
 }
@@ -82,30 +87,42 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   if (ctx.toCall > 0) {
     const potOdds = ctx.toCall / (ctx.potSize + ctx.toCall);
 
-    if (equity >= 0.78) {
-      return decision("raise", size, equity, potOdds, texture,
-        `Mão muito forte (equity ${pct(equity)} vs range): aumenta por valor.`);
+    // ICM: se pagar significa ir all-in, a equity exigida sobe perto da bolha.
+    const isAllInCall = ctx.toCall >= ctx.heroStack;
+    let required = potOdds;
+    let icmNote = "";
+    if (isAllInCall && ctx.icmSpot) {
+      const icmReq = requiredEquityToCall(ctx.icmSpot);
+      if (icmReq > required) {
+        required = icmReq;
+        icmNote = ` [ICM exige ${pct(icmReq)}]`;
+      }
     }
 
-    if (effEquity >= potOdds) {
+    if (equity >= Math.max(0.78, required + 0.12)) {
+      return decision("raise", size, equity, required, texture,
+        `Mão muito forte (equity ${pct(equity)} vs range): aumenta por valor.${icmNote}`);
+    }
+
+    if (effEquity >= required) {
       // Preço compensa. Mão forte às vezes aumenta (valor/proteção); senão paga.
       const raiseProb = 0.25 + 0.4 * ctx.profile.aggression;
-      if (equity >= 0.66 && rng() < raiseProb) {
-        return decision("raise", size, equity, potOdds, texture,
-          `Mão forte (equity ${pct(equity)} ≥ odds ${pct(potOdds)}): aumenta por valor/proteção.`);
+      if (equity >= 0.66 && !isAllInCall && rng() < raiseProb) {
+        return decision("raise", size, equity, required, texture,
+          `Mão forte (equity ${pct(equity)} ≥ ${pct(required)}): aumenta por valor/proteção.${icmNote}`);
       }
-      return decision("call", undefined, equity, potOdds, texture,
-        `Equity ${pct(equity)} paga as odds de ${pct(potOdds)}: paga.`);
+      return decision("call", undefined, equity, required, texture,
+        `Equity ${pct(equity)} paga o preço de ${pct(required)}: paga.${icmNote}`);
     }
 
     // Sem preço direto: considerar aumento de blefe/semi-blefe (só com projeto).
     const semibluffProb = ctx.profile.bluffFactor * 0.18 * texture.wetness;
-    if (effEquity >= potOdds * 0.7 && rng() < semibluffProb) {
-      return decision("raise", size, equity, potOdds, texture,
+    if (!isAllInCall && effEquity >= required * 0.7 && rng() < semibluffProb) {
+      return decision("raise", size, equity, required, texture,
         `Semi-blefe: equity ${pct(equity)} com projeto em board molhado (perfil ${ctx.profile.archetype}).`);
     }
-    return decision("fold", undefined, equity, potOdds, texture,
-      `Equity ${pct(equity)} não paga as odds de ${pct(potOdds)}: fold.`);
+    return decision("fold", undefined, equity, required, texture,
+      `Equity ${pct(equity)} não paga o preço de ${pct(required)}: fold.${icmNote}`);
   }
 
   // ---------- Caso B: ação passada até o herói (pode apostar ou dar check) ----------
@@ -114,20 +131,30 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       `Mão de valor (equity ${pct(equity)} vs range): aposta ${Math.round(size * 100)}% do pote.`);
   }
 
-  // C-bet de blefe: mais frequente em board seco e com iniciativa; menos molhado.
+  // Blefe/barrel coerente. A frequência cai a cada rua (o barrel "afina") e sobe
+  // com a equity — o "ar" desiste mais no turn/river; projetos seguem apostando.
+  const streetIdx = ctx.board.length >= 5 ? 2 : ctx.board.length === 4 ? 1 : 0;
+  const taper = [1.0, 0.72, 0.52][streetIdx];
   const dryness = 1 - texture.wetness;
-  let baseCbet = 0.35 + 0.35 * dryness; // 0.35 (molhado) .. 0.70 (seco)
-  if (ctx.wasPreflopAggressor) baseCbet += 0.1;
-  if (!ctx.inPosition) baseCbet -= 0.05;
-  const cbetProb = Math.max(0, Math.min(0.9, baseCbet * ctx.profile.cbetFactor));
+  const initiative = ctx.hasInitiative ?? ctx.wasPreflopAggressor;
 
-  if (equity >= 0.25 && rng() < cbetProb) {
+  let base = (0.34 + 0.32 * dryness) * taper; // board seco e cedo → mais aposta
+  if (initiative) base += 0.14; // com iniciativa, dá continuidade/barrel
+  if (!ctx.inPosition) base -= 0.05;
+  // Peso pela equity: quanto mais equity (projetos), mais segue apostando.
+  const equityWeight = initiative ? 0.6 + equity : 1;
+  const cbetProb = Math.max(0, Math.min(0.9, base * ctx.profile.cbetFactor * equityWeight));
+
+  // No river não há projeto: só blefa "ar" com pouca frequência e sem iniciativa mínima.
+  const minEquityToBluff = streetIdx === 2 ? 0.12 : 0.22;
+  if (equity >= minEquityToBluff && rng() < cbetProb) {
+    const verb = initiative && streetIdx > 0 ? "barrel" : "c-bet";
     return decision("bet", size, equity, 0, texture,
-      `Blefe/semi-blefe: c-bet ${Math.round(size * 100)}% em board ${texture.wetness < 0.4 ? "seco" : "molhado"} (perfil ${ctx.profile.archetype}).`);
+      `Blefe/semi-blefe (${verb} ${Math.round(size * 100)}%) em board ${texture.wetness < 0.4 ? "seco" : "molhado"} (perfil ${ctx.profile.archetype}).`);
   }
 
   return decision("check", undefined, equity, 0, texture,
-    `Equity ${pct(equity)} insuficiente para valor e não blefa aqui: check.`);
+    `Equity ${pct(equity)} insuficiente para valor e sem blefe rentável aqui: ${initiative ? "desiste do barrel (check)" : "check"}.`);
 }
 
 function decision(

@@ -41,6 +41,8 @@ export interface GameOptions {
   smallBlind?: number;
   bigBlind?: number;
   startingStack?: number;
+  /** Prêmios do torneio (ativam o ICM nas decisões de all-in pós-flop). */
+  payouts?: number[];
 }
 
 const STREET_LABEL: Record<string, string> = {
@@ -64,11 +66,13 @@ export class GameController {
   lastHand: HandHistory | null = null;
   private history: ReplayEvent[] = [];
   private perHand: Record<number, PerHandFlags> = {};
+  private payouts?: number[];
   private rng = Math.random;
   private handSeed = 1;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
+    this.payouts = opts.payouts;
     const seats = [
       { name: "Você", stack, isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, stack, profileId: p.id })),
@@ -177,7 +181,7 @@ export class GameController {
     const action =
       this.table.street === "preflop"
         ? botPreflopAction(this.table, seat)
-        : botPostflopAction(this.table, seat, this.rng, 1500);
+        : botPostflopAction(this.table, seat, this.rng, 1500, this.payouts);
     this.applyLabeled(action);
   }
 
@@ -207,7 +211,7 @@ export class GameController {
       const d = preflopDecision(ctx);
       return { kind: "preflop", action: d.action, reason: d.reason };
     }
-    const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500);
+    const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);
     return {
       kind: "postflop",

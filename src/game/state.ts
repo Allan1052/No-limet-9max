@@ -71,6 +71,8 @@ export interface TableState {
   lastAggressor: number;
   /** Assento do agressor do pré-flop (quem levou a iniciativa; -1 se ninguém). */
   preflopAggressor: number;
+  /** Assento de quem apostou por último na rua ANTERIOR (iniciativa/barrel). */
+  lastStreetAggressor: number;
   /** Baralho restante (as próximas cartas a sair). */
   deck: Card[];
   handOver: boolean;

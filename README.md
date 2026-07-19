@@ -99,6 +99,15 @@ estimado do vilão no board atual) comparada com as pot odds, e é calibrada por
 textura de board, posição e perfil. Tudo com justificativa em texto — pronto
 para o sistema de feedback.
 
+Refinamentos de realismo:
+- **Range do vilão que estreita rua a rua** (`villainRange.ts`): quanto mais
+  fundo e agressiva a linha, mais forte o range que resta.
+- **Barrel coerente** (iniciativa entre ruas): quem apostou a rua anterior dá
+  continuidade com frequência que afina no turn/river e sobe com a equity — o
+  "ar" desiste mais tarde, projetos seguem.
+- **ICM nos all-ins pós-flop**: com prêmios configurados, um all-in que pagaria
+  por pot odds vira fold sob pressão de bolha.
+
 Exemplo real (log do motor, board 8♦7♠4♣ → J♥):
 
 ```

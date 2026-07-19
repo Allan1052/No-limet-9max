@@ -397,3 +397,51 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .icm-result { display: flex; align-items: center; gap: 16px; }
 .icm-big { font-size: 40px; font-weight: 800; color: var(--gold); line-height: 1; }
 .icm-desc { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* ---- Responsivo (celular / telas estreitas) ---- */
+@media (max-width: 860px) {
+  .app { padding: 8px 10px 24px; }
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .brand { font-size: 17px; }
+  .brand small { display: none; }
+  .disclaimer { font-size: 10px; padding: 4px 7px; }
+
+  /* Sidebar desce para baixo da mesa. */
+  .layout { flex-direction: column; }
+  .sidebar { flex: 1 1 auto; width: 100%; }
+
+  /* Mesa mais alta para caber os 9 assentos menores. */
+  .table-wrap { aspect-ratio: 4 / 5; }
+  .seat { width: 88px; }
+  .seat .pod { padding: 4px 5px; }
+  .seat .name { font-size: 10px; }
+  .seat .arch { font-size: 8px; }
+  .seat .stack { font-size: 10px; }
+  .seat .badge { font-size: 9px; padding: 1px 5px; }
+
+  /* Cartas menores. */
+  .card { width: 34px; height: 48px; }
+  .card .rank { font-size: 16px; }
+  .card .suit { font-size: 12px; }
+  .card.sm { width: 22px; height: 32px; }
+  .card.sm .rank { font-size: 11px; }
+  .card.sm .suit { font-size: 8px; }
+  .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
+
+  /* Controles e ICM empilham. */
+  .controls { padding: 10px; gap: 8px; }
+  .btn { padding: 9px 12px; font-size: 13px; }
+  .slider-wrap { flex: 1 1 100%; }
+  .icm-cols { flex-direction: column; }
+  .icm-result { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Tabelas com rolagem horizontal se precisar. */
+  table.stats { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
+@media (max-width: 460px) {
+  .seat { width: 74px; }
+  .seat .arch { display: none; }
+  .card { width: 28px; height: 40px; }
+  .card .rank { font-size: 14px; }
+}
