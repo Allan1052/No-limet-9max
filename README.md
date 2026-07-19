@@ -63,6 +63,14 @@ agressão, adaptação a stack e sensibilidade a ICM:
 - ✅ Suíte de milhares de mãos simuladas (`npm run sim`).
 - ✅ Calculadora de ICM na interface (aba "Calculadora ICM").
 - ✅ Modo torneio (aba "Torneio").
+- ✅ Visualizador de ranges 13×13 (aba "Ranges").
+
+### Visualizador de ranges (`ui/RangeGrid.tsx`)
+
+Aba "Ranges": a grade 13×13 estilo GTO Wizard, colorida pela frequência de
+abertura (dourado = abrir, escuro = foldar). Escolha posição, profundidade de
+stack e perfil para ver, por exemplo, o LAG abrindo largo e o TAG bem fechado —
+ou como a range aperta quando o stack encurta.
 
 ### Modo torneio (`tournament/`)
 

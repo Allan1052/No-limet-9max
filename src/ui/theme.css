@@ -446,6 +446,45 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 }
 .lvl.active { background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%); color: #14170f; border-color: var(--gold); }
 
+/* ---- Visualizador de ranges (grade 13×13) ---- */
+.rangeview { max-width: 720px; }
+.rg-controls { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-start; }
+.rg-controls select {
+  background: #0f120b;
+  border: 1px solid #2a2c22;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.rg-status { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; }
+.rg-status b { color: var(--gold); }
+.rg-hover b { color: var(--text); }
+.rg-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 2px;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 560px;
+}
+.rg-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: default;
+  user-select: none;
+  transition: outline 0.05s;
+}
+.rg-cell:hover { outline: 2px solid var(--gold); outline-offset: -1px; z-index: 1; }
+.rg-cell.pair { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.rg-suit { font-size: 8px; opacity: 0.75; margin-left: 1px; }
+.rg-legend { margin-top: 12px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rg-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-left: 8px; }
+.rg-note { width: 100%; margin-top: 6px; line-height: 1.5; }
+
 /* ---- Responsivo (celular / telas estreitas) ---- */
 @media (max-width: 860px) {
   .app { padding: 8px 10px 24px; }
@@ -485,6 +524,9 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .tourney { flex-direction: column; }
   .hud { gap: 10px; }
   .hud-levels { margin-left: 0; width: 100%; }
+  .rg-cell { font-size: 8px; }
+  .rg-suit { font-size: 6px; }
+  .rg-controls { gap: 10px; }
 
   /* Tabelas com rolagem horizontal se precisar. */
   table.stats { display: block; overflow-x: auto; white-space: nowrap; }

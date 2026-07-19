@@ -7,13 +7,14 @@ import { StatsPanel } from "../ui/StatsPanel";
 import { Replayer } from "../ui/Replayer";
 import { IcmCalculator } from "../ui/IcmCalculator";
 import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
+import { RangeGrid } from "../ui/RangeGrid";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
   const { controller, heroAct, newHand, resetStats, startTournament, setLevel } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
-  const [view, setView] = useState<"play" | "icm" | "torneio">("play");
+  const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges">("play");
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -44,6 +45,12 @@ export function App() {
             Torneio
           </button>
           <button
+            className={`tab ${view === "ranges" ? "active" : ""}`}
+            onClick={() => setView("ranges")}
+          >
+            Ranges
+          </button>
+          <button
             className={`tab ${view === "icm" ? "active" : ""}`}
             onClick={() => setView("icm")}
           >
@@ -55,6 +62,8 @@ export function App() {
 
       {view === "icm" ? (
         <IcmCalculator />
+      ) : view === "ranges" ? (
+        <RangeGrid />
       ) : view === "torneio" ? (
         <TournamentSetup
           onStart={(cfg) => {
