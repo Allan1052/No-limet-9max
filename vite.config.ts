@@ -3,9 +3,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-// Caminho base no GitHub Pages (site de projeto): https://<user>.github.io/no-limet-9max/
-// Em desenvolvimento (npm run dev) o Vite usa "/".
-const base = process.env.NODE_ENV === "production" ? "/no-limet-9max/" : "/";
+// Caminho base no GitHub Pages (site de projeto): https://allan1052.github.io/No-limet-9max/
+// Precisa bater EXATAMENTE com o nome do repositório (o Pages diferencia
+// maiúsculas). Em desenvolvimento (npm run dev) o Vite usa "/".
+const base = process.env.NODE_ENV === "production" ? "/No-limet-9max/" : "/";
 
 // Configuração do Vite: React + Web Worker (Monte Carlo fora da UI) + PWA
 // (torna o app instalável no celular, com ícone e funcionamento offline).
