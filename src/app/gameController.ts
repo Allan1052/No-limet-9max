@@ -8,7 +8,7 @@
 // A interface só lê o estado e chama `heroAct` / `botStep` / `newHand`.
 // ---------------------------------------------------------------------------
 
-import { seededRng, type Card } from "../engine/cards";
+import { type Card } from "../engine/cards";
 import {
   createTable,
   startHand,
@@ -100,7 +100,6 @@ export class GameController {
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
   private rng = Math.random;
-  private handSeed = 1;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
@@ -230,7 +229,9 @@ export class GameController {
     this.feedback = [];
     this.lastActionLabel = {};
     this.history = [];
-    startHand(this.table, freshShuffledDeck(seededRng(this.handSeed++ * 2654435761)));
+    // Baralho verdadeiramente aleatório a cada mão (sem semente fixa — senão
+    // toda sessão repetiria a mesma sequência de cartas e o mesmo vencedor).
+    startHand(this.table, freshShuffledDeck());
     if (levelUp) {
       const lv = BLIND_LEVELS[this.tournament!.levelIndex];
       this.message = `Nível subiu: blinds ${lv.sb}/${lv.bb}.`;
