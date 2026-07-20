@@ -165,11 +165,53 @@ export class GameController {
     }
   }
 
+  /**
+   * Reposição estilo GGPoker: cadeiras vazias (bot quebrado) recebem um novo
+   * jogador, com stack = média da mesa e um arquétipo sorteado (sem repetir
+   * nome ativo). Na MESA FINAL não há reposição — a mesa encolhe até o heads-up.
+   * Devolve quantas cadeiras foram repostas.
+   */
+  private refillSeats(): number {
+    if (this.tournament && this.tournament.stage === "mesa_final") return 0;
+    const players = this.table.players;
+    const withChips = players.filter((p) => p.stack > 0);
+    if (withChips.length === 0) return 0;
+    const bb = this.table.bigBlind;
+    const avgRaw = withChips.reduce((s, p) => s + p.stack, 0) / withChips.length;
+    const avg = Math.max(bb * 5, Math.round(avgRaw / bb) * bb);
+
+    let count = 0;
+    for (const p of players) {
+      if (p.isHero || p.stack > 0) continue;
+      const activeIds = new Set(
+        players.filter((x) => x.stack > 0 && x.profileId).map((x) => x.profileId),
+      );
+      const pool = PROFILES.filter((pr) => !activeIds.has(pr.id));
+      const chosen = (pool.length ? pool : PROFILES)[Math.floor(this.rng() * (pool.length || PROFILES.length))];
+      p.profileId = chosen.id;
+      p.name = chosen.name;
+      p.stack = avg;
+      p.status = "active";
+      this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
+      count++;
+    }
+    return count;
+  }
+
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
   newHand(): void {
+    // Reposição de jogadores (bust → entra outro), exceto na mesa final.
+    const refilled = this.refillSeats();
+    const hero = this.table.players[this.heroSeat];
+    if (hero.stack <= 0) {
+      this.message = "Você foi eliminado. Configure um novo jogo (aba Torneio) para recomeçar.";
+      return;
+    }
     const alive = this.table.players.filter((p) => p.stack > 0).length;
     if (alive < 2) {
-      this.message = "Fim da sessão: não há jogadores suficientes com fichas.";
+      this.message = this.tournament
+        ? "Torneio encerrado — você chegou ao fim da mesa final!"
+        : "Fim da sessão: não há jogadores suficientes com fichas.";
       return;
     }
     if (this.table.handOver && this.table.result) moveButton(this.table);
@@ -192,6 +234,8 @@ export class GameController {
     if (levelUp) {
       const lv = BLIND_LEVELS[this.tournament!.levelIndex];
       this.message = `Nível subiu: blinds ${lv.sb}/${lv.bb}.`;
+    } else if (refilled > 0) {
+      this.message = refilled === 1 ? "Um novo jogador entrou na mesa." : `${refilled} novos jogadores entraram na mesa.`;
     }
     // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
     for (const p of this.table.players) {
