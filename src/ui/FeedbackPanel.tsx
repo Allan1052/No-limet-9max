@@ -46,16 +46,17 @@ export function ProfilesLegend() {
       <h3>Estilos na mesa</h3>
       <div className="legend">
         <span className="dot" style={{ background: "#d1544f" }} />
-        <b>Maníaco / LAG</b> — muito agressivo, muito blefe (Kenney, Astedt).
+        <b>Soltos</b> — Recreativo, Calling Station, Spewy: entram em muitos potes,
+        pagam demais.
         <br />
         <span className="dot" style={{ background: "#c9b458" }} />
-        <b>TAG</b> — sólido e seletivo (Chidwick, Moorman, Dan Smith).
+        <b>Tight</b> — Nit e ABC Careful: poucas mãos, aposta = força real.
         <br />
         <span className="dot" style={{ background: "#4caf7d" }} />
-        <b>Quase-GTO</b> — muito balanceado (Holz).
+        <b>Regs</b> — TAG e LAG: sólidos e agressivos com fundamento.
         <br />
         <span className="dot" style={{ background: "#8a7326" }} />
-        <b>Técnico/adaptável</b> — ajusta ao stack (Sikorski, Addamo).
+        <b>Shover</b> — ajusta tudo por stack e ICM (fase final).
       </div>
     </div>
   );

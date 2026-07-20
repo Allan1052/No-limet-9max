@@ -86,9 +86,9 @@ describe("integração — mesa 9-max com os 8 perfis", () => {
     }
 
     const vpip = (id: string) => entered[id] / dealt[id];
-    // Kenney (maníaco) deve entrar em bem mais potes que Chidwick (TAG preciso).
-    expect(vpip("kenney")).toBeGreaterThan(vpip("chidwick"));
-    // E o hiperagressivo (Astedt) também mais que o TAG preciso.
-    expect(vpip("astedt")).toBeGreaterThan(vpip("chidwick"));
+    // O calling station deve entrar em bem mais potes que o nit.
+    expect(vpip("station")).toBeGreaterThan(vpip("nit"));
+    // E o recreativo solto também entra em muito mais potes que o nit.
+    expect(vpip("recreativo")).toBeGreaterThan(vpip("nit"));
   });
 });

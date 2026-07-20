@@ -99,6 +99,13 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       }
     }
 
+    // "Grude": perfis pegajosos (calling station) exigem menos equity para pagar;
+    // perfis disciplinados exigem um pouco mais. Não vale para all-in (respeita ICM).
+    if (!isAllInCall) {
+      const leniency = (ctx.profile.stickiness - 0.5) * 0.5;
+      required = Math.max(0.02, required * (1 - leniency));
+    }
+
     if (equity >= Math.max(0.78, required + 0.12)) {
       return decision("raise", size, equity, required, texture,
         `Mão muito forte (equity ${pct(equity)} vs range): aumenta por valor.${icmNote}`);
@@ -131,19 +138,28 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       `Mão de valor (equity ${pct(equity)} vs range): aposta ${Math.round(size * 100)}% do pote.`);
   }
 
-  // Blefe/barrel coerente. A frequência cai a cada rua (o barrel "afina") e sobe
-  // com a equity — o "ar" desiste mais no turn/river; projetos seguem apostando.
+  // Blefe/barrel coerente, com as FREQUÊNCIAS do perfil por rua. No flop usa a
+  // frequência de c-bet; no turn/river usa as de barrel do perfil (que já caem
+  // rua a rua). Em multiway, reduz a continuação conforme o perfil.
   const streetIdx = ctx.board.length >= 5 ? 2 : ctx.board.length === 4 ? 1 : 0;
-  const taper = [1.0, 0.72, 0.52][streetIdx];
   const dryness = 1 - texture.wetness;
   const initiative = ctx.hasInitiative ?? ctx.wasPreflopAggressor;
 
-  let base = (0.34 + 0.32 * dryness) * taper; // board seco e cedo → mais aposta
-  if (initiative) base += 0.14; // com iniciativa, dá continuidade/barrel
+  let base: number;
+  if (streetIdx === 0) {
+    base = (0.34 + 0.32 * dryness) * ctx.profile.cbetFactor; // c-bet no flop
+    if (initiative) base += 0.14;
+  } else {
+    base = streetIdx === 1 ? ctx.profile.barrelTurn : ctx.profile.barrelRiver;
+    if (initiative) base += 0.05;
+    else base *= 0.5; // liderar sem iniciativa é bem mais raro
+  }
   if (!ctx.inPosition) base -= 0.05;
   // Peso pela equity: quanto mais equity (projetos), mais segue apostando.
   const equityWeight = initiative ? 0.6 + equity : 1;
-  const cbetProb = Math.max(0, Math.min(0.9, base * ctx.profile.cbetFactor * equityWeight));
+  let cbetProb = base * equityWeight;
+  if (ctx.numOpponents > 1) cbetProb *= 1 - ctx.profile.multiwayReduction; // some em multiway
+  cbetProb = Math.max(0, Math.min(0.92, cbetProb));
 
   // No river não há projeto: só blefa "ar" com pouca frequência e sem iniciativa mínima.
   const minEquityToBluff = streetIdx === 2 ? 0.12 : 0.22;

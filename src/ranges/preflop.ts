@@ -24,6 +24,7 @@ import {
   comboToHandType,
   isSuited,
   POSITIONS,
+  rangePercent,
   type Position,
   type Range,
 } from "./types";
@@ -121,8 +122,10 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
 
   // ----- Caso 1: pote não aberto → abertura (RFI) -----
   if (!ctx.raiserPosition) {
+    // Tilt por posição do perfil (amortecido para não dobrar a estrutura da base).
+    const posMult = Math.sqrt(profile.positional[ctx.heroPosition] ?? 1);
     const range = rfiRange(ctx.heroPosition, {
-      widthFactor: profile.rfiWidth,
+      widthFactor: profile.rfiWidth * posMult,
       stackFactor: sd.factor,
       icmFactor,
     });
@@ -142,6 +145,23 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         handType,
       };
     }
+    // Limp especulativo: perfis passivos entram de limp com mãos logo abaixo da
+    // abertura — é assim que o recreativo/station veem tantos flops.
+    if (profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
+      const openPct = rangePercent(range);
+      const limpRange = rangeSubtract(
+        buildTopRange(openPct + profile.limpFactor * 0.4),
+        range,
+      );
+      if (freqIn(limpRange, handType) > 0) {
+        return {
+          action: "call",
+          sizeBB: 1,
+          reason: `${handType}: limp especulativo (perfil ${profile.archetype}).`,
+          handType,
+        };
+      }
+    }
     return {
       action: "fold",
       sizeBB: 0,
@@ -153,8 +173,11 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // ----- Caso 2: enfrentando um raise -----
   const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition);
 
-  // Aplica perfil e ICM aos alvos.
-  let defendPct = p.defendPct * profile.defendFactor * icmFactor;
+  // Aplica perfil e ICM aos alvos. `coldCallFactor` amplia (muito, nos passivos)
+  // a range de flat — é o que infla o VPIP do recreativo/calling station.
+  const baseDefend = p.defendPct * profile.defendFactor * icmFactor;
+  const coldCallPct = Math.min(0.9, p.defendPct * profile.coldCallFactor * icmFactor);
+  let defendPct = Math.max(baseDefend, coldCallPct);
   let value3betPct = p.value3betPct * profile.threeBetFactor * icmFactor;
   const bluffPct = p.bluffExtraPct * profile.bluffFactor * profile.threeBetFactor * icmFactor;
   // Coerência: a range de valor do 3-bet não pode ultrapassar a de defesa.
@@ -166,6 +189,8 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // Blefes de 3-bet: mãos logo abaixo da defesa, apenas suited (bons bloqueios).
   const wider = buildTopRange(defendPct + bluffPct);
   const bluffZone = rangeSubtract(wider, defendRange);
+  // Passivos (coldCallFactor alto) pagam aberturas até fora de posição.
+  const callsOutOfPosition = profile.coldCallFactor >= 1.5;
 
   const openSize = ctx.openSizeBB ?? 2.3;
   const threeBetSize = p.inPosition ? openSize * 3 : openSize * 3.8;
@@ -181,16 +206,16 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   }
 
   if (freqIn(defendRange, handType) > 0) {
-    // Dentro da defesa mas não é valor de 3-bet → paga (flat), se puder pagar IP.
-    if (p.inPosition || ctx.heroPosition === "BB") {
+    // Dentro da defesa mas não é valor de 3-bet → paga (flat).
+    if (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition) {
       return {
         action: "call",
         sizeBB: openSize,
-        reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (defesa em boa posição/odds).`,
+        reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (perfil ${profile.archetype}).`,
         handType,
       };
     }
-    // OOP sem valor de 3-bet: preferir fold a pagar dominado.
+    // OOP sem valor de 3-bet (perfis disciplinados): fold em vez de pagar dominado.
     return {
       action: "fold",
       sizeBB: 0,

@@ -31,13 +31,13 @@ describe("pré-flop — abertura (pote não aberto)", () => {
 });
 
 describe("pré-flop — perfis diferenciam o comportamento", () => {
-  it("hiperagressivo abre mais que o TAG preciso no CO", () => {
-    const astedt = profileById("astedt");
-    const chidwick = profileById("chidwick");
-    // Uma mão marginal de roubo: o LAG abre, o TAG fecha.
+  it("o LAG abre mais que o nit no CO", () => {
+    const lag = profileById("lag");
+    const nit = profileById("nit");
+    // Uma mão marginal de roubo: o LAG abre, o nit fecha.
     const hand = "Jh8h";
-    const a = decide(hand, "CO", { profile: astedt });
-    const c = decide(hand, "CO", { profile: chidwick });
+    const a = decide(hand, "CO", { profile: lag });
+    const c = decide(hand, "CO", { profile: nit });
     expect(a.action).toBe("raise");
     expect(c.action).toBe("fold");
   });

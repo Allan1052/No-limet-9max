@@ -85,11 +85,11 @@ describe("pós-flop — pot odds", () => {
 });
 
 describe("pós-flop — perfis diferenciam o blefe", () => {
-  it("o maníaco dá c-bet de blefe muito mais que o TAG preciso", () => {
+  it("o LAG dá c-bet de blefe muito mais que o calling station", () => {
     // Mão sem valor (ar) em board seco, ação passada: mede frequência de aposta
     // ao longo de muitas amostras aleatórias.
-    const kenney = profileById("kenney");
-    const chidwick = profileById("chidwick");
+    const kenney = profileById("lag");
+    const chidwick = profileById("station");
 
     function betFrequency(profileId: ReturnType<typeof profileById>) {
       let bets = 0;

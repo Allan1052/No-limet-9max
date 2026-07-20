@@ -27,14 +27,14 @@ describe(`simulação em massa (${HANDS} mãos)`, () => {
     for (const r of report.byProfile) expect(r.hands).toBe(HANDS);
   });
 
-  it("VPIP: o maníaco entra em muito mais potes que os TAGs apertados", () => {
-    expect(byId("kenney").vpip).toBeGreaterThan(byId("chidwick").vpip);
-    expect(byId("astedt").vpip).toBeGreaterThan(byId("chidwick").vpip);
+  it("VPIP: os soltos entram em muito mais potes que os apertados", () => {
+    expect(byId("station").vpip).toBeGreaterThan(byId("nit").vpip);
+    expect(byId("recreativo").vpip).toBeGreaterThan(byId("abc").vpip);
   });
 
-  it("3-bet: os agressivos dão bem mais 3-bet que o TAG preciso", () => {
-    expect(byId("kenney").threeBet).toBeGreaterThan(byId("chidwick").threeBet);
-    expect(byId("astedt").threeBet).toBeGreaterThan(byId("smith").threeBet);
+  it("3-bet: os agressivos dão bem mais 3-bet que os passivos/tight", () => {
+    expect(byId("spewy").threeBet).toBeGreaterThan(byId("station").threeBet);
+    expect(byId("lag").threeBet).toBeGreaterThan(byId("nit").threeBet);
   });
 
   it("PFR ≤ VPIP para todos (não se aumenta mais do que se entra)", () => {
