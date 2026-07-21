@@ -69,6 +69,7 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   const iters = ctx.equityIterations ?? 1500;
   const numOpp = Math.max(1, ctx.numOpponents);
   const texture = classifyBoard(ctx.board);
+  const streetIdx = ctx.board.length >= 5 ? 2 : ctx.board.length === 4 ? 1 : 0; // 0=flop 1=turn 2=river
 
   // Equity do herói contra o range do vilão, no board atual.
   const villainPct = ctx.villainRangePct ?? 0.45;
@@ -99,11 +100,16 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       }
     }
 
-    // "Grude": perfis pegajosos (calling station) exigem menos equity para pagar;
-    // perfis disciplinados exigem um pouco mais. Não vale para all-in (respeita ICM).
+    // Disciplina para pagar. Uma aposta representa força e há reverse implied
+    // odds, então paga-se com MAIS equity que as pot odds cruas — e cada perfil
+    // no seu estilo: o disciplinado (nit/ABC) larga fácil, o calling station
+    // gruda. Ruas mais adiantadas (turn/river) exigem ainda mais. Não vale para
+    // all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
-      const leniency = (ctx.profile.stickiness - 0.5) * 0.5;
-      required = Math.max(0.02, required * (1 - leniency));
+      const streetPenalty = [0, 0.06, 0.12][streetIdx]; // turn/river = range mais forte
+      const discipline = (0.5 - ctx.profile.stickiness) * 1.3; // nit +, station −
+      const multiwayPenalty = Math.min(0.14, 0.07 * (numOpp - 1)); // alguém pode ter mão
+      required = Math.min(0.92, Math.max(0.03, required + 0.08 + streetPenalty + discipline + multiwayPenalty));
     }
 
     if (equity >= Math.max(0.78, required + 0.12)) {
@@ -133,7 +139,9 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   }
 
   // ---------- Caso B: ação passada até o herói (pode apostar ou dar check) ----------
-  if (equity >= 0.6) {
+  // Aposta de valor um pouco mais fina (0.55) — evita "check até o river": quem
+  // tem o melhor da parada aposta, tira os outros do pote e reduz showdowns.
+  if (equity >= 0.55) {
     return decision("bet", size, equity, 0, texture,
       `Mão de valor (equity ${pct(equity)} vs range): aposta ${Math.round(size * 100)}% do pote.`);
   }
@@ -141,7 +149,6 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   // Blefe/barrel coerente, com as FREQUÊNCIAS do perfil por rua. No flop usa a
   // frequência de c-bet; no turn/river usa as de barrel do perfil (que já caem
   // rua a rua). Em multiway, reduz a continuação conforme o perfil.
-  const streetIdx = ctx.board.length >= 5 ? 2 : ctx.board.length === 4 ? 1 : 0;
   const dryness = 1 - texture.wetness;
   const initiative = ctx.hasInitiative ?? ctx.wasPreflopAggressor;
 
