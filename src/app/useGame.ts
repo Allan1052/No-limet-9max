@@ -42,5 +42,9 @@ export function useGame(opts?: GameOptions) {
       g.setBlindLevel(idx);
       force();
     },
+    dismissSummary: () => {
+      g.tournamentOver = false;
+      force();
+    },
   };
 }

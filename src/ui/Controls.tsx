@@ -52,10 +52,16 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
       )}
 
       <div className="slider-wrap">
-        <button className="btn" disabled={!canRaise} onClick={() => potBet(0.5)} title="Meio pote">
-          ½
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.3)} title="30% do pote">
+          30%
         </button>
-        <button className="btn" disabled={!canRaise} onClick={() => potBet(1)} title="Pote">
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.4)} title="40% do pote">
+          40%
+        </button>
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title="60% do pote">
+          60%
+        </button>
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1)} title="Pote inteiro">
           Pote
         </button>
         <input

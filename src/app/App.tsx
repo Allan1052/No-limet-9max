@@ -5,6 +5,7 @@ import { Controls } from "../ui/Controls";
 import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
 import { StatsPanel } from "../ui/StatsPanel";
 import { Replayer } from "../ui/Replayer";
+import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
 import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
@@ -12,7 +13,8 @@ import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
-  const { controller, heroAct, newHand, resetStats, startTournament, setLevel } = useGame();
+  const { controller, heroAct, newHand, resetStats, startTournament, setLevel, dismissSummary } =
+    useGame();
   const [replayOpen, setReplayOpen] = useState(false);
   const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges">("play");
   const t = controller.table;
@@ -115,6 +117,16 @@ export function App() {
 
       {replayOpen && controller.lastHand ? (
         <Replayer hand={controller.lastHand} onClose={() => setReplayOpen(false)} />
+      ) : null}
+
+      {controller.tournamentOver && controller.tournamentSummary() ? (
+        <TournamentSummary
+          summary={controller.tournamentSummary()!}
+          onClose={() => {
+            dismissSummary();
+            setView("torneio");
+          }}
+        />
       ) : null}
     </div>
   );

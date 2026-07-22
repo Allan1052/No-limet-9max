@@ -173,13 +173,20 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // ----- Caso 2: enfrentando um raise -----
   const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition);
 
-  // Aplica perfil e ICM aos alvos. `coldCallFactor` amplia (muito, nos passivos)
-  // a range de flat — é o que infla o VPIP do recreativo/calling station.
-  const baseDefend = p.defendPct * profile.defendFactor * icmFactor;
-  const coldCallPct = Math.min(0.9, p.defendPct * profile.coldCallFactor * icmFactor);
+  // Tamanho da abertura importa MUITO: contra um open pequeno (2.3bb) defende-se
+  // largo; contra 3-bet/4-bet/all-in a range de continuar ENCOLHE drasticamente
+  // (ninguém — nem calling station — paga um shove com 85s). Aberturas grandes
+  // apertam tudo por este fator; abaixo de 0.6 mata os 3-bets de blefe.
+  const raiseSize = ctx.openSizeBB ?? 2.3;
+  const sizeFactor = raiseSize <= 2.6 ? 1 : Math.max(0.1, Math.pow(2.4 / raiseSize, 0.9));
+
+  // Aplica perfil, ICM e tamanho aos alvos. `coldCallFactor` amplia (muito, nos
+  // passivos) a range de flat — é o que infla o VPIP do recreativo/station.
+  const baseDefend = p.defendPct * profile.defendFactor * icmFactor * sizeFactor;
+  const coldCallPct = Math.min(0.9, p.defendPct * profile.coldCallFactor * icmFactor) * sizeFactor;
   let defendPct = Math.max(baseDefend, coldCallPct);
-  let value3betPct = p.value3betPct * profile.threeBetFactor * icmFactor;
-  const bluffPct = p.bluffExtraPct * profile.bluffFactor * profile.threeBetFactor * icmFactor;
+  let value3betPct = p.value3betPct * profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
+  const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * profile.bluffFactor * profile.threeBetFactor * icmFactor;
   // Coerência: a range de valor do 3-bet não pode ultrapassar a de defesa.
   value3betPct = Math.min(value3betPct, defendPct);
   defendPct = Math.max(defendPct, value3betPct);

@@ -25,7 +25,7 @@ import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
 import { BASELINE_PROFILE, PROFILES } from "../bots/profiles";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
-import { gradeDecision, type FeedbackItem, type HeroAdvice } from "../feedback/analyzer";
+import { gradeDecision, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
 import {
   beginHand,
   emptyStats,
@@ -74,6 +74,19 @@ export interface TournamentState {
   handsThisLevel: number;
 }
 
+/** Análise de fim de torneio: resultado + estatísticas + notas + erros. */
+export interface TournamentSummary {
+  result: "eliminado" | "campeao";
+  handsPlayed: number;
+  vpip: number;
+  pfr: number;
+  threeBet: number;
+  ratings: Record<Rating, number>;
+  styleNote: string;
+  qualityNote: string;
+  mistakes: FeedbackItem[];
+}
+
 const STREET_LABEL: Record<string, string> = {
   preflop: "Pré-flop",
   flop: "Flop",
@@ -95,6 +108,11 @@ export class GameController {
   lastHand: HandHistory | null = null;
   /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
   tournament: TournamentState | null = null;
+  /** Verdadeiro quando o torneio terminou para o herói (mostra a análise). */
+  tournamentOver = false;
+  private heroRatings: Record<Rating, number> = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
+  private sessionMistakes: FeedbackItem[] = [];
+  private tournamentResult: "eliminado" | "campeao" | null = null;
   private history: ReplayEvent[] = [];
   private perHand: Record<number, PerHandFlags> = {};
   private payouts?: number[];
@@ -148,6 +166,11 @@ export class GameController {
     this.phase = "handOver";
     this.lastHand = null;
     this.feedback = [];
+    // Zera a análise acumulada do torneio (notas, erros e resultado).
+    this.tournamentOver = false;
+    this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
+    this.sessionMistakes = [];
+    this.tournamentResult = null;
     this.message = `Torneio configurado — ${stageInfo.label}. Clique em “Nova mão”.`;
   }
 
@@ -204,13 +227,22 @@ export class GameController {
     const hero = this.table.players[this.heroSeat];
     if (hero.stack <= 0) {
       this.message = "Você foi eliminado. Configure um novo jogo (aba Torneio) para recomeçar.";
+      if (this.tournament) {
+        this.tournamentResult = "eliminado";
+        this.tournamentOver = true;
+      }
       return;
     }
     const alive = this.table.players.filter((p) => p.stack > 0).length;
     if (alive < 2) {
+      // Só o herói tem fichas → ele venceu (ou a sessão cash acabou).
       this.message = this.tournament
-        ? "Torneio encerrado — você chegou ao fim da mesa final!"
+        ? "Torneio encerrado — você venceu o torneio! 🏆"
         : "Fim da sessão: não há jogadores suficientes com fichas.";
+      if (this.tournament) {
+        this.tournamentResult = "campeao";
+        this.tournamentOver = true;
+      }
       return;
     }
     if (this.table.handOver && this.table.result) moveButton(this.table);
@@ -334,7 +366,15 @@ export class GameController {
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
       const heroType = action.type === "raise" ? "raise" : action.type;
-      this.feedback.push(gradeDecision(streetLabel, heroType, advice));
+      const item = gradeDecision(streetLabel, heroType, advice);
+      this.feedback.push(item);
+      // Acumula a nota para a análise de fim de torneio.
+      this.heroRatings[item.rating]++;
+      // Guarda os erros claros (ruim/imprecisa) para revisar depois — limita a
+      // uma lista enxuta com os mais graves primeiro.
+      if (item.rating === "ruim" || item.rating === "imprecisa") {
+        this.sessionMistakes.push(item);
+      }
     }
     this.applyLabeled(action, advice);
   }
@@ -361,6 +401,66 @@ export class GameController {
       reason: d.reason,
       equity: d.equity,
       potOdds: d.requiredEquity || undefined,
+    };
+  }
+
+  /**
+   * Análise da forma como o herói jogou o torneio: resultado, quantas mãos,
+   * métricas próprias (VPIP/PFR/3-bet), leitura do estilo e os erros a rever.
+   * Devolve null se não estivermos em torneio.
+   */
+  tournamentSummary(): TournamentSummary | null {
+    if (!this.tournament) return null;
+    const s = this.stats[this.heroSeat];
+    const row = toRow(this.heroSeat, "Você", true, s);
+    const ratings = this.heroRatings;
+    const totalGraded = ratings.boa + ratings.ok + ratings.imprecisa + ratings.ruim;
+
+    // Leitura do estilo a partir do VPIP/PFR (referências clássicas de MTT).
+    const gap = row.vpip - row.pfr;
+    let styleNote: string;
+    if (row.hands < 8) {
+      styleNote = "Amostra curta — jogue mais mãos para uma leitura confiável do seu estilo.";
+    } else if (row.vpip >= 40) {
+      styleNote = `Você jogou muito solto (VPIP ${row.vpip}%): entrou em mãos demais. Em MTT, apertar a seleção pré-flop costuma render mais.`;
+    } else if (row.vpip <= 15) {
+      styleNote = `Você jogou bem apertado (VPIP ${row.vpip}%): sólido, mas dá para roubar mais blinds abrindo um pouco a range em posição.`;
+    } else if (gap >= 12) {
+      styleNote = `Estilo passivo (VPIP ${row.vpip}% / PFR ${row.pfr}%): você paga bem mais do que aumenta. Tomar a iniciativa (raise em vez de call) tende a ganhar mais potes.`;
+    } else {
+      styleNote = `Estilo equilibrado (VPIP ${row.vpip}% / PFR ${row.pfr}%): faixa saudável de MTT — seleção de mãos e agressão bem calibradas.`;
+    }
+
+    // Qualidade média das decisões avaliadas.
+    let qualityNote: string;
+    if (totalGraded === 0) {
+      qualityNote = "Não houve decisões suas para avaliar (mãos resolvidas antes da sua vez).";
+    } else {
+      const goodPct = Math.round(((ratings.boa + ratings.ok) / totalGraded) * 100);
+      if (ratings.ruim === 0 && ratings.imprecisa <= 1) {
+        qualityNote = `Excelente disciplina: ${goodPct}% das suas decisões seguiram o padrão, sem erros claros de EV.`;
+      } else if (ratings.ruim <= 1) {
+        qualityNote = `Bom no geral: ${goodPct}% das decisões alinhadas, com poucas imprecisões para lapidar.`;
+      } else {
+        qualityNote = `${goodPct}% das decisões alinhadas, mas houve ${ratings.ruim} erros claros de EV — foque neles abaixo.`;
+      }
+    }
+
+    // Erros mais graves primeiro (ruim antes de imprecisa), limitado a 5.
+    const mistakes = [...this.sessionMistakes]
+      .sort((a, b) => (a.rating === "ruim" ? 0 : 1) - (b.rating === "ruim" ? 0 : 1))
+      .slice(0, 5);
+
+    return {
+      result: this.tournamentResult ?? "eliminado",
+      handsPlayed: row.hands,
+      vpip: row.vpip,
+      pfr: row.pfr,
+      threeBet: row.threeBet,
+      ratings: { ...ratings },
+      styleNote,
+      qualityNote,
+      mistakes,
     };
   }
 

@@ -60,6 +60,25 @@ describe("pré-flop — enfrentando um raise", () => {
     const d = decide("9c4d", "BB", { raiserPosition: "UTG" });
     expect(d.action).toBe("fold");
   });
+  it("nem o calling station paga um all-in pré-flop com lixo (85s)", () => {
+    const station = profileById("station");
+    // Enfrentando uma abertura ENORME (~70bb = shove), 85s tem que foldar.
+    const shove = decide("8s5s", "BB", {
+      profile: station,
+      raiserPosition: "HJ",
+      openSizeBB: 70,
+      effectiveBB: 112,
+    });
+    expect(shove.action).toBe("fold");
+    // Contra um open normal (2.3bb), o station pode pagar largo.
+    const openWide = decide("8s5s", "BB", {
+      profile: station,
+      raiserPosition: "HJ",
+      openSizeBB: 2.3,
+    });
+    expect(openWide.action).not.toBe("fold");
+  });
+
   it("BB defende mais largo contra o botão que contra UTG", () => {
     // Uma mão média: paga/defende vs BTN mas folda vs UTG.
     const vsBtn = decide("Kh9d", "BB", { raiserPosition: "BTN" });
