@@ -15,6 +15,8 @@ interface ControlsProps {
 
 export function Controls({ legal, active, pot, bigBlind, onAction, hint }: ControlsProps) {
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
+  // Porcentagem digitável do pote (campo livre ao lado dos atalhos).
+  const [customPct, setCustomPct] = useState("50");
 
   // Reajusta o slider sempre que o spot muda.
   useEffect(() => {
@@ -25,6 +27,11 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
   const potBet = (frac: number) => {
     const target = Math.round((legal.callAmount + pot) * frac) + legal.callAmount;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, target)));
+  };
+  // Aplica a % digitada (aceita valores fora de 0–100, o clamp cuida dos limites).
+  const applyCustomPct = () => {
+    const n = Number(customPct.replace(",", "."));
+    if (Number.isFinite(n) && n > 0) potBet(n / 100);
   };
 
   return (
@@ -64,6 +71,23 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(1)} title="Pote inteiro">
           Pote
         </button>
+        <span className="pct-input" title="Digite a % do pote e aplique">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={5}
+            value={customPct}
+            disabled={!canRaise}
+            onChange={(e) => setCustomPct(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyCustomPct();
+            }}
+          />
+          <button className="btn size" disabled={!canRaise} onClick={applyCustomPct}>
+            % OK
+          </button>
+        </span>
         <input
           type="range"
           min={legal.minRaiseTo}
