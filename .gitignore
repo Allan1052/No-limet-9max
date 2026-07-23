@@ -4,3 +4,8 @@ dist/
 .DS_Store
 .vite/
 coverage/
+
+# Planilhas com dados pessoais nunca vão pro repositório
+*.xlsx
+*.xlsm
+*.xls
