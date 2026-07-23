@@ -106,10 +106,15 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     // gruda. Ruas mais adiantadas (turn/river) exigem ainda mais. Não vale para
     // all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
-      const streetPenalty = [0, 0.06, 0.12][streetIdx]; // turn/river = range mais forte
+      // Uma aposta representa força + reverse implied odds. Ruas adiantadas
+      // (turn/river) representam ranges MUITO mais fortes — foldar a barrels
+      // fracos é o que mantém o WTSD em faixa realista (~27–32%) e faz o blefe
+      // funcionar. O piso (0.13) impede que até o calling station pague com
+      // qualquer coisa e sangre fichas de forma irreal.
+      const streetPenalty = [0.04, 0.12, 0.2][streetIdx];
       const discipline = (0.5 - ctx.profile.stickiness) * 1.3; // nit +, station −
-      const multiwayPenalty = Math.min(0.14, 0.07 * (numOpp - 1)); // alguém pode ter mão
-      required = Math.min(0.92, Math.max(0.03, required + 0.08 + streetPenalty + discipline + multiwayPenalty));
+      const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1)); // alguém pode ter mão
+      required = Math.min(0.92, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
     }
 
     if (equity >= Math.max(0.78, required + 0.12)) {

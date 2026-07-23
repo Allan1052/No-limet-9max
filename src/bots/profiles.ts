@@ -149,10 +149,10 @@ export const PROFILES: BotProfile[] = [
     archetype: "station",
     description: "Quase nunca desiste depois de entrar; paga até o showdown com frequência.",
     targetVpip: 51, targetPfr: 6.5, target3bet: 2,
-    rfiWidth: 0.46, limpFactor: 0.72, coldCallFactor: 5.5, threeBetFactor: 0.33, defendFactor: 1.75,
+    rfiWidth: 0.46, limpFactor: 0.72, coldCallFactor: 4.6, threeBetFactor: 0.33, defendFactor: 1.5,
     positional: pos6to8({ UTG: 0.85, MP: 0.9, CO: 1.0, BTN: 1.1, SB: 1.0 }),
     cbetFactor: 0.7, barrelTurn: 0.21, barrelRiver: 0.1, bluffFactor: 0.6, aggression: 0.25,
-    multiwayReduction: 0.05, stickiness: 0.8,
+    multiwayReduction: 0.05, stickiness: 0.74,
     adaptability: 0.35, icmSensitivity: 0.1, skill: 0.4, shoveMaxBB: null,
   },
   {

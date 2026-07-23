@@ -10,12 +10,20 @@ const base = process.env.NODE_ENV === "production" ? "/No-limet-9max/" : "/";
 
 // Configuração do Vite: React + Web Worker (Monte Carlo fora da UI) + PWA
 // (torna o app instalável no celular, com ícone e funcionamento offline).
+// Carimbo de versão (data/hora do build) — exibido no rodapé para o usuário
+// confirmar, no celular, que a versão nova realmente carregou.
+const buildId = new Date().toISOString().slice(0, 16).replace("T", " ");
+
 export default defineConfig({
   base,
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
       includeAssets: ["apple-touch-icon.png", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "Poker Sim — Estudo NLHE 9-max",

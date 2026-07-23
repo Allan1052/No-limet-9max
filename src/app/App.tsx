@@ -59,7 +59,12 @@ export function App() {
             Calculadora ICM
           </button>
         </div>
-        <div className="disclaimer">SEM DINHEIRO REAL · SÓ ESTUDO</div>
+        <div className="disclaimer">
+          SEM DINHEIRO REAL · SÓ ESTUDO
+          <span className="build-id" title="Versão do app (data/hora do build)">
+            v{__BUILD_ID__}
+          </span>
+        </div>
       </div>
 
       {view === "icm" ? (
