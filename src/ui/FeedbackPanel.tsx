@@ -1,5 +1,5 @@
 // Painel de feedback pós-mão: nota + explicação de cada decisão sua.
-import { summarize, type FeedbackItem } from "../feedback/analyzer";
+import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 
 const RATING_LABEL: Record<string, string> = {
   boa: "Boa",
@@ -33,6 +33,9 @@ export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
                   ? ")"
                   : ""}
             </div>
+            {mixText(it.mix) ? (
+              <div className="fb-mix">Estratégia: {mixText(it.mix)}</div>
+            ) : null}
           </div>
         ))
       )}

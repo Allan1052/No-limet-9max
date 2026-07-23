@@ -140,6 +140,35 @@ describe("pós-flop — barrel coerente (iniciativa)", () => {
   });
 });
 
+describe("pós-flop — estratégia mista (frequências)", () => {
+  it("mão muito forte gera mix dominado por valor e soma ~1", () => {
+    const d = postflopDecision(ctx({
+      hand: cardsFromString("AsAd"),
+      board: cardsFromString("Ah7d2c"),
+      toCall: 50,
+    }));
+    const total = d.mix.reduce((s, m) => s + m.freq, 0);
+    expect(total).toBeCloseTo(1, 1);
+    // Trinca de ases: quase nunca folda.
+    const fold = d.mix.find((m) => m.action === "fold")?.freq ?? 0;
+    expect(fold).toBeLessThan(0.1);
+  });
+
+  it("mão fraca sem preço gera mix dominado por fold", () => {
+    const d = postflopDecision(ctx({
+      hand: cardsFromString("7h2s"),
+      board: cardsFromString("AhKd9c"),
+      potSize: 100,
+      toCall: 90,
+      inPosition: false,
+      wasPreflopAggressor: false,
+    }));
+    const fold = d.mix.find((m) => m.action === "fold")?.freq ?? 0;
+    expect(fold).toBeGreaterThan(0.6);
+    expect(d.villainRangePct).toBeGreaterThan(0);
+  });
+});
+
 describe("pós-flop — ICM aperta o all-in", () => {
   it("um all-in que pagaria por pot odds vira fold sob pressão de ICM", () => {
     // Confronto de bolha: pagar all-in deve exigir bem mais equity.

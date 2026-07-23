@@ -9,6 +9,12 @@
 
 export type Rating = "boa" | "ok" | "imprecisa" | "ruim";
 
+/** Uma entrada da estratégia mista recomendada (ação + frequência 0..1). */
+export interface AdviceFreq {
+  action: string;
+  freq: number;
+}
+
 /** Recomendação da linha de base para o spot em que o herói decidiu. */
 export interface HeroAdvice {
   kind: "preflop" | "postflop";
@@ -16,6 +22,19 @@ export interface HeroAdvice {
   reason: string;
   equity?: number;
   potOdds?: number;
+  /** Largura estimada do range do vilão (0..1), para o painel de leitura. */
+  villainRangePct?: number;
+  /** Estratégia mista recomendada (frequências), quando disponível. */
+  mix?: AdviceFreq[];
+}
+
+/** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
+export function mixText(mix: AdviceFreq[] | undefined): string {
+  if (!mix || mix.length === 0) return "";
+  return mix
+    .filter((m) => m.freq >= 0.05)
+    .map((m) => `${actionLabel(m.action)} ${Math.round(m.freq * 100)}%`)
+    .join(" · ");
 }
 
 export interface FeedbackItem {
@@ -26,6 +45,8 @@ export interface FeedbackItem {
   text: string;
   equity?: number;
   potOdds?: number;
+  /** Estratégia mista recomendada no spot (frequências), para exibição. */
+  mix?: AdviceFreq[];
 }
 
 type Family = "fold" | "check" | "call" | "aggro";
@@ -78,6 +99,7 @@ export function gradeDecision(
     advice: actionLabel(advice.action),
     equity: eq,
     potOdds: odds,
+    mix: advice.mix,
   };
 
   // Bateu com a recomendação: boa jogada.

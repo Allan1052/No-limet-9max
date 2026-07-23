@@ -3,6 +3,7 @@ import { useGame } from "./useGame";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
+import { LiveRead } from "../ui/LiveRead";
 import { StatsPanel } from "../ui/StatsPanel";
 import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
@@ -113,6 +114,7 @@ export function App() {
         </div>
 
         <div className="sidebar">
+          {heroTurn && advice ? <LiveRead advice={advice} /> : null}
           <StatsPanel rows={controller.statRows()} onReset={resetStats} />
           <FeedbackPanel items={controller.feedback} />
           <ProfilesLegend />

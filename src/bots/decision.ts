@@ -12,9 +12,10 @@
 //   - posição (em posição realiza-se mais equity);
 //   - perfil (agressão, frequência de c-bet e de blefe distinguem os 8 bots).
 //
-// Nada de regras soltas: se a equity não paga o preço, não se paga; blefes têm
-// frequência controlada e só com alguma equity/projeto. É forte e explicável,
-// não um solver — as frequências são heurísticas transparentes.
+// Além da ação escolhida, devolvemos uma ESTRATÉGIA MISTA (frequências) — é como
+// um profissional pensa o spot ("call 70% / fold 30%"), e alimenta o feedback e
+// o painel de leitura ao vivo. As frequências são heurísticas transparentes
+// derivadas da margem equity×preço, não a saída de um solver.
 // ---------------------------------------------------------------------------
 
 import type { Card } from "../engine/cards";
@@ -26,6 +27,12 @@ import { requiredEquityToCall, type IcmSpot } from "../ranges/icm";
 import { classifyBoard, type BoardTexture } from "./boardTexture";
 
 export type PostflopAct = "check" | "bet" | "call" | "raise" | "fold";
+
+/** Uma entrada da estratégia mista: ação e sua frequência (0..1). */
+export interface ActionFreq {
+  action: PostflopAct;
+  freq: number;
+}
 
 export interface PostflopContext {
   hand: Card[];
@@ -57,11 +64,28 @@ export interface PostflopDecision {
   requiredEquity: number;
   texture: BoardTexture;
   reason: string;
+  /** Largura do range do vilão usada no cálculo (0..1), para exibição. */
+  villainRangePct: number;
+  /** Estratégia mista recomendada (frequências que somam ~1). */
+  mix: ActionFreq[];
 }
 
 /** Tamanho de aposta por textura: seco aposta pequeno, molhado aposta grande. */
 function sizeForTexture(texture: BoardTexture): number {
   return Math.round((0.33 + 0.4 * texture.wetness) * 100) / 100; // 0.33..0.73 do pote
+}
+
+function clamp(x: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, x));
+}
+
+/** Normaliza e limpa uma estratégia mista (remove ~0, arredonda a 2 casas). */
+function cleanMix(entries: ActionFreq[]): ActionFreq[] {
+  const kept = entries.filter((e) => e.freq > 0.005);
+  const sum = kept.reduce((s, e) => s + e.freq, 0) || 1;
+  return kept
+    .map((e) => ({ action: e.action, freq: Math.round((e.freq / sum) * 100) / 100 }))
+    .sort((a, b) => b.freq - a.freq);
 }
 
 export function postflopDecision(ctx: PostflopContext): PostflopDecision {
@@ -106,19 +130,37 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     // gruda. Ruas mais adiantadas (turn/river) exigem ainda mais. Não vale para
     // all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
-      // Uma aposta representa força + reverse implied odds. Ruas adiantadas
-      // (turn/river) representam ranges MUITO mais fortes — foldar a barrels
-      // fracos é o que mantém o WTSD em faixa realista (~27–32%) e faz o blefe
-      // funcionar. O piso (0.13) impede que até o calling station pague com
-      // qualquer coisa e sangre fichas de forma irreal.
       const streetPenalty = [0.04, 0.12, 0.2][streetIdx];
       const discipline = (0.5 - ctx.profile.stickiness) * 1.3; // nit +, station −
       const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1)); // alguém pode ter mão
       required = Math.min(0.92, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
     }
 
+    // ----- Estratégia mista quando enfrentamos aposta -----
+    // "Continuar" (call+raise) cresce suavemente com a margem equity×preço.
+    const margin = effEquity - required;
+    const continueP = clamp(0.5 + margin * 3.2, 0, 1);
+    let raiseShare: number;
+    if (equity >= 0.78) {
+      raiseShare = 0.85; // valor claro: quase sempre aumenta
+    } else if (equity >= 0.62 && !isAllInCall) {
+      raiseShare = 0.2 + 0.4 * ctx.profile.aggression; // valor/proteção
+    } else if (!isAllInCall && texture.wetness > 0.45 && effEquity >= required * 0.7) {
+      raiseShare = 0.1 + 0.25 * ctx.profile.bluffFactor * texture.wetness; // semi-blefe
+    } else {
+      raiseShare = 0;
+    }
+    const raiseP = isAllInCall ? 0 : continueP * raiseShare;
+    const callP = continueP - raiseP;
+    const foldP = 1 - continueP;
+    const mix = cleanMix([
+      { action: "fold", freq: foldP },
+      { action: "call", freq: callP },
+      { action: "raise", freq: raiseP },
+    ]);
+
     if (equity >= Math.max(0.78, required + 0.12)) {
-      return decision("raise", size, equity, required, texture,
+      return decision("raise", size, equity, required, texture, villainPct, mix,
         `Mão muito forte (equity ${pct(equity)} vs range): aumenta por valor.${icmNote}`);
     }
 
@@ -126,62 +168,70 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       // Preço compensa. Mão forte às vezes aumenta (valor/proteção); senão paga.
       const raiseProb = 0.25 + 0.4 * ctx.profile.aggression;
       if (equity >= 0.66 && !isAllInCall && rng() < raiseProb) {
-        return decision("raise", size, equity, required, texture,
+        return decision("raise", size, equity, required, texture, villainPct, mix,
           `Mão forte (equity ${pct(equity)} ≥ ${pct(required)}): aumenta por valor/proteção.${icmNote}`);
       }
-      return decision("call", undefined, equity, required, texture,
+      return decision("call", undefined, equity, required, texture, villainPct, mix,
         `Equity ${pct(equity)} paga o preço de ${pct(required)}: paga.${icmNote}`);
     }
 
     // Sem preço direto: considerar aumento de blefe/semi-blefe (só com projeto).
     const semibluffProb = ctx.profile.bluffFactor * 0.18 * texture.wetness;
     if (!isAllInCall && effEquity >= required * 0.7 && rng() < semibluffProb) {
-      return decision("raise", size, equity, required, texture,
+      return decision("raise", size, equity, required, texture, villainPct, mix,
         `Semi-blefe: equity ${pct(equity)} com projeto em board molhado (perfil ${ctx.profile.archetype}).`);
     }
-    return decision("fold", undefined, equity, required, texture,
+    return decision("fold", undefined, equity, required, texture, villainPct, mix,
       `Equity ${pct(equity)} não paga o preço de ${pct(required)}: fold.${icmNote}`);
   }
 
   // ---------- Caso B: ação passada até o herói (pode apostar ou dar check) ----------
-  // Aposta de valor um pouco mais fina (0.55) — evita "check até o river": quem
-  // tem o melhor da parada aposta, tira os outros do pote e reduz showdowns.
-  if (equity >= 0.55) {
-    return decision("bet", size, equity, 0, texture,
-      `Mão de valor (equity ${pct(equity)} vs range): aposta ${Math.round(size * 100)}% do pote.`);
-  }
-
-  // Blefe/barrel coerente, com as FREQUÊNCIAS do perfil por rua. No flop usa a
-  // frequência de c-bet; no turn/river usa as de barrel do perfil (que já caem
-  // rua a rua). Em multiway, reduz a continuação conforme o perfil.
   const dryness = 1 - texture.wetness;
   const initiative = ctx.hasInitiative ?? ctx.wasPreflopAggressor;
 
+  // Frequência de blefe/barrel do perfil (mesma lógica usada pela ação real).
   let base: number;
   if (streetIdx === 0) {
-    base = (0.34 + 0.32 * dryness) * ctx.profile.cbetFactor; // c-bet no flop
+    base = (0.34 + 0.32 * dryness) * ctx.profile.cbetFactor;
     if (initiative) base += 0.14;
   } else {
     base = streetIdx === 1 ? ctx.profile.barrelTurn : ctx.profile.barrelRiver;
     if (initiative) base += 0.05;
-    else base *= 0.5; // liderar sem iniciativa é bem mais raro
+    else base *= 0.5;
   }
   if (!ctx.inPosition) base -= 0.05;
-  // Peso pela equity: quanto mais equity (projetos), mais segue apostando.
   const equityWeight = initiative ? 0.6 + equity : 1;
   let cbetProb = base * equityWeight;
-  if (ctx.numOpponents > 1) cbetProb *= 1 - ctx.profile.multiwayReduction; // some em multiway
-  cbetProb = Math.max(0, Math.min(0.92, cbetProb));
+  if (ctx.numOpponents > 1) cbetProb *= 1 - ctx.profile.multiwayReduction;
+  cbetProb = clamp(cbetProb, 0, 0.92);
 
-  // No river não há projeto: só blefa "ar" com pouca frequência e sem iniciativa mínima.
+  // Aposta de valor um pouco mais fina (0.55) — quem tem o melhor da parada
+  // aposta, tira os outros do pote e reduz showdowns.
+  if (equity >= 0.55) {
+    // Com valor, aposta na maioria das vezes; o resto é check de armadilha.
+    const betP = clamp(0.7 + (equity - 0.55) * 0.8, 0.55, 0.95);
+    const mix = cleanMix([
+      { action: "bet", freq: betP },
+      { action: "check", freq: 1 - betP },
+    ]);
+    return decision("bet", size, equity, 0, texture, villainPct, mix,
+      `Mão de valor (equity ${pct(equity)} vs range): aposta ${Math.round(size * 100)}% do pote.`);
+  }
+
   const minEquityToBluff = streetIdx === 2 ? 0.12 : 0.22;
-  if (equity >= minEquityToBluff && rng() < cbetProb) {
+  const bluffable = equity >= minEquityToBluff;
+  const betP = bluffable ? cbetProb : 0;
+  const mix = cleanMix([
+    { action: "bet", freq: betP },
+    { action: "check", freq: 1 - betP },
+  ]);
+  if (bluffable && rng() < cbetProb) {
     const verb = initiative && streetIdx > 0 ? "barrel" : "c-bet";
-    return decision("bet", size, equity, 0, texture,
+    return decision("bet", size, equity, 0, texture, villainPct, mix,
       `Blefe/semi-blefe (${verb} ${Math.round(size * 100)}%) em board ${texture.wetness < 0.4 ? "seco" : "molhado"} (perfil ${ctx.profile.archetype}).`);
   }
 
-  return decision("check", undefined, equity, 0, texture,
+  return decision("check", undefined, equity, 0, texture, villainPct, mix,
     `Equity ${pct(equity)} insuficiente para valor e sem blefe rentável aqui: ${initiative ? "desiste do barrel (check)" : "check"}.`);
 }
 
@@ -191,9 +241,11 @@ function decision(
   equity: number,
   requiredEquity: number,
   texture: BoardTexture,
+  villainRangePct: number,
+  mix: ActionFreq[],
   reason: string,
 ): PostflopDecision {
-  return { action, sizeToPot, equity, requiredEquity, texture, reason };
+  return { action, sizeToPot, equity, requiredEquity, texture, reason, villainRangePct, mix };
 }
 
 function pct(x: number): string {

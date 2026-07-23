@@ -401,6 +401,8 @@ export class GameController {
       reason: d.reason,
       equity: d.equity,
       potOdds: d.requiredEquity || undefined,
+      villainRangePct: d.villainRangePct,
+      mix: d.mix,
     };
   }
 
