@@ -3,6 +3,7 @@ import { CardView, CardBack } from "./Card";
 import { profileById } from "../bots/profiles";
 import { toBB } from "../app/format";
 import type { PlayerState } from "../game/state";
+import type { StatRow } from "../feedback/stats";
 
 interface SeatProps {
   player: PlayerState;
@@ -11,9 +12,11 @@ interface SeatProps {
   lastAction?: string;
   bigBlind: number;
   style: React.CSSProperties;
+  /** Estatísticas do jogador (HUD), exibidas quando há amostra suficiente. */
+  hud?: StatRow;
 }
 
-export function Seat({ player, acting, reveal, lastAction, bigBlind, style }: SeatProps) {
+export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud }: SeatProps) {
   if (player.status === "out") {
     return (
       <div className="seat" style={style}>
@@ -44,6 +47,11 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style }: Se
       <div className="pod">
         <div className="name">{player.name}</div>
         <div className="arch">{archetype}</div>
+        {hud && !player.isHero && hud.hands >= 6 ? (
+          <div className="hud" title={`${hud.hands} mãos · VPIP/PFR/3-bet`}>
+            {hud.vpip}/{hud.pfr}/{hud.threeBet}
+          </div>
+        ) : null}
         <div className="stack">{toBB(player.stack, bigBlind)}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (

@@ -8,7 +8,7 @@
 // A interface só lê o estado e chama `heroAct` / `botStep` / `newHand`.
 // ---------------------------------------------------------------------------
 
-import { type Card } from "../engine/cards";
+import { type Card, cardsToString } from "../engine/cards";
 import {
   createTable,
   startHand,
@@ -106,6 +106,8 @@ export class GameController {
   stats: Record<number, PlayerStats> = {};
   /** Histórico da mão anterior, para o replayer. */
   lastHand: HandHistory | null = null;
+  /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
+  handLog: HandHistory[] = [];
   /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
   tournament: TournamentState | null = null;
   /** Verdadeiro quando o torneio terminou para o herói (mostra a análise). */
@@ -165,6 +167,7 @@ export class GameController {
     };
     this.phase = "handOver";
     this.lastHand = null;
+    this.handLog = [];
     this.feedback = [];
     // Zera a análise acumulada do torneio (notas, erros e resultado).
     this.tournamentOver = false;
@@ -466,6 +469,43 @@ export class GameController {
     };
   }
 
+  /**
+   * Exporta o histórico da sessão em texto legível (estilo hand history), com
+   * board, cartas reveladas, sequência de ações e resultado de cada mão. Serve
+   * para revisar fora do app ou colar num fórum/coach.
+   */
+  exportSessionText(): string {
+    const lines: string[] = [];
+    lines.push(`Poker Sim — histórico da sessão (${this.handLog.length} mãos)`);
+    lines.push(`Exportado em ${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
+    lines.push("");
+    this.handLog.forEach((h, i) => {
+      const bb = h.bigBlind;
+      lines.push(`===== Mão ${i + 1} =====`);
+      const heroCards = h.holeCards[h.heroSeat];
+      if (heroCards) lines.push(`Você: ${cardsToString(heroCards)}`);
+      let lastStreet = "";
+      for (const ev of h.events) {
+        if (ev.street !== lastStreet) {
+          lastStreet = ev.street;
+          const board = ev.board.length ? ` [${cardsToString(ev.board)}]` : "";
+          lines.push(`-- ${ev.street}${board} --`);
+        }
+        lines.push(`  ${ev.name}${ev.isHero ? " (você)" : ""}: ${ev.actionLabel}`);
+      }
+      if (h.finalBoard.length) lines.push(`Board final: ${cardsToString(h.finalBoard)}`);
+      const r = h.result;
+      if (r) {
+        const winners = Object.entries(r.winningsBySeat)
+          .filter(([, v]) => v > 0)
+          .map(([seat, v]) => `${h.names[Number(seat)]} (+${(v / bb).toFixed(1)}bb)`);
+        lines.push(`Resultado: ${winners.length ? winners.join(", ") : "—"}${r.showdown ? " (showdown)" : ""}`);
+      }
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
   private finishHand(): void {
     this.phase = "handOver";
     // Congela o histórico da mão para o replayer (modo estudo: revela cartas).
@@ -485,6 +525,9 @@ export class GameController {
       bigBlind: this.table.bigBlind,
       result: this.table.result,
     };
+    // Guarda no log da sessão (limita para não crescer sem fim).
+    this.handLog.push(this.lastHand);
+    if (this.handLog.length > 300) this.handLog.shift();
 
     const r = this.table.result;
     const hero = this.table.players[this.heroSeat];

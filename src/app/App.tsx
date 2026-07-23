@@ -22,6 +22,10 @@ export function App() {
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
 
+  // HUD por assento (VPIP/PFR/3-bet) para exibir sobre cada jogador.
+  const rows = controller.statRows();
+  const hudBySeat = Object.fromEntries(rows.map((r) => [r.seat, r]));
+
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
   const hint = advice
@@ -85,7 +89,11 @@ export function App() {
           {controller.tournament ? (
             <TournamentHUD t={controller.tournament} onSetLevel={setLevel} />
           ) : null}
-          <PokerTable table={t} lastActionLabel={controller.lastActionLabel} />
+          <PokerTable
+            table={t}
+            lastActionLabel={controller.lastActionLabel}
+            hudBySeat={hudBySeat}
+          />
 
           {controller.phase === "handOver" ? (
             <div className="controls">
@@ -98,6 +106,14 @@ export function App() {
                 onClick={() => setReplayOpen(true)}
               >
                 Rever mão
+              </button>
+              <button
+                className="btn"
+                disabled={controller.handLog.length === 0}
+                onClick={() => downloadText(controller.exportSessionText())}
+                title="Baixa o histórico da sessão em texto"
+              >
+                Exportar mãos ({controller.handLog.length})
               </button>
               <div className="message">{controller.message}</div>
             </div>
@@ -137,6 +153,19 @@ export function App() {
       ) : null}
     </div>
   );
+}
+
+/** Dispara o download de um texto como arquivo .txt (histórico da sessão). */
+function downloadText(text: string): void {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `poker-sim-maos-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function adviceLabel(a: string): string {

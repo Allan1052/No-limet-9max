@@ -2,6 +2,7 @@
 import { Seat } from "./Seat";
 import { Board } from "./Board";
 import type { TableState } from "../game/state";
+import type { StatRow } from "../feedback/stats";
 
 // Posições (%) dos 9 assentos. O herói (assento 0) fica embaixo, no centro.
 const SEAT_POS: Array<{ top: string; left: string }> = [
@@ -25,9 +26,11 @@ function towardCenter(pos: { top: string; left: string }, f: number) {
 export function PokerTable({
   table,
   lastActionLabel = {},
+  hudBySeat = {},
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
+  hudBySeat?: Record<number, StatRow>;
 }) {
   const reveal = table.handOver && !!table.result?.showdown;
 
@@ -52,6 +55,7 @@ export function PokerTable({
             reveal={reveal}
             lastAction={lastActionLabel[p.seat]}
             bigBlind={table.bigBlind}
+            hud={hudBySeat[p.seat]}
             style={{ top: pos.top, left: pos.left }}
           />
         );
