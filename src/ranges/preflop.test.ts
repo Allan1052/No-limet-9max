@@ -49,6 +49,18 @@ describe("pré-flop — profundidade de stack", () => {
     expect(d.action).toBe("jam");
     expect(d.sizeBB).toBeCloseTo(10, 5);
   });
+
+  it("na mesa final, o jogador habilidoso dá all-in de roubo que o passivo folda", () => {
+    // Mão marginal de steal no botão a 10bb: o skilled (shover) jamma; o fraco
+    // (station, skill baixo) folda e vai perdendo blinds — o edge da mesa final.
+    const shover = profileById("shover");
+    const station = profileById("station");
+    const hand = "Jc8c";
+    const skilled = decide(hand, "BTN", { effectiveBB: 10, profile: shover });
+    const weak = decide(hand, "BTN", { effectiveBB: 10, profile: station });
+    expect(skilled.action).toBe("jam");
+    expect(weak.action).toBe("fold");
+  });
 });
 
 describe("pré-flop — enfrentando um raise", () => {

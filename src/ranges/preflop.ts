@@ -124,8 +124,14 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   if (!ctx.raiserPosition) {
     // Tilt por posição do perfil (amortecido para não dobrar a estrutura da base).
     const posMult = Math.sqrt(profile.positional[ctx.heroPosition] ?? 1);
+    // Habilidade no push/fold: em stack raso, quem entende do jogo dá all-in
+    // MAIS largo para roubar blinds/antes (o edge da mesa final), enquanto o
+    // passivo/fraco (skill baixo) fica travado e some sem lutar (blind down).
+    // Só vale na zona de push/fold — no jogo profundo a habilidade age noutros
+    // lugares (pós-flop). skill 0.5 é neutro.
+    const shoveSkill = sd.pushFold ? Math.max(0.7, 1 + (profile.skill - 0.5) * 0.8) : 1;
     const range = rfiRange(ctx.heroPosition, {
-      widthFactor: profile.rfiWidth * posMult,
+      widthFactor: profile.rfiWidth * posMult * shoveSkill,
       stackFactor: sd.factor,
       icmFactor,
     });
