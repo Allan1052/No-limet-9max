@@ -45,6 +45,7 @@ export function useGame(opts?: GameOptions) {
   const progressRef = useRef<ProgressState>(loadProgress());
   const missionRef = useRef<MissionState>(loadMissions());
   const [toasts, setToasts] = useState<Mission[]>([]);
+  const [celebrateItm, setCelebrateItm] = useState(false);
   const ref = useRef<GameController | null>(null);
 
   // Aplica um evento às missões, salva e enfileira as recém-concluídas (aviso).
@@ -70,6 +71,7 @@ export function useGame(opts?: GameOptions) {
       onTournamentEnd: ({ result, inMoney }) => {
         fireMission({ type: "tournamentEnd", result, inMoney });
       },
+      onBubble: () => setCelebrateItm(true),
     });
     // Retoma o torneio mais recente, se houver (sair e voltar de onde parou).
     const recent = listSlots()[0];
@@ -163,5 +165,7 @@ export function useGame(opts?: GameOptions) {
     },
     missionToasts: toasts,
     dismissMissionToasts: () => setToasts([]),
+    celebrateItm,
+    dismissItmCelebration: () => setCelebrateItm(false),
   };
 }

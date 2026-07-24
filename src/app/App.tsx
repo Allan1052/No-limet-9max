@@ -16,6 +16,7 @@ import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { HandTipsModal } from "../ui/HandTipsModal";
+import { MoneyRain } from "../ui/MoneyRain";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
 import { legalActions } from "../game/betting";
@@ -40,6 +41,8 @@ export function App() {
     resetMissions,
     missionToasts,
     dismissMissionToasts,
+    celebrateItm,
+    dismissItmCelebration,
   } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
@@ -141,6 +144,7 @@ export function App() {
             onSelectSeat={setSelectedSeat}
             onShowTips={() => setTipsOpen(true)}
             showTips={handOver && controller.feedback.length > 0}
+            celebrate={celebrateItm}
           />
 
           {handOver ? (
@@ -211,6 +215,8 @@ export function App() {
       {!onboarded ? <Onboarding onClose={() => setOnboarded(true)} /> : null}
 
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
+
+      {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
     </div>
   );
 }

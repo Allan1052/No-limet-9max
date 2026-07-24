@@ -67,6 +67,8 @@ export interface GameOptions {
   onHeroHand?: () => void;
   /** Chamado quando um torneio termina para o herói (missões de torneio). */
   onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
+  /** Chamado quando a bolha estoura (herói entra no dinheiro) — comemoração. */
+  onBubble?: () => void;
 }
 
 export interface TournamentConfig {
@@ -166,6 +168,7 @@ export class GameController {
   private onDecision?: (d: { rating: Rating; heroType: string }) => void;
   private onHeroHand?: () => void;
   private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
+  private onBubble?: () => void;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
@@ -173,6 +176,7 @@ export class GameController {
     this.onDecision = opts.onDecision;
     this.onHeroHand = opts.onHeroHand;
     this.onTournamentEnd = opts.onTournamentEnd;
+    this.onBubble = opts.onBubble;
     this.seatDefs = [
       { name: "Você", isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
@@ -329,6 +333,7 @@ export class GameController {
       if (!this.tournament.bubbleBurst && Math.round(after) <= paid) {
         this.tournament.bubbleBurst = true;
         bubbleMsg = true;
+        this.onBubble?.();
       }
     } else if (this.tournament) {
       // Na mesa final o "campo" passa a ser a própria mesa (encolhe de verdade).

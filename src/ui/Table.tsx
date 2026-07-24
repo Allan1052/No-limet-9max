@@ -39,6 +39,7 @@ export function PokerTable({
   onSelectSeat,
   onShowTips,
   showTips = false,
+  celebrate = false,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -47,6 +48,7 @@ export function PokerTable({
   onSelectSeat?: (seat: number) => void;
   onShowTips?: () => void;
   showTips?: boolean;
+  celebrate?: boolean;
 }) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
@@ -54,10 +56,10 @@ export function PokerTable({
   const ante = table.ante ?? 0;
 
   return (
-    <div className="table-wrap">
+    <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
       <div className="felt" />
 
-      {/* Camada de informação sobre a mesa */}
+      {/* Canto: classificação no torneio */}
       {field ? (
         <div className="tbl-pos">
           <div className="tbl-rank">
@@ -66,7 +68,7 @@ export function PokerTable({
           <div className={`tbl-money ${field.inMoney ? "itm" : ""}`}>
             {field.inMoney
               ? `ITM ${usd(field.currentCash)} 💰`
-              : `${field.remaining.toLocaleString("en-US")} vivos · ${field.toBubble.toLocaleString("en-US")} p/ bolha`}
+              : `${t("hud.paid")}: ${field.paidPlaces.toLocaleString("en-US")}`}
           </div>
         </div>
       ) : null}
@@ -75,11 +77,13 @@ export function PokerTable({
         {unit === "bb" ? "bb" : "fichas"}
       </button>
 
+      {/* Info central: fica ABAIXO dos dois assentos de cima */}
       <div className="tbl-topcenter">
         {hint ? <div className="tbl-hint">💡 {hint}</div> : null}
         <div className="tbl-blinds">
           {t("hud.blinds")} {table.smallBlind}/{table.bigBlind}
           {ante > 0 ? ` (ante ${ante})` : ""}
+          {field ? ` · ${field.remaining.toLocaleString("en-US")} ${t("hud.alive")}` : ""}
         </div>
       </div>
 

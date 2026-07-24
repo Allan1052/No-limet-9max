@@ -112,8 +112,10 @@ export function payoutLadder(entrants: number, pool: number): number[] {
   const baseline = paid * minCash;
   const remaining = Math.max(0, pool - baseline);
 
-  // Pesos decrescentes (lei de potência) para o "prêmio extra" acima do min-cash.
-  const p = 1.05;
+  // Pesos decrescentes (lei de potência) para o "prêmio extra" acima do
+  // min-cash. Expoente mais alto = curva mais "top-heavy", como no GGPoker/
+  // PokerStars (o 1º leva uma fatia bem maior que os últimos pagos).
+  const p = 1.15;
   const weights: number[] = [];
   for (let i = 1; i <= paid; i++) weights.push(1 / Math.pow(i, p));
   const totalW = weights.reduce((a, b) => a + b, 0);
