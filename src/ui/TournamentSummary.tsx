@@ -17,11 +17,23 @@ export function TournamentSummary({
   onClose: () => void;
 }) {
   const champ = summary.result === "campeao";
+  const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+  const num = (n: number) => Math.round(n).toLocaleString("en-US");
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay summary-modal" onClick={(e) => e.stopPropagation()}>
         <div className={`summary-banner ${champ ? "champ" : "out"}`}>
-          {champ ? "🏆 Você venceu o torneio!" : "Fim de linha — você foi eliminado"}
+          {champ
+            ? "🏆 Você venceu o torneio!"
+            : `Você terminou em ${summary.finishPlace}º de ${num(summary.entrants)}`}
+        </div>
+
+        <div className="summary-finish">
+          {summary.inMoney ? (
+            <span className="itm">Prêmio: {usd(summary.cash)} 💰</span>
+          ) : (
+            <span className="oom">Fora do dinheiro desta vez — bola pra frente!</span>
+          )}
         </div>
 
         <h3>Análise da sua jogada</h3>

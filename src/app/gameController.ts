@@ -46,6 +46,13 @@ import {
   unevenStacks,
   type Stage,
 } from "../tournament/structure";
+import {
+  initialFieldRemaining,
+  attritionPerHand,
+  fieldStatus,
+  cashForPlace,
+  type FieldStatus,
+} from "../tournament/field";
 
 export interface GameOptions {
   smallBlind?: number;
@@ -76,11 +83,21 @@ export interface TournamentState {
   ladder: number[];
   handsPerLevel: number;
   handsThisLevel: number;
+  /** Jogadores ainda vivos no torneio inteiro (encolhe com o tempo). */
+  fieldRemaining: number;
+  /** A bolha já estourou (o herói já entrou no dinheiro)? */
+  bubbleBurst: boolean;
 }
 
 /** Análise de fim de torneio: resultado + estatísticas + notas + erros. */
 export interface TournamentSummary {
   result: "eliminado" | "campeao";
+  /** Posição final no torneio (1 = campeão). */
+  finishPlace: number;
+  entrants: number;
+  /** Prêmio recebido ($) — 0 se terminou fora do dinheiro. */
+  cash: number;
+  inMoney: boolean;
   handsPlayed: number;
   vpip: number;
   pfr: number;
@@ -89,6 +106,22 @@ export interface TournamentSummary {
   styleNote: string;
   qualityNote: string;
   mistakes: FeedbackItem[];
+}
+
+/** Estado serializável para salvar/retomar um torneio (entre mãos). */
+export interface GameSnapshot {
+  v: 1;
+  seats: Array<{ name: string; profileId?: string; isHero?: boolean; stack: number }>;
+  buttonSeat: number;
+  blinds: { sb: number; bb: number; ante: number };
+  stats: Record<number, PlayerStats>;
+  tournament: TournamentState;
+  payouts?: number[];
+  heroRatings: Record<Rating, number>;
+  sessionMistakes: FeedbackItem[];
+  tournamentResult: "eliminado" | "campeao" | null;
+  tournamentFinishPlace: number | null;
+  savedAt: string;
 }
 
 const STREET_LABEL: Record<string, string> = {
@@ -119,6 +152,7 @@ export class GameController {
   private heroRatings: Record<Rating, number> = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
   private sessionMistakes: FeedbackItem[] = [];
   private tournamentResult: "eliminado" | "campeao" | null = null;
+  private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
   private perHand: Record<number, PerHandFlags> = {};
   private payouts?: number[];
@@ -163,6 +197,7 @@ export class GameController {
 
     this.table = createTable({ smallBlind: level.sb, bigBlind: level.bb, ante: level.ante }, seats, 0);
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+    const fieldRemaining = initialFieldRemaining(cfg.entrants, cfg.stage, ladder.length);
     this.tournament = {
       buyIn: cfg.buyIn,
       entrants: cfg.entrants,
@@ -172,6 +207,8 @@ export class GameController {
       ladder,
       handsPerLevel: cfg.handsPerLevel ?? 10,
       handsThisLevel: 0,
+      fieldRemaining,
+      bubbleBurst: Math.round(fieldRemaining) <= ladder.length,
     };
     this.phase = "handOver";
     this.lastHand = null;
@@ -182,6 +219,7 @@ export class GameController {
     this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
     this.sessionMistakes = [];
     this.tournamentResult = null;
+    this.tournamentFinishPlace = null;
     this.message = `Torneio configurado — ${stageInfo.label}. Clique em “Nova mão”.`;
   }
 
@@ -205,7 +243,9 @@ export class GameController {
    * Devolve quantas cadeiras foram repostas.
    */
   private refillSeats(): number {
-    if (this.tournament && this.tournament.stage === "mesa_final") return 0;
+    // Sem reposição na mesa final (campo global ≤ 9): a mesa encolhe até o
+    // heads-up. Antes disso, cadeiras vazias são repostas (table balancing).
+    if (this.tournament && Math.round(this.tournament.fieldRemaining) <= 9) return 0;
     const players = this.table.players;
     const withChips = players.filter((p) => p.stack > 0);
     if (withChips.length === 0) return 0;
@@ -237,27 +277,54 @@ export class GameController {
     const refilled = this.refillSeats();
     const hero = this.table.players[this.heroSeat];
     if (hero.stack <= 0) {
-      this.message = "Você foi eliminado. Configure um novo jogo (aba Torneio) para recomeçar.";
+      // Herói bustou: termina no lugar = campo restante (é o próximo a cair).
       if (this.tournament) {
+        const place = Math.max(1, Math.round(this.tournament.fieldRemaining));
+        this.tournamentFinishPlace = place;
         this.tournamentResult = "eliminado";
         this.tournamentOver = true;
+        const cash = cashForPlace(place, this.tournament.ladder);
+        this.message =
+          cash > 0
+            ? `Você foi eliminado em ${place}º de ${this.tournament.entrants} — no dinheiro! 💰`
+            : `Você foi eliminado em ${place}º de ${this.tournament.entrants}.`;
+      } else {
+        this.message = "Você foi eliminado. Configure um novo jogo (aba Torneio) para recomeçar.";
       }
       return;
     }
     const alive = this.table.players.filter((p) => p.stack > 0).length;
-    if (alive < 2) {
-      // Só o herói tem fichas → ele venceu (ou a sessão cash acabou).
-      this.message = this.tournament
-        ? "Torneio encerrado — você venceu o torneio! 🏆"
-        : "Fim da sessão: não há jogadores suficientes com fichas.";
+    // Vitória: só o herói tem fichas na mesa final (campo global já ≤ 9).
+    if (alive < 2 && (!this.tournament || Math.round(this.tournament.fieldRemaining) <= 9)) {
       if (this.tournament) {
+        this.tournamentFinishPlace = 1;
         this.tournamentResult = "campeao";
         this.tournamentOver = true;
       }
+      this.message = this.tournament
+        ? "Você VENCEU o torneio! 🏆"
+        : "Fim da sessão: não há jogadores suficientes com fichas.";
       return;
     }
     if (this.table.handOver && this.table.result) moveButton(this.table);
-    // Torneio: sobe o nível de blind a cada `handsPerLevel` mãos (simula o tempo).
+    // Torneio: campo global encolhe a cada mão (gente bustando em outras mesas),
+    // sobe o nível de blind e detecta o estouro da bolha.
+    let bubbleMsg = false;
+    if (this.tournament && Math.round(this.tournament.fieldRemaining) > 9) {
+      const busts = attritionPerHand(this.tournament.fieldRemaining, this.tournament.levelIndex);
+      let after = this.tournament.fieldRemaining - busts;
+      // Não deixa o campo global passar da mesa final por atrito abstrato.
+      after = Math.max(9, after);
+      this.tournament.fieldRemaining = after;
+      const paid = this.tournament.ladder.length;
+      if (!this.tournament.bubbleBurst && Math.round(after) <= paid) {
+        this.tournament.bubbleBurst = true;
+        bubbleMsg = true;
+      }
+    } else if (this.tournament) {
+      // Na mesa final o "campo" passa a ser a própria mesa (encolhe de verdade).
+      this.tournament.fieldRemaining = this.table.players.filter((p) => p.stack > 0).length;
+    }
     let levelUp = false;
     if (this.tournament && this.tournament.handsPerLevel > 0) {
       this.tournament.handsThisLevel++;
@@ -275,11 +342,16 @@ export class GameController {
     // Baralho verdadeiramente aleatório a cada mão (sem semente fixa — senão
     // toda sessão repetiria a mesma sequência de cartas e o mesmo vencedor).
     startHand(this.table, freshShuffledDeck());
-    if (levelUp) {
+    // Mensagem do topo: bolha > subida de nível > reposição (a mais relevante).
+    if (bubbleMsg) {
+      this.message = "🫧 A BOLHA ESTOUROU — você está no dinheiro (ITM)!";
+    } else if (levelUp) {
       const lv = BLIND_LEVELS[this.tournament!.levelIndex];
       this.message = `Nível subiu: blinds ${lv.sb}/${lv.bb}.`;
     } else if (refilled > 0) {
       this.message = refilled === 1 ? "Um novo jogador entrou na mesa." : `${refilled} novos jogadores entraram na mesa.`;
+    } else {
+      this.message = "";
     }
     // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
     for (const p of this.table.players) {
@@ -288,7 +360,6 @@ export class GameController {
     // Placar de evolução: conta uma mão jogada pelo herói.
     if (this.table.players[this.heroSeat].status !== "out") this.onHeroHand?.();
     this.phase = "playing";
-    this.message = "";
   }
 
   /** Linhas de estatísticas (herói + bots) para exibição. */
@@ -468,8 +539,16 @@ export class GameController {
       .sort((a, b) => (a.rating === "ruim" ? 0 : 1) - (b.rating === "ruim" ? 0 : 1))
       .slice(0, 5);
 
+    const finishPlace =
+      this.tournamentFinishPlace ?? Math.max(1, Math.round(this.tournament.fieldRemaining));
+    const cash = cashForPlace(finishPlace, this.tournament.ladder);
+
     return {
       result: this.tournamentResult ?? "eliminado",
+      finishPlace,
+      entrants: this.tournament.entrants,
+      cash,
+      inMoney: cash > 0,
       handsPlayed: row.hands,
       vpip: row.vpip,
       pfr: row.pfr,
@@ -479,6 +558,85 @@ export class GameController {
       qualityNote,
       mistakes,
     };
+  }
+
+  /**
+   * Situação do herói no CAMPO do torneio agora: vivos restantes, classificação
+   * estimada, se está no dinheiro e o prêmio garantido. Null fora de torneio.
+   */
+  fieldStatus(): FieldStatus | null {
+    if (!this.tournament) return null;
+    const alive = this.table.players.filter((p) => p.stack > 0);
+    const avgStack = alive.length ? alive.reduce((s, p) => s + p.stack, 0) / alive.length : 0;
+    return fieldStatus({
+      entrants: this.tournament.entrants,
+      remaining: this.tournament.fieldRemaining,
+      heroStack: this.table.players[this.heroSeat].stack,
+      avgStack,
+      ladder: this.tournament.ladder,
+    });
+  }
+
+  /**
+   * Snapshot serializável para retomar o torneio depois (sair e voltar). Só faz
+   * sentido ENTRE mãos (handOver), quando os stacks estão fechados. Devolve null
+   * fora de torneio ou com o torneio já encerrado.
+   */
+  snapshot(): GameSnapshot | null {
+    if (!this.tournament || this.tournamentOver) return null;
+    return {
+      v: 1,
+      seats: this.table.players.map((p) => ({
+        name: p.name,
+        profileId: p.profileId,
+        isHero: p.isHero,
+        stack: p.stack,
+      })),
+      buttonSeat: this.table.buttonSeat,
+      blinds: { sb: this.table.smallBlind, bb: this.table.bigBlind, ante: this.table.ante ?? 0 },
+      stats: this.stats,
+      tournament: this.tournament,
+      payouts: this.payouts,
+      heroRatings: { ...this.heroRatings },
+      sessionMistakes: this.sessionMistakes,
+      tournamentResult: this.tournamentResult,
+      tournamentFinishPlace: this.tournamentFinishPlace,
+      savedAt: new Date().toISOString(),
+    };
+  }
+
+  /** Restaura um torneio salvo, pronto para continuar na próxima mão. */
+  restore(snap: GameSnapshot): void {
+    const seats = snap.seats.map((s) => ({
+      name: s.name,
+      profileId: s.profileId,
+      isHero: s.isHero,
+      stack: s.stack,
+    }));
+    this.seatDefs = snap.seats.map((s) => ({
+      name: s.name,
+      profileId: s.profileId,
+      isHero: s.isHero,
+    }));
+    this.table = createTable(
+      { smallBlind: snap.blinds.sb, bigBlind: snap.blinds.bb, ante: snap.blinds.ante },
+      seats,
+      snap.buttonSeat,
+    );
+    this.stats = {};
+    for (const p of this.table.players) this.stats[p.seat] = snap.stats[p.seat] ?? emptyStats();
+    this.tournament = snap.tournament;
+    this.payouts = snap.payouts;
+    this.heroRatings = snap.heroRatings;
+    this.sessionMistakes = snap.sessionMistakes;
+    this.tournamentResult = snap.tournamentResult;
+    this.tournamentFinishPlace = snap.tournamentFinishPlace;
+    this.tournamentOver = false;
+    this.phase = "handOver";
+    this.lastHand = null;
+    this.handLog = [];
+    this.feedback = [];
+    this.message = "Torneio retomado de onde você parou. Clique em “Nova mão”.";
   }
 
   /**

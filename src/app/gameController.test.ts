@@ -39,3 +39,56 @@ describe("reposição de jogadores (seat refill)", () => {
     expect(g.message).toMatch(/eliminad/i);
   });
 });
+
+describe("torneio — campo, classificação e persistência", () => {
+  it("mostra jogadores restantes, classificação e status de dinheiro", () => {
+    const g = new GameController();
+    g.configureTournament({ buyIn: 11, entrants: 2500, stage: "inicio" });
+    const f = g.fieldStatus()!;
+    expect(f.entrants).toBe(2500);
+    expect(f.remaining).toBe(2500);
+    expect(f.heroRank).toBeGreaterThanOrEqual(1);
+    expect(f.heroRank).toBeLessThanOrEqual(2500);
+    expect(f.inMoney).toBe(false); // longe do dinheiro no início
+  });
+
+  it("salvar e retomar preserva o torneio (stacks, campo, prêmios)", () => {
+    const g = new GameController();
+    g.configureTournament({ buyIn: 22, entrants: 1000, stage: "meio" });
+    // Simula progresso: joga algumas mãos.
+    for (let i = 0; i < 5 && !g.tournamentOver; i++) {
+      g.newHand();
+      let guard = 0;
+      while (g.phase === "playing" && guard++ < 500) {
+        if (g.isHeroTurn()) g.heroAct({ type: "fold" });
+        else g.botStep();
+      }
+    }
+    const snap = g.snapshot();
+    expect(snap).toBeTruthy();
+    const beforeField = g.tournament!.fieldRemaining;
+    const beforeStack = g.table.players[0].stack;
+
+    // Restaura num controlador novo.
+    const g2 = new GameController();
+    g2.restore(snap!);
+    expect(g2.tournament!.entrants).toBe(1000);
+    expect(g2.tournament!.fieldRemaining).toBeCloseTo(beforeField, 5);
+    expect(g2.table.players[0].stack).toBe(beforeStack);
+    expect(g2.tournament!.ladder).toEqual(g.tournament!.ladder);
+  });
+
+  it("herói bustado no torneio recebe posição final e status ITM", () => {
+    const g = new GameController();
+    g.configureTournament({ buyIn: 11, entrants: 500, stage: "mesa_final" });
+    g.table.players[0].stack = 0; // herói busta
+    g.newHand();
+    expect(g.tournamentOver).toBe(true);
+    const sum = g.tournamentSummary()!;
+    expect(sum.finishPlace).toBeGreaterThanOrEqual(1);
+    expect(sum.entrants).toBe(500);
+    // Na mesa final de 500, bustar já está no dinheiro.
+    expect(sum.inMoney).toBe(true);
+    expect(sum.cash).toBeGreaterThan(0);
+  });
+});

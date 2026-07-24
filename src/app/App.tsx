@@ -110,7 +110,11 @@ export function App() {
       <div className="layout">
         <div className="main">
           {controller.tournament ? (
-            <TournamentHUD t={controller.tournament} onSetLevel={setLevel} />
+            <TournamentHUD
+              t={controller.tournament}
+              field={controller.fieldStatus()}
+              onSetLevel={setLevel}
+            />
           ) : null}
           <PokerTable
             table={t}

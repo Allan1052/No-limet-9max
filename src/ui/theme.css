@@ -124,6 +124,12 @@ body {
 .onboard-steps li { margin-bottom: 9px; }
 .onboard-mode { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
 .onboard .btn.primary { width: 100%; }
+
+/* ---- HUD do campo do torneio ---- */
+.hud-sub { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+.summary-finish { text-align: center; margin: 8px 0 4px; font-size: 15px; font-weight: 700; }
+.summary-finish .itm { color: var(--good); }
+.summary-finish .oom { color: var(--text-dim); font-weight: 600; font-size: 13px; }
 .install-btn {
   border: 1px solid var(--gold);
   background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%);

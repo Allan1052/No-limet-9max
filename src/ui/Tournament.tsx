@@ -9,9 +9,14 @@ import {
   type Stage,
 } from "../tournament/structure";
 import type { TournamentConfig, TournamentState } from "../app/gameController";
+import type { FieldStatus } from "../tournament/field";
 
 function usd(n: number): string {
   return "$" + Math.round(n).toLocaleString("en-US");
+}
+
+function num(n: number): string {
+  return Math.round(n).toLocaleString("en-US");
 }
 
 export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) => void }) {
@@ -124,9 +129,11 @@ export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) 
 
 export function TournamentHUD({
   t,
+  field,
   onSetLevel,
 }: {
   t: TournamentState;
+  field?: FieldStatus | null;
   onSetLevel: (idx: number) => void;
 }) {
   const level = BLIND_LEVELS[t.levelIndex];
@@ -137,15 +144,30 @@ export function TournamentHUD({
         <span className="hud-lbl">Estágio</span>
         <span className="hud-val">{stageLabel}</span>
       </div>
+      {field ? (
+        <>
+          <div className="hud-item">
+            <span className="hud-lbl">Jogadores</span>
+            <span className="hud-val">
+              {num(field.remaining)} / {num(field.entrants)}
+            </span>
+          </div>
+          <div className="hud-item">
+            <span className="hud-lbl">Sua posição</span>
+            <span className="hud-val">
+              {field.heroRank}º{" "}
+              <small className="hud-sub">
+                {field.inMoney
+                  ? `· ITM ${usd(field.currentCash)} 💰`
+                  : `· ${num(field.toBubble)} até a bolha`}
+              </small>
+            </span>
+          </div>
+        </>
+      ) : null}
       <div className="hud-item">
         <span className="hud-lbl">Premiação</span>
         <span className="hud-val">{usd(t.prizePool)}</span>
-      </div>
-      <div className="hud-item">
-        <span className="hud-lbl">Prêmios (1º/2º/3º)</span>
-        <span className="hud-val">
-          {usd(t.ladder[0] ?? 0)} / {usd(t.ladder[1] ?? 0)} / {usd(t.ladder[2] ?? 0)}
-        </span>
       </div>
       <div className="hud-item hud-levels">
         <span className="hud-lbl">Nível (clique p/ mudar) · blinds {level.sb}/{level.bb}</span>
