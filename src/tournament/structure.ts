@@ -34,17 +34,32 @@ export interface BlindLevel {
   ante: number;
 }
 
-// Níveis de blind (em fichas). Sobem ao longo do torneio.
+// Níveis de blind (em fichas). Sobem ao longo do torneio. Estrutura inspirada
+// nos MTTs online: incrementos suaves e ANTE de big blind entrando a partir do
+// nível 3 (como no GGPoker/PokerStars) — o que acelera a ação e o ICM.
 export const BLIND_LEVELS: BlindLevel[] = [
   { level: 1, sb: 25, bb: 50, ante: 0 },
   { level: 2, sb: 50, bb: 100, ante: 0 },
-  { level: 3, sb: 100, bb: 200, ante: 0 },
-  { level: 4, sb: 150, bb: 300, ante: 0 },
-  { level: 5, sb: 200, bb: 400, ante: 0 },
-  { level: 6, sb: 300, bb: 600, ante: 0 },
-  { level: 7, sb: 400, bb: 800, ante: 0 },
-  { level: 8, sb: 600, bb: 1200, ante: 0 },
+  { level: 3, sb: 75, bb: 150, ante: 20 },
+  { level: 4, sb: 100, bb: 200, ante: 25 },
+  { level: 5, sb: 150, bb: 300, ante: 40 },
+  { level: 6, sb: 200, bb: 400, ante: 50 },
+  { level: 7, sb: 300, bb: 600, ante: 75 },
+  { level: 8, sb: 400, bb: 800, ante: 100 },
+  { level: 9, sb: 600, bb: 1200, ante: 150 },
+  { level: 10, sb: 800, bb: 1600, ante: 200 },
+  { level: 11, sb: 1200, bb: 2400, ante: 300 },
+  { level: 12, sb: 1600, bb: 3200, ante: 400 },
 ];
+
+export type Speed = "turbo" | "normal" | "deep";
+
+/** Quantas mãos por nível conforme a velocidade (turbo sobe rápido). */
+export const SPEED_HANDS: Record<Speed, number> = {
+  turbo: 6,
+  normal: 12,
+  deep: 20,
+};
 
 export type Stage = "inicio" | "meio" | "bolha" | "mesa_final";
 

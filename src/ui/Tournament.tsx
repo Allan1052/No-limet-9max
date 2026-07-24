@@ -4,12 +4,15 @@ import {
   BUY_INS,
   BLIND_LEVELS,
   STAGES,
+  SPEED_HANDS,
   prizePool,
   payoutLadder,
   type Stage,
+  type Speed,
 } from "../tournament/structure";
 import type { TournamentConfig, TournamentState } from "../app/gameController";
 import type { FieldStatus } from "../tournament/field";
+import type { SlotMeta } from "../app/tournamentSlots";
 
 function usd(n: number): string {
   return "$" + Math.round(n).toLocaleString("en-US");
@@ -19,17 +22,31 @@ function num(n: number): string {
   return Math.round(n).toLocaleString("en-US");
 }
 
-export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) => void }) {
+const SPEED_LABEL: Record<Speed, string> = { turbo: "Turbo", normal: "Normal", deep: "Deep" };
+
+export function TournamentSetup({
+  onStart,
+  saved = [],
+  onResume,
+  onDiscard,
+}: {
+  onStart: (cfg: TournamentConfig) => void;
+  saved?: SlotMeta[];
+  onResume?: (buyIn: number) => void;
+  onDiscard?: (buyIn: number) => void;
+}) {
   const [buyIn, setBuyIn] = useState(11);
   const [entrants, setEntrants] = useState(500);
-  const [stage, setStage] = useState<Stage>("mesa_final");
-  const [handsPerLevel, setHandsPerLevel] = useState(10);
+  const [stage, setStage] = useState<Stage>("inicio");
+  const [speed, setSpeed] = useState<Speed>("normal");
+  const [gameType, setGameType] = useState<"nlhe" | "plo">("nlhe");
 
   const pool = prizePool(buyIn, Math.max(1, entrants));
   const ladder = payoutLadder(Math.max(1, entrants), pool);
   const stageInfo = STAGES[stage];
   const level = BLIND_LEVELS[stageInfo.levelIndex];
   const avgBB = stageInfo.avgBB;
+  const savedBuyIns = new Set(saved.map((s) => s.buyIn));
   const icmLabel =
     stageInfo.icm === "final" ? "Mesa final (ICM cheio)"
       : stageInfo.icm === "bubble" ? "Bolha (pressão de ICM)"
@@ -37,8 +54,51 @@ export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) 
 
   return (
     <div className="tourney">
+      {saved.length > 0 ? (
+        <div className="panel saved-panel">
+          <h3>Torneios salvos ({saved.length})</h3>
+          <div className="legend" style={{ marginBottom: 8 }}>
+            Um save por faixa de buy-in — volte a qualquer um de onde parou.
+          </div>
+          {saved.map((s) => (
+            <div key={s.buyIn} className="saved-row">
+              <div className="saved-info">
+                <b>${s.buyIn}</b> · {STAGES[s.stage].label} · {Math.round(s.heroStack / s.bb)}bb
+                <br />
+                <small>
+                  {s.fieldRemaining.toLocaleString("en-US")} / {s.entrants.toLocaleString("en-US")} vivos
+                </small>
+              </div>
+              <div className="saved-actions">
+                <button className="btn primary" onClick={() => onResume?.(s.buyIn)}>
+                  Continuar
+                </button>
+                <button className="btn tiny" onClick={() => onDiscard?.(s.buyIn)}>
+                  descartar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div className="panel">
         <h3>Montar torneio</h3>
+
+        <div className="t-field">
+          <label>Modalidade</label>
+          <div className="t-btns">
+            <button
+              className={`tab ${gameType === "nlhe" ? "active" : ""}`}
+              onClick={() => setGameType("nlhe")}
+            >
+              NL Hold'em
+            </button>
+            <button className="tab" disabled title="Em breve" style={{ opacity: 0.5 }}>
+              Omaha (em breve)
+            </button>
+          </div>
+        </div>
 
         <div className="t-field">
           <label>Buy-in</label>
@@ -50,6 +110,7 @@ export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) 
                 onClick={() => setBuyIn(b.value)}
               >
                 {b.label}
+                {savedBuyIns.has(b.value) ? " 💾" : ""}
               </button>
             ))}
           </div>
@@ -81,21 +142,39 @@ export function TournamentSetup({ onStart }: { onStart: (cfg: TournamentConfig) 
         </div>
 
         <div className="t-field">
-          <label>Blinds sobem a cada</label>
-          <input
-            type="number"
-            min={0}
-            value={handsPerLevel}
-            onChange={(e) => setHandsPerLevel(Number(e.target.value))}
-            style={{ width: 70 }}
-          />
-          <span className="t-suffix">mãos (0 = fixo)</span>
+          <label>Velocidade</label>
+          <div className="t-btns">
+            {(Object.keys(SPEED_HANDS) as Speed[]).map((s) => (
+              <button
+                key={s}
+                className={`tab ${speed === s ? "active" : ""}`}
+                onClick={() => setSpeed(s)}
+                title={`Blinds sobem a cada ${SPEED_HANDS[s]} mãos`}
+              >
+                {SPEED_LABEL[s]}
+              </button>
+            ))}
+          </div>
+          <span className="t-suffix">blinds a cada {SPEED_HANDS[speed]} mãos</span>
         </div>
+
+        {savedBuyIns.has(buyIn) ? (
+          <div className="legend" style={{ color: "var(--warn)", marginBottom: 6 }}>
+            ⚠ Você já tem um torneio de ${buyIn} salvo — iniciar um novo vai substituí-lo.
+          </div>
+        ) : null}
 
         <button
           className="btn primary"
           style={{ marginTop: 10 }}
-          onClick={() => onStart({ buyIn, entrants: Math.max(2, entrants), stage, handsPerLevel })}
+          onClick={() =>
+            onStart({
+              buyIn,
+              entrants: Math.max(2, entrants),
+              stage,
+              handsPerLevel: SPEED_HANDS[speed],
+            })
+          }
         >
           Iniciar torneio
         </button>

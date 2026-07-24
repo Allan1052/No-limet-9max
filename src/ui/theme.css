@@ -125,6 +125,20 @@ body {
 .onboard-mode { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
 .onboard .btn.primary { width: 100%; }
 
+/* ---- Torneios salvos ---- */
+.saved-panel { border-color: var(--gold-dim); }
+.saved-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid #2a2c22;
+}
+.saved-info { font-size: 13px; line-height: 1.4; }
+.saved-info small { color: var(--text-dim); }
+.saved-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
 /* ---- HUD do campo do torneio ---- */
 .hud-sub { font-size: 10px; color: var(--text-dim); font-weight: 600; }
 .summary-finish { text-align: center; margin: 8px 0 4px; font-size: 15px; font-weight: 700; }

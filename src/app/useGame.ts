@@ -1,11 +1,6 @@
 // Hook React que embrulha o GameController e cuida do tempo dos bots.
 import { useEffect, useReducer, useRef } from "react";
-import {
-  GameController,
-  type GameOptions,
-  type GameSnapshot,
-  type TournamentConfig,
-} from "./gameController";
+import { GameController, type GameOptions, type TournamentConfig } from "./gameController";
 import type { Action } from "../game/engine";
 import {
   loadProgress,
@@ -16,31 +11,22 @@ import {
   summarize,
   type ProgressState,
 } from "./progress";
+import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
 
-const SNAP_KEY = "poker-sim-tournament";
-
-/** Salva o torneio entre mãos (para retomar depois) ou limpa se acabou. */
+/**
+ * Salva o torneio ATUAL entre mãos, no slot da sua faixa de buy-in (para
+ * retomar depois), ou limpa esse slot quando o torneio acaba.
+ */
 function persist(g: GameController): void {
-  try {
-    if (g.tournamentOver) {
-      localStorage.removeItem(SNAP_KEY);
-      return;
-    }
-    if (g.tournament && g.phase === "handOver") {
-      const snap = g.snapshot();
-      if (snap) localStorage.setItem(SNAP_KEY, JSON.stringify(snap));
-    }
-  } catch {
-    /* armazenamento indisponível — segue sem persistir */
+  const tourney = g.tournament;
+  if (!tourney) return;
+  if (g.tournamentOver) {
+    removeSlot(tourney.buyIn);
+    return;
   }
-}
-
-function loadSnapshot(): GameSnapshot | null {
-  try {
-    const raw = localStorage.getItem(SNAP_KEY);
-    return raw ? (JSON.parse(raw) as GameSnapshot) : null;
-  } catch {
-    return null;
+  if (g.phase === "handOver") {
+    const snap = g.snapshot();
+    if (snap) saveSlot(snap);
   }
 }
 
@@ -59,13 +45,16 @@ export function useGame(opts?: GameOptions) {
         saveProgress(progressRef.current);
       },
     });
-    // Retoma um torneio salvo, se houver (sair e voltar de onde parou).
-    const snap = loadSnapshot();
-    if (snap && snap.v === 1) {
-      try {
-        g.restore(snap);
-      } catch {
-        /* snapshot inválido — começa limpo */
+    // Retoma o torneio mais recente, se houver (sair e voltar de onde parou).
+    const recent = listSlots()[0];
+    if (recent) {
+      const snap = loadSlot(recent.buyIn);
+      if (snap && snap.v === 1) {
+        try {
+          g.restore(snap);
+        } catch {
+          /* snapshot inválido — começa limpo */
+        }
       }
     }
     ref.current = g;
@@ -112,13 +101,27 @@ export function useGame(opts?: GameOptions) {
       force();
     },
     dismissSummary: () => {
+      // O slot já foi removido quando o torneio acabou (persist). Só limpa a UI.
       g.tournamentOver = false;
       g.tournament = null;
-      try {
-        localStorage.removeItem(SNAP_KEY);
-      } catch {
-        /* ignora */
+      force();
+    },
+    // Lista dos torneios salvos (um por faixa de buy-in), para a tela de setup.
+    savedTournaments: () => listSlots(),
+    resumeTournament: (buyIn: number) => {
+      const snap = loadSlot(buyIn);
+      if (snap && snap.v === 1) {
+        try {
+          g.restore(snap);
+        } catch {
+          /* snapshot inválido */
+        }
       }
+      force();
+    },
+    discardTournament: (buyIn: number) => {
+      removeSlot(buyIn);
+      if (g.tournament && g.tournament.buyIn === buyIn) g.tournament = null;
       force();
     },
     progress: () => summarize(progressRef.current),

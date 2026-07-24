@@ -33,6 +33,9 @@ export function App() {
     dismissSummary,
     progress,
     resetProgress,
+    savedTournaments,
+    resumeTournament,
+    discardTournament,
   } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
   const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges">("play");
@@ -101,6 +104,12 @@ export function App() {
         <RangeGrid />
       ) : view === "torneio" ? (
         <TournamentSetup
+          saved={savedTournaments()}
+          onResume={(buyIn) => {
+            resumeTournament(buyIn);
+            setView("play");
+          }}
+          onDiscard={discardTournament}
           onStart={(cfg) => {
             startTournament(cfg);
             setView("play");
