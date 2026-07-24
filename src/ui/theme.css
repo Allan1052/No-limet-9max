@@ -125,6 +125,68 @@ body {
 .onboard-mode { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
 .onboard .btn.primary { width: 100%; }
 
+/* ---- Missões e desafios ---- */
+.missions-view { max-width: 720px; margin: 0 auto; }
+.missions-count { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+.missions-list { display: grid; gap: 10px; }
+.mission-card {
+  display: flex;
+  gap: 12px;
+  background: #14170f;
+  border: 1px solid #2a2c22;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.mission-card.done { border-color: var(--good); background: #131a13; }
+.mission-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.mission-body { flex: 1; min-width: 0; }
+.mission-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mission-title { font-weight: 700; color: var(--text); }
+.mission-cat {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gold-soft);
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  padding: 1px 7px;
+}
+.mission-desc { font-size: 12px; color: var(--text-dim); margin: 2px 0 8px; }
+.mission-bar { height: 8px; background: #2a2c22; border-radius: 5px; overflow: hidden; }
+.mission-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+.mission-card.done .mission-fill { background: var(--good); }
+.mission-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 3px; }
+
+/* ---- Aviso de missão concluída (toast) ---- */
+.mission-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+.mission-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(180deg, #1c2015 0%, #141810 100%);
+  border: 1px solid var(--good);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.3s ease;
+}
+@keyframes toast-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.mt-icon { font-size: 24px; }
+.mt-head { font-size: 11px; color: var(--good); font-weight: 700; }
+.mt-title { font-size: 14px; font-weight: 800; color: var(--text); }
+
 /* ---- Torneios salvos ---- */
 .saved-panel { border-color: var(--gold-dim); }
 .saved-row {

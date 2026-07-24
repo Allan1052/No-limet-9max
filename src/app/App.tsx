@@ -10,6 +10,8 @@ import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
 import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
+import { MissionsPanel } from "../ui/MissionsPanel";
+import { MissionToast } from "../ui/MissionToast";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -36,9 +38,14 @@ export function App() {
     savedTournaments,
     resumeTournament,
     discardTournament,
+    missions,
+    missionCounts,
+    resetMissions,
+    missionToasts,
+    dismissMissionToasts,
   } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
-  const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges">("play");
+  const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges" | "missoes">("play");
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -73,6 +80,12 @@ export function App() {
             {tr("tab.tournament")}
           </button>
           <button
+            className={`tab ${view === "missoes" ? "active" : ""}`}
+            onClick={() => setView("missoes")}
+          >
+            {tr("tab.missions")}
+          </button>
+          <button
             className={`tab ${view === "ranges" ? "active" : ""}`}
             onClick={() => setView("ranges")}
           >
@@ -100,6 +113,13 @@ export function App() {
 
       {view === "icm" ? (
         <IcmCalculator />
+      ) : view === "missoes" ? (
+        <MissionsPanel
+          missions={missions()}
+          done={missionCounts().done}
+          total={missionCounts().total}
+          onReset={resetMissions}
+        />
       ) : view === "ranges" ? (
         <RangeGrid />
       ) : view === "torneio" ? (
@@ -192,6 +212,8 @@ export function App() {
       ) : null}
 
       {!onboarded ? <Onboarding onClose={() => setOnboarded(true)} /> : null}
+
+      <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
     </div>
   );
 }

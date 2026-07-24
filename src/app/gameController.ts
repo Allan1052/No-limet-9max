@@ -60,10 +60,12 @@ export interface GameOptions {
   startingStack?: number;
   /** Prêmios do torneio (ativam o ICM nas decisões de all-in pós-flop). */
   payouts?: number[];
-  /** Chamado a cada decisão sua avaliada (para o placar de evolução). */
-  onGrade?: (rating: Rating) => void;
+  /** Chamado a cada decisão sua avaliada (placar de evolução + missões). */
+  onDecision?: (d: { rating: Rating; heroType: string }) => void;
   /** Chamado quando o herói recebe cartas numa nova mão. */
   onHeroHand?: () => void;
+  /** Chamado quando um torneio termina para o herói (missões de torneio). */
+  onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
 }
 
 export interface TournamentConfig {
@@ -158,14 +160,16 @@ export class GameController {
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
   private rng = Math.random;
-  private onGrade?: (rating: Rating) => void;
+  private onDecision?: (d: { rating: Rating; heroType: string }) => void;
   private onHeroHand?: () => void;
+  private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
     this.payouts = opts.payouts;
-    this.onGrade = opts.onGrade;
+    this.onDecision = opts.onDecision;
     this.onHeroHand = opts.onHeroHand;
+    this.onTournamentEnd = opts.onTournamentEnd;
     this.seatDefs = [
       { name: "Você", isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
@@ -284,6 +288,7 @@ export class GameController {
         this.tournamentResult = "eliminado";
         this.tournamentOver = true;
         const cash = cashForPlace(place, this.tournament.ladder);
+        this.onTournamentEnd?.({ result: "eliminado", inMoney: cash > 0 });
         this.message =
           cash > 0
             ? `Você foi eliminado em ${place}º de ${this.tournament.entrants} — no dinheiro! 💰`
@@ -300,6 +305,7 @@ export class GameController {
         this.tournamentFinishPlace = 1;
         this.tournamentResult = "campeao";
         this.tournamentOver = true;
+        this.onTournamentEnd?.({ result: "campeao", inMoney: true });
       }
       this.message = this.tournament
         ? "Você VENCEU o torneio! 🏆"
@@ -454,8 +460,8 @@ export class GameController {
       this.feedback.push(item);
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;
-      // Alimenta o placar de evolução (persistente entre sessões).
-      this.onGrade?.(item.rating);
+      // Alimenta o placar de evolução e as missões.
+      this.onDecision?.({ rating: item.rating, heroType });
       // Guarda os erros claros (ruim/imprecisa) para revisar depois — limita a
       // uma lista enxuta com os mais graves primeiro.
       if (item.rating === "ruim" || item.rating === "imprecisa") {

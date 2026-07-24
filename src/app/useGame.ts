@@ -1,5 +1,5 @@
 // Hook React que embrulha o GameController e cuida do tempo dos bots.
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { GameController, type GameOptions, type TournamentConfig } from "./gameController";
 import type { Action } from "../game/engine";
 import {
@@ -12,6 +12,17 @@ import {
   type ProgressState,
 } from "./progress";
 import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
+import {
+  loadMissions,
+  saveMissions,
+  resetMissions,
+  applyEvent,
+  missionViews,
+  missionCounts,
+  type MissionState,
+  type Mission,
+  type MissionEvent,
+} from "./missions";
 
 /**
  * Salva o torneio ATUAL entre mãos, no slot da sua faixa de buy-in (para
@@ -32,17 +43,32 @@ function persist(g: GameController): void {
 
 export function useGame(opts?: GameOptions) {
   const progressRef = useRef<ProgressState>(loadProgress());
+  const missionRef = useRef<MissionState>(loadMissions());
+  const [toasts, setToasts] = useState<Mission[]>([]);
   const ref = useRef<GameController | null>(null);
+
+  // Aplica um evento às missões, salva e enfileira as recém-concluídas (aviso).
+  const fireMission = (e: MissionEvent) => {
+    const r = applyEvent(missionRef.current, e);
+    saveMissions(missionRef.current);
+    if (r.completed.length) setToasts((prev) => [...prev, ...r.completed]);
+  };
+
   if (!ref.current) {
     const g = new GameController({
       ...opts,
-      onGrade: (rating) => {
+      onDecision: ({ rating, heroType }) => {
         recordDecision(progressRef.current, rating);
         saveProgress(progressRef.current);
+        fireMission({ type: "decision", rating, heroType });
       },
       onHeroHand: () => {
         recordHand(progressRef.current);
         saveProgress(progressRef.current);
+        fireMission({ type: "hand" });
+      },
+      onTournamentEnd: ({ result, inMoney }) => {
+        fireMission({ type: "tournamentEnd", result, inMoney });
       },
     });
     // Retoma o torneio mais recente, se houver (sair e voltar de onde parou).
@@ -129,5 +155,13 @@ export function useGame(opts?: GameOptions) {
       progressRef.current = resetProgress();
       force();
     },
+    missions: () => missionViews(missionRef.current),
+    missionCounts: () => missionCounts(missionRef.current),
+    resetMissions: () => {
+      missionRef.current = resetMissions();
+      force();
+    },
+    missionToasts: toasts,
+    dismissMissionToasts: () => setToasts([]),
   };
 }
