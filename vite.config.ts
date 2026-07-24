@@ -30,10 +30,15 @@ export default defineConfig({
         short_name: "Poker Sim",
         description: "Simulador de estudo de poker NLHE 9-max com bots, feedback e ICM.",
         lang: "pt-BR",
+        id: base,
+        start_url: base,
+        scope: base,
         theme_color: "#14170f",
         background_color: "#0d0f0d",
         display: "standalone",
         orientation: "any",
+        // Instala como PWA (WebAPK), não sugere um app nativo relacionado.
+        prefer_related_applications: false,
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png" },

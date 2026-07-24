@@ -54,6 +54,29 @@ body {
   font-size: 20px;
 }
 .brand small { color: var(--text-dim); font-weight: 400; font-size: 12px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.install-btn {
+  border: 1px solid var(--gold);
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%);
+  color: #0d0f0d;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: install-pulse 2.4s ease-in-out infinite;
+}
+@keyframes install-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 180, 88, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(201, 180, 88, 0); }
+}
+.ios-help { width: min(440px, 94vw); }
+.ios-help h3 { color: var(--gold); margin: 0 0 10px; }
+.ios-steps { margin: 0 0 12px; padding-left: 20px; line-height: 1.6; font-size: 14px; }
+.ios-steps li { margin-bottom: 8px; }
+.ios-note { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.ios-help .btn.primary { width: 100%; }
 .disclaimer {
   font-size: 12px;
   color: #0d0f0d;

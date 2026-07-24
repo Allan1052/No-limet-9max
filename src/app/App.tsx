@@ -10,6 +10,7 @@ import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
 import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
+import { InstallButton } from "../ui/InstallButton";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
@@ -64,11 +65,14 @@ export function App() {
             Calculadora ICM
           </button>
         </div>
-        <div className="disclaimer">
-          SEM DINHEIRO REAL · SÓ ESTUDO
-          <span className="build-id" title="Versão do app (data/hora do build)">
-            v{__BUILD_ID__}
-          </span>
+        <div className="topbar-right">
+          <InstallButton />
+          <div className="disclaimer">
+            SEM DINHEIRO REAL · SÓ ESTUDO
+            <span className="build-id" title="Versão do app (data/hora do build)">
+              v{__BUILD_ID__}
+            </span>
+          </div>
         </div>
       </div>
 
