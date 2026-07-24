@@ -113,6 +113,7 @@ export const TRANSLATIONS = {
     "tips.title": "Dicas da mão",
     "tips.empty": "Não houve decisões suas para avaliar nesta mão.",
     "btn.progress": "Evolução",
+    "version.update": "Toque para atualizar o app para a versão mais recente",
   },
   es: {
     "app.subtitle": "· NLHE 9-max · herramienta de estudio",
@@ -208,6 +209,7 @@ export const TRANSLATIONS = {
     "tips.title": "Consejos de la mano",
     "tips.empty": "No hubo decisiones tuyas para evaluar en esta mano.",
     "btn.progress": "Progreso",
+    "version.update": "Toca para actualizar la app a la versión más reciente",
   },
   en: {
     "app.subtitle": "· NLHE 9-max · study tool",
@@ -303,5 +305,6 @@ export const TRANSLATIONS = {
     "tips.title": "Hand tips",
     "tips.empty": "No decisions of yours to review this hand.",
     "btn.progress": "Progress",
+    "version.update": "Tap to update the app to the latest version",
   },
 } as const;

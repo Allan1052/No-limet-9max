@@ -95,10 +95,14 @@ export function App() {
           <LangSelect />
           <InstallButton />
           <div className="disclaimer">
-            {tr("disclaimer")}
-            <span className="build-id" title="Versão do app (data/hora do build)">
-              v{__BUILD_ID__}
-            </span>
+            <span className="disclaimer-text">{tr("disclaimer")}</span>
+            <button
+              className="build-id"
+              title={tr("version.update")}
+              onClick={forceUpdate}
+            >
+              🔄 v{__BUILD_ID__}
+            </button>
           </div>
         </div>
       </div>
@@ -209,6 +213,27 @@ export function App() {
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
     </div>
   );
+}
+
+/**
+ * Força a atualização do app: desregistra o service worker antigo, limpa os
+ * caches e recarrega buscando tudo da rede. É o jeito mais garantido de puxar a
+ * versão nova quando o PWA instalado ficou preso numa versão em cache.
+ */
+async function forceUpdate(): Promise<void> {
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
+    }
+    if (typeof caches !== "undefined") {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {
+    /* segue para o reload mesmo se algo falhar */
+  }
+  location.reload();
 }
 
 /** Dispara o download de um texto como arquivo .txt (histórico da sessão). */
