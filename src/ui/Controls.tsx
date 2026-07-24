@@ -1,6 +1,7 @@
 // Controles do herói: Fold, Check/Call e Raise com slider.
 import { useEffect, useState } from "react";
 import { toBB } from "../app/format";
+import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
 
@@ -14,6 +15,7 @@ interface ControlsProps {
 }
 
 export function Controls({ legal, active, pot, bigBlind, onAction, hint }: ControlsProps) {
+  const { t } = useT();
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
   // Porcentagem digitável do pote (campo livre ao lado dos atalhos).
   const [customPct, setCustomPct] = useState("50");
@@ -41,12 +43,12 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
         disabled={!active || !legal.canFold}
         onClick={() => onAction({ type: "fold" })}
       >
-        Fold
+        {t("ctrl.fold")}
       </button>
 
       {legal.canCheck ? (
         <button className="btn" disabled={!active} onClick={() => onAction({ type: "check" })}>
-          Check
+          {t("ctrl.check")}
         </button>
       ) : (
         <button
@@ -54,24 +56,24 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
           disabled={!active || !legal.canCall}
           onClick={() => onAction({ type: "call" })}
         >
-          Call {toBB(legal.callAmount, bigBlind)}
+          {t("ctrl.call")} {toBB(legal.callAmount, bigBlind)}
         </button>
       )}
 
       <div className="slider-wrap">
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.3)} title="30% do pote">
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.3)} title={t("ctrl.pctOf", { p: 30 })}>
           30%
         </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.4)} title="40% do pote">
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.4)} title={t("ctrl.pctOf", { p: 40 })}>
           40%
         </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title="60% do pote">
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title={t("ctrl.pctOf", { p: 60 })}>
           60%
         </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1)} title="Pote inteiro">
-          Pote
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1)} title={t("ctrl.potWhole")}>
+          {t("ctrl.pot")}
         </button>
-        <span className="pct-input" title="Digite a % do pote e aplique">
+        <span className="pct-input" title={t("ctrl.pctHint")}>
           <input
             type="number"
             inputMode="numeric"
@@ -85,7 +87,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
             }}
           />
           <button className="btn size" disabled={!canRaise} onClick={applyCustomPct}>
-            % OK
+            {t("ctrl.pctApply")}
           </button>
         </span>
         <input
@@ -108,7 +110,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
           )
         }
       >
-        {legal.callAmount > 0 ? "Raise" : "Apostar"}
+        {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
       </button>
 
       {hint ? <div className="hint">💡 {hint}</div> : null}

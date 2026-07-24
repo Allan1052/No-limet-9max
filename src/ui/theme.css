@@ -55,6 +55,24 @@ body {
 }
 .brand small { color: var(--text-dim); font-weight: 400; font-size: 12px; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
+.lang-select { display: inline-flex; gap: 2px; }
+.lang-opt {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+.lang-opt.active {
+  opacity: 1;
+  filter: none;
+  border-color: var(--gold-dim);
+  background: rgba(201, 180, 88, 0.12);
+}
 .install-btn {
   border: 1px solid var(--gold);
   background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%);

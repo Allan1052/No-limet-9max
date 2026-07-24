@@ -3,8 +3,10 @@
 // (frequências). É o "raio-x" do profissional — visível ENQUANTO você decide,
 // não só no replay depois.
 import { mixText, type HeroAdvice } from "../feedback/analyzer";
+import { useT } from "../i18n";
 
 export function LiveRead({ advice }: { advice: HeroAdvice | null }) {
+  const { t } = useT();
   if (!advice) return null;
   const eq = advice.equity;
   const req = advice.potOdds;
@@ -15,23 +17,23 @@ export function LiveRead({ advice }: { advice: HeroAdvice | null }) {
 
   return (
     <div className="panel live-read">
-      <h3>Leitura do spot</h3>
+      <h3>{t("panel.liveRead")}</h3>
 
       {advice.kind === "postflop" && eq !== undefined ? (
         <div className="lr-grid">
           {vr !== undefined ? (
             <div className="lr-cell">
-              <div className="lr-lbl">Range do vilão</div>
+              <div className="lr-lbl">{t("panel.villainRange")}</div>
               <div className="lr-val">~{Math.round(vr * 100)}%</div>
             </div>
           ) : null}
           <div className="lr-cell">
-            <div className="lr-lbl">Sua equity</div>
+            <div className="lr-lbl">{t("panel.yourEquity")}</div>
             <div className="lr-val">{Math.round(eq * 100)}%</div>
           </div>
           {req !== undefined && req > 0 ? (
             <div className="lr-cell">
-              <div className="lr-lbl">Preço p/ pagar</div>
+              <div className="lr-lbl">{t("panel.price")}</div>
               <div className={`lr-val ${ahead ? "good" : "bad"}`}>{Math.round(req * 100)}%</div>
             </div>
           ) : null}
@@ -41,14 +43,14 @@ export function LiveRead({ advice }: { advice: HeroAdvice | null }) {
       {priced && req! > 0 ? (
         <div className={`lr-verdict ${ahead ? "good" : "bad"}`}>
           {ahead
-            ? `Equity acima do preço (${Math.round((eq! - req!) * 100)}% de margem): dá para continuar.`
-            : `Equity abaixo do preço (${Math.round((req! - eq!) * 100)}% a menos): tende a fold.`}
+            ? t("panel.aheadPrice", { m: Math.round((eq! - req!) * 100) })
+            : t("panel.behindPrice", { m: Math.round((req! - eq!) * 100) })}
         </div>
       ) : null}
 
       {mix ? (
         <div className="lr-mix">
-          <span className="lr-lbl">Estratégia recomendada</span>
+          <span className="lr-lbl">{t("panel.strategy")}</span>
           <div className="lr-mixbar">
             {(advice.mix ?? [])
               .filter((m) => m.freq >= 0.05)

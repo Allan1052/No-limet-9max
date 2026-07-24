@@ -1,20 +1,17 @@
 // Painel de feedback pós-mão: nota + explicação de cada decisão sua.
 import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
-
-const RATING_LABEL: Record<string, string> = {
-  boa: "Boa",
-  ok: "Ok",
-  imprecisa: "Imprecisa",
-  ruim: "Ruim",
-};
+import { useT } from "../i18n";
+import type { TransKey } from "../i18n/translations";
 
 export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
+  const { t } = useT();
+  const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
   return (
     <div className="panel">
-      <h3>Feedback da mão</h3>
+      <h3>{t("panel.handFeedback")}</h3>
       <div className="summary">{summarize(items)}</div>
       {items.length === 0 ? (
-        <div className="legend">Suas decisões aparecem aqui ao final de cada mão.</div>
+        <div className="legend">{t("panel.feedbackEmpty")}</div>
       ) : (
         items.map((it, i) => (
           <div key={i} className={`fb-item ${it.rating}`}>
@@ -22,7 +19,7 @@ export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
               <span>
                 {it.street}: {it.heroAction}
               </span>
-              <span className="tag">{RATING_LABEL[it.rating]}</span>
+              <span className="tag">{ratingLabel(it.rating)}</span>
             </div>
             <div className="fb-text">
               {it.text}
@@ -34,7 +31,7 @@ export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
                   : ""}
             </div>
             {mixText(it.mix) ? (
-              <div className="fb-mix">Estratégia: {mixText(it.mix)}</div>
+              <div className="fb-mix">{t("panel.strategyLabel")}: {mixText(it.mix)}</div>
             ) : null}
           </div>
         ))

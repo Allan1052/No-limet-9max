@@ -6,6 +6,7 @@
 // jeito). No iPhone (Safari não suporta o evento), mostramos o passo a passo
 // manual. Se o app já está instalado (rodando em standalone), o botão some.
 import { useEffect, useState } from "react";
+import { useT } from "../i18n";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -21,6 +22,7 @@ function isStandalone(): boolean {
 }
 
 export function InstallButton() {
+  const { t } = useT();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [showIosHelp, setShowIosHelp] = useState(false);
@@ -65,32 +67,22 @@ export function InstallButton() {
 
   return (
     <>
-      <button className="install-btn" onClick={onClick} title="Instalar como aplicativo">
-        ⬇ Instalar app
+      <button className="install-btn" onClick={onClick} title={t("install.button")}>
+        {t("install.button")}
       </button>
 
       {showIosHelp ? (
         <div className="overlay" onClick={() => setShowIosHelp(false)}>
           <div className="replay ios-help" onClick={(e) => e.stopPropagation()}>
-            <h3>Instalar no iPhone</h3>
+            <h3>{t("install.iosTitle")}</h3>
             <ol className="ios-steps">
-              <li>
-                Toque no botão <b>Compartilhar</b> (o quadradinho com uma seta para cima),
-                na barra do Safari.
-              </li>
-              <li>
-                Role e toque em <b>“Adicionar à Tela de Início”</b>.
-              </li>
-              <li>
-                Confirme em <b>Adicionar</b>. O ícone do Poker Sim aparece como um app normal.
-              </li>
+              <li>{t("install.iosStep1")}</li>
+              <li>{t("install.iosStep2")}</li>
+              <li>{t("install.iosStep3")}</li>
             </ol>
-            <p className="ios-note">
-              No iPhone não existe aviso de “fonte não confiável” — ele instala direto pela
-              Tela de Início.
-            </p>
+            <p className="ios-note">{t("install.iosNote")}</p>
             <button className="btn primary" onClick={() => setShowIosHelp(false)}>
-              Entendi
+              {t("install.iosOk")}
             </button>
           </div>
         </div>

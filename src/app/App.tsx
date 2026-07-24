@@ -11,10 +11,13 @@ import { IcmCalculator } from "../ui/IcmCalculator";
 import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { InstallButton } from "../ui/InstallButton";
+import { LangSelect } from "../ui/LangSelect";
+import { useT } from "../i18n";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
+  const { t: tr } = useT();
   const { controller, heroAct, newHand, resetStats, startTournament, setLevel, dismissSummary } =
     useGame();
   const [replayOpen, setReplayOpen] = useState(false);
@@ -30,45 +33,46 @@ export function App() {
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
   const hint = advice
-    ? `Recomendação da linha de base: ${adviceLabel(advice.action)}.`
+    ? tr("hint.baseline", { action: adviceLabel(advice.action) })
     : undefined;
 
   return (
     <div className="app">
       <div className="topbar">
         <div className="brand">
-          ♠ Poker Sim <small>· NLHE 9-max · ferramenta de estudo</small>
+          ♠ Poker Sim <small>{tr("app.subtitle")}</small>
         </div>
         <div className="tabs">
           <button
             className={`tab ${view === "play" ? "active" : ""}`}
             onClick={() => setView("play")}
           >
-            Jogar
+            {tr("tab.play")}
           </button>
           <button
             className={`tab ${view === "torneio" ? "active" : ""}`}
             onClick={() => setView("torneio")}
           >
-            Torneio
+            {tr("tab.tournament")}
           </button>
           <button
             className={`tab ${view === "ranges" ? "active" : ""}`}
             onClick={() => setView("ranges")}
           >
-            Ranges
+            {tr("tab.ranges")}
           </button>
           <button
             className={`tab ${view === "icm" ? "active" : ""}`}
             onClick={() => setView("icm")}
           >
-            Calculadora ICM
+            {tr("tab.icm")}
           </button>
         </div>
         <div className="topbar-right">
+          <LangSelect />
           <InstallButton />
           <div className="disclaimer">
-            SEM DINHEIRO REAL · SÓ ESTUDO
+            {tr("disclaimer")}
             <span className="build-id" title="Versão do app (data/hora do build)">
               v{__BUILD_ID__}
             </span>
@@ -102,14 +106,14 @@ export function App() {
           {controller.phase === "handOver" ? (
             <div className="controls">
               <button className="btn primary" onClick={newHand}>
-                Nova mão
+                {tr("btn.newHand")}
               </button>
               <button
                 className="btn"
                 disabled={!controller.lastHand}
                 onClick={() => setReplayOpen(true)}
               >
-                Rever mão
+                {tr("btn.reviewHand")}
               </button>
               <button
                 className="btn"
@@ -117,7 +121,7 @@ export function App() {
                 onClick={() => downloadText(controller.exportSessionText())}
                 title="Baixa o histórico da sessão em texto"
               >
-                Exportar mãos ({controller.handLog.length})
+                {tr("btn.exportHands")} ({controller.handLog.length})
               </button>
               <div className="message">{controller.message}</div>
             </div>
