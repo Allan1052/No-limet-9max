@@ -1,10 +1,9 @@
 // Um assento na mesa: nome, estilo, stack, cartas, última ação.
 import { CardView, CardBack } from "./Card";
 import { profileById } from "../bots/profiles";
-import { toBB } from "../app/format";
+import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
 import type { PlayerState } from "../game/state";
-import type { StatRow } from "../feedback/stats";
 
 interface SeatProps {
   player: PlayerState;
@@ -13,12 +12,12 @@ interface SeatProps {
   lastAction?: string;
   bigBlind: number;
   style: React.CSSProperties;
-  /** Estatísticas do jogador (HUD), exibidas quando há amostra suficiente. */
-  hud?: StatRow;
+  /** Toque no assento → abre as estatísticas do jogador. */
+  onSelect?: (seat: number) => void;
 }
 
-export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud }: SeatProps) {
-  const { mode } = useSettings();
+export function Seat({ player, acting, reveal, lastAction, bigBlind, style, onSelect }: SeatProps) {
+  const { unit } = useSettings();
   if (player.status === "out") {
     return (
       <div className="seat" style={style}>
@@ -46,15 +45,15 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud 
       className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""}`}
       style={style}
     >
-      <div className="pod">
+      <button
+        type="button"
+        className="pod pod-btn"
+        onClick={() => onSelect?.(player.seat)}
+        title="Ver estatísticas"
+      >
         <div className="name">{player.name}</div>
         <div className="arch">{archetype}</div>
-        {mode === "tecnico" && hud && !player.isHero && hud.hands >= 6 ? (
-          <div className="hud" title={`${hud.hands} mãos · VPIP/PFR/3-bet`}>
-            {hud.vpip}/{hud.pfr}/{hud.threeBet}
-          </div>
-        ) : null}
-        <div className="stack">{toBB(player.stack, bigBlind)}</div>
+        <div className="stack">{fmtAmount(player.stack, bigBlind, unit)}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (
             player.holeCards.map((c, i) => <CardView key={i} card={c} small />)
@@ -65,8 +64,8 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud 
             </>
           )}
         </div>
-        <div className={badgeClass}>{lastAction ?? " "}</div>
-      </div>
+        <div className={badgeClass}>{lastAction ?? " "}</div>
+      </button>
     </div>
   );
 }

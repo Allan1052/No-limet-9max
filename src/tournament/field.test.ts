@@ -5,6 +5,7 @@ import {
   estimateHeroRank,
   fieldStatus,
   cashForPlace,
+  stageForField,
 } from "./field";
 import { paidPlaces, prizePool, payoutLadder } from "./structure";
 
@@ -48,6 +49,14 @@ describe("campo do torneio", () => {
     expect(itm.inMoney).toBe(true);
     expect(itm.currentCash).toBeGreaterThan(0);
     expect(itm.toBubble).toBe(0);
+  });
+
+  it("o estágio avança sozinho conforme o campo encolhe", () => {
+    const paid = paidPlaces(2500); // ~375
+    expect(stageForField(2500, 2500, paid)).toBe("inicio");
+    expect(stageForField(1000, 2500, paid)).toBe("meio"); // metade do campo
+    expect(stageForField(390, 2500, paid)).toBe("bolha"); // perto do dinheiro
+    expect(stageForField(8, 2500, paid)).toBe("mesa_final");
   });
 
   it("cash por posição: 1º > min-cash > fora do dinheiro", () => {

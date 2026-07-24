@@ -92,3 +92,15 @@ export function cashForPlace(place: number, ladder: number[]): number {
   if (place < 1 || place > ladder.length) return 0;
   return ladder[place - 1] ?? 0;
 }
+
+/**
+ * Estágio derivado do tamanho do campo (o torneio avança sozinho): início →
+ * meio → bolha (perto do dinheiro) → mesa final (≤ 9 vivos).
+ */
+export function stageForField(remaining: number, entrants: number, paidPlaces: number): Stage {
+  const r = Math.round(remaining);
+  if (r <= 9) return "mesa_final";
+  if (r <= paidPlaces * 1.15) return "bolha";
+  if (r <= entrants * 0.5) return "meio";
+  return "inicio";
+}

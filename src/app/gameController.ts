@@ -51,6 +51,7 @@ import {
   attritionPerHand,
   fieldStatus,
   cashForPlace,
+  stageForField,
   type FieldStatus,
 } from "../tournament/field";
 
@@ -123,6 +124,8 @@ export interface GameSnapshot {
   sessionMistakes: FeedbackItem[];
   tournamentResult: "eliminado" | "campeao" | null;
   tournamentFinishPlace: number | null;
+  /** Histórico de mãos jogadas (para o export continuar após retomar). */
+  handLog?: HandHistory[];
   savedAt: string;
 }
 
@@ -330,6 +333,19 @@ export class GameController {
     } else if (this.tournament) {
       // Na mesa final o "campo" passa a ser a própria mesa (encolhe de verdade).
       this.tournament.fieldRemaining = this.table.players.filter((p) => p.stack > 0).length;
+    }
+    // O torneio avança de estágio sozinho conforme o campo encolhe (início →
+    // meio → bolha → mesa final) e a pressão de ICM acompanha.
+    if (this.tournament) {
+      const newStage = stageForField(
+        this.tournament.fieldRemaining,
+        this.tournament.entrants,
+        this.tournament.ladder.length,
+      );
+      if (newStage !== this.tournament.stage) {
+        this.tournament.stage = newStage;
+        this.payouts = tablePayouts(STAGES[newStage].icm, this.tournament.ladder);
+      }
     }
     let levelUp = false;
     if (this.tournament && this.tournament.handsPerLevel > 0) {
@@ -607,6 +623,9 @@ export class GameController {
       sessionMistakes: this.sessionMistakes,
       tournamentResult: this.tournamentResult,
       tournamentFinishPlace: this.tournamentFinishPlace,
+      // Guarda as últimas mãos para o export continuar após retomar (limita
+      // para o save não crescer demais).
+      handLog: this.handLog.slice(-80),
       savedAt: new Date().toISOString(),
     };
   }
@@ -640,7 +659,7 @@ export class GameController {
     this.tournamentOver = false;
     this.phase = "handOver";
     this.lastHand = null;
-    this.handLog = [];
+    this.handLog = snap.handLog ?? []; // preserva as mãos para o export
     this.feedback = [];
     this.message = "Torneio retomado de onde você parou. Clique em “Nova mão”.";
   }

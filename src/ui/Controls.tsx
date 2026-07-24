@@ -1,6 +1,7 @@
 // Controles do herói: Fold, Check/Call e Raise com slider.
 import { useEffect, useState } from "react";
-import { toBB } from "../app/format";
+import { fmtAmount } from "../app/format";
+import { useSettings } from "../app/settings";
 import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
@@ -11,11 +12,11 @@ interface ControlsProps {
   pot: number;
   bigBlind: number;
   onAction: (a: Action) => void;
-  hint?: string;
 }
 
-export function Controls({ legal, active, pot, bigBlind, onAction, hint }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsProps) {
   const { t } = useT();
+  const { unit } = useSettings();
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
   // Porcentagem digitável do pote (campo livre ao lado dos atalhos).
   const [customPct, setCustomPct] = useState("50");
@@ -56,7 +57,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
           disabled={!active || !legal.canCall}
           onClick={() => onAction({ type: "call" })}
         >
-          {t("ctrl.call")} {toBB(legal.callAmount, bigBlind)}
+          {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
         </button>
       )}
 
@@ -98,7 +99,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
           disabled={!canRaise}
           onChange={(e) => setRaiseTo(Number(e.target.value))}
         />
-        <span className="raise-amount">{toBB(raiseTo, bigBlind)}</span>
+        <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
       </div>
 
       <button
@@ -112,8 +113,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, hint }: Contr
       >
         {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
       </button>
-
-      {hint ? <div className="hint">💡 {hint}</div> : null}
     </div>
   );
 }

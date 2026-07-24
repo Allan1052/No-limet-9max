@@ -2,13 +2,10 @@ import { useState } from "react";
 import { useGame } from "./useGame";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
-import { FeedbackPanel, ProfilesLegend } from "../ui/FeedbackPanel";
-import { LiveRead } from "../ui/LiveRead";
-import { StatsPanel } from "../ui/StatsPanel";
 import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
-import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
+import { TournamentSetup } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
@@ -17,6 +14,8 @@ import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
+import { SeatStatsPopup } from "../ui/SeatStatsPopup";
+import { HandTipsModal } from "../ui/HandTipsModal";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
 import { legalActions } from "../game/betting";
@@ -24,14 +23,12 @@ import "../ui/theme.css";
 
 export function App() {
   const { t: tr } = useT();
-  const { mode, onboarded, setOnboarded } = useSettings();
+  const { onboarded, setOnboarded } = useSettings();
   const {
     controller,
     heroAct,
     newHand,
-    resetStats,
     startTournament,
-    setLevel,
     dismissSummary,
     progress,
     resetProgress,
@@ -45,20 +42,21 @@ export function App() {
     dismissMissionToasts,
   } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges" | "missoes">("play");
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
+  const handOver = controller.phase === "handOver";
 
-  // HUD por assento (VPIP/PFR/3-bet) para exibir sobre cada jogador.
   const rows = controller.statRows();
-  const hudBySeat = Object.fromEntries(rows.map((r) => [r.seat, r]));
+  const selectedRow = selectedSeat != null ? rows.find((r) => r.seat === selectedSeat) : null;
 
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
-  const hint = advice
-    ? tr("hint.baseline", { action: adviceLabel(advice.action) })
-    : undefined;
+  const hint = advice ? tr("hint.baseline", { action: adviceLabel(advice.action) }) : undefined;
 
   return (
     <div className="app">
@@ -67,10 +65,7 @@ export function App() {
           ♠ Poker Sim <small>{tr("app.subtitle")}</small>
         </div>
         <div className="tabs">
-          <button
-            className={`tab ${view === "play" ? "active" : ""}`}
-            onClick={() => setView("play")}
-          >
+          <button className={`tab ${view === "play" ? "active" : ""}`} onClick={() => setView("play")}>
             {tr("tab.play")}
           </button>
           <button
@@ -91,10 +86,7 @@ export function App() {
           >
             {tr("tab.ranges")}
           </button>
-          <button
-            className={`tab ${view === "icm" ? "active" : ""}`}
-            onClick={() => setView("icm")}
-          >
+          <button className={`tab ${view === "icm" ? "active" : ""}`} onClick={() => setView("icm")}>
             {tr("tab.icm")}
           </button>
         </div>
@@ -136,42 +128,36 @@ export function App() {
           }}
         />
       ) : (
-      <div className="layout">
-        <div className="main">
-          {controller.tournament ? (
-            <TournamentHUD
-              t={controller.tournament}
-              field={controller.fieldStatus()}
-              onSetLevel={setLevel}
-            />
-          ) : null}
+        <div className="play">
           <PokerTable
             table={t}
             lastActionLabel={controller.lastActionLabel}
-            hudBySeat={hudBySeat}
+            field={controller.fieldStatus()}
+            hint={heroTurn ? hint : undefined}
+            onSelectSeat={setSelectedSeat}
+            onShowTips={() => setTipsOpen(true)}
+            showTips={handOver && controller.feedback.length > 0}
           />
 
-          {controller.phase === "handOver" ? (
-            <div className="controls">
+          {handOver ? (
+            <div className="controls action-row">
               <button className="btn primary" onClick={newHand}>
                 {tr("btn.newHand")}
               </button>
-              <button
-                className="btn"
-                disabled={!controller.lastHand}
-                onClick={() => setReplayOpen(true)}
-              >
+              <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
                 {tr("btn.reviewHand")}
+              </button>
+              <button className="btn" onClick={() => setProgressOpen(true)}>
+                📊 {tr("btn.progress")}
               </button>
               <button
                 className="btn"
                 disabled={controller.handLog.length === 0}
                 onClick={() => downloadText(controller.exportSessionText())}
-                title="Baixa o histórico da sessão em texto"
               >
                 {tr("btn.exportHands")} ({controller.handLog.length})
               </button>
-              <div className="message">{controller.message}</div>
+              {controller.message ? <div className="message">{controller.message}</div> : null}
             </div>
           ) : (
             <Controls
@@ -180,25 +166,32 @@ export function App() {
               pot={controller.pot}
               bigBlind={t.bigBlind}
               onAction={heroAct}
-              hint={hint}
             />
           )}
         </div>
-
-        <div className="sidebar">
-          {heroTurn && advice ? <LiveRead advice={advice} /> : null}
-          <ProgressPanel summary={progress()} onReset={resetProgress} />
-          <FeedbackPanel items={controller.feedback} />
-          {mode === "tecnico" ? (
-            <StatsPanel rows={controller.statRows()} onReset={resetStats} />
-          ) : null}
-          <ProfilesLegend />
-        </div>
-      </div>
       )}
 
       {replayOpen && controller.lastHand ? (
         <Replayer hand={controller.lastHand} onClose={() => setReplayOpen(false)} />
+      ) : null}
+
+      {tipsOpen ? (
+        <HandTipsModal items={controller.feedback} onClose={() => setTipsOpen(false)} />
+      ) : null}
+
+      {selectedRow ? (
+        <SeatStatsPopup row={selectedRow} onClose={() => setSelectedSeat(null)} />
+      ) : null}
+
+      {progressOpen ? (
+        <div className="overlay" onClick={() => setProgressOpen(false)}>
+          <div className="replay progress-modal" onClick={(e) => e.stopPropagation()}>
+            <ProgressPanel summary={progress()} onReset={resetProgress} />
+            <button className="btn" style={{ width: "100%" }} onClick={() => setProgressOpen(false)}>
+              fechar
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {controller.tournamentOver && controller.tournamentSummary() ? (

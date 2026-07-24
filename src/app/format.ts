@@ -11,3 +11,11 @@ export function toBB(chips: number, bigBlind: number): string {
   const s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   return `${s}bb`;
 }
+
+export type DisplayUnit = "bb" | "chips";
+
+/** Formata um valor em big blinds OU em fichas, conforme a preferência. */
+export function fmtAmount(chips: number, bigBlind: number, unit: DisplayUnit = "bb"): string {
+  if (unit === "chips") return Math.round(chips).toLocaleString("en-US");
+  return toBB(chips, bigBlind);
+}
