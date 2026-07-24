@@ -1,10 +1,15 @@
 // Painel de feedback pós-mão: nota + explicação de cada decisão sua.
+// No modo Simples, esconde os números (equity/odds/frequências) e mantém só a
+// explicação em linguagem humana — foco no recreativo.
 import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
+import { useSettings } from "../app/settings";
 
 export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
   const { t } = useT();
+  const { mode } = useSettings();
+  const tecnico = mode === "tecnico";
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
   return (
     <div className="panel">
@@ -23,14 +28,14 @@ export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
             </div>
             <div className="fb-text">
               {it.text}
-              {it.equity !== undefined ? ` (equity ${Math.round(it.equity * 100)}%` : ""}
-              {it.equity !== undefined && it.potOdds !== undefined
+              {tecnico && it.equity !== undefined ? ` (equity ${Math.round(it.equity * 100)}%` : ""}
+              {tecnico && it.equity !== undefined && it.potOdds !== undefined
                 ? `, preço ${Math.round(it.potOdds * 100)}%)`
-                : it.equity !== undefined
+                : tecnico && it.equity !== undefined
                   ? ")"
                   : ""}
             </div>
-            {mixText(it.mix) ? (
+            {tecnico && mixText(it.mix) ? (
               <div className="fb-mix">{t("panel.strategyLabel")}: {mixText(it.mix)}</div>
             ) : null}
           </div>

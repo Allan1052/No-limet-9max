@@ -53,6 +53,10 @@ export interface GameOptions {
   startingStack?: number;
   /** Prêmios do torneio (ativam o ICM nas decisões de all-in pós-flop). */
   payouts?: number[];
+  /** Chamado a cada decisão sua avaliada (para o placar de evolução). */
+  onGrade?: (rating: Rating) => void;
+  /** Chamado quando o herói recebe cartas numa nova mão. */
+  onHeroHand?: () => void;
 }
 
 export interface TournamentConfig {
@@ -120,10 +124,14 @@ export class GameController {
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
   private rng = Math.random;
+  private onGrade?: (rating: Rating) => void;
+  private onHeroHand?: () => void;
 
   constructor(opts: GameOptions = {}) {
     const stack = opts.startingStack ?? 3000;
     this.payouts = opts.payouts;
+    this.onGrade = opts.onGrade;
+    this.onHeroHand = opts.onHeroHand;
     this.seatDefs = [
       { name: "Você", isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
@@ -277,6 +285,8 @@ export class GameController {
     for (const p of this.table.players) {
       if (p.status !== "out") this.perHand[p.seat] = beginHand(this.stats[p.seat]);
     }
+    // Placar de evolução: conta uma mão jogada pelo herói.
+    if (this.table.players[this.heroSeat].status !== "out") this.onHeroHand?.();
     this.phase = "playing";
     this.message = "";
   }
@@ -373,6 +383,8 @@ export class GameController {
       this.feedback.push(item);
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;
+      // Alimenta o placar de evolução (persistente entre sessões).
+      this.onGrade?.(item.rating);
       // Guarda os erros claros (ruim/imprecisa) para revisar depois — limita a
       // uma lista enxuta com os mais graves primeiro.
       if (item.rating === "ruim" || item.rating === "imprecisa") {

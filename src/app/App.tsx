@@ -12,14 +12,28 @@ import { TournamentSetup, TournamentHUD } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
+import { ModeToggle } from "../ui/ModeToggle";
+import { ProgressPanel } from "../ui/ProgressPanel";
+import { Onboarding } from "../ui/Onboarding";
 import { useT } from "../i18n";
+import { useSettings } from "./settings";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
   const { t: tr } = useT();
-  const { controller, heroAct, newHand, resetStats, startTournament, setLevel, dismissSummary } =
-    useGame();
+  const { mode, onboarded, setOnboarded } = useSettings();
+  const {
+    controller,
+    heroAct,
+    newHand,
+    resetStats,
+    startTournament,
+    setLevel,
+    dismissSummary,
+    progress,
+    resetProgress,
+  } = useGame();
   const [replayOpen, setReplayOpen] = useState(false);
   const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges">("play");
   const t = controller.table;
@@ -69,6 +83,7 @@ export function App() {
           </button>
         </div>
         <div className="topbar-right">
+          <ModeToggle />
           <LangSelect />
           <InstallButton />
           <div className="disclaimer">
@@ -139,8 +154,11 @@ export function App() {
 
         <div className="sidebar">
           {heroTurn && advice ? <LiveRead advice={advice} /> : null}
-          <StatsPanel rows={controller.statRows()} onReset={resetStats} />
+          <ProgressPanel summary={progress()} onReset={resetProgress} />
           <FeedbackPanel items={controller.feedback} />
+          {mode === "tecnico" ? (
+            <StatsPanel rows={controller.statRows()} onReset={resetStats} />
+          ) : null}
           <ProfilesLegend />
         </div>
       </div>
@@ -159,6 +177,8 @@ export function App() {
           }}
         />
       ) : null}
+
+      {!onboarded ? <Onboarding onClose={() => setOnboarded(true)} /> : null}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { CardView, CardBack } from "./Card";
 import { profileById } from "../bots/profiles";
 import { toBB } from "../app/format";
+import { useSettings } from "../app/settings";
 import type { PlayerState } from "../game/state";
 import type { StatRow } from "../feedback/stats";
 
@@ -17,6 +18,7 @@ interface SeatProps {
 }
 
 export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud }: SeatProps) {
+  const { mode } = useSettings();
   if (player.status === "out") {
     return (
       <div className="seat" style={style}>
@@ -47,7 +49,7 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style, hud 
       <div className="pod">
         <div className="name">{player.name}</div>
         <div className="arch">{archetype}</div>
-        {hud && !player.isHero && hud.hands >= 6 ? (
+        {mode === "tecnico" && hud && !player.isHero && hud.hands >= 6 ? (
           <div className="hud" title={`${hud.hands} mãos · VPIP/PFR/3-bet`}>
             {hud.vpip}/{hud.pfr}/{hud.threeBet}
           </div>

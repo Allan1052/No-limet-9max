@@ -73,6 +73,57 @@ body {
   border-color: var(--gold-dim);
   background: rgba(201, 180, 88, 0.12);
 }
+
+/* ---- Alternador de modo (Simples/Técnico) ---- */
+.mode-toggle {
+  display: inline-flex;
+  border: 1px solid #2a2c22;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mode-opt {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.mode-opt.active { background: var(--gold); color: #0d0f0d; }
+
+/* ---- Placar de evolução ---- */
+.progress-panel { text-align: center; }
+.pp-head { display: flex; align-items: center; justify-content: space-between; }
+.pp-head h3 { margin: 0; }
+.pp-ring {
+  margin: 8px auto 6px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(closest-side, #14170f 78%, transparent 79%),
+    conic-gradient(var(--good) calc(var(--rate, 0) * 1%), #2a2c22 0);
+}
+.pp-rate { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1; }
+.pp-rate-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.pp-stats { display: flex; justify-content: center; gap: 14px; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.pp-week { font-size: 12px; color: var(--text); }
+.pp-week b { color: var(--gold); }
+.pp-trend { font-size: 12px; font-weight: 700; margin-top: 4px; }
+.pp-trend.up { color: var(--good); }
+.pp-trend.down { color: var(--warn); }
+
+/* ---- Onboarding ---- */
+.onboard { width: min(460px, 94vw); text-align: center; }
+.onboard h3 { color: var(--gold); margin: 0 0 12px; }
+.onboard-steps { text-align: left; margin: 0 0 12px; padding-left: 22px; line-height: 1.6; font-size: 14px; }
+.onboard-steps li { margin-bottom: 9px; }
+.onboard-mode { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.onboard .btn.primary { width: 100%; }
 .install-btn {
   border: 1px solid var(--gold);
   background: linear-gradient(180deg, var(--gold) 0%, var(--gold-soft) 100%);

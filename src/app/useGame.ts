@@ -2,10 +2,32 @@
 import { useEffect, useReducer, useRef } from "react";
 import { GameController, type GameOptions, type TournamentConfig } from "./gameController";
 import type { Action } from "../game/engine";
+import {
+  loadProgress,
+  recordDecision,
+  recordHand,
+  saveProgress,
+  resetProgress,
+  summarize,
+  type ProgressState,
+} from "./progress";
 
 export function useGame(opts?: GameOptions) {
+  const progressRef = useRef<ProgressState>(loadProgress());
   const ref = useRef<GameController | null>(null);
-  if (!ref.current) ref.current = new GameController(opts);
+  if (!ref.current) {
+    ref.current = new GameController({
+      ...opts,
+      onGrade: (rating) => {
+        recordDecision(progressRef.current, rating);
+        saveProgress(progressRef.current);
+      },
+      onHeroHand: () => {
+        recordHand(progressRef.current);
+        saveProgress(progressRef.current);
+      },
+    });
+  }
   const g = ref.current;
   const [, force] = useReducer((x) => x + 1, 0);
 
@@ -44,6 +66,11 @@ export function useGame(opts?: GameOptions) {
     },
     dismissSummary: () => {
       g.tournamentOver = false;
+      force();
+    },
+    progress: () => summarize(progressRef.current),
+    resetProgress: () => {
+      progressRef.current = resetProgress();
       force();
     },
   };
