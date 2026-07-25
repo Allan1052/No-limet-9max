@@ -396,10 +396,21 @@ body {
 }
 
 /* ---- Popup de estatísticas do assento + modais da mesa ---- */
-.seat-stats, .tips-modal { width: min(440px, 94vw); max-height: 88vh; overflow-y: auto; }
-.progress-modal { width: min(400px, 94vw); }
-.ss-head { display: flex; align-items: center; justify-content: space-between; }
-.ss-head h3 { margin: 0; color: var(--gold); }
+/* Especificidade .replay.X para vencer a largura padrão de .replay e caber
+   centralizado na tela sem transbordar. */
+.replay.seat-stats,
+.replay.tips-modal {
+  width: min(440px, 92vw);
+  max-height: 86vh;
+  overflow: hidden auto;
+}
+.replay.progress-modal { width: min(400px, 92vw); }
+.ss-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ss-head h3 { margin: 0; color: var(--gold); min-width: 0; overflow-wrap: anywhere; }
+.ss-head .btn.tiny { flex: 0 0 auto; }
+.tips-modal .fb-head { gap: 8px; }
+.tips-modal .fb-head > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.tips-modal .fb-item .tag { flex: 0 0 auto; }
 .felt {
   position: absolute;
   inset: 6%;

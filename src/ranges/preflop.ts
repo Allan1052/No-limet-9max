@@ -179,6 +179,33 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // ----- Caso 2: enfrentando um raise -----
   const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition);
 
+  // STACK ULTRACURTO (push/fold): se pagar já significa ir all-in (ou quase), a
+  // decisão é de POT ODDS — não de "aperto por tamanho". Com poucos bb as odds
+  // são ótimas e não há fold equity, então a range de call ALARGA conforme o
+  // stack encolhe (ex.: ATo com 4bb paga o shove tranquilo). O ICM aperta perto
+  // do dinheiro. Isso corrige o fold irreal com stack curtíssimo.
+  const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
+  if (sd.pushFold && callIsAllIn) {
+    const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
+    const profAdj = 0.7 + 0.3 * profile.defendFactor; // station paga mais largo
+    const callWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+    const callRange = buildTopRange(callWidth);
+    if (freqIn(callRange, handType) > 0) {
+      return {
+        action: "call",
+        sizeBB: ctx.effectiveBB,
+        reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in.`,
+        handType,
+      };
+    }
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+      handType,
+    };
+  }
+
   // Tamanho da abertura importa MUITO: contra um open pequeno (2.3bb) defende-se
   // largo; contra 3-bet/4-bet/all-in a range de continuar ENCOLHE drasticamente
   // (ninguém — nem calling station — paga um shove com 85s). Aberturas grandes

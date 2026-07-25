@@ -50,6 +50,23 @@ describe("pré-flop — profundidade de stack", () => {
     expect(d.sizeBB).toBeCloseTo(10, 5);
   });
 
+  it("stack ultracurto paga o all-in com ATo (pot odds), não folda", () => {
+    // ATo com 4.3bb enfrentando um all-in: com o preço do pote é call fácil.
+    const d = decide("AsTc", "BB", {
+      raiserPosition: "MP",
+      openSizeBB: 12,
+      effectiveBB: 4.3,
+    });
+    expect(d.action).toBe("call");
+    // Já mão bem fraca (72o) continua foldando mesmo curtíssimo.
+    const trash = decide("7h2c", "BB", {
+      raiserPosition: "MP",
+      openSizeBB: 12,
+      effectiveBB: 4.3,
+    });
+    expect(trash.action).toBe("fold");
+  });
+
   it("na mesa final, o jogador habilidoso dá all-in de roubo que o passivo folda", () => {
     // Mão marginal de steal no botão a 10bb: o skilled (shover) jamma; o fraco
     // (station, skill baixo) folda e vai perdendo blinds — o edge da mesa final.
