@@ -44,15 +44,35 @@ export interface PreflopContext {
   icmSpot?: IcmSpot;
 }
 
+export interface PreflopFreq {
+  action: string;
+  freq: number;
+}
+
 export interface PreflopDecision {
   action: PreflopAction;
   sizeBB: number; // 0 para fold; para call, o valor a pagar
   reason: string;
   handType: string;
+  /** Estratégia mista aproximada (frequências), para o feedback por frequência. */
+  mix?: PreflopFreq[];
 }
 
 function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
+}
+
+/**
+ * Mix aproximado numa fronteira de range: mãos bem dentro são "puras" (100%);
+ * mãos na BORDA da largura `pct` são MISTAS (parte na ação, parte na alternativa)
+ * — é o que permite avaliar o pré-flop por frequência (T9s abre ~60%, não 0/100).
+ */
+function bandMix(action: string, pct: number, handType: string, alt = "fold"): PreflopFreq[] {
+  const inCore = freqIn(buildTopRange(Math.max(0.005, pct * 0.72)), handType) > 0;
+  if (inCore) return [{ action, freq: 1 }];
+  const inEdge = freqIn(buildTopRange(Math.min(1, pct * 1.12)), handType) > 0;
+  if (inEdge) return [{ action, freq: 0.6 }, { action: alt, freq: 0.4 }];
+  return [{ action: alt, freq: 1 }];
 }
 
 // Parâmetros de defesa (call/3bet) ao enfrentar UMA abertura, antes de perfil e
@@ -135,6 +155,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       stackFactor: sd.factor,
       icmFactor,
     });
+    const openPct = rangePercent(range);
     if (freqIn(range, handType) > 0) {
       if (sd.pushFold) {
         return {
@@ -142,6 +163,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
           sizeBB: ctx.effectiveBB,
           reason: `Stack raso (${Math.round(ctx.effectiveBB)}bb): abertura vira all-in (push/fold).`,
           handType,
+          mix: bandMix("jam", openPct, handType),
         };
       }
       return {
@@ -149,12 +171,12 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         sizeBB: 2.3,
         reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${profile.archetype}).`,
         handType,
+        mix: bandMix("raise", openPct, handType),
       };
     }
     // Limp especulativo: perfis passivos entram de limp com mãos logo abaixo da
     // abertura — é assim que o recreativo/station veem tantos flops.
     if (profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
-      const openPct = rangePercent(range);
       const limpRange = rangeSubtract(
         buildTopRange(openPct + profile.limpFactor * 0.4),
         range,
@@ -173,6 +195,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       sizeBB: 0,
       reason: `${handType} está fora da range de abertura de ${ctx.heroPosition}.`,
       handType,
+      mix: bandMix("raise", openPct, handType),
     };
   }
 
@@ -242,6 +265,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
       reason: `${handType}: 3-bet por valor contra abertura de ${ctx.raiserPosition}.`,
       handType,
+      mix: bandMix(action, value3betPct, handType, "call"),
     };
   }
 
@@ -253,6 +277,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         sizeBB: openSize,
         reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (perfil ${profile.archetype}).`,
         handType,
+        mix: bandMix("call", defendPct, handType),
       };
     }
     // OOP sem valor de 3-bet (perfis disciplinados): fold em vez de pagar dominado.
@@ -261,6 +286,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       sizeBB: 0,
       reason: `${handType}: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.`,
       handType,
+      mix: bandMix("call", defendPct, handType),
     };
   }
 
@@ -278,5 +304,6 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     sizeBB: 0,
     reason: `${handType}: fora da range de defesa contra ${ctx.raiserPosition}.`,
     handType,
+    mix: bandMix("call", defendPct, handType),
   };
 }
