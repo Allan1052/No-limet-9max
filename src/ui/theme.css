@@ -1046,3 +1046,100 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .disclaimer-text { display: none; }
   .table-wrap { max-width: min(100%, 56vh); }
 }
+
+/* -------------------------------------------------------------------------
+   IMPORTAR SESSÃO — raio-x de mãos reais (PokerStars/GGPoker).
+   ------------------------------------------------------------------------- */
+.import-view {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.import-intro h2 { color: var(--gold); margin: 0 0 6px; font-size: 22px; }
+.import-intro p { color: var(--text-dim); margin: 0 0 8px; line-height: 1.5; }
+.import-how { font-size: 14px; color: var(--text-dim); }
+.import-how summary { cursor: pointer; color: var(--gold-soft); padding: 4px 0; }
+.import-how ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.6; }
+
+.import-input { display: flex; flex-direction: column; gap: 10px; }
+.import-textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  background: #0a0c09;
+  color: var(--text);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.import-textarea:focus { outline: none; border-color: var(--gold); }
+.import-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.import-actions .btn { cursor: pointer; }
+.import-error {
+  color: var(--bad);
+  background: #2a1413;
+  border: 1px solid var(--bad);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.import-report { display: flex; flex-direction: column; gap: 16px; }
+.import-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+}
+.import-stat {
+  background: var(--bg2);
+  border: 1px solid var(--rail);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.import-stat-value { font-size: 22px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.import-stat-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.import-stat-boa .import-stat-value { color: var(--good); }
+.import-stat-imprecisa .import-stat-value { color: var(--warn); }
+.import-stat-ruim .import-stat-value { color: var(--bad); }
+
+.import-leaks {
+  background: var(--bg2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.import-leaks h3 { margin: 0 0 8px; color: var(--gold); font-size: 16px; }
+.import-leaks ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.import-leaks li { margin-bottom: 6px; }
+
+.import-hands-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.import-hands-head h3 { margin: 0; color: var(--gold); font-size: 16px; }
+.import-filter { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-dim); cursor: pointer; }
+
+.import-hand-list { display: flex; flex-direction: column; gap: 8px; }
+.import-hand {
+  background: var(--bg2);
+  border: 1px solid var(--rail);
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.import-hand.grade-boa { border-left-color: var(--good); }
+.import-hand.grade-ok { border-left-color: var(--ok); }
+.import-hand.grade-imprecisa { border-left-color: var(--warn); }
+.import-hand.grade-ruim { border-left-color: var(--bad); }
+.import-hand.grade-skip { border-left-color: var(--rail); opacity: 0.7; }
+.import-hand-top { display: flex; gap: 12px; align-items: flex-start; }
+.import-hand-cards { display: flex; gap: 4px; flex-shrink: 0; }
+.import-hand-info { flex: 1; min-width: 0; }
+.import-hand-sit { font-size: 13px; color: var(--gold-soft); margin-bottom: 4px; }
+.import-hand-fb { font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; gap: 3px; }
+.import-hand-mix { font-size: 12px; color: var(--text-dim); }
+.import-hand-skip { color: var(--text-dim); font-style: italic; }
