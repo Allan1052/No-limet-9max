@@ -102,6 +102,40 @@ export function gradeDecision(
     mix: advice.mix,
   };
 
+  // ----- Nota por FREQUÊNCIA (estratégia mista) -----
+  // O poker é misto: uma mão pode ser 60% aposta / 40% check. Avaliar por
+  // "bateu a ação exata" pune jogadas corretas. Quando temos as frequências,
+  // a nota vem de QUÃO FREQUENTE a família da ação do herói aparece no padrão.
+  if (advice.mix && advice.mix.length > 0) {
+    const freqByFam: Record<Family, number> = { fold: 0, check: 0, call: 0, aggro: 0 };
+    for (const m of advice.mix) freqByFam[family(m.action)] += m.freq;
+    const heroFreq = freqByFam[hf];
+    const main = [...advice.mix].sort((a, b) => b.freq - a.freq)[0];
+    const mainLabel = actionLabel(main.action);
+    if (heroFreq >= 0.55) {
+      return {
+        ...base,
+        rating: "boa",
+        text: `Jogada principal aqui — o padrão faz ${actionLabel(heroAction)} em ~${pc(heroFreq)} das vezes.`,
+      };
+    }
+    if (heroFreq >= 0.25) {
+      return {
+        ...base,
+        rating: "ok",
+        text: `Jogada válida da estratégia mista (~${pc(heroFreq)} das vezes), mas na maioria o padrão prefere ${mainLabel}.`,
+      };
+    }
+    if (heroFreq >= 0.08) {
+      return {
+        ...base,
+        rating: "imprecisa",
+        text: `Linha minoritária (~${pc(heroFreq)}): dá para fazer de vez em quando, mas aqui o padrão costuma ${mainLabel}.`,
+      };
+    }
+    // Frequência quase nula → é erro de verdade: segue para a análise de EV.
+  }
+
   // Bateu com a recomendação: boa jogada.
   if (hf === af) {
     return { ...base, rating: "boa", text: `Alinhado com o padrão. ${advice.reason}` };
