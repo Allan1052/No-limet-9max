@@ -1,12 +1,13 @@
 name: Publicar no GitHub Pages
 
-# Publica o app automaticamente a cada push nestas branches (ou manualmente).
+# Publica o app automaticamente a cada push na main (ou manualmente).
+# Só a main dispara o deploy: pushes no branch de trabalho NÃO competem pelo
+# mesmo deploy (era o que cancelava a publicação e deixava o site quebrado).
 on:
   push:
     branches:
       - main
       - master
-      - claude/poker-nlhe-simulator-yx0aa7
   workflow_dispatch:
 
 permissions:
@@ -14,9 +15,11 @@ permissions:
   pages: write
   id-token: write
 
+# Um deploy por vez, MAS sem cancelar o que está em andamento (recomendação
+# oficial do GitHub Pages): deploys de produção sempre completam.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
