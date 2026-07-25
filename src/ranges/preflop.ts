@@ -149,9 +149,16 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // passivo/fraco (skill baixo) fica travado e some sem lutar (blind down).
     // Só vale na zona de push/fold — no jogo profundo a habilidade age noutros
     // lugares (pós-flop). skill 0.5 é neutro.
-    const shoveSkill = sd.pushFold ? Math.max(0.7, 1 + (profile.skill - 0.5) * 0.8) : 1;
+    // No PUSH/FOLD a largura do all-in converge fortemente para o Nash (perto de
+    // 1×) e é POUCO sensível ao rfiWidth — que é calibrado para o jogo profundo.
+    // Sem isso, os perfis largos (LAG) jammam muito além do razoável e sangram
+    // no final table. Jogar bem em push/fold é ficar PERTO do ótimo, não abrir
+    // mais; a diferença entre perfis vem sobretudo da largura da CALL vs shove.
+    const widthFactor = sd.pushFold
+      ? (1 + (profile.rfiWidth - 1) * 0.25) * posMult
+      : profile.rfiWidth * posMult;
     const range = rfiRange(ctx.heroPosition, {
-      widthFactor: profile.rfiWidth * posMult * shoveSkill,
+      widthFactor,
       stackFactor: sd.factor,
       icmFactor,
     });

@@ -67,16 +67,15 @@ describe("pré-flop — profundidade de stack", () => {
     expect(trash.action).toBe("fold");
   });
 
-  it("na mesa final, o jogador habilidoso dá all-in de roubo que o passivo folda", () => {
-    // Mão marginal de steal no botão a 10bb: o skilled (shover) jamma; o fraco
-    // (station, skill baixo) folda e vai perdendo blinds — o edge da mesa final.
+  it("na mesa final (push/fold), o shover de late position abre mais que o nit", () => {
+    // No BTN a 10bb, o shover (agressivo, posicional) jamma uma range mais larga
+    // que o nit conservador. Comparamos por várias mãos de fronteira.
     const shover = profileById("shover");
-    const station = profileById("station");
-    const hand = "Jc8c";
-    const skilled = decide(hand, "BTN", { effectiveBB: 10, profile: shover });
-    const weak = decide(hand, "BTN", { effectiveBB: 10, profile: station });
-    expect(skilled.action).toBe("jam");
-    expect(weak.action).toBe("fold");
+    const nit = profileById("nit");
+    const hands = ["Kd5c", "Qc7d", "Jd7s", "Tc7h", "9d6d", "8s5s"];
+    const jams = (p: ReturnType<typeof profileById>) =>
+      hands.filter((h) => decide(h, "BTN", { effectiveBB: 10, profile: p }).action === "jam").length;
+    expect(jams(shover)).toBeGreaterThan(jams(nit));
   });
 });
 
