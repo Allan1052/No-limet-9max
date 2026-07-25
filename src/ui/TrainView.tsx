@@ -21,13 +21,35 @@ import {
   resetModule,
   type MasteryState,
 } from "../train/mastery";
+import { makeRandomChallenge } from "../app/challenge";
+import { drawSpotImage } from "../app/handImage";
+import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
 
 export function TrainView() {
   const { t } = useT();
   const [mastery, setMasteryState] = useState<MasteryState>(() => loadMastery());
   const [moduleId, setModuleId] = useState<string | null>(null);
+  const [challengeMsg, setChallengeMsg] = useState<string | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
+
+  // Gera um desafio aleatório e compartilha (imagem + link) — cada convite
+  // é uma porta de entrada para novos usuários.
+  const onChallenge = async () => {
+    setChallengeMsg(null);
+    const { scenario: sc, url } = makeRandomChallenge();
+    const s = sc.spec;
+    const img = await drawSpotImage({
+      hand: sc.hand,
+      title: t("challenge.imgTitle"),
+      context: `${s.heroPosition} · ${s.effectiveBB}bb`,
+      question: t("challenge.imgQuestion"),
+      footer: t("challenge.imgFooter"),
+    });
+    const res = await shareSpot(img, url, t("challenge.shareText"));
+    if (res === "copied") setChallengeMsg(t("challenge.copied"));
+    else if (res === "failed") setChallengeMsg(t("challenge.failed"));
+  };
   const [result, setResult] = useState<FeedbackItem | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
 
@@ -62,6 +84,16 @@ export function TrainView() {
   if (!moduleId) {
     return (
       <div className="train-view">
+        <div className="panel challenge-cta-panel">
+          <div className="chal-cta-text">
+            <b>🎯 {t("challenge.button")}</b>
+            <span>{t("challenge.subtitle")}</span>
+          </div>
+          <button className="btn primary" onClick={onChallenge}>
+            {t("challenge.send")}
+          </button>
+          {challengeMsg ? <div className="chal-msg">{challengeMsg}</div> : null}
+        </div>
         <div className="panel">
           <h3>{t("train.title")}</h3>
           <div className="missions-list">

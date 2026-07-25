@@ -183,6 +183,25 @@ body {
 .train-next { width: 100%; margin-top: 10px; }
 .train-reset { display: block; margin: 14px auto 0; }
 
+/* ---- Desafie um amigo / landing ---- */
+.challenge-cta-panel {
+  border-color: var(--gold-dim);
+  background: linear-gradient(180deg, #1c2015 0%, #14170f 100%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chal-cta-text { flex: 1 1 180px; display: flex; flex-direction: column; gap: 2px; }
+.chal-cta-text b { color: var(--gold); font-size: 15px; }
+.chal-cta-text span { font-size: 12px; color: var(--text-dim); }
+.chal-msg { flex: 1 1 100%; font-size: 12px; color: var(--good); font-weight: 600; }
+.challenge-recv { width: min(460px, 94vw); text-align: center; }
+.chal-banner { font-size: 22px; font-weight: 800; color: var(--gold); }
+.chal-tagline { font-size: 13px; color: var(--text-dim); margin: 6px 0 14px; line-height: 1.4; }
+.chal-cta { width: 100%; margin-top: 12px; font-size: 16px; padding: 12px; }
+.chal-install { margin-top: 10px; display: flex; justify-content: center; }
+
 /* ---- Aviso de missão concluída (toast) ---- */
 .mission-toasts {
   position: fixed;

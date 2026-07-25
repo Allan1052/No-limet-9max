@@ -18,6 +18,8 @@ import { Onboarding } from "../ui/Onboarding";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { HandTipsModal } from "../ui/HandTipsModal";
 import { MoneyRain } from "../ui/MoneyRain";
+import { ChallengeReceived } from "../ui/ChallengeReceived";
+import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
 import { legalActions } from "../game/betting";
@@ -45,6 +47,7 @@ export function App() {
     celebrateItm,
     dismissItmCelebration,
   } = useGame();
+  const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
@@ -224,6 +227,20 @@ export function App() {
       ) : null}
 
       {!onboarded ? <Onboarding onClose={() => setOnboarded(true)} /> : null}
+
+      {challenge ? (
+        <ChallengeReceived
+          scenario={challenge}
+          onPlay={() => {
+            setChallenge(null);
+            try {
+              history.replaceState(null, "", location.pathname);
+            } catch {
+              /* ignora */
+            }
+          }}
+        />
+      ) : null}
 
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
 
