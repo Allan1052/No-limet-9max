@@ -1,4 +1,4 @@
-<title>Poker Sim — Aprenda poker de graça, sem arriscar dinheiro</title>
+<title>Poker Sim — Evoluir no poker é aprender a decidir certo</title>
 <style>
   :root {
     --ground: #0b0d0a;
@@ -61,17 +61,17 @@
   .btn:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 3px; }
 
   /* ---- Hero ---- */
-  .hero { text-align: center; padding: 40px 0 30px; position: relative; }
+  .hero { text-align: center; padding: 34px 0 20px; position: relative; }
   .eyebrow {
     display: inline-block; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
     color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 20px;
     padding: 6px 16px; margin-bottom: 22px;
   }
-  .hero h1 { font-size: clamp(34px, 7vw, 60px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.05; }
+  .hero h1 { font-size: clamp(32px, 6.4vw, 58px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.06; }
   .hero h1 .g { color: var(--gold); }
-  .hero p.sub { font-size: clamp(16px, 2.4vw, 20px); color: var(--dim); max-width: 30ch; margin: 20px auto 30px; }
+  .hero p.sub { font-size: clamp(16px, 2.4vw, 20px); color: var(--dim); max-width: 40ch; margin: 22px auto 30px; }
   .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  .trust { margin-top: 20px; font-size: 13px; color: var(--dim); display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+  .trust { margin-top: 22px; font-size: 13px; color: var(--dim); display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
   .trust b { color: var(--cream); }
 
   /* ---- Playing cards ---- */
@@ -89,10 +89,49 @@
   .card:nth-child(1){ transform: rotate(-6deg); animation-delay: .05s; }
   .card:nth-child(2){ transform: rotate(6deg) translateY(-4px); animation-delay: .18s; }
   @keyframes deal { from { opacity: 0; transform: translateY(30px) rotate(0); } }
-  @media (prefers-reduced-motion: reduce){ .card, .card:nth-child(1), .card:nth-child(2){ animation: none; } }
+
+  /* ---- Manifesto ---- */
+  .manifesto { margin: 40px 0 10px; }
+  .manifesto .card-lg {
+    background: linear-gradient(180deg, #15180f, #0e110b);
+    border: 1px solid #2a2e1e; border-radius: 22px;
+    padding: clamp(26px, 5vw, 52px);
+  }
+  .manifesto .k { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .manifesto h2 { font-size: clamp(24px, 4.4vw, 36px); margin: 10px 0 20px; }
+  .manifesto p { color: #cfccbe; font-size: clamp(16px, 2vw, 18px); margin: 0 0 16px; max-width: 62ch; }
+  .manifesto p:last-child { margin-bottom: 0; }
+  .manifesto b { color: var(--gold-soft); }
+  .manifesto .big {
+    color: var(--cream); font-weight: 800; font-size: clamp(19px, 2.6vw, 24px);
+    line-height: 1.35; border-left: 4px solid var(--gold); padding-left: 18px; margin: 22px 0;
+  }
+
+  /* ---- Flop dos sonhos ---- */
+  .dream { margin: 60px 0; }
+  .dream-grid { display: grid; gap: 22px; grid-template-columns: 1fr; align-items: center; }
+  @media (min-width: 760px){ .dream-grid { grid-template-columns: 1.2fr 1fr; } }
+  .dream .k { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .dream h2 { font-size: clamp(24px, 4.4vw, 36px); margin: 10px 0 18px; }
+  .dream p { color: var(--dim); font-size: clamp(15px, 2vw, 17.5px); margin: 0 0 15px; }
+  .dream p b { color: var(--cream); }
+  .dream .punch { color: var(--gold-soft); font-weight: 700; }
+  .dream-visual {
+    background: radial-gradient(120% 120% at 50% 15%, var(--felt-1), var(--felt-2));
+    border: 8px solid var(--rail); border-radius: 22px; padding: 26px 18px; text-align: center;
+    box-shadow: inset 0 0 40px rgba(0,0,0,.5), 0 18px 40px rgba(0,0,0,.4);
+  }
+  .dream-visual .cap { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-soft); opacity: .85; }
+  .dream-visual .mini-cards { display:flex; gap: 8px; justify-content:center; margin: 14px 0 12px; }
+  .mini { width: 54px; height: 76px; border-radius: 7px; background: var(--card-bg); display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; line-height:1; box-shadow: 0 8px 18px rgba(0,0,0,.45); }
+  .mini .r { font-size: 24px; } .mini .s { font-size: 18px; }
+  .mini.red { color: var(--card-red); } .mini.black { color: var(--card-black); }
+  .dream-visual .think { color: #cfe6d8; font-size: 15px; font-style: italic; margin: 4px 0 0; }
+  .dream-visual .real { margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(216,178,74,.3); font-size: 14px; color: var(--dim); }
+  .dream-visual .real b { color: var(--bad); }
 
   /* ---- Demo (spot jogável) ---- */
-  .demo { margin: 56px 0; }
+  .demo { margin: 60px 0; }
   .felt {
     background:
       radial-gradient(120% 120% at 50% 20%, var(--felt-1), var(--felt-2));
@@ -104,9 +143,10 @@
   }
   .felt .label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-soft); opacity: .85; }
   .felt h2 { font-size: clamp(22px, 4vw, 30px); margin: 8px 0 4px; }
-  .spot-meta { color: #cfe6d8; font-size: 15px; margin-bottom: 4px; }
+  .felt .lead { color: #cfe6d8; font-size: 15px; max-width: 44ch; margin: 4px auto 0; }
+  .spot-meta { color: #cfe6d8; font-size: 15px; margin: 16px 0 4px; }
   .spot-meta b { color: #fff; }
-  .demo-cards { display:flex; gap: 10px; justify-content:center; margin: 18px 0 22px; }
+  .demo-cards { display:flex; gap: 10px; justify-content:center; margin: 14px 0 22px; }
   .demo-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .act {
     min-width: 108px; font-weight: 800; font-size: 16px; padding: 13px 20px; border-radius: 11px;
@@ -116,7 +156,7 @@
   .act:hover { transform: translateY(-2px); }
   .act.fold { border-color: #6a3b38; }
   .verdict {
-    margin: 18px auto 0; max-width: 46ch; font-size: 15px; line-height: 1.5;
+    margin: 18px auto 0; max-width: 48ch; font-size: 15px; line-height: 1.5;
     background: rgba(0,0,0,.28); border: 1px solid rgba(216,178,74,.28); border-radius: 12px;
     padding: 14px 16px; display: none;
   }
@@ -130,7 +170,7 @@
   .section-h { text-align: center; margin: 70px 0 8px; }
   .section-h .k { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
   .section-h h2 { font-size: clamp(26px, 4.5vw, 38px); margin-top: 8px; }
-  .section-h p { color: var(--dim); max-width: 52ch; margin: 12px auto 0; }
+  .section-h p { color: var(--dim); max-width: 54ch; margin: 12px auto 0; }
   .grid {
     display: grid; gap: 16px; margin-top: 34px;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -152,9 +192,14 @@
   /* ---- Final CTA ---- */
   .final { text-align: center; margin: 20px 0 40px; padding: 46px 22px; }
   .final h2 { font-size: clamp(26px, 5vw, 40px); }
-  .final p { color: var(--dim); margin: 12px auto 26px; max-width: 40ch; }
+  .final p { color: var(--dim); margin: 12px auto 26px; max-width: 44ch; }
   footer { text-align: center; color: var(--dim); font-size: 12.5px; padding: 26px 22px 44px; border-top: 1px solid #1e2216; }
   footer .disc { color: var(--gold-soft); font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce){
+    * { animation: none !important; scroll-behavior: auto; }
+    .btn:hover, .act:hover { transform: none; }
+  }
 </style>
 
 <nav class="nav">
@@ -164,11 +209,11 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow">NLHE 9-max · em português</span>
-    <h1>Aprenda a jogar poker <span class="g">de verdade</span>.<br>Sem arriscar um centavo.</h1>
-    <p class="sub">Um simulador de estudo que te avalia a cada decisão — como um coach no bolso.</p>
+    <span class="eyebrow">Poker pra quem joga por diversão</span>
+    <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
+    <p class="sub">A maioria das mãos é decisão simples. Quem chega longe não erra as simples — e treina as poucas difíceis. Sem curso caro, sem jargão, no seu tempo.</p>
     <div class="cta-row">
-      <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Jogar agora — grátis</a>
+      <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Começar agora — grátis</a>
       <a class="btn ghost" href="#demo">Ver como funciona ↓</a>
     </div>
     <div class="cards" aria-hidden="true">
@@ -176,17 +221,50 @@
       <div class="card red"><span class="r">A</span><span class="s">♥</span></div>
     </div>
     <div class="trust">
-      <span><b>8</b> perfis de bots reais</span>
-      <span><b>3</b> idiomas</span>
+      <span>Em <b>português</b></span>
       <span>Instala no <b>celular</b></span>
+      <span><b>Zero</b> cadastro</span>
     </div>
   </div>
 </header>
+
+<section class="manifesto wrap">
+  <div class="card-lg">
+    <div class="k">A ideia por trás de tudo</div>
+    <h2>O poker é mais simples do que te venderam</h2>
+    <p>Te fizeram acreditar que, pra jogar bem, você precisa dominar um dicionário de termos — <b>range, polarização, equity, ICM</b> — e que sem pagar um time ou um curso caro em inglês, você nunca vai evoluir.</p>
+    <p>Não é verdade. Na essência, poker é uma coisa só:</p>
+    <p class="big">Tomar boas decisões, de novo e de novo, até virar hábito. Seu cérebro se acostuma com as decisões que você repete — as boas e as ruins.</p>
+    <p>A maior parte das mãos nem é decisão difícil: é <b>fold</b>. O que separa quem chega na mesa final de quem busta cedo não é um truque secreto. É <b>parar de vazar fichas nas decisões que pareciam fáceis</b> — e estar afiado nas poucas que realmente decidem o torneio.</p>
+  </div>
+</section>
+
+<section class="dream wrap">
+  <div class="dream-grid">
+    <div>
+      <div class="k">A gente entende você</div>
+      <h2>Sabemos por que você paga aquela mão</h2>
+      <p>Não é falta de lógica. Você olha pro seu <b>J♠5♠</b> e já vê o flop dos sonhos: dois espadas caindo, o flush chegando, suas fichas dobrando. <b>A esperança fala mais alto que a conta.</b></p>
+      <p>O problema é que o sonho vem poucas vezes — e as fichas que você gasta esperando por ele são exatamente as que te levariam adiante.</p>
+      <p class="punch">Aprender a foldar não é matar o sonho. É guardar munição pra hora em que o sonho é real — e você tem fichas pra brigar por ele.</p>
+    </div>
+    <div class="dream-visual" aria-hidden="true">
+      <div class="cap">O que a esperança vê</div>
+      <div class="mini-cards">
+        <div class="mini black"><span class="r">J</span><span class="s">♠</span></div>
+        <div class="mini black"><span class="r">5</span><span class="s">♠</span></div>
+      </div>
+      <p class="think">"se vier o flush eu dobro…"</p>
+      <div class="real">Na real, o flush vem em pouco mais de <b>1 a cada 20</b> vezes. As outras 19 custam caro.</div>
+    </div>
+  </div>
+</section>
 
 <section class="demo wrap" id="demo">
   <div class="felt">
     <div class="label">Você joga o quê?</div>
     <h2>Call ou Fold?</h2>
+    <p class="lead">Repara: você vai acertar isso aqui sem saber nenhum termo técnico. Só com uma boa decisão.</p>
     <p class="spot-meta">Você no <b>Big Blind</b> com <b>4bb</b> · o botão deu <b>all-in</b></p>
     <div class="demo-cards" aria-hidden="true">
       <div class="card red"><span class="r">A</span><span class="s">♦</span></div>
@@ -202,33 +280,33 @@
 
 <section class="wrap">
   <div class="section-h">
-    <div class="k">O que você recebe</div>
-    <h2>Um jogo que te ensina enquanto você joga</h2>
-    <p>Cada mão vira uma aula. O app compara a sua jogada com o padrão e explica o porquê — em linguagem simples ou técnica, você escolhe.</p>
+    <div class="k">Como você aprende</div>
+    <h2>Um jogo que te treina a decidir</h2>
+    <p>Cada mão vira uma decisão avaliada. O app compara a sua jogada com o padrão e te explica o porquê — em linguagem simples ou técnica, você escolhe.</p>
   </div>
   <div class="grid">
-    <div class="feature"><div class="ic">🧠</div><h3>Feedback em toda decisão</h3><p>Equity, pot odds e estratégia mista: "essa jogada é boa ~70% das vezes". Nada de certo/errado seco.</p></div>
-    <div class="feature"><div class="ic">🎓</div><h3>Módulos de Treino</h3><p>Defesa do Big Blind, roubo do botão, push/fold e mesa final (ICM). Domine cada um acertando 80%.</p></div>
-    <div class="feature"><div class="ic">🏆</div><h3>Torneios realistas</h3><p>Buy-ins, campo encolhendo, estouro da bolha, ITM e mesa final — com prêmios de verdade calculados.</p></div>
-    <div class="feature"><div class="ic">🃏</div><h3>Bots com estilo</h3><p>Do recreativo que paga tudo ao reg agressivo, cada bot joga como um arquétipo real de MTT.</p></div>
-    <div class="feature"><div class="ic">📈</div><h3>Sua evolução</h3><p>Placar de boas decisões, missões e desafios para você voltar amanhã um pouco melhor.</p></div>
-    <div class="feature"><div class="ic">📲</div><h3>No seu bolso</h3><p>Instala no celular, funciona offline, em português, espanhol e inglês. Zero cadastro.</p></div>
+    <div class="feature"><div class="ic">🧠</div><h3>Feedback em toda decisão</h3><p>"Essa jogada é boa ~70% das vezes." Nada de certo/errado seco — você entende o porquê e melhora.</p></div>
+    <div class="feature"><div class="ic">🎓</div><h3>Treino até virar hábito</h3><p>Defesa do Big Blind, roubo do botão, push/fold, mesa final. Repita o spot até a decisão certa ficar automática.</p></div>
+    <div class="feature"><div class="ic">📥</div><h3>Analisa seu jogo real</h3><p>Importe as mãos que você jogou no PokerStars ou GGPoker e veja onde vazou fichas — sua sessão, seus erros.</p></div>
+    <div class="feature"><div class="ic">🏆</div><h3>Torneios de verdade</h3><p>Campo encolhendo, bolha, ITM e mesa final com ICM. As situações que realmente decidem quem chega longe.</p></div>
+    <div class="feature"><div class="ic">🃏</div><h3>Adversários reais</h3><p>Do recreativo que paga tudo ao regular agressivo — cada bot joga como um tipo de gente que você encontra na mesa.</p></div>
+    <div class="feature"><div class="ic">📲</div><h3>No seu bolso, no seu tempo</h3><p>Instala no celular, funciona offline, em português. Cinco minutos entre uma tarefa e outra já valem.</p></div>
   </div>
 </section>
 
 <section class="wrap">
-  <div class="section-h"><div class="k">Por que é diferente</div><h2>Feito para quem joga por diversão</h2></div>
+  <div class="section-h"><div class="k">Por que é diferente</div><h2>Feito pra quem tem pouco tempo e joga por diversão</h2></div>
   <div class="why">
-    <div><h3>Acessível, não intimidante</h3><p>As ferramentas boas são caras e em inglês, cheias de jargão. Esta fala a sua língua e começa fácil.</p></div>
+    <div><h3>Fala a sua língua</h3><p>As ferramentas boas são caras, em inglês e cheias de jargão. Esta começa fácil e explica como quem ensina de verdade.</p></div>
     <div><h3>Sem dinheiro real</h3><p>É estudo, não aposta. Você erra à vontade e aprende — sem perder nada além do orgulho.</p></div>
-    <div><h3>Realismo de online</h3><p>ICM na bolha, antes de big blind, stacks desiguais, mesa final: as situações que decidem torneios.</p></div>
+    <div><h3>Foco no que importa</h3><p>Menos teoria decorada, mais decisão treinada. É o hábito de decidir certo que muda o seu jogo.</p></div>
   </div>
 </section>
 
 <section class="final wrap">
-  <h2>Pronto pra jogar melhor?</h2>
-  <p>Abra no celular, resolva uma mão e veja seu feedback na hora.</p>
-  <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Jogar Poker Sim agora</a>
+  <h2>Pronto pra decidir melhor?</h2>
+  <p>Abra no celular, resolva uma mão e veja seu feedback na hora. Leva um minuto.</p>
+  <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Abrir o Poker Sim agora</a>
 </section>
 
 <footer>
@@ -247,8 +325,8 @@
         var call = b.dataset.a === "call";
         verdict.className = "verdict show";
         verdict.innerHTML = call
-          ? '<span class="tag ok">✓ Boa!</span> Com apenas <b>4bb</b> e o pote enorme já feito, A♦T♦ paga o all-in fácil — as odds são ótimas e não dá pra desistir. É exatamente o tipo de decisão que o app te ensina.'
-          : '<span class="tag no">✗ Cuidado.</span> Aqui o Fold custa caro: com <b>4bb</b> e essas odds, A♦T♦ é call tranquilo. No app você vê o porquê em números — e treina até virar automático.';
+          ? '<span class="tag ok">✓ Boa decisão!</span> Com apenas <b>4bb</b> e o pote já enorme, A♦T♦ paga o all-in fácil — as odds são ótimas e não dá pra desistir. Viu? Você decidiu certo sem precisar de nenhuma palavra difícil.'
+          : '<span class="tag no">✗ Aqui o Fold custa caro.</span> Com <b>4bb</b> e essas odds, A♦T♦ é call tranquilo. No app você vê o porquê em números — e treina até virar automático.';
         verdict.scrollIntoView({ behavior: "smooth", block: "center" });
       });
     });
