@@ -1,0 +1,56 @@
+import { describe, it, expect } from "vitest";
+import { seededRng } from "../engine/cards";
+import { MODULES, buildScenario, evaluateChoice, isCorrect } from "./scenarios";
+import { recordResult, moduleView, type MasteryState } from "./mastery";
+
+describe("Módulos de Maestria — cenários", () => {
+  it("cada módulo gera um cenário jogável com ações e recomendação", () => {
+    for (const m of MODULES) {
+      const s = buildScenario(m, seededRng(42));
+      expect(s.hand).toHaveLength(2);
+      expect(s.actions.length).toBeGreaterThanOrEqual(2);
+      expect(s.advice.kind).toBe("preflop");
+      expect(["fold", "raise", "call", "3bet", "jam"]).toContain(s.advice.action);
+    }
+  });
+
+  it("push/fold oferece Fold e All-in (não raise pequeno)", () => {
+    const pf = MODULES.find((m) => m.id === "push_fold")!;
+    const s = buildScenario(pf, seededRng(7));
+    const keys = s.actions.map((a) => a.key);
+    expect(keys).toContain("fold");
+    expect(keys).toContain("allin");
+    expect(keys).not.toContain("raise");
+  });
+
+  it("avaliar a jogada recomendada conta como acerto", () => {
+    const m = MODULES[0];
+    const s = buildScenario(m, seededRng(123));
+    // Escolher a família da ação recomendada deve dar nota boa/ok (acerto).
+    const map: Record<string, "fold" | "call" | "raise" | "allin"> = {
+      fold: "fold",
+      call: "call",
+      raise: "raise",
+      "3bet": "raise",
+      jam: "allin",
+    };
+    const good = map[s.advice.action];
+    // Só testa se a ação recomendada está entre as opções oferecidas.
+    if (s.actions.some((a) => a.key === good)) {
+      expect(isCorrect(evaluateChoice(s, good))).toBe(true);
+    }
+  });
+});
+
+describe("Módulos de Maestria — progresso", () => {
+  it("dominar exige 16 dos últimos 20 acertos", () => {
+    let state: MasteryState = {};
+    // 4 erros + 15 acertos = janela de 19 → ainda não domina (faltam 20).
+    for (let i = 0; i < 4; i++) state = recordResult(state, "x", false);
+    for (let i = 0; i < 15; i++) state = recordResult(state, "x", true);
+    expect(moduleView(state, "x").mastered).toBe(false);
+    // O 16º acerto fecha a janela em 4F + 16T = 16/20 → domina.
+    state = recordResult(state, "x", true);
+    expect(moduleView(state, "x").mastered).toBe(true);
+  });
+});

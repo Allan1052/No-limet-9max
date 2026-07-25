@@ -9,6 +9,7 @@ import { TournamentSetup } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
+import { TrainView } from "../ui/TrainView";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -48,7 +49,9 @@ export function App() {
   const [tipsOpen, setTipsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
-  const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges" | "missoes">("play");
+  const [view, setView] = useState<"play" | "icm" | "torneio" | "ranges" | "missoes" | "treino">(
+    "play",
+  );
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -76,6 +79,12 @@ export function App() {
             onClick={() => setView("torneio")}
           >
             {tr("tab.tournament")}
+          </button>
+          <button
+            className={`tab ${view === "treino" ? "active" : ""}`}
+            onClick={() => setView("treino")}
+          >
+            {tr("tab.train")}
           </button>
           <button
             className={`tab ${view === "missoes" ? "active" : ""}`}
@@ -112,6 +121,8 @@ export function App() {
 
       {view === "icm" ? (
         <IcmCalculator />
+      ) : view === "treino" ? (
+        <TrainView />
       ) : view === "missoes" ? (
         <MissionsPanel
           missions={missions()}

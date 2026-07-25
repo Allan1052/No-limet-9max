@@ -157,6 +157,32 @@ body {
 .mission-card.done .mission-fill { background: var(--good); }
 .mission-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 3px; }
 
+/* ---- Módulos de Maestria (treino) ---- */
+.train-view { max-width: 620px; margin: 0 auto; }
+.train-card { text-align: left; cursor: pointer; width: 100%; }
+.train-session { font-size: 13px; color: var(--gold); font-weight: 700; }
+.train-spot {
+  background: radial-gradient(120% 120% at 50% 30%, var(--felt-1), var(--felt-2));
+  border: 1px solid #2a2c22;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  margin: 12px 0;
+}
+.train-prompt { font-size: 14px; color: var(--text-dim); }
+.train-prompt.strong { color: var(--text); font-weight: 700; font-size: 15px; margin-top: 4px; }
+.train-icm { font-size: 12px; color: var(--warn); margin-top: 8px; line-height: 1.4; }
+.train-hand { display: flex; gap: 8px; justify-content: center; margin: 14px 0; }
+.train-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.train-actions .btn { flex: 1 1 auto; min-width: 90px; max-width: 160px; }
+.train-result { text-align: center; }
+.train-verdict { font-size: 16px; font-weight: 800; margin-bottom: 10px; }
+.train-verdict.ok { color: var(--good); }
+.train-verdict.bad { color: var(--warn); }
+.train-result .fb-item { text-align: left; }
+.train-next { width: 100%; margin-top: 10px; }
+.train-reset { display: block; margin: 14px auto 0; }
+
 /* ---- Aviso de missão concluída (toast) ---- */
 .mission-toasts {
   position: fixed;
