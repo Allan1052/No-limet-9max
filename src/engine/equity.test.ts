@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { cardsFromString, seededRng } from "./cards";
-import { equityHandVsHand, equityVsRandom, equityHandVsRange } from "./equity";
+import {
+  equityHandVsHand,
+  equityVsRandom,
+  equityHandVsRange,
+  equityHandVsRangeMulti,
+} from "./equity";
+import { buildTopRange } from "../ranges/build";
+import { rangeCombos } from "../ranges/types";
 
 // Tolerância: Monte Carlo tem ruído. Com 60k iterações e semente fixa, ±1.5%
 // é folgado. Os valores de referência são números clássicos e bem conhecidos.
@@ -50,6 +57,31 @@ describe("equity — no board", () => {
       seededRng(999),
     ).equity;
     expect(eq).toBeGreaterThan(0.85);
+  });
+});
+
+describe("equity — multiway (projetos não são punidos)", () => {
+  it("nut flush draw multiway: melhor que elevar a equity HU à potência", () => {
+    // A♦T♦ em 3♦2♥8♦ = nut flush draw. Contra 3 oponentes de um range de 45%.
+    const hero = cardsFromString("AdTd");
+    const board = cardsFromString("3d2h8d");
+    const range = rangeCombos(buildTopRange(0.45));
+    const hu = equityHandVsRange(hero, range, board, 20000, seededRng(42)).equity;
+    const multi = equityHandVsRangeMulti(hero, range, 3, board, 20000, seededRng(42)).equity;
+    // A equity multiway REAL do projeto é bem maior que a aproximação por
+    // potência (hu^3), que puniria o flush draw injustamente.
+    expect(multi).toBeGreaterThan(Math.pow(hu, 3) * 1.3);
+    // E continua sendo uma fração sensata (não ganha de todos sempre).
+    expect(multi).toBeLessThan(hu);
+  });
+
+  it("com 1 oponente, multiway == heads-up", () => {
+    const hero = cardsFromString("AdTd");
+    const board = cardsFromString("3d2h8d");
+    const range = rangeCombos(buildTopRange(0.45));
+    const hu = equityHandVsRange(hero, range, board, 15000, seededRng(7)).equity;
+    const one = equityHandVsRangeMulti(hero, range, 1, board, 15000, seededRng(7)).equity;
+    expect(Math.abs(hu - one)).toBeLessThan(0.02);
   });
 });
 

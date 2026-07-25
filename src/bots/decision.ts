@@ -19,7 +19,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Card } from "../engine/cards";
-import { equityHandVsRange } from "../engine/equity";
+import { equityHandVsRange, equityHandVsRangeMulti } from "../engine/equity";
 import type { BotProfile } from "./profiles";
 import { buildTopRange } from "../ranges/build";
 import { rangeCombos } from "../ranges/types";
@@ -95,12 +95,17 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   const texture = classifyBoard(ctx.board);
   const streetIdx = ctx.board.length >= 5 ? 2 : ctx.board.length === 4 ? 1 : 0; // 0=flop 1=turn 2=river
 
-  // Equity do herói contra o range do vilão, no board atual.
+  // Equity do herói contra o range do vilão, no board atual. Em multiway,
+  // sorteamos uma mão de cada oponente e exigimos bater TODOS — equity multiway
+  // correta, que não pune os projetos (o flush que completa ganha de todos de
+  // uma vez), ao contrário de elevar a equity heads-up à potência do nº de
+  // oponentes.
   const villainPct = ctx.villainRangePct ?? 0.45;
   const villainRange = rangeCombos(buildTopRange(villainPct));
-  const eqHU = equityHandVsRange(ctx.hand, villainRange, ctx.board, iters, rng).equity;
-  // Aproximação multiway: precisa bater todos → potência pelo nº de oponentes.
-  const equity = Math.pow(eqHU, numOpp);
+  const equity =
+    numOpp <= 1
+      ? equityHandVsRange(ctx.hand, villainRange, ctx.board, iters, rng).equity
+      : equityHandVsRangeMulti(ctx.hand, villainRange, numOpp, ctx.board, iters, rng).equity;
 
   // Em posição realiza-se mais equity (controla o tamanho do pote, vê mais showdowns).
   const realization = ctx.inPosition ? 1.05 : 0.9;

@@ -202,6 +202,80 @@ export function equityHandVsRange(
   };
 }
 
+/**
+ * Equity de uma mão contra VÁRIOS oponentes, cada um com uma mão sorteada do
+ * mesmo range. A cada iteração sorteamos `numOpp` combos distintos (sem
+ * conflito) e o herói só marca a rodada se BATER TODOS — que é a equity
+ * multiway correta. Muito melhor que elevar a equity heads-up à potência do
+ * número de oponentes (que subestima os projetos, pois um flush que completa
+ * ganha de todos ao mesmo tempo).
+ */
+export function equityHandVsRangeMulti(
+  hero: Card[],
+  villainRange: Card[][],
+  numOpp: number,
+  board: Card[],
+  iterations: number,
+  rng: () => number = Math.random,
+): { equity: number; sampled: number } {
+  if (numOpp <= 1) {
+    const r = equityHandVsRange(hero, villainRange, board, iterations, rng);
+    return { equity: r.equity, sampled: r.sampled };
+  }
+  const deadBase = new Array(NUM_CARDS).fill(false);
+  markUsed(deadBase, hero);
+  markUsed(deadBase, board);
+
+  const need = 5 - board.length;
+  const drawn: Card[] = new Array(need);
+  const fullBoard: Card[] = new Array(5);
+  for (let i = 0; i < board.length; i++) fullBoard[i] = board[i];
+
+  let eq = 0;
+  let sampled = 0;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const used = deadBase.slice();
+    const villains: Card[][] = [];
+    for (let k = 0; k < numOpp; k++) {
+      let picked: Card[] | null = null;
+      for (let tries = 0; tries < 12; tries++) {
+        const cand = villainRange[Math.floor(rng() * villainRange.length)];
+        if (cand[0] !== cand[1] && !used[cand[0]] && !used[cand[1]]) {
+          picked = cand;
+          break;
+        }
+      }
+      if (!picked) break; // range muito bloqueado neste sorteio
+      used[picked[0]] = true;
+      used[picked[1]] = true;
+      villains.push(picked);
+    }
+    if (villains.length === 0) continue;
+    sampled++;
+
+    const available = availableFrom(used);
+    drawInto(available, need, drawn, rng);
+    for (let i = 0; i < need; i++) fullBoard[board.length + i] = drawn[i];
+
+    const vh = evaluate([hero[0], hero[1], fullBoard[0], fullBoard[1], fullBoard[2], fullBoard[3], fullBoard[4]]);
+    let best = vh;
+    let ties = 1; // conta o herói
+    let heroBeaten = false;
+    for (const v of villains) {
+      const vv = evaluate([v[0], v[1], fullBoard[0], fullBoard[1], fullBoard[2], fullBoard[3], fullBoard[4]]);
+      if (vv > vh) {
+        heroBeaten = true;
+        break;
+      }
+      if (vv === best) ties++;
+    }
+    if (!heroBeaten) eq += 1 / ties; // ganha (ou divide o pote nos empates)
+  }
+
+  return { equity: eq / (sampled || 1), sampled };
+}
+
 /** Equity de uma mão contra um oponente com mão totalmente aleatória. */
 export function equityVsRandom(
   hero: Card[],
