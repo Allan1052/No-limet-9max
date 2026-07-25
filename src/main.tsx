@@ -4,6 +4,7 @@ import { registerSW } from "virtual:pwa-register";
 import { App } from "./app/App";
 import { I18nProvider } from "./i18n";
 import { SettingsProvider } from "./app/settings";
+import { ErrorBoundary } from "./ui/ErrorBoundary";
 
 // Registro do service worker (PWA). Em modo autoUpdate, quando um build novo é
 // detectado o SW é aplicado e a página recarrega sozinha — assim o app instalado
@@ -26,10 +27,12 @@ const updateSW = registerSW({
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <I18nProvider>
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
-    </I18nProvider>
+    <ErrorBoundary>
+      <I18nProvider>
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      </I18nProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

@@ -250,7 +250,11 @@ async function forceUpdate(): Promise<void> {
   } catch {
     /* segue para o reload mesmo se algo falhar */
   }
-  location.reload();
+  // Cache-buster: força buscar o index.html novo da rede (evita apontar para um
+  // bundle antigo que já foi removido do servidor e causaria tela branca).
+  const url = new URL(location.href);
+  url.searchParams.set("u", Date.now().toString());
+  location.replace(url.toString());
 }
 
 /** Dispara o download de um texto como arquivo .txt (histórico da sessão). */
