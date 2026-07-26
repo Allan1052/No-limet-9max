@@ -17,6 +17,8 @@ import { ModeToggle } from "../ui/ModeToggle";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
+import { SpotRangePopup } from "../ui/SpotRangePopup";
+import { handSpots } from "./handSpots";
 import { HandTipsModal } from "../ui/HandTipsModal";
 import { MoneyRain } from "../ui/MoneyRain";
 import { ChallengeReceived } from "../ui/ChallengeReceived";
@@ -28,7 +30,7 @@ import "../ui/theme.css";
 
 export function App() {
   const { t: tr } = useT();
-  const { onboarded, setOnboarded } = useSettings();
+  const { onboarded, setOnboarded, mode } = useSettings();
   const {
     controller,
     heroAct,
@@ -63,6 +65,12 @@ export function App() {
 
   const rows = controller.statRows();
   const selectedRow = selectedSeat != null ? rows.find((r) => r.seat === selectedSeat) : null;
+
+  // Modo avançado + mão finalizada: clicar num jogador mostra o range que ele
+  // deveria jogar naquele spot, com a mão real dele em destaque.
+  const spots = handOver && controller.lastHand ? handSpots(controller.lastHand) : [];
+  const selectedSpot =
+    mode === "tecnico" && selectedSeat != null ? spots.find((s) => s.seat === selectedSeat) : null;
 
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
@@ -210,7 +218,9 @@ export function App() {
         <HandTipsModal items={controller.feedback} onClose={() => setTipsOpen(false)} />
       ) : null}
 
-      {selectedRow ? (
+      {selectedSpot ? (
+        <SpotRangePopup spot={selectedSpot} onClose={() => setSelectedSeat(null)} />
+      ) : selectedRow ? (
         <SeatStatsPopup row={selectedRow} onClose={() => setSelectedSeat(null)} />
       ) : null}
 

@@ -42,5 +42,7 @@ export interface HandHistory {
   finalBoard: Card[];
   buttonSeat: number;
   bigBlind: number;
+  /** Stack (em fichas) de cada assento no INÍCIO da mão — para o range por profundidade. */
+  startingStacks?: Record<number, number>;
   result?: HandResult;
 }

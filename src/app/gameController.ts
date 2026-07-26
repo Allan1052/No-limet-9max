@@ -161,6 +161,7 @@ export class GameController {
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
+  private handStartStacks: Record<number, number> = {};
   private perHand: Record<number, PerHandFlags> = {};
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
@@ -369,6 +370,12 @@ export class GameController {
     // Baralho verdadeiramente aleatório a cada mão (sem semente fixa — senão
     // toda sessão repetiria a mesma sequência de cartas e o mesmo vencedor).
     startHand(this.table, freshShuffledDeck());
+    // Congela o stack inicial de cada jogador (stack + o que já foi para o pote,
+    // ex. blinds/ante) — usado no range por profundidade ao revisar a mão.
+    this.handStartStacks = {};
+    for (const p of this.table.players) {
+      if (p.status !== "out") this.handStartStacks[p.seat] = p.stack + p.totalCommitted;
+    }
     // Mensagem do topo: bolha > subida de nível > reposição (a mais relevante).
     if (bubbleMsg) {
       this.message = "🫧 A BOLHA ESTOUROU — você está no dinheiro (ITM)!";
@@ -723,6 +730,7 @@ export class GameController {
       finalBoard: this.table.board.slice(),
       buttonSeat: this.table.buttonSeat,
       bigBlind: this.table.bigBlind,
+      startingStacks: { ...this.handStartStacks },
       result: this.table.result,
     };
     // Guarda no log da sessão (limita para não crescer sem fim).
