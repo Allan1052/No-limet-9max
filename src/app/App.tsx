@@ -101,7 +101,7 @@ export function App() {
       ) : null}
       <div className="topbar">
         <div className="brand">
-          ♠ Poker Sim <small>{tr("app.subtitle")}</small>
+          ♠ Call ou Fold <small>{tr("app.subtitle")}</small>
         </div>
         <div className="tabs">
           <button className={`tab ${view === "play" ? "active" : ""}`} onClick={() => setView("play")}>
@@ -335,7 +335,7 @@ function downloadText(text: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `poker-sim-maos-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.download = `call-ou-fold-maos-${new Date().toISOString().slice(0, 10)}.txt`;
   document.body.appendChild(a);
   a.click();
   a.remove();

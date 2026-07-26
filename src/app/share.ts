@@ -14,7 +14,7 @@ export async function shareSpot(
 
   // 1) Web Share com arquivo de imagem (melhor experiência no celular).
   if (blob) {
-    const file = new File([blob], "poker-sim-desafio.png", { type: "image/png" });
+    const file = new File([blob], "call-ou-fold-desafio.png", { type: "image/png" });
     if (nav.canShare?.({ files: [file] }) && nav.share) {
       try {
         await nav.share({ files: [file], text, url });

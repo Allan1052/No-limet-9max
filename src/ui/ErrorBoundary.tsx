@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   componentDidCatch(error: Error): void {
     // eslint-disable-next-line no-console
-    console.error("Poker Sim — erro capturado:", error);
+    console.error("Call ou Fold — erro capturado:", error);
   }
 
   render(): ReactNode {

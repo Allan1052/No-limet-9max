@@ -30,9 +30,10 @@ export default defineConfig({
       injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
       includeAssets: ["apple-touch-icon.png", "icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Poker Sim — Estudo NLHE 9-max",
-        short_name: "Poker Sim",
-        description: "Simulador de estudo de poker NLHE 9-max com bots, feedback e ICM.",
+        name: "Call ou Fold — Poker para Recreativos",
+        short_name: "Call ou Fold",
+        description:
+          "Poker para recreativos. Comece grátis, sem arriscar dinheiro — aprenda a tomar as decisões certas. O sonho do recreativo.",
         lang: "pt-BR",
         id: base,
         start_url: base,

@@ -1,4 +1,4 @@
-# Poker Sim — Simulador de estudo NLHE 9-max
+# Call ou Fold — Simulador de estudo NLHE 9-max
 
 Um simulador de No-Limit Hold'em 9-max para **estudo**, com bots que jogam de
 forma consistente e explicável (estilo MTT online), motor de equity próprio e

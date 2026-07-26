@@ -691,7 +691,7 @@ export class GameController {
    */
   exportSessionText(): string {
     const lines: string[] = [];
-    lines.push(`Poker Sim — histórico da sessão (${this.handLog.length} mãos)`);
+    lines.push(`Call ou Fold — histórico da sessão (${this.handLog.length} mãos)`);
     lines.push(`Exportado em ${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
     lines.push("");
     this.handLog.forEach((h, i) => {

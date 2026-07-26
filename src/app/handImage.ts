@@ -41,7 +41,7 @@ export interface SpotImageInput {
   title: string; // ex.: "Você desafia: Call, Fold ou Raise?"
   context: string; // ex.: "BTN · 25bb · CO abriu 2.3bb"
   question: string; // ex.: "Qual a jogada certa?"
-  footer: string; // ex.: "Resolva no Poker Sim"
+  footer: string; // ex.: "Resolva no Call ou Fold"
 }
 
 /** Desenha o spot e devolve um PNG (1080×1080). */
@@ -68,7 +68,7 @@ export function drawSpotImage(input: SpotImageInput): Promise<Blob | null> {
   ctx.textAlign = "center";
   ctx.fillStyle = "#d4af37";
   ctx.font = "bold 62px system-ui, sans-serif";
-  ctx.fillText("♠ Poker Sim", S / 2, 130);
+  ctx.fillText("♠ Call ou Fold", S / 2, 130);
 
   ctx.fillStyle = "#e8e6dc";
   ctx.font = "600 40px system-ui, sans-serif";
