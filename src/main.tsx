@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
+import { announceUpdate } from "./app/pwaUpdate";
 import { App } from "./app/App";
 import { I18nProvider } from "./i18n";
 import { SettingsProvider } from "./app/settings";
@@ -20,8 +21,9 @@ const updateSW = registerSW({
     });
   },
   onNeedRefresh() {
-    // Aplica a versão nova imediatamente (recarrega a página).
-    updateSW(true);
+    // Não recarrega no meio de uma mão: apenas avisa a interface, que mostra o
+    // aviso/botão e recarrega num momento seguro (entre mãos) ou ao toque.
+    announceUpdate(() => updateSW(true));
   },
 });
 

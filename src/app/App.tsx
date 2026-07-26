@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "./useGame";
+import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { Replayer } from "../ui/Replayer";
@@ -63,6 +64,18 @@ export function App() {
   const heroTurn = controller.isHeroTurn();
   const handOver = controller.phase === "handOver";
 
+  // Atualização do app: avisa quando há versão nova e recarrega num momento
+  // seguro (entre mãos, na tela de jogo) para não interromper uma decisão nem
+  // fazer perder algo digitado em outra aba (ex.: colar mãos no Importar).
+  const [updateReady, setUpdateReady] = useState(updateAvailable());
+  useEffect(() => onUpdateAvailable(() => setUpdateReady(true)), []);
+  useEffect(() => {
+    if (!updateReady) return;
+    if (view !== "play" || !handOver) return; // só recarrega sozinho entre mãos
+    const id = setTimeout(() => applyUpdate(), 1500);
+    return () => clearTimeout(id);
+  }, [updateReady, view, handOver]);
+
   const rows = controller.statRows();
   const selectedRow = selectedSeat != null ? rows.find((r) => r.seat === selectedSeat) : null;
 
@@ -78,6 +91,14 @@ export function App() {
 
   return (
     <div className="app">
+      {updateReady ? (
+        <div className="update-banner">
+          <span>✨ {tr("update.available")}</span>
+          <button className="btn primary" onClick={applyUpdate}>
+            {tr("update.button")}
+          </button>
+        </div>
+      ) : null}
       <div className="topbar">
         <div className="brand">
           ♠ Poker Sim <small>{tr("app.subtitle")}</small>
@@ -176,6 +197,8 @@ export function App() {
             onShowTips={() => setTipsOpen(true)}
             showTips={handOver && controller.feedback.length > 0}
             celebrate={celebrateItm}
+            updateReady={updateReady}
+            onUpdate={applyUpdate}
           />
 
           {handOver ? (

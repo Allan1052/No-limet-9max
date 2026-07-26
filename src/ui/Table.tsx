@@ -39,6 +39,8 @@ export function PokerTable({
   onShowTips,
   showTips = false,
   celebrate = false,
+  updateReady = false,
+  onUpdate,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -48,6 +50,8 @@ export function PokerTable({
   onShowTips?: () => void;
   showTips?: boolean;
   celebrate?: boolean;
+  updateReady?: boolean;
+  onUpdate?: () => void;
 }) {
   const { t } = useT();
   const reveal = table.handOver && !!table.result?.showdown;
@@ -89,6 +93,13 @@ export function PokerTable({
       {showTips ? (
         <button className="tbl-tips-btn" onClick={onShowTips}>
           💡 {t("tips.button")}
+        </button>
+      ) : null}
+
+      {/* Aviso de nova versão, bem no centro da mesa */}
+      {updateReady ? (
+        <button className="tbl-update-btn" onClick={onUpdate}>
+          ✨ {t("update.button")}
         </button>
       ) : null}
 

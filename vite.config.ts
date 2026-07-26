@@ -22,7 +22,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt": o novo service worker fica em espera até a interface aplicar a
+      // atualização (via updateSW(true)) — assim avisamos com o banner/botão e
+      // recarregamos no momento seguro, sem interromper uma mão.
+      registerType: "prompt",
       injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
       includeAssets: ["apple-touch-icon.png", "icon-192.png", "icon-512.png"],
       manifest: {
