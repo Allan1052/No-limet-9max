@@ -4,7 +4,6 @@
 import { Seat } from "./Seat";
 import { Board } from "./Board";
 import { useT } from "../i18n";
-import { useSettings } from "../app/settings";
 import type { TableState } from "../game/state";
 import type { FieldStatus } from "../tournament/field";
 
@@ -51,7 +50,6 @@ export function PokerTable({
   celebrate?: boolean;
 }) {
   const { t } = useT();
-  const { unit, setUnit } = useSettings();
   const reveal = table.handOver && !!table.result?.showdown;
   const ante = table.ante ?? 0;
 
@@ -59,27 +57,21 @@ export function PokerTable({
     <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
       <div className="felt" />
 
-      {/* Canto: classificação no torneio */}
-      {field ? (
-        <div className="tbl-pos">
-          <div className="tbl-rank">
-            {field.heroRank}º<span className="tbl-of"> / {field.entrants.toLocaleString("en-US")}</span>
-          </div>
-          <div className={`tbl-money ${field.inMoney ? "itm" : ""}`}>
-            {field.inMoney
-              ? `ITM ${usd(field.currentCash)} 💰`
-              : `${t("hud.paid")}: ${field.paidPlaces.toLocaleString("en-US")}`}
-          </div>
-        </div>
-      ) : null}
-
-      <button className="tbl-unit" onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}>
-        {unit === "bb" ? "bb" : "fichas"}
-      </button>
-
-      {/* Info central: fica ABAIXO dos dois assentos de cima */}
+      {/* Info central: classificação no torneio + blinds, abaixo dos assentos de cima */}
       <div className="tbl-topcenter">
         {hint ? <div className="tbl-hint">💡 {hint}</div> : null}
+        {field ? (
+          <div className="tbl-rankline">
+            <span className="tbl-rank">
+              {field.heroRank}º<span className="tbl-of"> / {field.entrants.toLocaleString("en-US")}</span>
+            </span>
+            <span className={`tbl-money ${field.inMoney ? "itm" : ""}`}>
+              {field.inMoney
+                ? `ITM ${usd(field.currentCash)} 💰`
+                : `${t("hud.paid")}: ${field.paidPlaces.toLocaleString("en-US")}`}
+            </span>
+          </div>
+        ) : null}
         <div className="tbl-blinds">
           {t("hud.blinds")} {table.smallBlind}/{table.bigBlind}
           {ante > 0 ? ` (ante ${ante})` : ""}

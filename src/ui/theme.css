@@ -25,6 +25,11 @@
 
 * { box-sizing: border-box; }
 
+/* Impede a página de ficar mais larga que a tela — senão no celular a
+   "layout viewport" cresce e os modais (position: fixed) centralizam fora da
+   tela visível. */
+html, body { overflow-x: hidden; }
+
 body {
   margin: 0;
   background: radial-gradient(1200px 700px at 50% 20%, #1a1d14 0%, var(--bg) 70%);
@@ -322,6 +327,7 @@ body {
   text-align: left;
   pointer-events: none;
 }
+.tbl-rankline { display: flex; gap: 10px; align-items: baseline; justify-content: center; margin-bottom: 3px; }
 .tbl-rank { font-size: 18px; font-weight: 800; color: var(--gold); line-height: 1; }
 .tbl-of { font-size: 11px; color: var(--text-dim); font-weight: 600; }
 .tbl-money { font-size: 10px; color: var(--text-dim); font-weight: 700; margin-top: 2px; }
@@ -857,7 +863,16 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .summary-modal .btn.primary { margin-top: 14px; width: 100%; }
 
 /* ---- Abas ---- */
-.tabs { display: flex; gap: 6px; }
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+.tab { flex: 0 0 auto; }
 .tab {
   background: transparent;
   border: 1px solid #2a2c22;
@@ -1184,4 +1199,14 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 
 @media (prefers-reduced-motion: reduce) {
   .spot-grid .rg-cell.hl { animation: none; }
+}
+
+/* Botão de unidade (bb/fichas) ao lado do Call, na barra de controles. */
+.unit-toggle {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  font-weight: 800;
+  color: var(--gold);
+  background: rgba(13, 15, 13, 0.6);
+  border-color: var(--gold-dim);
 }

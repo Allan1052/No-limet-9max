@@ -16,7 +16,7 @@ interface ControlsProps {
 
 export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsProps) {
   const { t } = useT();
-  const { unit } = useSettings();
+  const { unit, setUnit } = useSettings();
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
   // Porcentagem digitável do pote (campo livre ao lado dos atalhos).
   const [customPct, setCustomPct] = useState("50");
@@ -60,6 +60,15 @@ export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsPro
           {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
         </button>
       )}
+
+      <button
+        className="btn unit-toggle"
+        type="button"
+        onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}
+        title={t("unit.toggle")}
+      >
+        {unit === "bb" ? "bb" : "fichas"}
+      </button>
 
       <div className="slider-wrap">
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.3)} title={t("ctrl.pctOf", { p: 30 })}>
