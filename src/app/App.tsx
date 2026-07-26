@@ -322,7 +322,9 @@ async function forceUpdate(): Promise<void> {
   }
   // Cache-buster: força buscar o index.html novo da rede (evita apontar para um
   // bundle antigo que já foi removido do servidor e causaria tela branca).
+  // Remove um cache-buster anterior antes de pôr o novo (não acumula na URL).
   const url = new URL(location.href);
+  url.searchParams.delete("u");
   url.searchParams.set("u", Date.now().toString());
   location.replace(url.toString());
 }

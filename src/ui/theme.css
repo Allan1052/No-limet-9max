@@ -59,7 +59,15 @@ body {
   font-size: 20px;
 }
 .brand small { color: var(--text-dim); font-weight: 400; font-size: 12px; }
-.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 6px;
+  min-width: 0;
+}
 .lang-select { display: inline-flex; gap: 2px; }
 .lang-opt {
   background: transparent;
