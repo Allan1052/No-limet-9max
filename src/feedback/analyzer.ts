@@ -26,6 +26,8 @@ export interface HeroAdvice {
   villainRangePct?: number;
   /** Estratégia mista recomendada (frequências), quando disponível. */
   mix?: AdviceFreq[];
+  /** EV (em big blinds) de PAGAR neste spot; foldar vale 0. Só em spots com aposta. */
+  evBB?: number;
 }
 
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
@@ -47,6 +49,8 @@ export interface FeedbackItem {
   potOdds?: number;
   /** Estratégia mista recomendada no spot (frequências), para exibição. */
   mix?: AdviceFreq[];
+  /** EV (em bb) de pagar neste spot — foldar vale 0. */
+  evBB?: number;
 }
 
 type Family = "fold" | "check" | "call" | "aggro";
@@ -84,6 +88,44 @@ export function actionLabel(action: string): string {
  * (fold/check/call/raise/allin); `advice` é a recomendação da linha de base.
  */
 export function gradeDecision(
+  streetLabel: string,
+  heroAction: string,
+  advice: HeroAdvice,
+): FeedbackItem {
+  const item = gradeCore(streetLabel, heroAction, advice);
+  // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
+  // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
+  if (advice.evBB !== undefined) {
+    item.evBB = advice.evBB;
+    const note = evNote(heroAction, advice.evBB);
+    if (note) item.text += ` ${note}`;
+  }
+  return item;
+}
+
+/** Frase de EV conforme o que o herói fez (pagar vale evBB; foldar vale 0). */
+function evNote(heroAction: string, evBB: number): string {
+  const ev = Math.round(evBB * 10) / 10;
+  const fam = family(heroAction === "allin" ? "raise" : heroAction);
+  if (fam === "fold") {
+    return ev > 0.1
+      ? `💸 EV: pagar valia +${ev.toFixed(1)}bb — o fold deixou fichas na mesa.`
+      : `💰 EV: fold certo — pagar seria ${ev.toFixed(1)}bb.`;
+  }
+  if (fam === "call") {
+    return ev >= 0
+      ? `💰 EV: +${ev.toFixed(1)}bb — pagar foi lucrativo.`
+      : `💸 EV: ${ev.toFixed(1)}bb — pagou sem preço.`;
+  }
+  if (fam === "aggro") {
+    return ev >= 0
+      ? `💰 EV de continuar: +${ev.toFixed(1)}bb.`
+      : `💸 EV de continuar: ${ev.toFixed(1)}bb.`;
+  }
+  return "";
+}
+
+function gradeCore(
   streetLabel: string,
   heroAction: string,
   advice: HeroAdvice,

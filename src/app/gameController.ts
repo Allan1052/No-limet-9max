@@ -515,6 +515,13 @@ export class GameController {
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);
+    // EV (em bb) de PAGAR: equity × (pote + call) − call. Foldar vale 0. Só quando
+    // há uma aposta para pagar (senão não há decisão de preço).
+    const bb = this.table.bigBlind || 1;
+    const evBB =
+      ctx.toCall > 0
+        ? (d.equity * (ctx.potSize + ctx.toCall) - ctx.toCall) / bb
+        : undefined;
     return {
       kind: "postflop",
       action: d.action,
@@ -523,6 +530,7 @@ export class GameController {
       potOdds: d.requiredEquity || undefined,
       villainRangePct: d.villainRangePct,
       mix: d.mix,
+      evBB,
     };
   }
 
