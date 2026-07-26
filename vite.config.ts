@@ -10,9 +10,10 @@ const base = process.env.NODE_ENV === "production" ? "/No-limet-9max/" : "/";
 
 // Configuração do Vite: React + Web Worker (Monte Carlo fora da UI) + PWA
 // (torna o app instalável no celular, com ícone e funcionamento offline).
-// Carimbo de versão (data/hora do build) — exibido no rodapé para o usuário
-// confirmar, no celular, que a versão nova realmente carregou.
-const buildId = new Date().toISOString().slice(0, 16).replace("T", " ");
+// Carimbo de versão (data/hora do build) — exibido no topo para o usuário
+// confirmar, no celular, que a versão nova realmente carregou. Guardamos o ISO
+// completo (UTC); a interface formata no FUSO LOCAL de cada jogador.
+const buildId = new Date().toISOString();
 
 export default defineConfig({
   base,

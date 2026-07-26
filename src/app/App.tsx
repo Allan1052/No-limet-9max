@@ -152,7 +152,7 @@ export function App() {
               title={tr("version.update")}
               onClick={forceUpdate}
             >
-              🔄 v{__BUILD_ID__}
+              🔄 v{formatBuild(__BUILD_ID__)}
             </button>
           </div>
         </div>
@@ -289,6 +289,17 @@ export function App() {
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
     </div>
   );
+}
+
+/**
+ * Formata o carimbo de versão (ISO em UTC gerado no build) no FUSO LOCAL do
+ * jogador — ex.: um usuário no Brasil vê a hora dele, não a do servidor.
+ */
+function formatBuild(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso; // formato antigo: mostra como veio
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 /**
