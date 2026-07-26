@@ -29,6 +29,11 @@ export default defineConfig({
       registerType: "prompt",
       injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
       includeAssets: ["apple-touch-icon.png", "icon-192.png", "icon-512.png"],
+      // A página pública do site (/site) é servida direto do servidor — o service
+      // worker do app não deve interceptá-la com o fallback do SPA.
+      workbox: {
+        navigateFallbackDenylist: [/\/site(\/|$)/],
+      },
       manifest: {
         name: "Call ou Fold — Poker para Recreativos",
         short_name: "Call ou Fold",
