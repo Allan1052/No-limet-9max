@@ -150,18 +150,16 @@ export function App() {
         </div>
         <div className="topbar-right">
           <ModeToggle />
+          <button
+            className="build-id"
+            title={tr("version.update")}
+            onClick={forceUpdate}
+          >
+            🔄 v{formatBuild(__BUILD_ID__)}
+          </button>
           <LangSelect />
           <InstallButton />
-          <div className="disclaimer">
-            <span className="disclaimer-text">{tr("disclaimer")}</span>
-            <button
-              className="build-id"
-              title={tr("version.update")}
-              onClick={forceUpdate}
-            >
-              🔄 v{formatBuild(__BUILD_ID__)}
-            </button>
-          </div>
+          <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
         </div>
       </div>
 
