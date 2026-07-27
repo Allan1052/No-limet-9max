@@ -1523,6 +1523,43 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   color: #fff; opacity: 0.5; letter-spacing: 1px;
 }
 
+/* Fichas voando do pote pro carrasco quando ele leva a mão (você errou). */
+.chips-fly {
+  position: absolute; left: 50%; top: 52%;
+  width: 0; height: 0; z-index: 4; pointer-events: none;
+}
+.chips-fly .chip {
+  position: absolute; left: -10px; top: -10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  animation-name: chip-fly;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-fill-mode: both;
+}
+@keyframes chip-fly {
+  0% { transform: translate(0, 8px) scale(0.5) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(var(--dx), -158px) scale(0.95) rotate(var(--rot)); opacity: 0; }
+}
+.chip.red { background: radial-gradient(circle, #e0503b 0 58%, #b0331f 59%); }
+.chip.blue { background: radial-gradient(circle, #3f7fd6 0 58%, #255aa0 59%); }
+.chip.green { background: radial-gradient(circle, #3fae6b 0 58%, #26804b 59%); }
+.chip.black { background: radial-gradient(circle, #33373a 0 58%, #17191b 59%); }
+.chip.gold { background: radial-gradient(circle, #e8cf7f 0 58%, #b8922f 59%); }
+
+/* O carrasco dá uma investida ao arrastar as fichas. */
+.arena.lost .villain-av {
+  animation: terror-aura 1.8s ease-in-out infinite, terror-grab 0.55s ease-out;
+}
+@keyframes terror-grab {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18) translateY(5px); }
+  100% { transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .arena-headsup, .villain-av { animation: none; }
+  .arena-headsup, .villain-av, .chips-fly .chip, .arena.lost .villain-av { animation: none; }
 }

@@ -29,15 +29,55 @@ const STACK_PRESETS = [10, 20, 40, 60, 100];
 // e vira o seu terror pessoal do heads-up. Só flavor — não muda a matemática.
 const VILLAINS = [
   { id: "shark", emoji: "🦈", nameKey: "ultra.v.shark.name", tauntKey: "ultra.v.shark.taunt" },
-  { id: "reaper", emoji: "💀", nameKey: "ultra.v.reaper.name", tauntKey: "ultra.v.reaper.taunt" },
+  { id: "reaper", emoji: "", art: "hood", nameKey: "ultra.v.reaper.name", tauntKey: "ultra.v.reaper.taunt" },
   { id: "ice", emoji: "🧊", nameKey: "ultra.v.ice.name", tauntKey: "ultra.v.ice.taunt" },
   { id: "seer", emoji: "👁️", nameKey: "ultra.v.seer.name", tauntKey: "ultra.v.seer.taunt" },
   { id: "hurricane", emoji: "🌪️", nameKey: "ultra.v.hurricane.name", tauntKey: "ultra.v.hurricane.taunt" },
   { id: "ghost", emoji: "🎭", nameKey: "ultra.v.ghost.name", tauntKey: "ultra.v.ghost.taunt" },
-] as const satisfies ReadonlyArray<{ id: string; emoji: string; nameKey: TransKey; tauntKey: TransKey }>;
+] as const satisfies ReadonlyArray<{
+  id: string;
+  emoji: string;
+  art?: string;
+  nameKey: TransKey;
+  tauntKey: TransKey;
+}>;
 
 type Villain = (typeof VILLAINS)[number];
 const pickVillain = (): Villain => VILLAINS[Math.floor(Math.random() * VILLAINS.length)];
+
+// Rosto encapuzado de óculos escuros — o "hustler" anônimo (usado por O Ceifador).
+function HoodedFace({ size = 44 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden focusable="false">
+      <defs>
+        <linearGradient id="hoodGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#232830" />
+          <stop offset="1" stopColor="#0b0d11" />
+        </linearGradient>
+      </defs>
+      {/* silhueta do capuz */}
+      <path
+        d="M50 5C29 5 18 24 18 51c0 28 14 45 32 45s32-17 32-45C82 24 71 5 50 5Z"
+        fill="url(#hoodGrad)"
+        stroke="#3c414b"
+        strokeWidth="1.5"
+      />
+      {/* abertura do rosto (em sombra) */}
+      <ellipse cx="50" cy="55" rx="22" ry="28" fill="#2b3038" />
+      {/* sombra do capuz sobre a testa */}
+      <path d="M28 50C28 30 37 18 50 18s22 12 22 32Z" fill="#0c0e12" opacity="0.9" />
+      {/* óculos escuros */}
+      <g fill="#0a0b0d">
+        <rect x="29" y="47" width="17" height="12" rx="5" />
+        <rect x="54" y="47" width="17" height="12" rx="5" />
+        <rect x="45" y="50" width="10" height="3.5" rx="1.6" />
+      </g>
+      {/* brilho nas lentes */}
+      <rect x="32" y="49" width="6" height="3" rx="1.5" fill="#7cc0ff" opacity="0.5" />
+      <rect x="57" y="49" width="6" height="3" rx="1.5" fill="#7cc0ff" opacity="0.5" />
+    </svg>
+  );
+}
 
 export function UltraTrainer() {
   const { t } = useT();
@@ -77,7 +117,29 @@ export function UltraTrainer() {
     const item = evaluateChoice(scenario, key);
     setResult(item);
     setSession((s) => ({ correct: s.correct + (isCorrect(item) ? 1 : 0), total: s.total + 1 }));
+    // Errou = o carrasco leva o pote. Um tranco háptico pra doer de verdade.
+    if (!isCorrect(item)) {
+      try {
+        navigator.vibrate?.([45, 35, 110]);
+      } catch {
+        /* sem vibração — segue só o visual */
+      }
+    }
   };
+
+  // Fichas voando pro carrasco quando ele leva o pote (você errou).
+  // Geradas por resultado: espalhamento, atraso e giro aleatórios, estáveis no render.
+  const potChips = useMemo(() => {
+    if (!result || isCorrect(result)) return [];
+    const colors = ["red", "blue", "green", "black", "gold"];
+    return Array.from({ length: 18 }, (_, i) => ({
+      dx: Math.round((Math.random() - 0.5) * 140),
+      delay: Math.round(Math.random() * 420),
+      dur: 820 + Math.round(Math.random() * 560),
+      rot: Math.round((Math.random() - 0.5) * 340),
+      color: colors[i % colors.length],
+    }));
+  }, [result]);
 
   // Grade do spot (só depois de responder, pra não entregar a resposta antes).
   const cells = useMemo(() => {
@@ -181,7 +243,11 @@ export function UltraTrainer() {
           <div className="duel spotlight">
             <div className="duel-seat villain terror">
               <div className="villain-av">
-                <span className="villain-emoji">{villain.emoji}</span>
+                {"art" in villain ? (
+                  <HoodedFace />
+                ) : (
+                  <span className="villain-emoji">{villain.emoji}</span>
+                )}
                 {s.raiserPosition ? <span className="duel-pos vil">{s.raiserPosition}</span> : null}
               </div>
               <div className="villain-name">{t(villain.nameKey)}</div>
@@ -219,6 +285,25 @@ export function UltraTrainer() {
                 {t("ultra.you")} · {s.effectiveBB}bb
               </div>
             </div>
+
+            {potChips.length > 0 ? (
+              <div className="chips-fly" aria-hidden>
+                {potChips.map((c, i) => (
+                  <span
+                    key={i}
+                    className={`chip ${c.color}`}
+                    style={
+                      {
+                        "--dx": `${c.dx}px`,
+                        "--rot": `${c.rot}deg`,
+                        animationDelay: `${c.delay}ms`,
+                        animationDuration: `${c.dur}ms`,
+                      } as React.CSSProperties
+                    }
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 
