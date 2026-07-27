@@ -25,6 +25,11 @@ export interface PlayerSpot {
   /** Posição de quem abriu, se o jogador enfrentou um raise. Ausente = abertura. */
   raiserPosition?: Position;
   openSizeBB?: number;
+  /**
+   * Se este jogador ABRIU e depois levou um 3-bet, guarda o spot da resposta ao
+   * 3-bet (4-bet / pagar / foldar) — o popup mostra também essa grade.
+   */
+  vs3bet?: { threeBettorPosition: Position; threeBetSizeBB: number };
 }
 
 const VOLUNTARY = new Set(["fold", "check", "call", "raise", "allin", "bet"]);
@@ -57,6 +62,8 @@ export function handSpots(h: HandHistory): PlayerSpot[] {
   const seen = new Set<number>();
   let raiserPosition: Position | undefined;
   let openSizeBB: number | undefined;
+  // Sequência de raises do pré-flop (abertura, 3-bet, 4-bet...) na ordem.
+  const raises: { seat: number; position: Position; sizeBB: number }[] = [];
 
   for (const e of h.events) {
     if (!isPreflop(e.street)) break;
@@ -92,6 +99,24 @@ export function handSpots(h: HandHistory): PlayerSpot[] {
     if (e.actionType === "raise" || e.actionType === "allin") {
       raiserPosition = positions[e.seat];
       openSizeBB = sizeFromLabel(e.actionLabel) ?? (e.actionType === "allin" ? effBB(e.seat) : 2.3);
+      const pos = positions[e.seat];
+      if (pos) raises.push({ seat: e.seat, position: pos, sizeBB: openSizeBB });
+    }
+  }
+
+  // Quem ABRIU (1º raise) e levou um 3-bet (2º raise) ganha o spot de resposta
+  // ao 3-bet: clicar nele mostra também a grade de 4-bet / pagar / foldar.
+  if (raises.length >= 2) {
+    const opener = raises[0];
+    const threeBettor = raises[1];
+    if (opener.seat !== threeBettor.seat) {
+      const openerSpot = spots.find((s) => s.seat === opener.seat && s.raiserPosition == null);
+      if (openerSpot) {
+        openerSpot.vs3bet = {
+          threeBettorPosition: threeBettor.position,
+          threeBetSizeBB: threeBettor.sizeBB,
+        };
+      }
     }
   }
   return spots;

@@ -17,7 +17,7 @@ import type { BotProfile } from "../bots/profiles";
 import type { IcmSpot } from "./icm";
 
 /** Categoria de cor de uma célula da grade. */
-export type SpotCategory = "open" | "3bet" | "call" | "limp" | "fold";
+export type SpotCategory = "open" | "3bet" | "4bet" | "call" | "limp" | "fold";
 
 export interface SpotCell {
   hand: string; // "AA", "AKs", "AKo"
@@ -33,12 +33,20 @@ export interface SpotGridContext {
   raiserPosition?: Position;
   openSizeBB?: number;
   icmSpot?: IcmSpot;
+  /** O herói abriu e enfrenta um 3-bet (grade de 4-bet / pagar / foldar). */
+  threeBet?: boolean;
 }
 
+type SpotMode = "rfi" | "vs-open" | "vs-3bet";
+
 /** Traduz a ação do motor para a categoria de cor, conforme o tipo de spot. */
-function categorize(action: string, facingRaise: boolean): SpotCategory {
+function categorize(action: string, mode: SpotMode): SpotCategory {
   if (action === "fold") return "fold";
-  if (facingRaise) {
+  if (mode === "vs-3bet") {
+    if (action === "3bet" || action === "jam" || action === "raise") return "4bet";
+    return "call";
+  }
+  if (mode === "vs-open") {
     if (action === "3bet" || action === "jam" || action === "raise") return "3bet";
     return "call"; // call
   }
@@ -51,11 +59,11 @@ function categorize(action: string, facingRaise: boolean): SpotCategory {
 function categoryFreq(
   mix: { action: string; freq: number }[] | undefined,
   category: SpotCategory,
-  facingRaise: boolean,
+  mode: SpotMode,
 ): number {
   if (!mix || mix.length === 0) return 1;
   let sum = 0;
-  for (const m of mix) if (categorize(m.action, facingRaise) === category) sum += m.freq;
+  for (const m of mix) if (categorize(m.action, mode) === category) sum += m.freq;
   return sum > 0 ? Math.min(1, sum) : 1;
 }
 
@@ -64,7 +72,7 @@ function categoryFreq(
  * tipo de mão. Barato: preflopDecision é lógica de range, sem Monte Carlo.
  */
 export function spotRangeGrid(ctx: SpotGridContext): Record<string, SpotCell> {
-  const facingRaise = ctx.raiserPosition != null;
+  const mode: SpotMode = ctx.threeBet ? "vs-3bet" : ctx.raiserPosition != null ? "vs-open" : "rfi";
   const out: Record<string, SpotCell> = {};
   for (const hand of allHandTypes()) {
     const cards = handTypeCombos(hand)[0]; // mão representante do tipo
@@ -76,9 +84,10 @@ export function spotRangeGrid(ctx: SpotGridContext): Record<string, SpotCell> {
       raiserPosition: ctx.raiserPosition,
       openSizeBB: ctx.openSizeBB,
       icmSpot: ctx.icmSpot,
+      threeBet: ctx.threeBet,
     });
-    const category = categorize(dec.action, facingRaise);
-    out[hand] = { hand, category, freq: categoryFreq(dec.mix, category, facingRaise) };
+    const category = categorize(dec.action, mode);
+    out[hand] = { hand, category, freq: categoryFreq(dec.mix, category, mode) };
   }
   return out;
 }

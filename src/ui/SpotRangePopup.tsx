@@ -13,6 +13,7 @@ import type { PlayerSpot } from "../app/handSpots";
 const CAT_KEY: Record<SpotCategory, string> = {
   open: "spot.cat.open",
   "3bet": "spot.cat.3bet",
+  "4bet": "spot.cat.4bet",
   call: "spot.cat.call",
   limp: "spot.cat.limp",
   fold: "spot.cat.fold",
@@ -34,7 +35,24 @@ export function SpotRangePopup({ spot, onClose }: { spot: PlayerSpot; onClose: (
     [spot.position, spot.effectiveBB, spot.raiserPosition, spot.openSizeBB],
   );
 
+  // Segunda grade: o jogador abriu e levou 3-bet → 4-bet / pagar / foldar.
+  const cells3bet = useMemo(
+    () =>
+      spot.vs3bet
+        ? spotRangeGrid({
+            heroPosition: spot.position,
+            effectiveBB: spot.effectiveBB,
+            profile: BASELINE_PROFILE,
+            raiserPosition: spot.vs3bet.threeBettorPosition,
+            openSizeBB: spot.vs3bet.threeBetSizeBB,
+            threeBet: true,
+          })
+        : null,
+    [spot.position, spot.effectiveBB, spot.vs3bet],
+  );
+
   const realCat = cells[spot.handType]?.category ?? "fold";
+  const realCat3bet = cells3bet ? cells3bet[spot.handType]?.category ?? "fold" : null;
   const who = spot.isHero ? t("spot.you") : spot.name;
   const title = facing
     ? t("spot.defendTitle", {
@@ -89,6 +107,35 @@ export function SpotRangePopup({ spot, onClose }: { spot: PlayerSpot; onClose: (
         </div>
 
         <p className="spot-note">{facing ? t("spot.noteDefend") : t("spot.noteOpen")}</p>
+
+        {cells3bet && spot.vs3bet ? (
+          <div className="spot-section">
+            <h4 className="spot-section-title">
+              {t("spot.vs3betTitle", {
+                who,
+                raiser: spot.vs3bet.threeBettorPosition,
+                size: spot.vs3bet.threeBetSizeBB.toFixed(1),
+              })}
+            </h4>
+
+            {spot.cards.length >= 2 && realCat3bet ? (
+              <div className={`spot-verdict cat-${realCat3bet}`} style={{ marginBottom: 12 }}>
+                {t("spot.handWas", { hand: prettyHand(spot.handType) })}{" "}
+                <b>{t(CAT_KEY[realCat3bet] as never)}</b>
+              </div>
+            ) : null}
+
+            <SpotRangeGrid cells={cells3bet} highlight={spot.handType || undefined} />
+
+            <div className="spot-legend">
+              <Swatch cls="cat-4bet" label={t("spot.cat.4bet")} />
+              <Swatch cls="cat-call" label={t("spot.cat.call")} />
+              <Swatch cls="cat-fold" label={t("spot.cat.fold")} />
+            </div>
+
+            <p className="spot-note">{t("spot.note4bet")}</p>
+          </div>
+        ) : null}
 
         <button className="btn" style={{ width: "100%" }} onClick={onClose}>
           {t("spot.close")}

@@ -42,6 +42,12 @@ export interface PreflopContext {
   openSizeBB?: number;
   /** Contexto de ICM para o confronto herói×vilão (opcional). */
   icmSpot?: IcmSpot;
+  /**
+   * O herói ABRIU e agora enfrenta um 3-bet. `raiserPosition` passa a ser quem
+   * deu o 3-bet e `openSizeBB` o tamanho do 3-bet em bb. A decisão vira
+   * 4-bet / pagar / foldar.
+   */
+  threeBet?: boolean;
 }
 
 export interface PreflopFreq {
@@ -61,6 +67,19 @@ export interface PreflopDecision {
 function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
 }
+
+// Ordem de ação PÓS-FLOP (quem age por último fica EM POSIÇÃO). As blinds agem
+// primeiro no pós-flop, mesmo tendo índice pré-flop alto — por isso este vetor
+// separado (o abridor enfrentando um 3-bet de uma blind fica IP, por exemplo).
+const POSTFLOP_ORDER: Position[] = ["SB", "BB", "UTG", "UTG1", "MP", "LJ", "HJ", "CO", "BTN"];
+function heroInPositionPostflop(hero: Position, villain: Position): boolean {
+  return POSTFLOP_ORDER.indexOf(hero) > POSTFLOP_ORDER.indexOf(villain);
+}
+
+// Núcleo de valor do 4-bet: mãos que 4-betam por valor em qualquer profundidade
+// razoável de mesa final (QQ+ e AK). Garantidas independente do percentil — é o
+// recado central pro recreativo: com AK/QQ+ você NÃO só paga, você 4-beta.
+const VALUE_4BET_CORE = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
 
 /**
  * Mix aproximado numa fronteira de range: mãos bem dentro são "puras" (100%);
@@ -139,6 +158,11 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   const icmFactor = ctx.icmSpot
     ? icmTightenFactor(ctx.icmSpot, profile.icmSensitivity)
     : 1;
+
+  // ----- Caso 3: o herói abriu e enfrenta um 3-bet → 4-bet / pagar / foldar -----
+  if (ctx.threeBet && ctx.raiserPosition) {
+    return vsThreeBetDecision(ctx, handType, sd, icmFactor);
+  }
 
   // ----- Caso 1: pote não aberto → abertura (RFI) -----
   if (!ctx.raiserPosition) {
@@ -312,5 +336,102 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     reason: `${handType}: fora da range de defesa contra ${ctx.raiserPosition}.`,
     handType,
     mix: bandMix("call", defendPct, handType),
+  };
+}
+
+/**
+ * O herói ABRIU e leva um 3-bet. Decisão de 4-bet (valor/blefe) / pagar / foldar.
+ *
+ * Ideia central (e a que o app quer ensinar ao recreativo): abriu com uma mão
+ * forte e levou 3-bet? QQ+/AK NÃO é só pagar — é 4-betar. O resto continua só
+ * quando há posição e profundidade (pagar pra jogar o flop), senão folda.
+ *
+ * `ctx.raiserPosition` = quem deu o 3-bet; `ctx.openSizeBB` = tamanho do 3-bet.
+ */
+function vsThreeBetDecision(
+  ctx: PreflopContext,
+  handType: string,
+  sd: ReturnType<typeof stackDepthAdjust>,
+  icmFactor: number,
+): PreflopDecision {
+  const { profile } = ctx;
+  const threeBettor = ctx.raiserPosition!;
+  const threeBetSizeBB = ctx.openSizeBB ?? 9;
+  const ip = heroInPositionPostflop(ctx.heroPosition, threeBettor);
+  // Se 4-betar/pagar já compromete quase o stack, a jogada vira all-in ou fold.
+  const jam = sd.pushFold || ctx.effectiveBB <= threeBetSizeBB * 2.4;
+  // Quão largo o 3-bettor costuma jogar (proxy pela largura de abertura da
+  // posição dele): contra um 3-bet de BTN/blind, continua-se mais largo que
+  // contra um 3-bet de UTG.
+  const villainWide = RFI_BASE_PERCENT[threeBettor] || 0.15;
+
+  // 4-bet por VALOR: núcleo (QQ+/AK) + um pouco a mais contra 3-bettors largos
+  // e com perfis agressivos. ICM aperta.
+  const valueExtraPct =
+    (0.008 + 0.06 * villainWide) * (0.7 + 0.3 * profile.threeBetFactor) * icmFactor;
+  const valueExtra = buildTopRange(Math.max(0, valueExtraPct));
+  const isValue4bet = VALUE_4BET_CORE.has(handType) || freqIn(valueExtra, handType) > 0;
+
+  // PAGAR (flat): só em posição e com profundidade — mãos de set-mine e
+  // broadways suited que jogam bem o flop. Fora de posição é 4-bet ou fold.
+  // Stations (coldCallFactor alto) pagam 3-bets mais largo, até OOP.
+  const station = profile.coldCallFactor >= 1.5;
+  const canFlat = !jam && (ip || station) && ctx.effectiveBB >= 22;
+  const flatPct = canFlat
+    ? (0.05 + 0.06 * villainWide) * (0.7 + 0.3 * profile.coldCallFactor) * icmFactor
+    : 0;
+
+  // 4-bet de BLEFE: pequenos Ax suited (bloqueiam AA/AK), só profundo e IP.
+  const bluffPct =
+    !jam && ip && ctx.effectiveBB >= 30 ? 0.012 * profile.bluffFactor * profile.threeBetFactor : 0;
+
+  const size4bet = jam ? ctx.effectiveBB : Math.min(ctx.effectiveBB, threeBetSizeBB * 2.3);
+
+  if (isValue4bet) {
+    const action: PreflopAction = jam ? "jam" : "3bet";
+    return {
+      action,
+      sizeBB: size4bet,
+      reason: jam
+        ? `${handType}: forte demais pra desistir — 4-bet all-in (${Math.round(ctx.effectiveBB)}bb) contra o 3-bet de ${threeBettor}.`
+        : `${handType}: 4-bet por valor contra o 3-bet de ${threeBettor} — abriu forte, não é só pagar.`,
+      handType,
+      mix: [{ action: jam ? "jam" : "3bet", freq: 1 }],
+    };
+  }
+
+  if (flatPct > 0) {
+    // Continua (paga) as mãos logo abaixo do valor, tirando o núcleo de 4-bet.
+    const continueRange = rangeSubtract(buildTopRange(valueExtraPct + flatPct), valueExtra);
+    if (freqIn(continueRange, handType) > 0 && !VALUE_4BET_CORE.has(handType)) {
+      return {
+        action: "call",
+        sizeBB: threeBetSizeBB,
+        reason: `${handType}: paga o 3-bet de ${threeBettor} pra jogar o flop em posição (perfil ${profile.archetype}).`,
+        handType,
+      };
+    }
+  }
+
+  if (bluffPct > 0 && isSuited(handType)) {
+    const bluffZone = rangeSubtract(
+      buildTopRange(valueExtraPct + flatPct + bluffPct),
+      buildTopRange(valueExtraPct + flatPct),
+    );
+    if (freqIn(bluffZone, handType) > 0) {
+      return {
+        action: "3bet",
+        sizeBB: size4bet,
+        reason: `${handType}: 4-bet de blefe (Ax suited que bloqueia AA/AK), em posição e profundo.`,
+        handType,
+      };
+    }
+  }
+
+  return {
+    action: "fold",
+    sizeBB: 0,
+    reason: `${handType}: contra um 3-bet, não é forte o bastante pra 4-betar nem paga bem — foldar.`,
+    handType,
   };
 }

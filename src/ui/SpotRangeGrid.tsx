@@ -15,6 +15,7 @@ function cellHand(i: number, j: number): string {
 const CAT_RGB: Record<Exclude<SpotCategory, "fold">, [number, number, number]> = {
   open: [212, 175, 55], // dourado
   "3bet": [201, 84, 74], // vermelho
+  "4bet": [173, 58, 106], // magenta/vinho (raise sobre o 3-bet)
   call: [76, 175, 125], // verde
   limp: [150, 128, 70], // dourado fraco
 };

@@ -1204,6 +1204,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .spot-verdict b { font-weight: 800; }
 .spot-verdict.cat-open b { color: var(--gold); }
 .spot-verdict.cat-3bet b { color: #e0776c; }
+.spot-verdict.cat-4bet b { color: #e0709e; }
 .spot-verdict.cat-call b { color: var(--good); }
 .spot-verdict.cat-limp b { color: var(--gold-soft); }
 .spot-verdict.cat-fold b { color: var(--text-dim); }
@@ -1221,8 +1222,12 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .spot-sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
 .spot-sw.cat-open { background: rgba(212,175,55,0.85); }
 .spot-sw.cat-3bet { background: rgba(201,84,74,0.85); }
+.spot-sw.cat-4bet { background: rgba(173,58,106,0.9); }
 .spot-sw.cat-call { background: rgba(76,175,125,0.85); }
 .spot-sw.cat-fold { background: #191c13; border: 1px solid #2a2e1e; }
+/* Separador da 2ª grade (enfrentando o 3-bet) dentro do mesmo popup. */
+.spot-section { border-top: 1px solid #2a2e1e; margin-top: 16px; padding-top: 12px; }
+.spot-section-title { font-size: 14px; font-weight: 800; color: #e0709e; margin: 0 0 10px; }
 .spot-note { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin: 6px 0 14px; }
 
 @media (prefers-reduced-motion: reduce) {
