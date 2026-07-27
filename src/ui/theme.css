@@ -70,6 +70,13 @@ body {
   row-gap: 6px;
   min-width: 0;
 }
+/* Simples/Técnico + carimbo de versão + idiomas sempre juntos na mesma linha. */
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
 .lang-select { display: inline-flex; gap: 2px; }
 .lang-opt {
   background: transparent;
@@ -1032,8 +1039,9 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 
 /* ---- Responsivo (celular / telas estreitas) ---- */
 @media (max-width: 860px) {
-  .app { padding: 8px 10px 24px; }
-  .topbar { flex-wrap: wrap; gap: 8px; }
+  .app { padding: 8px 10px 16px; }
+  .topbar { flex-wrap: wrap; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; }
+  .play .controls { margin-top: 6px; }
   .brand { font-size: 17px; }
   .brand small { display: none; }
   .disclaimer { font-size: 10px; padding: 4px 7px; }
@@ -1042,9 +1050,9 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .layout { flex-direction: column; }
   .sidebar { flex: 1 1 auto; width: 100%; }
 
-  /* Mesa: limita a altura para caber tudo na tela sem rolar (deixa espaço
-     garantido para os controles Raise/All-in embaixo). */
-  .table-wrap { aspect-ratio: 5 / 6; width: 100%; max-width: min(100%, 62vh); max-height: 50vh; margin-inline: auto; }
+  /* Mesa: tamanho cheio no mobile (os controles cabem porque Simples/versão/
+     idiomas ficam numa linha só, liberando espaço vertical). */
+  .table-wrap { aspect-ratio: 5 / 6; width: 100%; max-width: min(100%, 62vh); }
   .tbl-rank { font-size: 15px; }
   .tbl-tips-btn { font-size: 12px; padding: 8px 13px; }
   .seat { width: 88px; }
@@ -1064,7 +1072,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
   /* Controles e ICM empilham. */
-  .controls { padding: 10px; gap: 8px; }
+  .controls { padding: 8px; gap: 6px; }
   .btn { padding: 9px 12px; font-size: 13px; }
   .slider-wrap { flex: 1 1 100%; }
   .icm-cols { flex-direction: column; }
@@ -1087,7 +1095,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .card .rank { font-size: 14px; }
   /* Economiza espaço no topo, mas mantém o botão de atualizar visível. */
   .disclaimer-text { display: none; }
-  .table-wrap { max-width: min(100%, 56vh); max-height: 46vh; }
+  .table-wrap { max-width: min(100%, 56vh); }
 }
 
 /* -------------------------------------------------------------------------

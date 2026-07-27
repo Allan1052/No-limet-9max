@@ -149,15 +149,17 @@ export function App() {
           </button>
         </div>
         <div className="topbar-right">
-          <ModeToggle />
-          <button
-            className="build-id"
-            title={tr("version.update")}
-            onClick={forceUpdate}
-          >
-            🔄 v{formatBuild(__BUILD_ID__)}
-          </button>
-          <LangSelect />
+          <div className="topbar-controls">
+            <ModeToggle />
+            <button
+              className="build-id"
+              title={tr("version.update")}
+              onClick={forceUpdate}
+            >
+              🔄 {formatBuild(__BUILD_ID__)}
+            </button>
+            <LangSelect />
+          </div>
           <InstallButton />
           <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
         </div>
@@ -312,7 +314,8 @@ function formatBuild(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso; // formato antigo: mostra como veio
   const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  // Curto (DD/MM/AA) para caber na mesma linha do Simples/Técnico + idiomas.
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`;
 }
 
 /**
