@@ -69,8 +69,10 @@ export function PokerTable({
     <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
       <div className="felt" />
 
-      {/* Info central: classificação no torneio + blinds, abaixo dos assentos de cima */}
-      <div className="tbl-topcenter">
+      {/* Coluna central única (dica + classificação + blinds + pote + board),
+          empilhada e centralizada — assim nada se sobrepõe, independente do
+          tamanho da dica. */}
+      <div className="tbl-center-col">
         {hint ? <div className="tbl-hint">💡 {hint}</div> : null}
         {field ? (
           <div className="tbl-rankline">
@@ -89,13 +91,13 @@ export function PokerTable({
           {ante > 0 ? ` (ante ${ante})` : ""}
           {field ? ` · ${field.remaining.toLocaleString("en-US")} ${t("hud.alive")}` : ""}
         </div>
+        <Board
+          board={table.board}
+          pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
+          bigBlind={table.bigBlind}
+          inline
+        />
       </div>
-
-      <Board
-        board={table.board}
-        pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
-        bigBlind={table.bigBlind}
-      />
 
       {/* Botão central: ver as dicas completas da mão (após o river/showdown) */}
       {showTips ? (
