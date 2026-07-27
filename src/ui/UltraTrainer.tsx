@@ -7,7 +7,7 @@
 // destacada. Reaproveita o mesmo motor do jogo — nada de regra nova.
 // ---------------------------------------------------------------------------
 import { useMemo, useState } from "react";
-import { CardView } from "./Card";
+import { CardView, CardBack } from "./Card";
 import { SpotRangeGrid } from "./SpotRangeGrid";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
@@ -139,6 +139,9 @@ export function UltraTrainer() {
   // ---------- Spot em andamento ----------
   const s = scenario.spec;
   const handType = comboToHandType(scenario.hand[0], scenario.hand[1]);
+  const openSize = s.openSizeBB ?? 2.3;
+  // Pote na hora da decisão: blinds (SB 0.5 + BB 1) + a aberta do vilão, se houve.
+  const potBB = Math.round((1.5 + (s.raiserPosition ? openSize : 0)) * 10) / 10;
   return (
     <div className="train-view">
       <div className="panel">
@@ -149,19 +152,37 @@ export function UltraTrainer() {
           </span>
         </div>
 
-        <div className="train-spot">
-          <div className="train-prompt">{t("train.spot", { pos: s.heroPosition, stack: s.effectiveBB })}</div>
-          <div className="train-prompt strong">
-            {s.raiserPosition
-              ? t("train.facing", { pos: s.raiserPosition, size: s.openSizeBB ?? 2.3 })
-              : t("train.rfi")}
+        {/* Mesa de disputa 1×1 — só 2 assentos, estilo mesa final. */}
+        <div className="duel">
+          <div className="duel-seat villain">
+            {s.raiserPosition ? <span className="duel-pos">{s.raiserPosition}</span> : null}
+            <div className="duel-cards">
+              <CardBack small />
+              <CardBack small />
+            </div>
+            <div className="duel-name">{t("ultra.villain")}</div>
+            <div className={`duel-badge ${s.raiserPosition ? "aggro" : "wait"}`}>
+              {s.raiserPosition ? t("ultra.opened", { size: openSize }) : t("ultra.waiting")}
+            </div>
           </div>
-        </div>
 
-        <div className="train-hand">
-          {scenario.hand.map((c, i) => (
-            <CardView key={i} card={c} />
-          ))}
+          <div className="duel-center">
+            <div className="duel-chip" aria-hidden />
+            <div className="duel-pot">{t("ultra.pot", { bb: potBB })}</div>
+          </div>
+
+          <div className="duel-seat hero">
+            <div className="duel-badge turn">{t("ultra.yourTurn")}</div>
+            <div className="duel-cards big">
+              {scenario.hand.map((c, i) => (
+                <CardView key={i} card={c} />
+              ))}
+            </div>
+            <div className="duel-name">
+              <span className="duel-pos hero">{s.heroPosition}</span>
+              {t("ultra.you")} · {s.effectiveBB}bb
+            </div>
+          </div>
         </div>
 
         {!result ? (
