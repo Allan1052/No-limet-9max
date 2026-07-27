@@ -1,6 +1,8 @@
 // Análise de fim de torneio: mostra como o herói jogou (resultado, estilo,
 // qualidade das decisões e os erros a rever). Aparece quando o torneio termina.
+import { useState } from "react";
 import type { TournamentSummary as Summary } from "../app/gameController";
+import type { Rating } from "../feedback/analyzer";
 
 const RATING_LABEL: Record<string, string> = {
   boa: "Boa",
@@ -19,6 +21,13 @@ export function TournamentSummary({
   const champ = summary.result === "campeao";
   const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
   const num = (n: number) => Math.round(n).toLocaleString("en-US");
+
+  // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
+  // Sem filtro (null), mostra as "mãos para rever" (imprecisa + ruim).
+  const [filter, setFilter] = useState<Rating | null>(null);
+  const shown = filter ? summary.review.filter((r) => r.rating === filter) : summary.mistakes;
+  const toggle = (r: Rating) => setFilter((cur) => (cur === r ? null : r));
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay summary-modal" onClick={(e) => e.stopPropagation()}>
@@ -65,16 +74,38 @@ export function TournamentSummary({
         </div>
 
         <div className="summary-ratings">
-          <span className="pill boa">Boas {summary.ratings.boa}</span>
-          <span className="pill ok">Ok {summary.ratings.ok}</span>
-          <span className="pill imprecisa">Imprecisas {summary.ratings.imprecisa}</span>
-          <span className="pill ruim">Ruins {summary.ratings.ruim}</span>
+          <span className="pill boa" title="As boas não são detalhadas">
+            Boas {summary.ratings.boa}
+          </span>
+          <button
+            className={`pill ok clickable ${filter === "ok" ? "active" : ""}`}
+            onClick={() => toggle("ok")}
+          >
+            Ok {summary.ratings.ok}
+          </button>
+          <button
+            className={`pill imprecisa clickable ${filter === "imprecisa" ? "active" : ""}`}
+            onClick={() => toggle("imprecisa")}
+          >
+            Imprecisas {summary.ratings.imprecisa}
+          </button>
+          <button
+            className={`pill ruim clickable ${filter === "ruim" ? "active" : ""}`}
+            onClick={() => toggle("ruim")}
+          >
+            Ruins {summary.ratings.ruim}
+          </button>
         </div>
+        <div className="summary-hint">👆 toque em Ok, Imprecisas ou Ruins para ver as decisões</div>
 
-        {summary.mistakes.length > 0 ? (
+        {shown.length > 0 ? (
           <>
-            <h4>Mãos para rever ({summary.mistakes.length})</h4>
-            {summary.mistakes.map((it, i) => (
+            <h4>
+              {filter
+                ? `Decisões "${RATING_LABEL[filter]}" (${shown.length})`
+                : `Mãos para rever (${shown.length})`}
+            </h4>
+            {shown.map((it, i) => (
               <div key={i} className={`fb-item ${it.rating}`}>
                 <div className="fb-head">
                   <span>
@@ -88,7 +119,9 @@ export function TournamentSummary({
           </>
         ) : (
           <div className="summary-note">
-            Sem erros claros de EV para revisar — jogo consistente. 👏
+            {filter
+              ? `Nenhuma decisão "${RATING_LABEL[filter]}" neste torneio. 👍`
+              : "Sem erros claros de EV para revisar — jogo consistente. 👏"}
           </div>
         )}
 

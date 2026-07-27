@@ -70,14 +70,16 @@ export function handSpots(h: HandHistory): PlayerSpot[] {
       const pos = positions[e.seat];
       // BB em pote não aberto (só deu check) não tem "range de abertura" — pula.
       const bbUnopened = pos === "BB" && raiserPosition == null;
-      if (pos && cards.length >= 2 && !bbUnopened) {
+      // Inclui TODOS que agiram no pré-flop, mesmo sem cartas reveladas (aí só
+      // não há a mão real pra destacar — o range mesmo aparece).
+      if (pos && !bbUnopened) {
         spots.push({
           seat: e.seat,
           name: h.names[e.seat] ?? `#${e.seat}`,
           position: pos,
           isHero: e.seat === h.heroSeat,
           cards: cards.slice(0, 2),
-          handType: comboToHandType(cards[0], cards[1]),
+          handType: cards.length >= 2 ? comboToHandType(cards[0], cards[1]) : "",
           effectiveBB: effBB(e.seat),
           actionType: e.actionType,
           raiserPosition,

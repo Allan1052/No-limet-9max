@@ -53,19 +53,25 @@ export function SpotRangePopup({ spot, onClose }: { spot: PlayerSpot; onClose: (
           <div className="spot-depth">{spot.effectiveBB}bb</div>
         </div>
 
-        <div className="spot-realhand">
-          <div className="spot-cards">
-            {spot.cards.map((c, i) => (
-              <CardView key={i} card={c} />
-            ))}
+        {spot.cards.length >= 2 ? (
+          <div className="spot-realhand">
+            <div className="spot-cards">
+              {spot.cards.map((c, i) => (
+                <CardView key={i} card={c} />
+              ))}
+            </div>
+            <div className={`spot-verdict cat-${realCat}`}>
+              {t("spot.handWas", { hand: prettyHand(spot.handType) })}{" "}
+              <b>{t(CAT_KEY[realCat] as never)}</b>
+            </div>
           </div>
-          <div className={`spot-verdict cat-${realCat}`}>
-            {t("spot.handWas", { hand: prettyHand(spot.handType) })}{" "}
-            <b>{t(CAT_KEY[realCat] as never)}</b>
+        ) : (
+          <div className="spot-verdict" style={{ marginBottom: 12 }}>
+            {t("spot.noCards")}
           </div>
-        </div>
+        )}
 
-        <SpotRangeGrid cells={cells} highlight={spot.handType} />
+        <SpotRangeGrid cells={cells} highlight={spot.handType || undefined} />
 
         <div className="spot-legend">
           {facing ? (

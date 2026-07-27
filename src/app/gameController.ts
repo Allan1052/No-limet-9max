@@ -22,7 +22,7 @@ import { legalActions, type LegalActions } from "../game/betting";
 import type { TableState } from "../game/state";
 import { botPreflopAction, preflopContextFor } from "../bots/preflopBot";
 import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
-import { BASELINE_PROFILE, PROFILES } from "../bots/profiles";
+import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
 import { gradeDecision, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
@@ -111,6 +111,8 @@ export interface TournamentSummary {
   styleNote: string;
   qualityNote: string;
   mistakes: FeedbackItem[];
+  /** Todas as decisões não "boa" (ok+imprecisa+ruim), para filtrar por categoria. */
+  review: FeedbackItem[];
 }
 
 /** Estado serializável para salvar/retomar um torneio (entre mãos). */
@@ -158,6 +160,9 @@ export class GameController {
   tournamentOver = false;
   private heroRatings: Record<Rating, number> = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
   private sessionMistakes: FeedbackItem[] = [];
+  // Todas as decisões NÃO "boa" (ok + imprecisa + ruim), para o resumo do
+  // torneio deixar clicar em cada categoria e ver as mãos.
+  private sessionReview: FeedbackItem[] = [];
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
@@ -230,6 +235,7 @@ export class GameController {
     this.tournamentOver = false;
     this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
     this.sessionMistakes = [];
+    this.sessionReview = [];
     this.tournamentResult = null;
     this.tournamentFinishPlace = null;
     this.message = `Torneio configurado — ${stageInfo.label}. Clique em “Nova mão”.`;
@@ -495,6 +501,7 @@ export class GameController {
       if (item.rating === "ruim" || item.rating === "imprecisa") {
         this.sessionMistakes.push(item);
       }
+      if (item.rating !== "boa") this.sessionReview.push(item);
     }
     this.applyLabeled(action, advice);
   }
@@ -599,6 +606,7 @@ export class GameController {
       styleNote,
       qualityNote,
       mistakes,
+      review: [...this.sessionReview],
     };
   }
 
@@ -652,14 +660,18 @@ export class GameController {
 
   /** Restaura um torneio salvo, pronto para continuar na próxima mão. */
   restore(snap: GameSnapshot): void {
+    // Re-deriva o nome pelo profileId (assim renomeações dos perfis chegam
+    // também aos torneios salvos antes da mudança). O herói mantém "Você".
+    const nameFor = (s: { name: string; profileId?: string; isHero?: boolean }) =>
+      s.isHero || !s.profileId ? s.name : profileById(s.profileId).name;
     const seats = snap.seats.map((s) => ({
-      name: s.name,
+      name: nameFor(s),
       profileId: s.profileId,
       isHero: s.isHero,
       stack: s.stack,
     }));
     this.seatDefs = snap.seats.map((s) => ({
-      name: s.name,
+      name: nameFor(s),
       profileId: s.profileId,
       isHero: s.isHero,
     }));

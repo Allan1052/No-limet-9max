@@ -868,6 +868,14 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .pill.ok { color: var(--ok); border-color: var(--ok); }
 .pill.imprecisa { color: var(--warn); border-color: var(--warn); }
 .pill.ruim { color: var(--bad); border-color: var(--bad); }
+.pill.clickable { cursor: pointer; background: transparent; transition: background 0.12s, transform 0.08s; }
+.pill.clickable:hover { background: rgba(255, 255, 255, 0.06); }
+.pill.clickable:active { transform: scale(0.96); }
+.pill.clickable.active { background: currentColor; }
+.pill.ok.clickable.active { color: #10120c; background: var(--ok); }
+.pill.imprecisa.clickable.active { color: #10120c; background: var(--warn); }
+.pill.ruim.clickable.active { color: #10120c; background: var(--bad); }
+.summary-hint { font-size: 11px; color: var(--muted); margin: 0 0 8px; }
 .summary-modal .btn.primary { margin-top: 14px; width: 100%; }
 
 /* ---- Abas ---- */
@@ -1330,3 +1338,11 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 }
 @keyframes seatpulse { 50% { outline-color: var(--gold-dim); } }
 @media (prefers-reduced-motion: reduce) { .seat.range-open .pod { animation: none; } }
+
+/* Marca de range visível mesmo em quem foldou (assento apagado). */
+.seat.folded.range-open { opacity: 0.9; }
+.seat .pos-tag, .seat .range-flag { opacity: 1; }
+
+/* Controles ficam ACIMA da mesa, pra o feltro/assentos não taparem o Raise. */
+.controls { position: relative; z-index: 10; }
+.play .controls { margin-top: 16px; }
