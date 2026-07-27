@@ -238,7 +238,12 @@ export function App() {
       ) : null}
 
       {tipsOpen ? (
-        <HandTipsModal items={controller.feedback} onClose={() => setTipsOpen(false)} />
+        <HandTipsModal
+          items={controller.feedback}
+          heroHand={controller.lastHand?.holeCards[controller.heroSeat] ?? []}
+          board={controller.lastHand?.finalBoard ?? []}
+          onClose={() => setTipsOpen(false)}
+        />
       ) : null}
 
       {selectedSpot ? (

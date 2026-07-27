@@ -4,18 +4,39 @@ import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { useSettings } from "../app/settings";
+import { findBlockers } from "../bots/blockers";
+import { classifyBoard } from "../bots/boardTexture";
+import type { Card } from "../engine/cards";
 
 export function HandTipsModal({
   items,
   onClose,
+  heroHand = [],
+  board = [],
 }: {
   items: FeedbackItem[];
   onClose: () => void;
+  heroHand?: Card[];
+  board?: Card[];
 }) {
   const { t } = useT();
   const { mode } = useSettings();
   const tecnico = mode === "tecnico";
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
+
+  // Leitura avançada do board (só no modo técnico): tamanho de aposta por
+  // textura + bloqueadores das suas cartas.
+  const hasBoard = board.length >= 3;
+  const texture = hasBoard ? classifyBoard(board) : null;
+  const sizePct = texture ? Math.round((0.33 + 0.4 * texture.wetness) * 100) : 0;
+  const texKey = texture
+    ? texture.wetness < 0.4
+      ? "tips.texDry"
+      : texture.wetness < 0.7
+        ? "tips.texMed"
+        : "tips.texWet"
+    : "";
+  const blockers = hasBoard ? findBlockers(heroHand, board) : [];
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -27,6 +48,27 @@ export function HandTipsModal({
           </button>
         </div>
         <div className="summary">{summarize(items)}</div>
+
+        {tecnico && texture ? (
+          <div className="board-read">
+            <div className="br-head">🧠 {t("tips.boardRead")}</div>
+            <div className="br-line">
+              {t("tips.sizingLine", { tex: t(texKey as TransKey), pct: sizePct })}{" "}
+              <span className="br-why">
+                {texture.wetness < 0.5 ? t("tips.whyDry") : t("tips.whyWet")}
+              </span>
+            </div>
+            {blockers.length > 0 ? (
+              <ul className="br-blockers">
+                {blockers.map((b, i) => (
+                  <li key={i}>{t(`blocker.${b.kind}` as TransKey, { c: b.label })}</li>
+                ))}
+              </ul>
+            ) : (
+              <div className="br-none">{t("tips.noBlockers")}</div>
+            )}
+          </div>
+        ) : null}
         {items.length === 0 ? (
           <div className="legend">{t("tips.empty")}</div>
         ) : (

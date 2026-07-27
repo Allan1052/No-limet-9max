@@ -1264,3 +1264,18 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .update-banner { animation: none; }
   .tbl-update-btn { animation: none; }
 }
+
+/* Leitura do board (Dicas da mão, modo técnico): sizing + bloqueadores. */
+.board-read {
+  background: #0f130c;
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.br-head { font-weight: 800; color: var(--gold); font-size: 14px; margin-bottom: 6px; }
+.br-line { font-size: 14px; color: var(--text); line-height: 1.45; }
+.br-why { color: var(--text-dim); }
+.br-blockers { margin: 8px 0 0; padding-left: 18px; }
+.br-blockers li { font-size: 14px; color: var(--gold-soft); margin-bottom: 4px; line-height: 1.4; }
+.br-none { font-size: 13px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
