@@ -85,7 +85,7 @@ function pos6to8(m: {
 export const PROFILES: BotProfile[] = [
   {
     id: "recreativo",
-    name: "Recreativo Solto",
+    name: "O Casual",
     archetype: "recreativo",
     description: "Casual: adora ver flops, superestima mãos médias, quase não blefa.",
     targetVpip: 46, targetPfr: 10, target3bet: 3,
@@ -97,7 +97,7 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "nit",
-    name: "Nit Conservador",
+    name: "Muralha",
     archetype: "nit",
     description: "Ultra-seletivo: joga pouquíssimas mãos, evita confronto sem premium.",
     targetVpip: 14, targetPfr: 11.5, target3bet: 3.5,
@@ -109,9 +109,9 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "tag",
-    name: "TAG Regular",
+    name: "O Certinho",
     archetype: "tag",
-    description: "Reg padrão de grinder: equilibrado, sólido e previsível dentro do razoável.",
+    description: "Sólido e equilibrado: joga certo e é bem previsível.",
     targetVpip: 22, targetPfr: 18, target3bet: 7,
     rfiWidth: 1.28, limpFactor: 0, coldCallFactor: 0.5, threeBetFactor: 1.17, defendFactor: 1.0,
     positional: pos6to8({ UTG: 0.6, MP: 0.8, CO: 1.0, BTN: 1.4, SB: 0.8 }),
@@ -121,9 +121,9 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "lag",
-    name: "LAG Moderno",
+    name: "Furacão",
     archetype: "lag",
-    description: "Agressivo com fundamento: pressão pós-flop, mas ranges coerentes.",
+    description: "Agressivo: aplica pressão o tempo todo, mas com critério.",
     targetVpip: 29.5, targetPfr: 23.5, target3bet: 10,
     rfiWidth: 1.86, limpFactor: 0, coldCallFactor: 1.0, threeBetFactor: 1.67, defendFactor: 1.13,
     positional: pos6to8({ UTG: 0.65, MP: 0.85, CO: 1.15, BTN: 1.5, SB: 0.9 }),
@@ -133,9 +133,9 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "abc",
-    name: "ABC Careful",
+    name: "O Cartilha",
     archetype: "abc",
-    description: "Direto e previsível, 'por cima da mesa', sem muita camada de blefe.",
+    description: "Direto e previsível: joga o óbvio e quase não blefa.",
     targetVpip: 19, targetPfr: 15.5, target3bet: 4.5,
     rfiWidth: 1.36, limpFactor: 0, coldCallFactor: 0.55, threeBetFactor: 0.78, defendFactor: 0.85,
     positional: pos6to8({ UTG: 0.6, MP: 0.75, CO: 0.95, BTN: 1.2, SB: 0.75 }),
@@ -145,7 +145,7 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "station",
-    name: "Calling Station",
+    name: "Paga-Tudo",
     archetype: "station",
     description: "Quase nunca desiste depois de entrar; paga até o showdown com frequência.",
     targetVpip: 51, targetPfr: 6.5, target3bet: 2,
@@ -157,9 +157,9 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "shover",
-    name: "Curto-stack Shover",
+    name: "Tudo ou Nada",
     archetype: "shover",
-    description: "Ajusta puramente por ICM e profundidade — típico de fase final.",
+    description: "Stack curto: é tudo ou nada — all-in ou fold.",
     targetVpip: 20, targetPfr: 16, target3bet: 6,
     rfiWidth: 1.14, limpFactor: 0, coldCallFactor: 0.4, threeBetFactor: 1.0, defendFactor: 1.3,
     positional: pos6to8({ UTG: 0.5, MP: 0.7, CO: 1.0, BTN: 1.6, SB: 1.2 }),
@@ -169,9 +169,9 @@ export const PROFILES: BotProfile[] = [
   },
   {
     id: "spewy",
-    name: "Spewy Recreativo",
+    name: "O Doidão",
     archetype: "spewy",
-    description: "Solto e impulsivo, mas humano: overbluffa às vezes, sem ser aleatório.",
+    description: "Solto e impulsivo: entra em muita mão e às vezes blefa demais.",
     targetVpip: 37.5, targetPfr: 20, target3bet: 11.5,
     rfiWidth: 1.43, limpFactor: 0.3, coldCallFactor: 2.2, threeBetFactor: 1.92, defendFactor: 1.38,
     positional: pos6to8({ UTG: 0.75, MP: 0.9, CO: 1.1, BTN: 1.4, SB: 1.1 }),

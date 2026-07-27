@@ -1,6 +1,5 @@
-// Um assento na mesa: nome, estilo, stack, cartas, última ação.
+// Um assento na mesa: nome, posição, stack, cartas, última ação.
 import { CardView, CardBack } from "./Card";
-import { profileById } from "../bots/profiles";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
 import type { PlayerState } from "../game/state";
@@ -12,11 +11,25 @@ interface SeatProps {
   lastAction?: string;
   bigBlind: number;
   style: React.CSSProperties;
-  /** Toque no assento → abre as estatísticas do jogador. */
+  /** Posição na mesa (UTG, CO, BTN, SB, BB…). */
+  position?: string;
+  /** Ao final da mão, este jogador tem range pra ver (destaca o assento). */
+  rangeMarked?: boolean;
+  /** Toque no assento → estatísticas (ou range, ao final da mão). */
   onSelect?: (seat: number) => void;
 }
 
-export function Seat({ player, acting, reveal, lastAction, bigBlind, style, onSelect }: SeatProps) {
+export function Seat({
+  player,
+  acting,
+  reveal,
+  lastAction,
+  bigBlind,
+  style,
+  position,
+  rangeMarked = false,
+  onSelect,
+}: SeatProps) {
   const { unit } = useSettings();
   if (player.status === "out") {
     return (
@@ -29,7 +42,6 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style, onSe
     );
   }
 
-  const archetype = player.profileId ? profileById(player.profileId).archetype : "VOCÊ";
   const folded = player.status === "folded";
   const showCards = player.isHero || reveal;
   const badgeClass = lastAction
@@ -42,17 +54,18 @@ export function Seat({ player, acting, reveal, lastAction, bigBlind, style, onSe
 
   return (
     <div
-      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""}`}
+      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""} ${rangeMarked ? "range-open" : ""}`}
       style={style}
     >
       <button
         type="button"
         className="pod pod-btn"
         onClick={() => onSelect?.(player.seat)}
-        title="Ver estatísticas"
+        title={rangeMarked ? "Ver o range desta mão" : "Ver estatísticas"}
       >
+        {position ? <div className="pos-tag">{position}</div> : null}
+        {rangeMarked ? <div className="range-flag">👁 range</div> : null}
         <div className="name">{player.name}</div>
-        <div className="arch">{archetype}</div>
         <div className="stack">{fmtAmount(player.stack, bigBlind, unit)}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (

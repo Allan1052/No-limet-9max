@@ -199,6 +199,7 @@ export function App() {
             celebrate={celebrateItm}
             updateReady={updateReady}
             onUpdate={applyUpdate}
+            rangeSeats={mode === "tecnico" ? spots.map((s) => s.seat) : []}
           />
 
           {handOver ? (

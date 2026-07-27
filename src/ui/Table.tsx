@@ -4,6 +4,7 @@
 import { Seat } from "./Seat";
 import { Board } from "./Board";
 import { useT } from "../i18n";
+import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
 import type { FieldStatus } from "../tournament/field";
 
@@ -41,6 +42,7 @@ export function PokerTable({
   celebrate = false,
   updateReady = false,
   onUpdate,
+  rangeSeats = [],
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -52,10 +54,16 @@ export function PokerTable({
   celebrate?: boolean;
   updateReady?: boolean;
   onUpdate?: () => void;
+  /** Assentos que têm range pra ver ao final da mão (ficam marcados). */
+  rangeSeats?: number[];
 }) {
   const { t } = useT();
   const reveal = table.handOver && !!table.result?.showdown;
   const ante = table.ante ?? 0;
+
+  // Posições (UTG..BTN/SB/BB) dos jogadores ainda na mesa, a partir do botão.
+  const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
+  const positions = tablePositions(seatsInPlay, table.buttonSeat);
 
   return (
     <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
@@ -113,6 +121,8 @@ export function PokerTable({
             reveal={reveal}
             lastAction={lastActionLabel[p.seat]}
             bigBlind={table.bigBlind}
+            position={positions[p.seat]}
+            rangeMarked={rangeSeats.includes(p.seat)}
             onSelect={onSelectSeat}
             style={{ top: pos.top, left: pos.left }}
           />

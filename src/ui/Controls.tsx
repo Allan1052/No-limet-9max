@@ -71,17 +71,17 @@ export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsPro
       </button>
 
       <div className="slider-wrap">
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.3)} title={t("ctrl.pctOf", { p: 30 })}>
-          30%
-        </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.4)} title={t("ctrl.pctOf", { p: 40 })}>
-          40%
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.35)} title={t("ctrl.pctOf", { p: 35 })}>
+          35%
         </button>
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title={t("ctrl.pctOf", { p: 60 })}>
           60%
         </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1)} title={t("ctrl.potWhole")}>
-          {t("ctrl.pot")}
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.75)} title={t("ctrl.pctOf", { p: 75 })}>
+          75%
+        </button>
+        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>
+          120%
         </button>
         <span className="pct-input" title={t("ctrl.pctHint")}>
           <input
@@ -111,17 +111,26 @@ export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsPro
         <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
       </div>
 
-      <button
-        className="btn primary"
-        disabled={!canRaise}
-        onClick={() =>
-          onAction(
-            raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
-          )
-        }
-      >
-        {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
-      </button>
+      <div className="raise-row">
+        <button
+          className="btn primary raise-btn"
+          disabled={!canRaise}
+          onClick={() =>
+            onAction(
+              raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
+            )
+          }
+        >
+          {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
+        </button>
+        <button
+          className="btn allin-btn"
+          disabled={!active || !legal.canRaise}
+          onClick={() => onAction({ type: "allin" })}
+        >
+          {t("ctrl.allin")}
+        </button>
+      </div>
     </div>
   );
 }

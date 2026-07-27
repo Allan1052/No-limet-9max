@@ -356,7 +356,7 @@ body {
 }
 .tbl-topcenter {
   position: absolute;
-  top: 34%;
+  top: 28%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 6;
@@ -1279,3 +1279,54 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .br-blockers { margin: 8px 0 0; padding-left: 18px; }
 .br-blockers li { font-size: 14px; color: var(--gold-soft); margin-bottom: 4px; line-height: 1.4; }
 .br-none { font-size: 13px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+
+/* -------------------------------------------------------------------------
+   Ajustes: Raise+All-in em linha própria, posição e marcação nos assentos.
+   ------------------------------------------------------------------------- */
+.raise-row { display: flex; gap: 8px; flex: 1 1 100%; }
+.raise-btn { flex: 1 1 auto; }
+.allin-btn {
+  flex: 0 0 auto;
+  background: linear-gradient(180deg, #b5462f 0%, #7d2f20 100%);
+  color: #fff;
+  border-color: #8a3a29;
+  font-weight: 800;
+}
+.allin-btn:hover:not(:disabled) { border-color: #e0765c; }
+
+/* Etiqueta de posição e marca de "ver range" no assento. */
+.seat .pod { position: relative; }
+.pos-tag {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  background: var(--gold-dim);
+  color: #0d0f0d;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  z-index: 2;
+}
+.seat.hero .pos-tag { background: var(--gold); }
+.range-flag {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  background: #14170f;
+  color: var(--gold-soft);
+  border: 1px solid var(--gold);
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 6px;
+  z-index: 2;
+}
+.seat.range-open .pod {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  animation: seatpulse 1.5s ease-in-out infinite;
+}
+@keyframes seatpulse { 50% { outline-color: var(--gold-dim); } }
+@media (prefers-reduced-motion: reduce) { .seat.range-open .pod { animation: none; } }
