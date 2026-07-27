@@ -144,9 +144,8 @@ function actionsFor(spec: ScenarioSpec): TrainAction[] {
   ];
 }
 
-/** Monta um cenário completo: sorteia a mão e calcula a estratégia correta. */
-export function buildScenario(module: TrainModule, rng: () => number): Scenario {
-  const spec = module.gen(rng);
+/** Monta um cenário a partir de um spec já definido (usado no treino 1×1 Ultra). */
+export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Scenario {
   const hand = randomHand(rng);
   const ctx: PreflopContext = {
     heroPosition: spec.heroPosition,
@@ -160,6 +159,11 @@ export function buildScenario(module: TrainModule, rng: () => number): Scenario 
   const d = preflopDecision(ctx);
   const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix };
   return { spec, hand, advice, actions: actionsFor(spec) };
+}
+
+/** Monta um cenário completo: sorteia a mão e calcula a estratégia correta. */
+export function buildScenario(module: TrainModule, rng: () => number): Scenario {
+  return buildScenarioFromSpec(module.gen(rng), rng);
 }
 
 /** Avalia a escolha do usuário (mesma lógica de nota do jogo). */
