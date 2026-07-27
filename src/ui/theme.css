@@ -1412,11 +1412,18 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .arena-top {
   position: relative;
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px;
   margin-bottom: 8px;
 }
 .arena-title {
   font-size: 11px; font-weight: 900; letter-spacing: 1px;
   color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+.arena-badges { display: flex; align-items: center; gap: 6px; }
+.arena-ring {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
+  color: var(--gold-soft); padding: 2px 7px; border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.35); background: rgba(212, 175, 55, 0.07);
 }
 .arena-headsup {
   font-size: 10px; font-weight: 900; letter-spacing: 2px;

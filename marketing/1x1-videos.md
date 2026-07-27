@@ -1,8 +1,14 @@
 # 🎬 Call ou Fold — Kit de Vídeo · Modo 1×1 (O Carrasco)
 
 Dois vídeos verticais (9:16 · 1080×1920) para Reels / TikTok / Shorts sobre a
-modalidade de treino única do app: o **duelo heads-up contra o seu carrasco** —
+modalidade de treino única do app: o **duelo 1×1 contra o seu carrasco** —
 aquele vilão que faz suas fichas sangrarem.
+
+> ⚠️ **Enquadramento correto (não errar no copy):** o *visual* é um duelo (2
+> assentos, clima de mesa final), mas a **jogabilidade é full-ring, mesa 9-max**.
+> As posições (CO, BTN, HJ…) e os ranges são de mesa cheia — é o momento 1×1
+> daquele pote, não um jogo heads-up. Na arena o selo diz **"DUELO · mesa 9-max"**.
+> Evite prometer "estratégia de heads-up": o que se treina é decisão de mesa de 9.
 
 - **App:** https://allan1052.github.io/No-limet-9max/
 - **Marca:** Call ou Fold · NLHE 9-max · ferramenta de estudo · sem dinheiro real
@@ -71,7 +77,7 @@ aquilo. **Duração:** 22–28s. **Legenda/CC:** sim (obrigatório, som off).
 | 0:04–0:08 | Abre o app → toca na aba **✨ 1×1** | **1. Abre o modo 1×1** | "Abre o Call ou Fold, vai no 1×1." |
 | 0:08–0:14 | Seleciona posição (BTN), "um vilão abre", posição do vilão (CO) | **2. Monta o spot exato** | "Escolhe a sua posição, o vilão, e o stack." |
 | 0:14–0:18 | Toca nas fichas: 12bb | **12bb — o stack que te dá dor de cabeça** | "Aquele 12bb que faz seu coração acelerar." |
-| 0:18–0:24 | "Começar treino" → arena aparece com o carrasco provocando | **3. Encare o carrasco** | "E pronto: você tá no heads-up de mesa final." |
+| 0:18–0:24 | "Começar treino" → arena aparece com o carrasco provocando (selo "DUELO · mesa 9-max") | **3. Encare o carrasco** | "E pronto: o duelo de mesa final — mesa 9-max, você contra ele." |
 | 0:24–0:29 | Decide (Call/Fold) → veredito + **grade de range com a mão destacada** | **Vê o range certo NA HORA** | "Decidiu? Ele te mostra o range certo, sem decoreba." |
 | 0:29–0:34 | Toca "Nova mão" repetidas vezes (montagem rápida) | **Repete até virar reflexo** | "Repete o mesmo spot até dominar. De graça." |
 | 0:34–0:36 | Logo + URL + ✨ 1×1 | **Call ou Fold** | "Call ou Fold. Link na bio." |
@@ -81,7 +87,7 @@ aquilo. **Duração:** 22–28s. **Legenda/CC:** sim (obrigatório, som off).
 > Cansou de perder fichas no MESMO spot? 🩸
 >
 > No modo **✨ 1×1** do Call ou Fold você monta o duelo exato — sua posição, o
-> vilão, o stack — e encara um heads-up de mesa final contra o seu carrasco.
+> vilão, o stack — e encara um duelo de mesa final (mesa 9-max) contra o seu carrasco.
 > Decide, e o app te mostra o range certo na hora. Sem termo difícil. 🧠♠️
 >
 > 3 toques pra treinar o que mais dói. Grátis, sem dinheiro real.

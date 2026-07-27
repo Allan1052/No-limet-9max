@@ -172,7 +172,10 @@ export function UltraTrainer() {
         <div className={`arena ${result ? (isCorrect(result) ? "won" : "lost") : ""}`}>
           <div className="arena-top">
             <span className="arena-title">🏆 {t("ultra.mainEvent")}</span>
-            <span className="arena-headsup">{t("ultra.headsup")}</span>
+            <span className="arena-badges">
+              <span className="arena-ring">{t("ultra.fullring")}</span>
+              <span className="arena-headsup">{t("ultra.headsup")}</span>
+            </span>
           </div>
 
           <div className="duel spotlight">
