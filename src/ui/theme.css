@@ -1383,27 +1383,101 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ultra-start { width: 100%; margin-top: 6px; }
 .ultra-grid-title { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin: 16px 0 8px; }
 
-/* Mesa de disputa 1×1 — só você e o vilão, estilo mesa final. */
-.duel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+/* ---------------------------------------------------------------------------
+   Arena 1×1 — heads-up de Main Event contra o seu carrasco pessoal.
+   Holofote no feltro, vinheta escura em volta, aura vermelha de ameaça.
+--------------------------------------------------------------------------- */
+.arena {
+  position: relative;
   margin: 14px auto 16px;
-  max-width: 340px;
-  padding: 18px 16px;
-  border-radius: 120px / 90px;
-  background: radial-gradient(120% 120% at 50% 35%, var(--felt-1) 0%, var(--felt-2) 100%);
-  border: 2px solid rgba(212, 175, 55, 0.25);
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.4);
+  max-width: 380px;
+  padding: 14px 12px 18px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 80% at 50% 8%, rgba(212, 175, 55, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #0a0b07 0%, #050604 100%);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
 }
-.duel-seat {
+.arena::before {
+  /* holofote descendo sobre a mesa */
+  content: "";
+  position: absolute;
+  top: -30%; left: 50%; transform: translateX(-50%);
+  width: 140%; height: 120%;
+  background: radial-gradient(closest-side, rgba(255, 240, 200, 0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.arena-top {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.arena-title {
+  font-size: 11px; font-weight: 900; letter-spacing: 1px;
+  color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+.arena-headsup {
+  font-size: 10px; font-weight: 900; letter-spacing: 2px;
+  color: #ff5a3c; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid rgba(255, 90, 60, 0.5); background: rgba(255, 90, 60, 0.10);
+  animation: hu-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hu-pulse { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+
+/* Mesa de disputa — só você e o carrasco. */
+.duel {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  padding: 16px 14px;
+  border-radius: 130px / 96px;
+  background: radial-gradient(120% 120% at 50% 35%, var(--felt-1) 0%, var(--felt-2) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.28);
+  box-shadow: inset 0 0 44px rgba(0, 0, 0, 0.5), 0 6px 18px rgba(0, 0, 0, 0.4);
 }
+.duel.spotlight::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(60% 45% at 50% 42%, rgba(255, 245, 210, 0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.duel-seat {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+
+/* Carrasco: avatar com aura vermelha pulsante. */
+.villain-av {
+  position: relative;
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, #2a1010 0%, #120707 100%);
+  border: 2px solid rgba(255, 70, 50, 0.7);
+  box-shadow: 0 0 0 rgba(255, 60, 40, 0.6);
+  animation: terror-aura 1.8s ease-in-out infinite;
+}
+.villain-emoji { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
+@keyframes terror-aura {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 60, 40, 0.35); }
+  50% { box-shadow: 0 0 20px 5px rgba(255, 60, 40, 0.65); }
+}
+.villain-name {
+  font-size: 14px; font-weight: 900; letter-spacing: 0.4px;
+  color: #ff6a4d; text-shadow: 0 0 10px rgba(255, 60, 40, 0.4);
+}
+.villain-taunt {
+  max-width: 260px; text-align: center;
+  font-size: 12px; font-style: italic; line-height: 1.35;
+  color: #ffd7cc;
+}
+.arena.lost .villain-taunt { color: #ff8a72; font-weight: 700; font-style: normal; }
+.arena.won .villain-taunt { color: var(--gold-soft); font-weight: 700; font-style: normal; }
+
 .duel-cards { display: flex; gap: 5px; justify-content: center; }
 .duel-cards.big { gap: 7px; }
 .duel-name { font-size: 12px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
@@ -1412,18 +1486,36 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   background: var(--gold-dim); color: #0d0f0d; font-size: 10px; font-weight: 800;
   padding: 1px 6px; border-radius: 6px; letter-spacing: 0.3px;
 }
+.duel-pos.vil {
+  position: absolute; top: -4px; right: -8px;
+  background: #d84a2a; color: #fff;
+}
 .duel-pos.hero { background: var(--gold); }
 .duel-badge {
   font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
   background: rgba(0, 0, 0, 0.35); color: var(--text-dim); border: 1px solid rgba(255, 255, 255, 0.08);
 }
-.duel-badge.aggro { background: rgba(200, 70, 40, 0.9); color: #fff; border-color: transparent; }
+.duel-badge.aggro { background: rgba(216, 74, 42, 0.95); color: #fff; border-color: transparent; }
 .duel-badge.wait { font-style: italic; }
-.duel-badge.turn { background: var(--gold); color: #10120c; border-color: transparent; }
-.duel-center { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+.duel-badge.turn {
+  background: var(--gold); color: #10120c; border-color: transparent;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.5);
+}
+.duel-center {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 8px; margin: 2px 0;
+}
 .duel-chip {
   width: 16px; height: 16px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff 0%, var(--gold) 60%, var(--gold-dim) 100%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .duel-pot { font-size: 12px; font-weight: 800; color: var(--gold-soft); letter-spacing: 0.3px; }
+.duel-vs {
+  font-size: 15px; font-weight: 900; font-style: italic;
+  color: #fff; opacity: 0.5; letter-spacing: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-headsup, .villain-av { animation: none; }
+}

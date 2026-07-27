@@ -25,6 +25,20 @@ import type { FeedbackItem } from "../feedback/analyzer";
 
 const STACK_PRESETS = [10, 20, 40, 60, 100];
 
+// O "carrasco": o vilão que faz suas fichas sangrarem. Um é sorteado por sessão
+// e vira o seu terror pessoal do heads-up. Só flavor — não muda a matemática.
+const VILLAINS = [
+  { id: "shark", emoji: "🦈", nameKey: "ultra.v.shark.name", tauntKey: "ultra.v.shark.taunt" },
+  { id: "reaper", emoji: "💀", nameKey: "ultra.v.reaper.name", tauntKey: "ultra.v.reaper.taunt" },
+  { id: "ice", emoji: "🧊", nameKey: "ultra.v.ice.name", tauntKey: "ultra.v.ice.taunt" },
+  { id: "seer", emoji: "👁️", nameKey: "ultra.v.seer.name", tauntKey: "ultra.v.seer.taunt" },
+  { id: "hurricane", emoji: "🌪️", nameKey: "ultra.v.hurricane.name", tauntKey: "ultra.v.hurricane.taunt" },
+  { id: "ghost", emoji: "🎭", nameKey: "ultra.v.ghost.name", tauntKey: "ultra.v.ghost.taunt" },
+] as const satisfies ReadonlyArray<{ id: string; emoji: string; nameKey: TransKey; tauntKey: TransKey }>;
+
+type Villain = (typeof VILLAINS)[number];
+const pickVillain = (): Villain => VILLAINS[Math.floor(Math.random() * VILLAINS.length)];
+
 export function UltraTrainer() {
   const { t } = useT();
   const [heroPos, setHeroPos] = useState<Position>("BTN");
@@ -35,6 +49,7 @@ export function UltraTrainer() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<FeedbackItem | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
+  const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
 
   const specFrom = (): ScenarioSpec => ({
     heroPosition: heroPos,
@@ -46,6 +61,7 @@ export function UltraTrainer() {
   const start = () => {
     setResult(null);
     setSession({ correct: 0, total: 0 });
+    setVillain(pickVillain()); // novo carrasco a cada sessão de treino
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
   };
   const next = () => {
@@ -152,35 +168,53 @@ export function UltraTrainer() {
           </span>
         </div>
 
-        {/* Mesa de disputa 1×1 — só 2 assentos, estilo mesa final. */}
-        <div className="duel">
-          <div className="duel-seat villain">
-            {s.raiserPosition ? <span className="duel-pos">{s.raiserPosition}</span> : null}
-            <div className="duel-cards">
-              <CardBack small />
-              <CardBack small />
-            </div>
-            <div className="duel-name">{t("ultra.villain")}</div>
-            <div className={`duel-badge ${s.raiserPosition ? "aggro" : "wait"}`}>
-              {s.raiserPosition ? t("ultra.opened", { size: openSize }) : t("ultra.waiting")}
-            </div>
+        {/* Arena 1×1 — heads-up de Main Event contra o seu carrasco pessoal. */}
+        <div className={`arena ${result ? (isCorrect(result) ? "won" : "lost") : ""}`}>
+          <div className="arena-top">
+            <span className="arena-title">🏆 {t("ultra.mainEvent")}</span>
+            <span className="arena-headsup">{t("ultra.headsup")}</span>
           </div>
 
-          <div className="duel-center">
-            <div className="duel-chip" aria-hidden />
-            <div className="duel-pot">{t("ultra.pot", { bb: potBB })}</div>
-          </div>
-
-          <div className="duel-seat hero">
-            <div className="duel-badge turn">{t("ultra.yourTurn")}</div>
-            <div className="duel-cards big">
-              {scenario.hand.map((c, i) => (
-                <CardView key={i} card={c} />
-              ))}
+          <div className="duel spotlight">
+            <div className="duel-seat villain terror">
+              <div className="villain-av">
+                <span className="villain-emoji">{villain.emoji}</span>
+                {s.raiserPosition ? <span className="duel-pos vil">{s.raiserPosition}</span> : null}
+              </div>
+              <div className="villain-name">{t(villain.nameKey)}</div>
+              <div className="villain-taunt">
+                {result
+                  ? isCorrect(result)
+                    ? t("ultra.survive")
+                    : t("ultra.gloat")
+                  : `“${t(villain.tauntKey)}”`}
+              </div>
+              <div className="duel-cards">
+                <CardBack small />
+                <CardBack small />
+              </div>
+              <div className={`duel-badge ${s.raiserPosition ? "aggro" : "wait"}`}>
+                {s.raiserPosition ? t("ultra.opened", { size: openSize }) : t("ultra.waiting")}
+              </div>
             </div>
-            <div className="duel-name">
-              <span className="duel-pos hero">{s.heroPosition}</span>
-              {t("ultra.you")} · {s.effectiveBB}bb
+
+            <div className="duel-center">
+              <div className="duel-chip" aria-hidden />
+              <div className="duel-pot">{t("ultra.pot", { bb: potBB })}</div>
+              <div className="duel-vs">VS</div>
+            </div>
+
+            <div className="duel-seat hero">
+              <div className="duel-badge turn">{t("ultra.yourTurn")}</div>
+              <div className="duel-cards big">
+                {scenario.hand.map((c, i) => (
+                  <CardView key={i} card={c} />
+                ))}
+              </div>
+              <div className="duel-name">
+                <span className="duel-pos hero">{s.heroPosition}</span>
+                {t("ultra.you")} · {s.effectiveBB}bb
+              </div>
             </div>
           </div>
         </div>
