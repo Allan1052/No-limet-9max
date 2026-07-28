@@ -12,6 +12,8 @@
   --gold: #d4af37;
   --gold-soft: #b9973f;
   --gold-dim: #8a7326;
+  --gold-bright: #e6c454;
+  --gold-grad: linear-gradient(160deg, #f7e79b 0%, #e6c454 45%, #b8912e 100%);
   --text: #ece7d5;
   --text-dim: #9a9686;
   --good: #4caf7d;
@@ -45,6 +47,15 @@ body {
   padding: 12px 16px calc(48px + env(safe-area-inset-bottom, 0px));
 }
 
+/* Fio dourado no topo (assinatura da marca, como nos cards). */
+.app::before {
+  content: "";
+  display: block;
+  height: 3px;
+  margin: -12px -16px 12px;
+  background: linear-gradient(90deg, #1c6b52, var(--gold-bright) 50%, #1c6b52);
+  opacity: 0.85;
+}
 .topbar {
   display: flex;
   align-items: center;
@@ -54,13 +65,49 @@ body {
   padding-bottom: 10px;
   margin-bottom: 12px;
 }
-.brand {
+/* Lockup da marca: monograma CF + nome em serifa + tagline. */
+.brand { display: flex; align-items: center; gap: 11px; }
+.brand-mono {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--gold);
-  font-size: 20px;
 }
-.brand small { color: var(--text-dim); font-weight: 400; font-size: 12px; }
+.brand-mono b,
+.brand-mono i {
+  position: absolute;
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+  line-height: 1;
+}
+.brand-mono b { left: 0; top: 0; font-size: 38px; }
+.brand-mono i { left: 13px; top: 4px; font-size: 32px; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+.brand-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.3px;
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.brand-name em { font-size: 0.62em; font-style: italic; font-weight: 400; margin: 0 3px; }
+.brand small,
+.brand-text small {
+  color: var(--gold-soft);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
 .topbar-right {
   display: flex;
   align-items: center;

@@ -102,7 +102,16 @@ export function App() {
       ) : null}
       <div className="topbar">
         <div className="brand">
-          ♠ Call ou Fold <small>{tr("app.subtitle")}</small>
+          <span className="brand-mono" aria-hidden="true">
+            <b>C</b>
+            <i>F</i>
+          </span>
+          <span className="brand-text">
+            <span className="brand-name">
+              Call<em>ou</em>Fold
+            </span>
+            <small>aqui é possível</small>
+          </span>
         </div>
         <div className="tabs">
           <button className={`tab ${view === "play" ? "active" : ""}`} onClick={() => setView("play")}>
