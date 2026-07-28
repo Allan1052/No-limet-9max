@@ -311,6 +311,8 @@ export function App() {
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
 
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
+
+      <div className={`app-seal${view === "play" ? " on-play" : ""}`}>🔒 {tr("disclaimer")}</div>
     </div>
   );
 }
