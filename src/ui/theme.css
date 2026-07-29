@@ -1701,3 +1701,46 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 @media (prefers-reduced-motion: reduce) {
   .arena-headsup, .villain-av, .chips-fly .chip, .arena.lost .villain-av { animation: none; }
 }
+
+/* ---- Polimento da tela de Análise (Importar) — cara de marca ---- */
+.import-intro h2 {
+  text-transform: uppercase; letter-spacing: 1px;
+  background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.import-stat {
+  background: linear-gradient(180deg, #191d12 0%, #12160d 100%);
+  border: 1px solid #2c2f22; position: relative; overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.import-stat::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--gold-grad); opacity: 0.85;
+}
+.import-stat-value { color: var(--gold-bright); font-size: 24px; }
+.import-stat-label { letter-spacing: 0.5px; text-transform: uppercase; font-size: 10px; font-weight: 700; }
+
+/* Vazamentos = o destaque-herói (o "onde a decisão vazou" dos cards) */
+.import-leaks {
+  background: radial-gradient(120% 120% at 100% 0%, #241722 0%, #14170f 60%);
+  border: 1px solid var(--gold-dim); border-left: 5px solid #ad3a6a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.import-leaks h3 {
+  text-transform: uppercase; letter-spacing: 1px; font-size: 15px;
+  background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.import-leaks ul { list-style: none; padding-left: 0; }
+.import-leaks li {
+  position: relative; padding: 8px 10px 8px 26px; margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.03); border-radius: 8px; line-height: 1.45;
+}
+.import-leaks li::before {
+  content: "◆"; position: absolute; left: 9px; top: 8px; color: var(--gold-bright); font-size: 11px;
+}
+.import-hand {
+  background: linear-gradient(180deg, #171b10 0%, #12150d 100%);
+  border-left-width: 5px;
+}
+.import-hand-sit {
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; font-size: 12px;
+}
