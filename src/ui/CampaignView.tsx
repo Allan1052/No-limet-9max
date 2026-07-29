@@ -4,7 +4,7 @@
 // Reaproveita o motor de cenários e a grade de range do Ultra 1×1.
 // ---------------------------------------------------------------------------
 import { useMemo, useState } from "react";
-import { DuelArena, HOODED_VILLAIN } from "./DuelArena";
+import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
@@ -114,8 +114,16 @@ export function CampaignView() {
     return (
       <div className="train-view">
         <div className={`panel mission-done ${done.passed ? "won" : "lost"}`}>
-          <div className="mission-medal">{done.passed ? "🏅" : "🎯"}</div>
+          <div className={`mission-villain ${done.passed ? "beaten" : "gloat"}`}>
+            <HoodedFace size={80} />
+            {done.passed ? <span className="mission-medal-badge">🏅</span> : null}
+          </div>
           <h3>{done.passed ? t("mission.passed") : t("mission.almost")}</h3>
+          <div className="mission-villain-cap">
+            {done.passed
+              ? t("mission.beat", { name: t(HOODED_VILLAIN.nameKey) })
+              : `“${t(HOODED_VILLAIN.tauntKey)}”`}
+          </div>
           <div className="mission-score">
             {done.correct}/{stage.rounds} · {t("mission.needed", { n: stage.passNeeded })}
           </div>

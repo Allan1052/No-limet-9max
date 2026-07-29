@@ -1784,3 +1784,21 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .mission-share-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
 .mission-nav { display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .mission-champion { color: var(--gold-bright); font-weight: 800; font-size: 15px; line-height: 1.4; }
+
+/* Encapuzado na tela de conquista da Missão */
+.mission-villain { position: relative; display: inline-block; margin-bottom: 6px; }
+.mission-villain svg {
+  width: 96px; height: 96px;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+}
+.mission-villain.beaten svg { filter: grayscale(0.7) brightness(0.7) drop-shadow(0 6px 16px rgba(0,0,0,0.5)); transform: rotate(-8deg); opacity: 0.85; }
+.mission-villain.gloat svg { filter: drop-shadow(0 0 14px rgba(201, 84, 74, 0.55)); }
+.mission-medal-badge {
+  position: absolute; right: -10px; bottom: -6px; font-size: 40px;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+}
+.mission-villain-cap {
+  font-size: 13px; font-style: italic; color: var(--text-dim);
+  margin: 2px 0 14px; line-height: 1.4;
+}
+.mission-done.won .mission-villain-cap { color: var(--gold-soft); font-style: normal; font-weight: 700; }

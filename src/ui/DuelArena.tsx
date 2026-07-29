@@ -34,7 +34,7 @@ export const pickDuelVillain = (): DuelVillain =>
 // O encapuzado anônimo — a cara da marca (usado como desafiante da Missão).
 export const HOODED_VILLAIN: DuelVillain = VILLAINS[1];
 
-function HoodedFace({ size = 44 }: { size?: number }) {
+export function HoodedFace({ size = 44 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden focusable="false">
       <defs>
