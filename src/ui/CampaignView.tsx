@@ -4,7 +4,7 @@
 // Reaproveita o motor de cenários e a grade de range do Ultra 1×1.
 // ---------------------------------------------------------------------------
 import { useMemo, useState } from "react";
-import { CardView } from "./Card";
+import { DuelArena, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
@@ -163,20 +163,7 @@ export function CampaignView() {
             </span>
           </div>
 
-          <div className="train-spot">
-            <div className="train-prompt">{t("train.spot", { pos: s.heroPosition, stack: s.effectiveBB })}</div>
-            <div className="train-prompt strong">
-              {s.raiserPosition
-                ? t("train.facing", { pos: s.raiserPosition, size: s.openSizeBB ?? 2.3 })
-                : t("train.rfi")}
-            </div>
-          </div>
-
-          <div className="train-hand">
-            {scenario.hand.map((c, i) => (
-              <CardView key={i} card={c} />
-            ))}
-          </div>
+          <DuelArena spec={s} hand={scenario.hand} result={result} villain={HOODED_VILLAIN} />
 
           {!result ? (
             <div className="train-actions">
