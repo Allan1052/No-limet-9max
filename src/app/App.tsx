@@ -12,6 +12,7 @@ import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
 import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";
+import { CampaignView } from "../ui/CampaignView";
 import { ImportView } from "../ui/ImportView";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
@@ -58,7 +59,7 @@ export function App() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<
-    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra"
+    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha"
   >("play");
   const t = controller.table;
   const la = legalActions(t);
@@ -136,6 +137,12 @@ export function App() {
             {tr("tab.ultra")}
           </button>
           <button
+            className={`tab tab-mission ${view === "campanha" ? "active" : ""}`}
+            onClick={() => setView("campanha")}
+          >
+            {tr("tab.mission")}
+          </button>
+          <button
             className={`tab ${view === "importar" ? "active" : ""}`}
             onClick={() => setView("importar")}
           >
@@ -178,6 +185,8 @@ export function App() {
         <IcmCalculator />
       ) : view === "ultra" ? (
         <UltraTrainer />
+      ) : view === "campanha" ? (
+        <CampaignView />
       ) : view === "treino" ? (
         <TrainView />
       ) : view === "importar" ? (
