@@ -47,8 +47,13 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 22px; max-width: var(--maxw); margin: 0 auto;
   }
-  .brand { font-weight: 800; letter-spacing: 0.5px; color: var(--gold); font-size: 20px; }
-  .brand small { color: var(--dim); font-weight: 500; font-size: 12px; letter-spacing: 0; }
+  .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+  .brand-logo { height: 40px; width: auto; display: block; }
+  .brand-tag { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; border-left: 1px solid #2f331f; padding-left: 11px; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-link { text-decoration: none; color: var(--gold-soft); font-weight: 700; font-size: 14px; letter-spacing: .3px; }
+  .nav-link:hover { color: var(--gold); }
+  @media (max-width: 520px){ .brand-tag { display: none; } .nav-link { display: none; } }
   .nav .disc {
     font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
     color: #0b0d0a; background: linear-gradient(180deg, var(--gold), var(--gold-dim));
@@ -240,14 +245,77 @@
   .sl-em { color: var(--gold-soft); font-weight:800; }
   .sl-punch { border-left:4px solid var(--gold); padding-left:18px; color:var(--cream) !important; font-weight:800; font-size: clamp(18px,2.6vw,23px) !important; line-height:1.4 !important; }
   .sl-sign { text-align:center; margin-top:22px; color: var(--gold-soft); font-weight:800; font-size:17px; letter-spacing:.3px; }
+
+  /* ---- Ranking ---- */
+  .rank { margin: 74px 0 20px; }
+  .rank .section-h { margin-top: 0; }
+  .rank .badge-soon {
+    display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--gold-soft);
+    border: 1px solid var(--gold-dim); border-radius: 20px; padding: 5px 14px;
+  }
+  .rank-grid { display: grid; gap: 18px; margin-top: 30px; grid-template-columns: 1fr; }
+  @media (min-width: 820px){ .rank-grid { grid-template-columns: 1fr 1fr; } }
+  .rank-card {
+    background: linear-gradient(180deg, #15180f, #0d0f09);
+    border: 1px solid #2a2e1c; border-radius: 20px; padding: 22px 20px 20px;
+    box-shadow: 0 18px 44px rgba(0,0,0,.4);
+  }
+  .rank-card .rc-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+  .rank-card .rc-ic {
+    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+    font-size: 20px; background: linear-gradient(160deg,#f7e79b,#e6c454 45%,#b8912e); color: #14120a;
+  }
+  .rank-card h3 { font-size: 19px; color: var(--cream); }
+  .rank-card .rc-sub { color: var(--dim); font-size: 13px; margin: 2px 0 14px; }
+  .tiers { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .tier {
+    font-size: 12px; font-weight: 800; letter-spacing: .3px; padding: 7px 12px; border-radius: 9px;
+    border: 1px solid #2f331f; background: #12140d; color: var(--dim); cursor: pointer;
+    transition: transform .1s ease, border-color .1s ease, color .1s ease;
+  }
+  .tier:hover { transform: translateY(-1px); }
+  .tier.on { color: #14120a; background: linear-gradient(180deg, var(--gold-soft), var(--gold)); border-color: var(--gold-dim); }
+  .tier .buyin { display: block; font-size: 10px; font-weight: 600; opacity: .8; letter-spacing: 0; }
+  .lead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lead li {
+    display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 11px; background: #10130c; border: 1px solid #22261899;
+  }
+  .lead li.me { border-color: var(--gold-dim); background: rgba(216,178,74,.07); }
+  .lead .pos { font-weight: 800; font-size: 15px; color: var(--dim); text-align: center; font-variant-numeric: tabular-nums; }
+  .lead li:nth-child(1) .pos { color: var(--gold); }
+  .lead li:nth-child(2) .pos { color: #d8d8d8; }
+  .lead li:nth-child(3) .pos { color: #cd9b63; }
+  .lead .who { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .lead .av {
+    width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: radial-gradient(120% 120% at 50% 25%, #232830, #0b0d11); border: 1px solid #3c414b; font-size: 15px;
+  }
+  .lead .nm { font-weight: 700; font-size: 14.5px; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lead .nm small { display: block; color: var(--dim); font-weight: 500; font-size: 11.5px; }
+  .lead .pts { font-weight: 800; font-size: 15px; color: var(--gold-soft); font-variant-numeric: tabular-nums; text-align: right; }
+  .lead .pts small { display: block; color: var(--dim); font-weight: 500; font-size: 10.5px; letter-spacing: .3px; }
+  .rc-foot { margin-top: 14px; font-size: 12.5px; color: var(--dim); text-align: center; }
+  .rank-note {
+    margin: 26px auto 0; max-width: 60ch; text-align: center; color: var(--dim); font-size: 13.5px;
+    background: rgba(0,0,0,.25); border: 1px dashed rgba(216,178,74,.3); border-radius: 12px; padding: 13px 16px;
+  }
+  .rank-note b { color: var(--gold-soft); }
 </style>
 </head>
 <body>
 
 
-<nav class="nav">
-  <div class="brand">♠ Call ou Fold <small>· ferramenta de estudo</small></div>
-  <span class="disc">Sem dinheiro real</span>
+<nav class="nav" id="top">
+  <a class="brand" href="#top">
+    <img src="logo.png" alt="Call ou Fold" class="brand-logo" />
+    <span class="brand-tag">ferramenta de estudo</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#ranking">Ranking</a>
+    <span class="disc">Sem dinheiro real</span>
+  </div>
 </nav>
 
 <header class="hero">
@@ -364,6 +432,43 @@
   </div>
 </section>
 
+<section class="rank wrap" id="ranking">
+  <div class="section-h">
+    <div class="k">Jogou, pontuou</div>
+    <h2>Ranking de jogadores</h2>
+    <p>Cada torneio que você joga no app vira pontos. A gente separa por valor de inscrição — micro joga com micro — pra o rank ser justo. E a Missão 1×1 tem o ranking dela.</p>
+    <span class="badge-soon">◔ prévia · em breve</span>
+  </div>
+
+  <div class="rank-grid">
+    <div class="rank-card" id="rc-tourn">
+      <div class="rc-head">
+        <div class="rc-ic">🏆</div>
+        <div><h3>Ranking de Torneios</h3><div class="rc-sub">Por valor de inscrição · temporada atual</div></div>
+      </div>
+      <div class="tiers" id="tiers">
+        <button class="tier on" data-t="micro">Micro <span class="buyin">até R$5</span></button>
+        <button class="tier" data-t="baixa">Baixa <span class="buyin">R$5–25</span></button>
+        <button class="tier" data-t="media">Média <span class="buyin">R$25–100</span></button>
+        <button class="tier" data-t="alta">Alta <span class="buyin">R$100+</span></button>
+      </div>
+      <ol class="lead" id="tourn-lead"></ol>
+      <div class="rc-foot">Pontos por ITM, mesa final e vitória. Reseta a cada temporada.</div>
+    </div>
+
+    <div class="rank-card" id="rc-mission">
+      <div class="rc-head">
+        <div class="rc-ic">🎯</div>
+        <div><h3>Ranking 1×1 · Missão</h3><div class="rc-sub">Quem venceu O Ceifador em mais estágios</div></div>
+      </div>
+      <ol class="lead" id="mission-lead"></ol>
+      <div class="rc-foot">Some os estágios conquistados na campanha de posições.</div>
+    </div>
+  </div>
+
+  <p class="rank-note">Os nomes acima são <b>exemplo</b> pra você ver como vai ficar. O placar de verdade, com jogadores reais de todo o Brasil, entra numa próxima atualização — <b>sem dinheiro real, só pontuação de estudo</b>.</p>
+</section>
+
 <section class="story wrap">
   <div class="card-lg">
     <div class="k">Quem tá te falando isso</div>
@@ -414,6 +519,56 @@
           ? '<span class="tag ok">✓ Boa decisão!</span> Com apenas <b>4bb</b> e o pote já enorme, A♦T♦ paga o all-in fácil — as odds são ótimas e não dá pra desistir. Viu? Você decidiu certo sem precisar de nenhuma palavra difícil.'
           : '<span class="tag no">✗ Aqui o Fold custa caro.</span> Com <b>4bb</b> e essas odds, A♦T♦ é call tranquilo. No app você vê o porquê em números — e treina até virar automático.';
         verdict.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  })();
+
+  /* ---- Ranking (dados de exemplo · prévia) ---- */
+  (function () {
+    var AV = ["🦈","🎩","🧊","👁️","🌵","🔥","🌊","🃏","🎯","🐺"];
+    var TOURN = {
+      micro: [
+        ["Coruja_RJ","Rio de Janeiro",1840],["ZeDoRiver","Fortaleza",1710],["mari.calls","São Paulo",1655],
+        ["Você","seu apelido no app",1512,true],["Tico_PE","Recife",1488],["gugainc","Curitiba",1402]
+      ],
+      baixa: [
+        ["FoldMaster","Belo Horizonte",2960],["ana.shove","Porto Alegre",2740],["JP_grinder","São Paulo",2610],
+        ["nordestino87","Salvador",2455],["Você","seu apelido no app",2380,true],["luk4s","Brasília",2210]
+      ],
+      media: [
+        ["Muralha","São Paulo",4120],["dfariasz","Campinas",3980],["reg_frio","Florianópolis",3760],
+        ["bina_pkr","Goiânia",3540],["thor.90","Manaus",3410],["Você","seu apelido no app",3120,true]
+      ],
+      alta: [
+        ["OCartilha","São Paulo",6890],["shark.br","Rio de Janeiro",6410],["v1ctorH","Curitiba",6020],
+        ["mmatos","Recife",5780],["Você","seu apelido no app",4990,true],["gab_ferr","Vitória",4720]
+      ]
+    };
+    var MISSION = [
+      ["OCartilha","9/9 estágios",9],["Muralha","9/9 estágios",9],["ana.shove","8/9 estágios",8],
+      ["Você","7/9 estágios",7,true],["ZeDoRiver","6/9 estágios",6],["mari.calls","5/9 estágios",5]
+    ];
+    function render(el, rows, unit) {
+      if (!el) return;
+      el.innerHTML = rows.map(function (r, i) {
+        var me = r[3] === true;
+        return '<li class="' + (me ? "me" : "") + '">' +
+          '<span class="pos">' + (i + 1) + '</span>' +
+          '<span class="who"><span class="av">' + AV[i % AV.length] + '</span>' +
+          '<span class="nm">' + r[0] + '<small>' + r[1] + '</small></span></span>' +
+          '<span class="pts">' + r[2].toLocaleString("pt-BR") + '<small>' + unit + '</small></span>' +
+          '</li>';
+      }).join("");
+    }
+    var tournLead = document.getElementById("tourn-lead");
+    render(tournLead, TOURN.micro, "pts");
+    render(document.getElementById("mission-lead"), MISSION, "estágios");
+    var tiers = document.querySelectorAll("#tiers .tier");
+    tiers.forEach(function (b) {
+      b.addEventListener("click", function () {
+        tiers.forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        render(tournLead, TOURN[b.dataset.t], "pts");
       });
     });
   })();
