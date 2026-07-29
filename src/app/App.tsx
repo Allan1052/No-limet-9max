@@ -247,7 +247,9 @@ export function App() {
               >
                 {tr("btn.exportHands")} ({controller.handLog.length})
               </button>
-              {controller.message ? <div className="message">{controller.message}</div> : null}
+              {controller.messageKey ? (
+                <div className="message">{tr(controller.messageKey, controller.messageVars)}</div>
+              ) : null}
             </div>
           ) : (
             <Controls

@@ -36,6 +36,7 @@ import {
   type StatRow,
 } from "../feedback/stats";
 import type { HandHistory, ReplayEvent } from "./replay";
+import { TRANSLATIONS, type TransKey } from "../i18n/translations";
 import { toBB } from "./format";
 import {
   BLIND_LEVELS,
@@ -133,6 +134,12 @@ export interface GameSnapshot {
   savedAt: string;
 }
 
+/** Interpola {chaves} num texto (mesma sintaxe do i18n) para o fallback PT. */
+function interpolatePt(text: string, vars?: Record<string, string | number>): string {
+  if (!vars) return text;
+  return text.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+}
+
 const STREET_LABEL: Record<string, string> = {
   preflop: "Pré-flop",
   flop: "Flop",
@@ -147,7 +154,13 @@ export class GameController {
   heroSeat = 0;
   phase: "playing" | "handOver" = "handOver";
   feedback: FeedbackItem[] = [];
-  message = "Clique em “Nova mão” para começar.";
+  /**
+   * Mensagem de status do topo. Mantemos o texto em PT (fallback e testes),
+   * mas a UI prefere traduzir por `messageKey`/`messageVars` no idioma ativo.
+   */
+  message: string = TRANSLATIONS.pt["msg.newHandHint"];
+  messageKey: TransKey | null = "msg.newHandHint";
+  messageVars: Record<string, string | number> | undefined = undefined;
   lastActionLabel: Record<number, string> = {};
   stats: Record<number, PlayerStats> = {};
   /** Histórico da mão anterior, para o replayer. */
@@ -238,7 +251,7 @@ export class GameController {
     this.sessionReview = [];
     this.tournamentResult = null;
     this.tournamentFinishPlace = null;
-    this.message = `Torneio configurado — ${stageInfo.label}. Clique em “Nova mão”.`;
+    this.setMessage("msg.tourneyConfigured", { stage: stageInfo.label });
   }
 
   /** Aplica um nível de blind (usado pelo filtro clicável e pela subida automática). */
@@ -289,6 +302,16 @@ export class GameController {
     return count;
   }
 
+  /**
+   * Define a mensagem de status por chave i18n (a UI traduz no idioma ativo).
+   * Também preenche `message` com o PT interpolado — fallback e testes.
+   */
+  private setMessage(key: TransKey | null, vars?: Record<string, string | number>): void {
+    this.messageKey = key;
+    this.messageVars = vars;
+    this.message = key ? interpolatePt(TRANSLATIONS.pt[key] as string, vars) : "";
+  }
+
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
   newHand(): void {
     // Reposição de jogadores (bust → entra outro), exceto na mesa final.
@@ -303,12 +326,12 @@ export class GameController {
         this.tournamentOver = true;
         const cash = cashForPlace(place, this.tournament.ladder);
         this.onTournamentEnd?.({ result: "eliminado", inMoney: cash > 0 });
-        this.message =
-          cash > 0
-            ? `Você foi eliminado em ${place}º de ${this.tournament.entrants} — no dinheiro! 💰`
-            : `Você foi eliminado em ${place}º de ${this.tournament.entrants}.`;
+        this.setMessage(cash > 0 ? "msg.bustedItm" : "msg.busted", {
+          place,
+          entrants: this.tournament.entrants,
+        });
       } else {
-        this.message = "Você foi eliminado. Configure um novo jogo (aba Torneio) para recomeçar.";
+        this.setMessage("msg.bustedCash");
       }
       return;
     }
@@ -321,9 +344,7 @@ export class GameController {
         this.tournamentOver = true;
         this.onTournamentEnd?.({ result: "campeao", inMoney: true });
       }
-      this.message = this.tournament
-        ? "Você VENCEU o torneio! 🏆"
-        : "Fim da sessão: não há jogadores suficientes com fichas.";
+      this.setMessage(this.tournament ? "msg.tourneyWon" : "msg.sessionEnd");
       return;
     }
     if (this.table.handOver && this.table.result) moveButton(this.table);
@@ -384,14 +405,14 @@ export class GameController {
     }
     // Mensagem do topo: bolha > subida de nível > reposição (a mais relevante).
     if (bubbleMsg) {
-      this.message = "🫧 A BOLHA ESTOUROU — você está no dinheiro (ITM)!";
+      this.setMessage("msg.bubbleBurst");
     } else if (levelUp) {
       const lv = BLIND_LEVELS[this.tournament!.levelIndex];
-      this.message = `Nível subiu: blinds ${lv.sb}/${lv.bb}.`;
+      this.setMessage("msg.levelUp", { sb: lv.sb, bb: lv.bb });
     } else if (refilled > 0) {
-      this.message = refilled === 1 ? "Um novo jogador entrou na mesa." : `${refilled} novos jogadores entraram na mesa.`;
+      this.setMessage(refilled === 1 ? "msg.refillOne" : "msg.refillMany", { n: refilled });
     } else {
-      this.message = "";
+      this.setMessage(null);
     }
     // Conta a mão para cada jogador que recebeu cartas e zera as flags do turno.
     for (const p of this.table.players) {
@@ -693,7 +714,7 @@ export class GameController {
     this.lastHand = null;
     this.handLog = snap.handLog ?? []; // preserva as mãos para o export
     this.feedback = [];
-    this.message = "Torneio retomado de onde você parou. Clique em “Nova mão”.";
+    this.setMessage("msg.tourneyResumed");
   }
 
   /**
@@ -761,11 +782,11 @@ export class GameController {
     const hero = this.table.players[this.heroSeat];
     const heroWin = r?.winningsBySeat[this.heroSeat] ?? 0;
     if (heroWin > 0) {
-      this.message = `Você ganhou ${toBB(heroWin, this.table.bigBlind)}.`;
+      this.setMessage("msg.wonHand", { amount: toBB(heroWin, this.table.bigBlind) });
     } else if (hero.status === "folded") {
-      this.message = "Você desistiu desta mão.";
+      this.setMessage("msg.foldedHand");
     } else {
-      this.message = "Você não levou o pote desta mão.";
+      this.setMessage("msg.lostHand");
     }
   }
 }
