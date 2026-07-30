@@ -11,6 +11,7 @@ import { cardsFromString } from "../engine/cards";
 import { parseHandHistory } from "../import/handHistory";
 import { analyzeSession, type SessionReport, type HandReport } from "../import/analyzeSession";
 import type { Rating } from "../feedback/analyzer";
+import { supabase } from "../lib/supabase";
 
 const RATING_CLASS: Record<Rating, string> = {
   boa: "grade-boa",
@@ -33,7 +34,7 @@ export function ImportView() {
   const [error, setError] = useState<string | null>(null);
   const [onlyProblems, setOnlyProblems] = useState(false);
 
-  const run = (raw: string) => {
+  const run = async (raw: string) => {
     setError(null);
     const hands = parseHandHistory(raw);
     if (hands.length === 0) {
@@ -41,7 +42,25 @@ export function ImportView() {
       setError(t("import.errorEmpty"));
       return;
     }
-    setReport(analyzeSession(hands));
+    const sessionReport = analyzeSession(hands);
+    setReport(sessionReport);
+
+    // Salvar no Supabase (silenciosamente)
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await supabase.from("user_sessions").insert({
+          user_id: userData.user.id,
+          vpip: sessionReport.vpip,
+          pfr: sessionReport.pfr,
+          total_hands: sessionReport.totalHands,
+          rating_counts: sessionReport.counts,
+          leaks: sessionReport.leaks,
+        });
+      }
+    } catch (e) {
+      console.error("Erro ao salvar sessão no Supabase:", e);
+    }
   };
 
   const onFile = async (file: File | undefined) => {
