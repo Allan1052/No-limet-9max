@@ -658,15 +658,16 @@ body {
   width: 42px;
   height: 60px;
   border-radius: 6px;
-  background: var(--card-bg);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.1);
   user-select: none;
+  border: 1px solid #ddd;
 }
 .card.sm { width: 30px; height: 43px; border-radius: 4px; }
 .card .rank { font-size: 20px; }
@@ -676,11 +677,19 @@ body {
 .card.red { color: var(--card-red); }
 .card.black { color: var(--card-black); }
 .card.back {
-  background: repeating-linear-gradient(45deg, #2a2410 0 6px, #3a3216 6px 12px);
-  border: 1px solid var(--gold-dim);
-  color: var(--gold-dim);
+  background: linear-gradient(135deg, #1a1d16 0%, #0d0f0d 100%);
+  border: 2px solid var(--gold-dim);
+  color: var(--gold);
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+}
+.card.back::after {
+  content: "CF";
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  opacity: 0.4;
+  color: var(--gold);
 }
 .card.back .mono { font-size: 16px; color: rgba(212, 175, 55, 0.55); }
 
@@ -692,11 +701,16 @@ body {
   text-align: center;
 }
 .seat .pod {
-  background: linear-gradient(180deg, #20241a 0%, #171a12 100%);
-  border: 1px solid #33362a;
-  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(32, 36, 26, 0.9) 0%, rgba(23, 26, 18, 0.9) 100%);
+  border: 2px solid var(--rail);
+  border-radius: 12px;
   padding: 6px 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+.seat.hero .pod { 
+  border-color: var(--gold); 
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3), 0 6px 20px rgba(0, 0, 0, 0.6);
 }
 .seat.acting .pod {
   border-color: var(--gold);
