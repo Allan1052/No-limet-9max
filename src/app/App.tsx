@@ -26,6 +26,7 @@ import { handSpots } from "./handSpots";
 import { HandTipsModal } from "../ui/HandTipsModal";
 import { MoneyRain } from "../ui/MoneyRain";
 import { ChallengeReceived } from "../ui/ChallengeReceived";
+import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
@@ -35,6 +36,7 @@ import "../ui/theme.css";
 export function App() {
   const { t: tr } = useT();
   const { onboarded, setOnboarded, mode } = useSettings();
+  const [splashComplete, setSplashComplete] = useState(false);
   const {
     controller,
     heroAct,
@@ -91,6 +93,10 @@ export function App() {
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
   const hint = advice ? tr("hint.baseline", { action: adviceLabel(advice.action) }) : undefined;
+
+  if (!splashComplete) {
+    return <SplashScreen onComplete={() => setSplashComplete(true)} />;
+  }
 
   return (
     <div className="app">

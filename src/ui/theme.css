@@ -2007,3 +2007,146 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gold);
 }
+
+/* =========================================================================
+   SPLASH SCREEN — Primeira Impressão Premium
+   ========================================================================= */
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0d0f0d 0%, #050604 100%);
+  z-index: 9999;
+  animation: splash-in 0.6s ease-out;
+  opacity: 1;
+  transition: opacity 0.6s ease-out;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.splash-logo-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-logo {
+  filter: drop-shadow(0 0 20px rgba(230, 196, 84, 0.4));
+  animation: splash-pulse 2s ease-in-out infinite;
+}
+
+.splash-ring {
+  animation: splash-ring-rotate 3s linear infinite;
+  transform-origin: 100px 100px;
+}
+
+.splash-letter {
+  animation: splash-letter-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(230, 196, 84, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 40px rgba(230, 196, 84, 0.6));
+  }
+}
+
+@keyframes splash-ring-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes splash-letter-glow {
+  0%, 100% {
+    filter: url(#cfGlow);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.splash-tagline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.splash-main {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Playfair Display', serif;
+  color: var(--gold-bright);
+  margin: 0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 20px rgba(230, 196, 84, 0.4);
+}
+
+.splash-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.splash-loader {
+  width: 200px;
+  height: 3px;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright), var(--gold));
+  border-radius: 2px;
+  animation: loader-progress 2s ease-in-out forwards;
+}
+
+@keyframes loader-progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
