@@ -14,6 +14,7 @@ import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";
 import { CampaignView } from "../ui/CampaignView";
 import { ImportView } from "../ui/ImportView";
+import { Leaderboard } from "../ui/Leaderboard";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -59,7 +60,7 @@ export function App() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<
-    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha"
+    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha" | "ranking"
   >("play");
   const t = controller.table;
   const la = legalActions(t);
@@ -143,6 +144,12 @@ export function App() {
             {tr("tab.mission")}
           </button>
           <button
+            className={`tab ${view === "ranking" ? "active" : ""}`}
+            onClick={() => setView("ranking")}
+          >
+            🏆 {tr("tab.ranking")}
+          </button>
+          <button
             className={`tab ${view === "importar" ? "active" : ""}`}
             onClick={() => setView("importar")}
           >
@@ -189,6 +196,8 @@ export function App() {
         <CampaignView />
       ) : view === "treino" ? (
         <TrainView />
+      ) : view === "ranking" ? (
+        <Leaderboard />
       ) : view === "importar" ? (
         <ImportView />
       ) : view === "missoes" ? (

@@ -1802,3 +1802,98 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   margin: 2px 0 14px; line-height: 1.4;
 }
 .mission-done.won .mission-villain-cap { color: var(--gold-soft); font-style: normal; font-weight: 700; }
+
+/* =========================================================================
+   ESTILOS PREMIUM - UNIFICAÇÃO COM OS CARDS
+   ========================================================================= */
+
+/* Fontes */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+/* Cores e Gradientes Adicionais */
+:root {
+  --gold-ultra: linear-gradient(160deg, #f7e79b 0%, #e6c454 45%, #b8912e 100%);
+  --bg-deep: radial-gradient(circle at center, #1a231a 0%, #0a0f0a 100%);
+  --shadow-gold: 0 0 20px rgba(230, 196, 84, 0.3);
+}
+
+/* Ajustes Globais para Estilo Card */
+body {
+  background: var(--bg-deep);
+}
+
+.text-gold-bright { color: var(--gold-bright); }
+.text-gold-dim { color: var(--gold-dim); }
+.text-gold-soft { color: var(--gold-soft); }
+.text-text-dim { color: var(--text-dim); }
+
+.bg-gold-grad {
+  background: var(--gold-grad);
+}
+
+/* Botões Premium */
+.btn-premium {
+  background: var(--gold-grad);
+  color: #000;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  box-shadow: var(--shadow-gold);
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(230, 196, 84, 0.5);
+}
+
+/* Tabs Estilo Card */
+.tabs .tab {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.tabs .tab.active {
+  color: var(--gold-bright);
+  border-bottom: 2px solid var(--gold-bright);
+  text-shadow: 0 0 10px rgba(230, 196, 84, 0.5);
+}
+
+/* Leaderboard Premium Styles */
+.leaderboard-view {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar Dourada */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold-dim);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}

@@ -7,20 +7,24 @@
 <meta name="description" content="Call ou Fold: poker para recreativos. Comece grátis, sem arriscar dinheiro — aprenda a tomar as decisões certas. O sonho do recreativo." />
 <title>Call ou Fold — Evoluir no poker é aprender a decidir certo</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
   :root {
-    --ground: #0b0d0a;
-    --ground-2: #12150e;
-    --felt-1: #1b4634;
-    --felt-2: #0d2419;
-    --rail: #241f0f;
-    --gold: #d8b24a;
-    --gold-soft: #e8cf7f;
+    --ground: #0d0f0d;
+    --ground-2: #14180f;
+    --felt-1: #123a2a;
+    --felt-2: #0a231a;
+    --rail: #1b1d16;
+    --gold: #d4af37;
+    --gold-soft: #b9973f;
     --gold-dim: #8a7326;
-    --cream: #ece9dc;
-    --dim: #9c9a8a;
-    --good: #57c98a;
-    --bad: #d9695f;
-    --card-bg: #f5f2e7;
+    --gold-bright: #e6c454;
+    --gold-grad: linear-gradient(160deg, #f7e79b 0%, #e6c454 45%, #b8912e 100%);
+    --cream: #ece7d5;
+    --dim: #9a9686;
+    --good: #4caf7d;
+    --bad: #d1544f;
+    --card-bg: #f6f3e9;
     --card-red: #c0392b;
     --card-black: #1c1c1c;
     --maxw: 1080px;
@@ -40,7 +44,12 @@
   }
   .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
   a { color: inherit; }
-  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  h1, h2, h3 { 
+    text-wrap: balance; 
+    margin: 0; 
+    font-family: 'Playfair Display', Georgia, serif; 
+  }
+  .cinzel { font-family: 'Cinzel', serif; }
 
   /* ---- Nav ---- */
   .nav {
@@ -67,7 +76,13 @@
     border: 1px solid var(--gold-dim); cursor: pointer; text-decoration: none;
     transition: transform .12s ease, box-shadow .12s ease;
   }
-  .btn.primary { background: linear-gradient(180deg, var(--gold-soft), var(--gold)); color: #14120a; box-shadow: 0 10px 30px rgba(216,178,74,.22); }
+  .btn.primary { 
+    background: var(--gold-grad); 
+    color: #000; 
+    box-shadow: 0 10px 30px rgba(212,175,55,0.3); 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
   .btn.ghost { background: transparent; color: var(--gold-soft); }
   .btn:hover { transform: translateY(-2px); }
   .btn:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 3px; }
