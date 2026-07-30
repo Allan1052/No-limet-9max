@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
 /* -------------------------------------------------------------------------
    Tema visual — dark gold, inspirado no estilo GGPoker.
    Feltro escuro, borda dourada, acentos em ouro. Ferramenta de estudo.
@@ -1902,7 +1904,6 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
    ========================================================================= */
 
 /* Fontes */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
 .font-serif {
   font-family: 'Playfair Display', Georgia, serif;
