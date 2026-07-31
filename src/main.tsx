@@ -24,7 +24,11 @@ createRoot(root).render(
 if ("serviceWorker" in navigator) {
   const updateSW = async () => {
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      // Detectar o base path dinamicamente a partir do script src
+      const scriptSrc = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
+      const basePathMatch = scriptSrc.match(/^(\/[^/]+\/)assets\//);
+      const basePath = basePathMatch ? basePathMatch[1] : '/';
+      const registration = await navigator.serviceWorker.register(`${basePath}sw.js`);
       registration.addEventListener("updatefound", () => {
         const newWorker = registration.installing;
         if (newWorker) {

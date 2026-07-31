@@ -4,6 +4,14 @@
 
 import { useEffect, useState } from "react";
 
+// Get the base URL from the manifest or default to '/'
+function getBasePath(): string {
+  const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
+  // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
+  const match = base.match(/^(\/[^/]+\/)/);
+  return match ? match[1] : '/';
+}
+
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const [fade, setFade] = useState(false);
 
@@ -19,7 +27,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     <div className={`splash-screen ${fade ? "fade-out" : ""}`}>
       <div className="splash-content">
         <div className="splash-logo-container">
-          <img src="/brand-logo-splash.png" alt="Call ou Fold" className="splash-logo-img" />
+          <img src={`${getBasePath()}brand-logo-splash.png`} alt="Call ou Fold" className="splash-logo-img" />
         </div>
 
         <div className="splash-tagline">

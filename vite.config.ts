@@ -4,8 +4,6 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 // Caminho base no GitHub Pages (site de projeto): https://allan1052.github.io/No-limet-9max/
-// Precisa bater EXATAMENTE com o nome do repositório (o Pages diferencia
-// maiúsculas). Em desenvolvimento (npm run dev) o Vite usa "/".
 const base = "/No-limet-9max/";
 
 const buildId = new Date().toISOString();
@@ -16,7 +14,6 @@ export default defineConfig({
     target: "es2022",
     rollupOptions: {
       output: {
-        // Forçar formato ESM no output
         format: "es",
       },
     },
@@ -30,17 +27,19 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       injectRegister: false,
       includeAssets: ["brand-apple-touch.png", "brand-icon-192.png", "brand-icon-512.png", "brand-logo-splash.png"],
       workbox: {
         navigateFallbackDenylist: [/\/site(\/|$)/],
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
       },
+      manifestFilename: "manifest.webmanifest",
       manifest: {
-        name: "Call ou Fold — Poker para Recreativos",
+        name: "Call ou Fold",
         short_name: "Call ou Fold",
         description:
-          "Poker para recreativos. Comece grátis, sem arriscar dinheiro — aprenda a tomar as decisões certas. O sonho do recreativo.",
+          "Poker para recreativos. Texas Hold'em e Omaha com ranges profissionais.",
         lang: "pt-BR",
         id: base,
         start_url: base,
@@ -48,14 +47,27 @@ export default defineConfig({
         theme_color: "#14170f",
         background_color: "#0d0f0d",
         display: "standalone",
-        orientation: "any",
+        orientation: "portrait",
         prefer_related_applications: false,
+        icons: [
+          {
+            src: `${base}brand-icon-192.png`,
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: `${base}brand-icon-512.png`,
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: `${base}brand-icon-512.png`,
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
       },
-      icons: [
-        { src: "brand-icon-192.png", sizes: "192x192", type: "image/png" },
-        { src: "brand-icon-512.png", sizes: "512x512", type: "image/png" },
-        { src: "brand-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
-      ],
     }),
   ],
   worker: {
