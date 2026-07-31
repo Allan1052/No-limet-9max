@@ -18,6 +18,12 @@ import { cardsToString } from "../engine/cards";
 import type { Position } from "../ranges/types";
 import type { ParsedHand } from "./handHistory";
 
+declare module "./handHistory" {
+  interface ParsedHand {
+    variant?: "holdem" | "omaha";
+  }
+}
+
 export interface HandReport {
   handId: string;
   heroPosition?: Position;
@@ -120,14 +126,15 @@ export function analyzeHand(h: ParsedHand): HandReport {
     };
   }
 
-  const dec = preflopDecision({
-    heroPosition: hero.position,
-    hand: h.heroCards,
-    effectiveBB: base.effectiveBB,
-    profile: BASELINE_PROFILE,
-    raiserPosition,
-    openSizeBB,
-  });
+    const dec = preflopDecision({
+      heroPosition: hero.position,
+      hand: h.heroCards,
+      effectiveBB: base.effectiveBB,
+      profile: BASELINE_PROFILE,
+      raiserPosition,
+      openSizeBB,
+      variant: h.variant ?? "holdem",
+    });
 
   const feedback = gradeDecision("Pré-flop", 'free', mapped.engine, {
     kind: "preflop",

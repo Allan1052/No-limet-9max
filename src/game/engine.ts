@@ -44,6 +44,7 @@ export function createTable(
   config: TableConfig,
   seats: SeatConfig[],
   buttonSeat = 0,
+  variant: "holdem" | "omaha" = "holdem",
 ): TableState {
   const players: PlayerState[] = seats.map((s, i) => ({
     seat: i,
@@ -75,6 +76,7 @@ export function createTable(
     deck: [],
     handOver: true,
     log: [],
+    variant,
   };
 }
 
@@ -152,8 +154,9 @@ export function startHand(t: TableState, deck: Card[]): TableState {
   t.lastStreetAggressor = -1;
   t.log.push(`Botão no assento ${t.buttonSeat}. SB: ${t.players[sbSeat].name}, BB: ${t.players[bbSeat].name}.`);
 
-  // Distribui 2 cartas para cada jogador ativo, começando após o botão.
-  for (let round = 0; round < 2; round++) {
+  // Distribui cartas para cada jogador ativo, começando após o botão.
+  const cardsPerPlayer = t.variant === "omaha" ? 4 : 2;
+  for (let round = 0; round < cardsPerPlayer; round++) {
     for (const s of occupiedSeatsInOrder(t, t.buttonSeat)) {
       t.players[s].holeCards.push(t.deck.pop()!);
     }

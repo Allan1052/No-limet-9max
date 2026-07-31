@@ -12,9 +12,10 @@ interface ControlsProps {
   pot: number;
   bigBlind: number;
   onAction: (a: Action) => void;
+  isOmaha?: boolean; // Indica se é Omaha (PLO)
 }
 
-export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
@@ -71,6 +72,16 @@ export function Controls({ legal, active, pot, bigBlind, onAction }: ControlsPro
       </button>
 
       <div className="slider-wrap">
+        {isOmaha && (
+          <button
+            className="btn size pot-btn"
+            disabled={!canRaise}
+            onClick={() => potBet(1.0)}
+            title="Pot Limit"
+          >
+            POT
+          </button>
+        )}
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.35)} title={t("ctrl.pctOf", { p: 35 })}>
           35%
         </button>

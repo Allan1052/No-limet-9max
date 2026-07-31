@@ -17,6 +17,8 @@
 import type { Card } from "../engine/cards";
 import type { BotProfile } from "../bots/profiles";
 import { buildTopRange, rangeSubtract } from "./build";
+import { OmahaRanges, OmahaPosition } from "../game/omaha";
+import { rankOf, suitOf, RANKS } from "../engine/cards";
 import { rfiRange, RFI_BASE_PERCENT } from "./charts/rfi";
 import { stackDepthAdjust } from "./stackDepth";
 import { icmTightenFactor, type IcmSpot } from "./icm";
@@ -33,9 +35,10 @@ export type PreflopAction = "fold" | "raise" | "call" | "3bet" | "jam";
 
 export interface PreflopContext {
   heroPosition: Position;
-  hand: Card[]; // 2 cartas
+  hand: Card[]; // 2 cartas para Hold'em, 4 para Omaha
   effectiveBB: number; // stack efetivo em big blinds
   profile: BotProfile;
+  variant: "holdem" | "omaha";
   /** Posição de quem abriu, se o pote já foi aberto com raise. */
   raiserPosition?: Position;
   /** Tamanho da abertura do vilão em BB (default 2.3). */
@@ -68,18 +71,6 @@ function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
 }
 
-// Ordem de ação PÓS-FLOP (quem age por último fica EM POSIÇÃO). As blinds agem
-// primeiro no pós-flop, mesmo tendo índice pré-flop alto — por isso este vetor
-// separado (o abridor enfrentando um 3-bet de uma blind fica IP, por exemplo).
-const POSTFLOP_ORDER: Position[] = ["SB", "BB", "UTG", "UTG1", "MP", "LJ", "HJ", "CO", "BTN"];
-function heroInPositionPostflop(hero: Position, villain: Position): boolean {
-  return POSTFLOP_ORDER.indexOf(hero) > POSTFLOP_ORDER.indexOf(villain);
-}
-
-// Núcleo de valor do 4-bet: mãos que 4-betam por valor em qualquer profundidade
-// razoável de mesa final (QQ+ e AK). Garantidas independente do percentil — é o
-// recado central pro recreativo: com AK/QQ+ você NÃO só paga, você 4-beta.
-const VALUE_4BET_CORE = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
 
 /**
  * Mix aproximado numa fronteira de range: mãos bem dentro são "puras" (100%);
@@ -151,12 +142,94 @@ function freqIn(range: Range, handType: string): number {
 }
 
 /** Decisão pré-flop completa. */
+function rankLetter(rank: number): string {
+  return RANKS[rank - 2];
+}
+
+function getOmahaHandType(hand: Card[]): string {
+  const ranks = hand.map(c => rankOf(c)).sort((a, b) => b - a);
+  const suits = hand.map(c => suitOf(c));
+
+  // Contar pares
+  const rankCounts: Record<number, number> = {};
+  for (const r of ranks) {
+    rankCounts[r] = (rankCounts[r] || 0) + 1;
+  }
+  const pairs = Object.entries(rankCounts).filter(([, count]) => count >= 2).map(([rank]) => Number(rank));
+
+  // Contar naipes
+  const suitCounts: Record<number, number> = {};
+  for (const s of suits) {
+    suitCounts[s] = (suitCounts[s] || 0) + 1;
+  }
+  const numSuits = Object.keys(suitCounts).length;
+  let suitedness = "";
+  if (numSuits === 2 && Object.values(suitCounts).some(c => c === 2)) suitedness = "ss"; // Single suited
+  if (numSuits === 2 && Object.values(suitCounts).every(c => c === 2)) suitedness = "ds"; // Double suited
+
+  let handType = "";
+
+  // Representação de pares
+  if (pairs.length === 2) {
+    handType = `${rankLetter(pairs[0])}${rankLetter(pairs[0])}${rankLetter(pairs[1])}${rankLetter(pairs[1])}`;
+  } else if (pairs.length === 1) {
+    const otherRanks = ranks.filter(r => r !== pairs[0]);
+    handType = `${rankLetter(pairs[0])}${rankLetter(pairs[0])}${rankLetter(otherRanks[0])}${rankLetter(otherRanks[1])}`;
+  } else {
+    // Sem pares, focar em conectividade e danglers
+    const uniqueRanks = Array.from(new Set(ranks)).sort((a, b) => b - a);
+    handType = uniqueRanks.map(rankLetter).join('');
+
+    // Detecção de rundowns e wraps (simplificado)
+    let connectors = 0;
+    for (let i = 0; i < uniqueRanks.length - 1; i++) {
+      if (uniqueRanks[i] - uniqueRanks[i + 1] === 1) {
+        connectors++;
+      }
+    }
+
+    if (connectors >= 2) {
+      handType += "R"; // Indica um rundown
+    } else if (connectors === 1 && uniqueRanks.length === 4) {
+      // Pode ser um wrap com um gap, como 9765
+      const gaps = uniqueRanks[0] - uniqueRanks[3] - 3; // Total span - (num ranks - 1)
+      if (gaps <= 1) {
+        handType += "W"; // Indica um wrap
+      }
+    }
+
+    // Detecção de danglers (simplificado: uma carta muito desconectada)
+    if (uniqueRanks.length === 4) {
+      const sortedRanks = [...uniqueRanks].sort((a, b) => a - b);
+      // Um dangler é uma carta que não se conecta com as outras 3
+      // Simplificado: se a diferença entre a menor e a segunda menor for grande, ou a maior e a segunda maior
+      const span = sortedRanks[3] - sortedRanks[0];
+      if (span > 5 && connectors < 2) { // Grande span e pouca conectividade
+        handType += "D"; // Indica um dangler
+      }
+    }
+
+    // Adiciona uma representação para AAxx, KKxx, etc. se for o caso
+    if (rankCounts[RANKS.indexOf("A") + 2] >= 2) {
+      handType = "AAxx" + handType; // Ex: AAxxRds
+    } else if (rankCounts[RANKS.indexOf("K") + 2] >= 2) {
+      handType = "KKxx" + handType; // Ex: KKxxRss
+    }
+  }
+
+  // Adiciona suitedness se for o caso
+  if (suitedness) {
+    handType += suitedness;
+  }
+
+  return handType;
+}
+
 export function preflopDecision(ctx: PreflopContext): PreflopDecision {
-  const handType = comboToHandType(ctx.hand[0], ctx.hand[1]);
-  const { profile } = ctx;
-  const sd = stackDepthAdjust(ctx.effectiveBB, profile.adaptability);
+  const handType = ctx.variant === "omaha" ? getOmahaHandType(ctx.hand) : comboToHandType(ctx.hand[0], ctx.hand[1]);
+  const sd = stackDepthAdjust(ctx.effectiveBB, ctx.profile.adaptability);
   const icmFactor = ctx.icmSpot
-    ? icmTightenFactor(ctx.icmSpot, profile.icmSensitivity)
+    ? icmTightenFactor(ctx.icmSpot, ctx.profile.icmSensitivity)
     : 1;
 
   // ----- Caso 3: o herói abriu e enfrenta um 3-bet → 4-bet / pagar / foldar -----
@@ -167,7 +240,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // ----- Caso 1: pote não aberto → abertura (RFI) -----
   if (!ctx.raiserPosition) {
     // Tilt por posição do perfil (amortecido para não dobrar a estrutura da base).
-    const posMult = Math.sqrt(profile.positional[ctx.heroPosition] ?? 1);
+    const posMult = Math.sqrt(ctx.profile.positional[ctx.heroPosition] ?? 1);
     // Habilidade no push/fold: em stack raso, quem entende do jogo dá all-in
     // MAIS largo para roubar blinds/antes (o edge da mesa final), enquanto o
     // passivo/fraco (skill baixo) fica travado e some sem lutar (blind down).
@@ -179,15 +252,34 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // no final table. Jogar bem em push/fold é ficar PERTO do ótimo, não abrir
     // mais; a diferença entre perfis vem sobretudo da largura da CALL vs shove.
     const widthFactor = sd.pushFold
-      ? (1 + (profile.rfiWidth - 1) * 0.25) * posMult
-      : profile.rfiWidth * posMult;
-    const range = rfiRange(ctx.heroPosition, {
-      widthFactor,
-      stackFactor: sd.factor,
-      icmFactor,
-    });
-    const openPct = rangePercent(range);
-    if (freqIn(range, handType) > 0) {
+      ? (1 + (ctx.profile.rfiWidth - 1) * 0.25) * posMult
+      : ctx.profile.rfiWidth * posMult;
+    if (ctx.variant === "omaha") {
+      const omahaPos = ctx.heroPosition as OmahaPosition;
+      const omahaOpenRange = OmahaRanges[omahaPos]?.open || [];
+      if (omahaOpenRange.includes(handType)) {
+        return {
+          action: "raise",
+          sizeBB: 2.3, // Tamanho de abertura padrão para Omaha
+          reason: `${handType} está na range de abertura de Omaha de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
+          handType,
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType} está fora da range de abertura de Omaha de ${ctx.heroPosition}.`,
+        handType,
+      };
+    } else {
+      const range = rfiRange(ctx.heroPosition, {
+        widthFactor,
+        stackFactor: sd.factor,
+        icmFactor,
+      });
+      const openPct = rangePercent(range);
+  
+      if (freqIn(range, handType) > 0) {
       if (sd.pushFold) {
         return {
           action: "jam",
@@ -197,26 +289,27 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
           mix: bandMix("jam", openPct, handType),
         };
       }
-      return {
-        action: "raise",
-        sizeBB: 2.3,
-        reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${profile.archetype}).`,
-        handType,
-        mix: bandMix("raise", openPct, handType),
-      };
     }
+    return {
+      action: "raise",
+      sizeBB: 2.3,
+      reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
+      handType,
+      mix: bandMix("raise", openPct, handType),
+    };
+
     // Limp especulativo: perfis passivos entram de limp com mãos logo abaixo da
     // abertura — é assim que o recreativo/station veem tantos flops.
-    if (profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
+    if (ctx.profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
       const limpRange = rangeSubtract(
-        buildTopRange(openPct + profile.limpFactor * 0.4),
+        buildTopRange(openPct + ctx.profile.limpFactor * 0.4),
         range,
       );
       if (freqIn(limpRange, handType) > 0) {
         return {
           action: "call",
           sizeBB: 1,
-          reason: `${handType}: limp especulativo (perfil ${profile.archetype}).`,
+          reason: `${handType}: limp especulativo (perfil ${ctx.profile.archetype}).`,
           handType,
         };
       }
@@ -226,13 +319,152 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       sizeBB: 0,
       reason: `${handType} está fora da range de abertura de ${ctx.heroPosition}.`,
       handType,
-      mix: bandMix("raise", openPct, handType),
     };
+    }
   }
 
   // ----- Caso 2: enfrentando um raise -----
-  const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition);
+  if (!ctx.raiserPosition) {
+    // Se não há raiser, não deveria chegar aqui, mas para garantir um retorno.
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: "Erro: raiserPosition indefinido ao enfrentar um raise.",
+      handType: handType,
+    };
+  }
+  const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition!);
 
+  if (ctx.variant === "omaha") {
+    const omahaPos = ctx.heroPosition as OmahaPosition;
+    const omahaCallRange = OmahaRanges[omahaPos]?.call || [];
+    const omahaThreeBetRange = OmahaRanges[omahaPos]?.threeBet || [];
+
+    if (omahaThreeBetRange.includes(handType)) {
+      return {
+        action: "3bet",
+        sizeBB: 3 * (ctx.openSizeBB ?? 2.3), // Exemplo de 3-bet size
+        reason: `${handType}: 3-bet por valor contra abertura de ${ctx.raiserPosition} em Omaha.`,
+        handType,
+      };
+    }
+
+    if (omahaCallRange.includes(handType)) {
+      return {
+        action: "call",
+        sizeBB: ctx.openSizeBB ?? 2.3,
+        reason: `${handType}: paga a abertura de ${ctx.raiserPosition} em Omaha.`,
+        handType,
+      };
+    }
+
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `${handType}: fora da range de defesa contra ${ctx.raiserPosition} em Omaha.`,
+      handType,
+    };
+  } else {
+    // Lógica Hold'em: enfrentando um raise
+    const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
+    if (sd.pushFold && callIsAllIn) {
+      const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
+      const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
+      const callWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+      const callRange = buildTopRange(callWidth);
+      if (freqIn(callRange, handType) > 0) {
+        return {
+          action: "call",
+          sizeBB: ctx.effectiveBB,
+          reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in.`,
+          handType,
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+        handType,
+      };
+    }
+
+    const raiseSize = ctx.openSizeBB ?? 2.3;
+    const sizeFactor = raiseSize <= 2.6 ? 1 : Math.max(0.1, Math.pow(2.4 / raiseSize, 0.9));
+
+    const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFactor * sizeFactor;
+    const coldCallPct = Math.min(0.9, p.defendPct * ctx.profile.coldCallFactor * icmFactor) * sizeFactor;
+    let defendPct = Math.max(baseDefend, coldCallPct);
+    let value3betPct = p.value3betPct * ctx.profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
+    const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * ctx.profile.bluffFactor * ctx.profile.threeBetFactor * icmFactor;
+    value3betPct = Math.min(value3betPct, defendPct);
+    defendPct = Math.max(defendPct, value3betPct);
+
+    const defendRange = buildTopRange(defendPct);
+    const value3betRange = buildTopRange(value3betPct);
+    const wider = buildTopRange(defendPct + bluffPct);
+    const bluffZone = rangeSubtract(wider, defendRange);
+    const callsOutOfPosition = ctx.profile.coldCallFactor >= 1.5;
+
+    const openSize = ctx.openSizeBB ?? 2.3;
+    const threeBetSize = p.inPosition ? openSize * 3 : openSize * 3.8;
+
+    if (freqIn(value3betRange, handType) > 0) {
+      const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
+      return {
+        action,
+        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
+        reason: `${handType}: 3-bet por valor contra abertura de ${ctx.raiserPosition}.`,
+        handType,
+        mix: bandMix(action, value3betPct, handType, "call"),
+      };
+    }
+
+    if (freqIn(defendRange, handType) > 0) {
+      if (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition) {
+        return {
+          action: "call",
+          sizeBB: openSize,
+          reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (perfil ${ctx.profile.archetype}).`,
+          handType,
+          mix: bandMix("call", defendPct, handType),
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.`,
+        handType,
+        mix: bandMix("call", defendPct, handType),
+      };
+    }
+
+    if (isSuited(handType) && freqIn(bluffZone, handType) > 0 && !sd.pushFold) {
+      return {
+        action: "3bet",
+        sizeBB: threeBetSize,
+        reason: `${handType}: 3-bet de blefe (mão suited com bloqueios, perfil ${ctx.profile.archetype}).`,
+        handType,
+      };
+    }
+
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `${handType}: fora da range de defesa contra ${ctx.raiserPosition}.`,
+      handType,
+      mix: bandMix("call", defendPct, handType),
+    };
+  }
+
+  return {
+    action: "fold",
+    sizeBB: 0,
+    reason: "Erro: Caminho de decisão não coberto.",
+    handType: handType,
+  };
+}
+
+function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmFactor: number): PreflopDecision {
   // STACK ULTRACURTO (push/fold): se pagar já significa ir all-in (ou quase), a
   // decisão é de POT ODDS — não de "aperto por tamanho". Com poucos bb as odds
   // são ótimas e não há fold equity, então a range de call ALARGA conforme o
@@ -241,7 +473,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
   if (sd.pushFold && callIsAllIn) {
     const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
-    const profAdj = 0.7 + 0.3 * profile.defendFactor; // station paga mais largo
+    const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor; // station paga mais largo
     const callWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
     const callRange = buildTopRange(callWidth);
     if (freqIn(callRange, handType) > 0) {
@@ -269,11 +501,12 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
 
   // Aplica perfil, ICM e tamanho aos alvos. `coldCallFactor` amplia (muito, nos
   // passivos) a range de flat — é o que infla o VPIP do recreativo/station.
-  const baseDefend = p.defendPct * profile.defendFactor * icmFactor * sizeFactor;
-  const coldCallPct = Math.min(0.9, p.defendPct * profile.coldCallFactor * icmFactor) * sizeFactor;
+  const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition!);
+  const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFactor * sizeFactor;
+  const coldCallPct = Math.min(0.9, p.defendPct * ctx.profile.coldCallFactor * icmFactor) * sizeFactor;
   let defendPct = Math.max(baseDefend, coldCallPct);
-  let value3betPct = p.value3betPct * profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
-  const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * profile.bluffFactor * profile.threeBetFactor * icmFactor;
+  let value3betPct = p.value3betPct * ctx.profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
+  const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * ctx.profile.bluffFactor * ctx.profile.threeBetFactor * icmFactor;
   // Coerência: a range de valor do 3-bet não pode ultrapassar a de defesa.
   value3betPct = Math.min(value3betPct, defendPct);
   defendPct = Math.max(defendPct, value3betPct);
@@ -283,12 +516,16 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // Blefes de 3-bet: mãos logo abaixo da defesa, apenas suited (bons bloqueios).
   const wider = buildTopRange(defendPct + bluffPct);
   const bluffZone = rangeSubtract(wider, defendRange);
-  // Passivos (coldCallFactor alto) pagam aberturas até fora de posição.
-  const callsOutOfPosition = profile.coldCallFactor >= 1.5;
+
 
   const openSize = ctx.openSizeBB ?? 2.3;
   const threeBetSize = p.inPosition ? openSize * 3 : openSize * 3.8;
 
+  // Paga (call) ou 3-bet (raise) contra o raise do vilão.
+
+
+
+  // 3-bet por VALOR: mãos fortes que querem ir all-in (ou quase).
   if (freqIn(value3betRange, handType) > 0) {
     const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
     return {
@@ -300,138 +537,88 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     };
   }
 
-  if (freqIn(defendRange, handType) > 0) {
-    // Dentro da defesa mas não é valor de 3-bet → paga (flat).
-    if (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition) {
+  // Paga (call): mãos que não são fortes o bastante para 3-betar, mas têm
+  // equidade suficiente para pagar e jogar o pós-flop.
+  if (ctx.profile.coldCallFactor > 0 && !sd.pushFold) {
+    const callRange = rangeSubtract(
+      buildTopRange(defendPct + ctx.profile.coldCallFactor * icmFactor * 0.4),
+      defendRange,
+    );
+    if (freqIn(callRange, handType) > 0) {
       return {
         action: "call",
-        sizeBB: openSize,
-        reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (perfil ${profile.archetype}).`,
+        sizeBB: ctx.openSizeBB!,
+        reason: `${handType}: paga a abertura de ${ctx.raiserPosition} (perfil ${ctx.profile.archetype}).`,
         handType,
-        mix: bandMix("call", defendPct, handType),
+        mix: bandMix("call", rangePercent(callRange), handType),
       };
     }
-    // OOP sem valor de 3-bet (perfis disciplinados): fold em vez de pagar dominado.
-    return {
-      action: "fold",
-      sizeBB: 0,
-      reason: `${handType}: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.`,
-      handType,
-      mix: bandMix("call", defendPct, handType),
-    };
   }
 
+  // Blefes de 3-bet: mãos logo abaixo da defesa, apenas suited (bons bloqueios).
   if (isSuited(handType) && freqIn(bluffZone, handType) > 0 && !sd.pushFold) {
     return {
       action: "3bet",
       sizeBB: threeBetSize,
-      reason: `${handType}: 3-bet de blefe (mão suited com bloqueios, perfil ${profile.archetype}).`,
+      reason: `${handType}: 3-bet de blefe contra o raise de ${ctx.raiserPosition}.`,
       handType,
+      mix: bandMix("3bet", rangePercent(bluffZone), handType),
     };
   }
 
-  return {
-    action: "fold",
-    sizeBB: 0,
-    reason: `${handType}: fora da range de defesa contra ${ctx.raiserPosition}.`,
-    handType,
-    mix: bandMix("call", defendPct, handType),
-  };
-}
+  const omahaPos = ctx.heroPosition as OmahaPosition;
+  const omahaFourBetRange = OmahaRanges[omahaPos]?.fourBet || [];
+  const omahaSqueezeRange = OmahaRanges[omahaPos]?.squeeze || [];
+  const omahaThreeBetRange = OmahaRanges[omahaPos]?.threeBet || [];
+  const omahaCallRange = OmahaRanges[omahaPos]?.call || [];
 
-/**
- * O herói ABRIU e leva um 3-bet. Decisão de 4-bet (valor/blefe) / pagar / foldar.
- *
- * Ideia central (e a que o app quer ensinar ao recreativo): abriu com uma mão
- * forte e levou 3-bet? QQ+/AK NÃO é só pagar — é 4-betar. O resto continua só
- * quando há posição e profundidade (pagar pra jogar o flop), senão folda.
- *
- * `ctx.raiserPosition` = quem deu o 3-bet; `ctx.openSizeBB` = tamanho do 3-bet.
- */
-function vsThreeBetDecision(
-  ctx: PreflopContext,
-  handType: string,
-  sd: ReturnType<typeof stackDepthAdjust>,
-  icmFactor: number,
-): PreflopDecision {
-  const { profile } = ctx;
-  const threeBettor = ctx.raiserPosition!;
-  const threeBetSizeBB = ctx.openSizeBB ?? 9;
-  const ip = heroInPositionPostflop(ctx.heroPosition, threeBettor);
-  // Se 4-betar/pagar já compromete quase o stack, a jogada vira all-in ou fold.
-  const jam = sd.pushFold || ctx.effectiveBB <= threeBetSizeBB * 2.4;
-  // Quão largo o 3-bettor costuma jogar (proxy pela largura de abertura da
-  // posição dele): contra um 3-bet de BTN/blind, continua-se mais largo que
-  // contra um 3-bet de UTG.
-  const villainWide = RFI_BASE_PERCENT[threeBettor] || 0.15;
-
-  // 4-bet por VALOR: núcleo (QQ+/AK) + um pouco a mais contra 3-bettors largos
-  // e com perfis agressivos. ICM aperta.
-  const valueExtraPct =
-    (0.008 + 0.06 * villainWide) * (0.7 + 0.3 * profile.threeBetFactor) * icmFactor;
-  const valueExtra = buildTopRange(Math.max(0, valueExtraPct));
-  const isValue4bet = VALUE_4BET_CORE.has(handType) || freqIn(valueExtra, handType) > 0;
-
-  // PAGAR (flat): só em posição e com profundidade — mãos de set-mine e
-  // broadways suited que jogam bem o flop. Fora de posição é 4-bet ou fold.
-  // Stations (coldCallFactor alto) pagam 3-bets mais largo, até OOP.
-  const station = profile.coldCallFactor >= 1.5;
-  const canFlat = !jam && (ip || station) && ctx.effectiveBB >= 22;
-  const flatPct = canFlat
-    ? (0.05 + 0.06 * villainWide) * (0.7 + 0.3 * profile.coldCallFactor) * icmFactor
-    : 0;
-
-  // 4-bet de BLEFE: pequenos Ax suited (bloqueiam AA/AK), só profundo e IP.
-  const bluffPct =
-    !jam && ip && ctx.effectiveBB >= 30 ? 0.012 * profile.bluffFactor * profile.threeBetFactor : 0;
-
-  const size4bet = jam ? ctx.effectiveBB : Math.min(ctx.effectiveBB, threeBetSizeBB * 2.3);
-
-  if (isValue4bet) {
-    const action: PreflopAction = jam ? "jam" : "3bet";
+  // Lógica para 4-bet (se o herói abriu e enfrenta um 3-bet)
+  if (ctx.threeBet && omahaFourBetRange.includes(handType)) {
     return {
-      action,
-      sizeBB: size4bet,
-      reason: jam
-        ? `${handType}: forte demais pra desistir — 4-bet all-in (${Math.round(ctx.effectiveBB)}bb) contra o 3-bet de ${threeBettor}.`
-        : `${handType}: 4-bet por valor contra o 3-bet de ${threeBettor} — abriu forte, não é só pagar.`,
+      action: "3bet", // Representando 4-bet como 3-bet para simplificar
+      sizeBB: (ctx.openSizeBB ?? 9) * 2.5, // Exemplo de 4-bet size
+      reason: `${handType}: 4-bet por valor em Omaha.`,
       handType,
-      mix: [{ action: jam ? "jam" : "3bet", freq: 1 }],
     };
   }
 
-  if (flatPct > 0) {
-    // Continua (paga) as mãos logo abaixo do valor, tirando o núcleo de 4-bet.
-    const continueRange = rangeSubtract(buildTopRange(valueExtraPct + flatPct), valueExtra);
-    if (freqIn(continueRange, handType) > 0 && !VALUE_4BET_CORE.has(handType)) {
-      return {
-        action: "call",
-        sizeBB: threeBetSizeBB,
-        reason: `${handType}: paga o 3-bet de ${threeBettor} pra jogar o flop em posição (perfil ${profile.archetype}).`,
-        handType,
-      };
-    }
+  // Lógica para squeeze (se o herói enfrenta um open e um call)
+  // Esta lógica é mais complexa e precisaria de mais contexto (número de callers)
+  // Por enquanto, um placeholder simples
+  if (ctx.threeBet && omahaSqueezeRange.includes(handType)) {
+    return {
+      action: "3bet", // Representando squeeze como 3-bet para simplificar
+      sizeBB: (ctx.openSizeBB ?? 9) * 3.5, // Exemplo de squeeze size
+      reason: `${handType}: squeeze por valor em Omaha.`,
+      handType,
+    };
   }
 
-  if (bluffPct > 0 && isSuited(handType)) {
-    const bluffZone = rangeSubtract(
-      buildTopRange(valueExtraPct + flatPct + bluffPct),
-      buildTopRange(valueExtraPct + flatPct),
-    );
-    if (freqIn(bluffZone, handType) > 0) {
-      return {
-        action: "3bet",
-        sizeBB: size4bet,
-        reason: `${handType}: 4-bet de blefe (Ax suited que bloqueia AA/AK), em posição e profundo.`,
-        handType,
-      };
-    }
+  // Lógica para 3-bet (se o herói enfrenta um open e não um 3-bet)
+  if (!ctx.threeBet && omahaThreeBetRange.includes(handType)) {
+    return {
+      action: "3bet",
+      sizeBB: (ctx.openSizeBB ?? 2.3) * 3, // Exemplo de 3-bet size
+      reason: `${handType}: 3-bet por valor em Omaha.`,
+      handType,
+    };
+  }
+
+  // Lógica para call
+  if (omahaCallRange.includes(handType)) {
+    return {
+      action: "call",
+      sizeBB: ctx.openSizeBB ?? 9,
+      reason: `${handType}: paga o 3-bet em Omaha.`,
+      handType,
+    };
   }
 
   return {
     action: "fold",
     sizeBB: 0,
-    reason: `${handType}: contra um 3-bet, não é forte o bastante pra 4-betar nem paga bem — foldar.`,
+    reason: `${handType}: fora da range de defesa contra 3-bet em Omaha.`,
     handType,
   };
 }
+

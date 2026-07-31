@@ -78,6 +78,7 @@ export function preflopContextFor(
     raiserPosition,
     openSizeBB: facingRaise ? t.currentBet / t.bigBlind : undefined,
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
+    variant: t.variant ?? "holdem",
   };
 }
 

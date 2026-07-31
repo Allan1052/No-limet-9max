@@ -13,6 +13,7 @@ function decide(
     hand: cardsFromString(hand),
     effectiveBB: 100,
     profile: BASELINE_PROFILE,
+    variant: "holdem", // Default para Hold'em nos testes
     ...opts,
   });
 }

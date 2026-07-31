@@ -30,6 +30,7 @@ export interface ScenarioSpec {
   raiserPosition?: Position;
   openSizeBB?: number;
   icmSpot?: IcmSpot;
+  variant?: "holdem" | "omaha";
 }
 
 export interface TrainAction {
@@ -49,9 +50,9 @@ function pick<T>(arr: T[], rng: () => number): T {
 }
 
 /** Duas cartas aleatórias distintas. */
-export function randomHand(rng: () => number): Card[] {
+export function randomHand(rng: () => number, variant: "holdem" | "omaha" = "holdem"): Card[] {
   const d = shuffle(fullDeck(), rng);
-  return [d[0], d[1]];
+  return variant === "omaha" ? [d[0], d[1], d[2], d[3]] : [d[0], d[1]];
 }
 
 export const MODULES: TrainModule[] = [
@@ -65,6 +66,7 @@ export const MODULES: TrainModule[] = [
       effectiveBB: 40,
       raiserPosition: pick<Position>(["MP", "HJ", "CO", "BTN"], rng),
       openSizeBB: 2.3,
+      variant: "holdem", // Default para Hold'em
     }),
   },
   {
@@ -75,6 +77,7 @@ export const MODULES: TrainModule[] = [
     gen: (rng) => ({
       heroPosition: "BTN",
       effectiveBB: pick([15, 25, 50], rng),
+      variant: "holdem", // Default para Hold'em
     }),
   },
   {
@@ -85,6 +88,7 @@ export const MODULES: TrainModule[] = [
     gen: (rng) => ({
       heroPosition: pick<Position>(["MP", "HJ", "CO", "BTN", "SB"], rng),
       effectiveBB: 7 + Math.floor(rng() * 5), // 7–11bb (zona de push/fold)
+      variant: "holdem", // Default para Hold'em
     }),
   },
   {
@@ -107,6 +111,7 @@ export const MODULES: TrainModule[] = [
           villain: 0,
           chips: Math.min(heroBB, 60),
         } satisfies IcmSpot,
+        variant: "holdem", // Default para Hold'em
       };
     },
   },
@@ -146,7 +151,7 @@ function actionsFor(spec: ScenarioSpec): TrainAction[] {
 
 /** Monta um cenário a partir de um spec já definido (usado no treino 1×1 Ultra). */
 export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Scenario {
-  const hand = randomHand(rng);
+  const hand = randomHand(rng, spec.variant);
   const ctx: PreflopContext = {
     heroPosition: spec.heroPosition,
     hand,
@@ -155,6 +160,7 @@ export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Sc
     raiserPosition: spec.raiserPosition,
     openSizeBB: spec.openSizeBB,
     icmSpot: spec.icmSpot,
+    variant: spec.variant || "holdem",
   };
   const d = preflopDecision(ctx);
   const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix };
@@ -162,8 +168,10 @@ export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Sc
 }
 
 /** Monta um cenário completo: sorteia a mão e calcula a estratégia correta. */
-export function buildScenario(module: TrainModule, rng: () => number): Scenario {
-  return buildScenarioFromSpec(module.gen(rng), rng);
+export function buildScenario(module: TrainModule, rng: () => number, variant: "holdem" | "omaha" = "holdem"): Scenario {
+  const spec = module.gen(rng);
+  spec.variant = variant;
+  return buildScenarioFromSpec(spec, rng);
 }
 
 /** Avalia a escolha do usuário (mesma lógica de nota do jogo). */

@@ -8,6 +8,9 @@
 // ---------------------------------------------------------------------------
 
 import { evaluate } from "../engine/evaluator";
+import { evaluateOmahaHand } from "./omahaEvaluator";
+import { cardToString } from "../engine/cards";
+import { totalPot } from "./engine";
 import type { Card } from "../engine/cards";
 import type { Pot, TableState } from "./state";
 
@@ -45,8 +48,16 @@ export function legalActions(t: TableState): LegalActions {
   // Raise mínimo: igualar + um aumento cheio. Se não tiver fichas para tanto,
   // ainda pode ir all-in (que pode ser um raise parcial).
   const minRaiseCommitted = t.currentBet + t.minRaiseAmount;
-  const maxRaiseTo = p.committed + p.stack; // all-in
-  const canRaise = p.stack > toCall; // precisa ter mais que o call para aumentar
+  let maxRaiseTo = p.committed + p.stack; // all-in (No Limit default)
+
+  // Pot Limit: a aposta máxima é o tamanho do pote após o call.
+  if (t.variant === "omaha") {
+    const potAfterCall = totalPot(t) + toCall;
+    const maxPLO = t.currentBet + potAfterCall;
+    maxRaiseTo = Math.min(maxRaiseTo, maxPLO);
+  }
+
+  const canRaise = p.stack > toCall && maxRaiseTo >= minRaiseCommitted;
 
   return {
     canFold: true,
@@ -118,11 +129,18 @@ export function settlePots(
   const handValueBySeat: Record<number, number> = {};
 
   // Avalia cada mão elegível uma vez.
+  const isOmaha = board.length >= 3 && Object.values(holeBySeat)[0]?.length === 4;
   for (const pot of pots) {
     for (const seat of pot.eligible) {
       if (handValueBySeat[seat] === undefined) {
         const hole = holeBySeat[seat];
-        handValueBySeat[seat] = evaluate([...hole, ...board]);
+        if (isOmaha) {
+          const ranking = evaluateOmahaHand(hole.map(c => cardToString(c)) as any, board.map(c => cardToString(c)));
+          // Converte HandRanking para um número comparável (rank * 10000 + kickers)
+          handValueBySeat[seat] = ranking.rank * 10000 + ranking.kickers.reduce((s, k) => s * 100 + k, 0);
+        } else {
+          handValueBySeat[seat] = evaluate([...hole, ...board]);
+        }
       }
     }
   }

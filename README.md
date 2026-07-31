@@ -1,6 +1,6 @@
-# Call ou Fold — Simulador de estudo NLHE 9-max
+# Call ou Fold — Simulador de estudo Texas Hold'em e Omaha
 
-Um simulador de No-Limit Hold'em 9-max para **estudo**, com bots que jogam de
+Um simulador de **Texas Hold'em** e **Omaha (PLO)** 9-max para **estudo**, com bots que jogam de
 forma consistente e explicável (estilo MTT online), motor de equity próprio e
 feedback pós-mão. Roda inteiro no navegador — sem servidor.
 
@@ -25,7 +25,7 @@ npm run dev      # sobe a interface (a partir da Etapa 7)
 | 0. Esqueleto | Projeto configurado | ✅ |
 | 1. Cartas + Avaliador | Baralho e avaliador de mãos de 7 cartas | ✅ |
 | 2. Equity (Monte Carlo) | Motor de equity mão vs mão / vs range | ✅ |
-| 3. Ranges pré-flop | Charts por posição/stack + ICM real | ✅ |
+| 3. Ranges pré-flop | Charts Hold'em e Omaha (João Simão/Solver) | ✅ |
 | 4. Motor de jogo | Mesa, blinds, apostas, side pots, showdown | ✅ |
 | — Perfis de bot (base) | 8 perfis inspirados em MTT, aplicados ao pré-flop | ✅ |
 | 5. Decisão pós-flop | Pot odds, equity realizada, textura | ✅ |
@@ -61,6 +61,7 @@ agressão, adaptação a stack e sensibilidade a ICM:
 - ✅ Aviso claro no app de que é **ferramenta de estudo, sem dinheiro real**.
 - ✅ Replayer de mãos com a decisão ótima passo a passo.
 - ✅ Suíte de milhares de mãos simuladas (`npm run sim`).
+- ✅ Suporte completo a **Omaha (PLO)** com avaliador 2+3 e Pot Limit.
 - ✅ Calculadora de ICM na interface (aba "Calculadora ICM").
 - ✅ Modo torneio (aba "Torneio").
 - ✅ Visualizador de ranges 13×13 (aba "Ranges").

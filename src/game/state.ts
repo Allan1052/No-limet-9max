@@ -79,6 +79,7 @@ export interface TableState {
   result?: HandResult;
   /** Log de ações legível, para replayer/feedback. */
   log: string[];
+  variant: "holdem" | "omaha";
 }
 
 /** Assentos "com cartas na mão" (podem ainda agir ou estão all-in). */

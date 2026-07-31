@@ -85,6 +85,7 @@ export function spotRangeGrid(ctx: SpotGridContext): Record<string, SpotCell> {
       openSizeBB: ctx.openSizeBB,
       icmSpot: ctx.icmSpot,
       threeBet: ctx.threeBet,
+      variant: "holdem", // Default para Hold'em na grade de spots
     });
     const category = categorize(dec.action, mode);
     out[hand] = { hand, category, freq: categoryFreq(dec.mix, category, mode) };

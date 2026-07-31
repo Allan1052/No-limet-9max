@@ -20,6 +20,7 @@ interface ChallengePayload {
   bb: number; // stack efetivo
   r?: Position; // posição de quem abriu (se enfrenta raise)
   s?: number; // tamanho da abertura (bb)
+  v?: "holdem" | "omaha"; // variante do jogo
 }
 
 function toBase64Url(s: string): string {
@@ -39,6 +40,7 @@ export function encodeChallenge(spec: ScenarioSpec, hand: Card[]): string {
     bb: Math.round(spec.effectiveBB),
     r: spec.raiserPosition,
     s: spec.openSizeBB,
+    v: spec.variant,
   };
   return toBase64Url(JSON.stringify(payload));
 }
@@ -54,6 +56,7 @@ export function decodeChallenge(code: string): Scenario | null {
       effectiveBB: p.bb,
       raiserPosition: p.r,
       openSizeBB: p.s,
+      variant: p.v ?? "holdem",
     };
     const ctx: PreflopContext = {
       heroPosition: spec.heroPosition,
@@ -62,6 +65,7 @@ export function decodeChallenge(code: string): Scenario | null {
       profile: BASELINE_PROFILE,
       raiserPosition: spec.raiserPosition,
       openSizeBB: spec.openSizeBB,
+      variant: spec.variant ?? "holdem",
     };
     const d = preflopDecision(ctx);
     const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix };

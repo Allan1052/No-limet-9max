@@ -73,6 +73,8 @@ export interface GameOptions {
   onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   /** Chamado quando a bolha estoura (herói entra no dinheiro) — comemoração. */
   onBubble?: () => void;
+  /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
+  variant?: "holdem" | "omaha";
 
 }
 
@@ -213,6 +215,7 @@ export class GameController {
       { smallBlind: opts.smallBlind ?? 25, bigBlind: opts.bigBlind ?? 50 },
       seats,
       0,
+      opts.variant || "holdem",
     );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
   }
@@ -233,7 +236,12 @@ export class GameController {
     const stacks = unevenStacks(avgChips, this.seatDefs.length, stageInfo.spread, this.rng, level.bb * 3);
     const seats = this.seatDefs.map((s, i) => ({ ...s, stack: stacks[i] }));
 
-    this.table = createTable({ smallBlind: level.sb, bigBlind: level.bb, ante: level.ante }, seats, 0);
+    this.table = createTable(
+      { smallBlind: level.sb, bigBlind: level.bb, ante: level.ante },
+      seats,
+      0,
+      "holdem", // Tournament mode defaults to Hold'em; can be extended for PLO tournaments
+    );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
     const fieldRemaining = initialFieldRemaining(cfg.entrants, cfg.stage, ladder.length);
     this.tournament = {

@@ -2,6 +2,7 @@
 // de informação SOBRE a mesa (posição no torneio, blinds, dica e atalhos) —
 // tudo concentrado aqui para caber na tela sem rolagem.
 import { Seat } from "./Seat";
+import { OmahaSeat } from "./OmahaSeat";
 import { Board } from "./Board";
 import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
@@ -115,8 +116,10 @@ export function PokerTable({
 
       {table.players.map((p) => {
         const pos = SEAT_POS[p.seat] ?? { top: "50%", left: "50%" };
+        const isOmaha = table.variant === "omaha";
+        const SeatComponent = isOmaha ? OmahaSeat : Seat;
         return (
-          <Seat
+          <SeatComponent
             key={p.seat}
             player={p}
             acting={table.toAct === p.seat && !table.handOver}
@@ -127,6 +130,7 @@ export function PokerTable({
             rangeMarked={rangeSeats.includes(p.seat)}
             onSelect={onSelectSeat}
             style={{ top: pos.top, left: pos.left }}
+            isOmaha={isOmaha}
           />
         );
       })}

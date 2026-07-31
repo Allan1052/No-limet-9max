@@ -41,6 +41,7 @@ export function App() {
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
+  const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
   const {
     controller,
     heroAct,
@@ -59,7 +60,7 @@ export function App() {
     dismissMissionToasts,
     celebrateItm,
     dismissItmCelebration,
-  } = useGame(userSubscriptionLevel);
+  } = useGame(userSubscriptionLevel, { variant: gameVariant });
   const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
@@ -181,6 +182,22 @@ export function App() {
         </div>
         <div className="topbar-right">
           <div className="topbar-controls">
+            <div className="variant-toggle">
+              <button
+                className={`variant-btn ${gameVariant === "holdem" ? "active" : ""}`}
+                onClick={() => setGameVariant("holdem")}
+                title="Texas Hold'em"
+              >
+                Texas
+              </button>
+              <button
+                className={`variant-btn ${gameVariant === "omaha" ? "active" : ""}`}
+                onClick={() => setGameVariant("omaha")}
+                title="Omaha (PLO)"
+              >
+                Omaha
+              </button>
+            </div>
             <ModeToggle />
             <button
               className="build-id"
@@ -278,6 +295,7 @@ export function App() {
               pot={controller.pot}
               bigBlind={t.bigBlind}
               onAction={heroAct}
+              isOmaha={t.variant === "omaha"}
             />
           )}
         </div>
