@@ -59,7 +59,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback<TFunc>(
     (key, vars) => {
       const dict = TRANSLATIONS[lang] ?? TRANSLATIONS.pt;
-      const raw = (dict[key] ?? TRANSLATIONS.pt[key] ?? key) as string;
+      const raw = (dict[key as keyof typeof dict] ?? TRANSLATIONS.pt[key as keyof typeof TRANSLATIONS.pt] ?? key) as string;
       return interpolate(raw, vars);
     },
     [lang],

@@ -1,6 +1,6 @@
 // Hook React que embrulha o GameController e cuida do tempo dos bots.
 import { useEffect, useReducer, useRef, useState } from "react";
-import { GameController, type GameOptions, type TournamentConfig } from "./gameController";
+import { GameController, type GameOptions, type TournamentConfig, type UserSubscriptionLevel } from "./gameController";
 import type { Action } from "../game/engine";
 import {
   loadProgress,
@@ -41,7 +41,7 @@ function persist(g: GameController): void {
   }
 }
 
-export function useGame(opts?: GameOptions) {
+export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: GameOptions) {
   const progressRef = useRef<ProgressState>(loadProgress());
   const missionRef = useRef<MissionState>(loadMissions());
   const [toasts, setToasts] = useState<Mission[]>([]);
@@ -58,6 +58,7 @@ export function useGame(opts?: GameOptions) {
   if (!ref.current) {
     const g = new GameController({
       ...opts,
+      userSubscriptionLevel,
       onDecision: ({ rating, heroType }) => {
         recordDecision(progressRef.current, rating);
         saveProgress(progressRef.current);
@@ -97,7 +98,7 @@ export function useGame(opts?: GameOptions) {
         g.botStep();
         persist(g);
         force();
-      }, 650);
+      }, 1200);
       return () => clearTimeout(id);
     }
   });

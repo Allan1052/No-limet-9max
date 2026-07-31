@@ -6,23 +6,24 @@
    ------------------------------------------------------------------------- */
 
 :root {
-  --bg: #0d0f0d;
-  --bg2: #14180f;
-  --felt-1: #123a2a;
-  --felt-2: #0a231a;
-  --rail: #1b1d16;
-  --gold: #d4af37;
-  --gold-soft: #b9973f;
-  --gold-dim: #8a7326;
-  --gold-bright: #e6c454;
-  --gold-grad: linear-gradient(160deg, #f7e79b 0%, #e6c454 45%, #b8912e 100%);
-  --text: #ece7d5;
-  --text-dim: #9a9686;
-  --good: #4caf7d;
-  --ok: #c9b458;
-  --warn: #d98c3f;
-  --bad: #d1544f;
-  --card-bg: #f6f3e9;
+  /* Cores Premium Atualizadas - Alinhadas com os Vídeos */
+  --bg: #0a0d0a;
+  --bg2: #0f1410;
+  --felt-1: #1a4a3a;  /* Verde mais profundo e premium */
+  --felt-2: #0d2820;  /* Verde escuro mais intenso */
+  --rail: #2a2d22;    /* Borda dourada mais proeminente */
+  --gold: #e6c454;    /* Dourado mais brilhante */
+  --gold-soft: #d4af37;
+  --gold-dim: #b8912e;
+  --gold-bright: #f7e79b;  /* Dourado mais luminoso */
+  --gold-grad: linear-gradient(160deg, #f7e79b 0%, #e6c454 45%, #d4af37 100%);
+  --text: #f0ede0;    /* Texto mais claro */
+  --text-dim: #a8a596;
+  --good: #5cbe8d;    /* Verde sucesso mais vibrante */
+  --ok: #d4b860;      /* Amarelo ok mais quente */
+  --warn: #e89c4f;    /* Aviso mais visível */
+  --bad: #e0645f;     /* Erro mais claro */
+  --card-bg: #faf7f0; /* Fundo carta mais premium */
   --card-red: #c0392b;
   --card-black: #1c1c1c;
 }
@@ -344,6 +345,14 @@ body {
 .ios-steps li { margin-bottom: 8px; }
 .ios-note { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
 .ios-help .btn.primary { width: 100%; }
+
+/* ---- Estilos do Modal de Instalação PWA ---- */
+.pwa-install-help { width: min(460px, 94vw); text-align: center; }
+.pwa-install-help h3 { color: var(--gold); margin: 0 0 10px; }
+.pwa-steps { margin: 0 0 12px; padding-left: 20px; line-height: 1.6; font-size: 14px; }
+.pwa-steps li { margin-bottom: 8px; }
+.pwa-note { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.pwa-install-help .btn.primary { width: 100%; }
 .disclaimer {
   font-size: 12px;
   color: #0d0f0d;
@@ -2149,4 +2158,102 @@ body {
   100% {
     width: 100%;
   }
+}
+
+/* ---- Estilos da Marca Call ou Fold ---- */
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
+}
+
+.splash-logo-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  animation: splash-pulse 2s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.5)); }
+}
+
+.brand-name em {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+/* ---- Estilos do Modal de Instalação PWA ---- */
+.pwa-install-help { width: min(460px, 94vw); text-align: center; }
+.pwa-install-help h3 { color: var(--gold); margin: 0 0 10px; }
+.pwa-steps { margin: 0 0 12px; padding-left: 20px; line-height: 1.6; font-size: 14px; }
+.pwa-steps li { margin-bottom: 8px; }
+.pwa-note { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.pwa-install-help .btn.primary { width: 100%; }
+
+/* ---- Estilos da Logo da Marca ---- */
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
+}
+
+.splash-logo-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  animation: splash-pulse 2s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.5)); }
+}
+
+/* ---- Selo de Segurança ---- */
+.security-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-seal-icon {
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.5));
+}
+
+.app-seal-icon {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.5));
+}
+
+/* Destaque de Participantes ao final da mão */
+.seat.range-open .pod-btn {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 20px rgba(201, 180, 88, 0.7) !important;
+  animation: pulse-gold 2s infinite;
+  z-index: 10;
+}
+
+@keyframes pulse-gold {
+  0% { box-shadow: 0 0 10px rgba(201, 180, 88, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(201, 180, 88, 0.9); }
+  100% { box-shadow: 0 0 10px rgba(201, 180, 88, 0.4); }
+}
+
+.seat.range-open .range-flag {
+  background: var(--gold);
+  color: #000;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 4px;
 }

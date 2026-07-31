@@ -7,6 +7,7 @@ export async function shareSpot(
   blob: Blob | null,
   url: string,
   text: string,
+  securityDisclaimer: string | null = null,
 ): Promise<ShareResult> {
   const nav = navigator as Navigator & {
     canShare?: (data?: ShareData) => boolean;
@@ -17,7 +18,7 @@ export async function shareSpot(
     const file = new File([blob], "call-ou-fold-desafio.png", { type: "image/png" });
     if (nav.canShare?.({ files: [file] }) && nav.share) {
       try {
-        await nav.share({ files: [file], text, url });
+        await nav.share({ files: [file], text: securityDisclaimer ? `${securityDisclaimer}\n\n${text}` : text, url });
         return "shared";
       } catch (e) {
         if ((e as Error)?.name === "AbortError") return "cancelled";
@@ -29,7 +30,7 @@ export async function shareSpot(
   // 2) Web Share só com texto + link.
   if (nav.share) {
     try {
-      await nav.share({ text: `${text} ${url}` });
+      await nav.share({ text: securityDisclaimer ? `${securityDisclaimer}\n\n${text} ${url}` : `${text} ${url}` });
       return "shared";
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return "cancelled";

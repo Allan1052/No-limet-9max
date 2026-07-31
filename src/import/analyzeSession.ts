@@ -129,7 +129,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
     openSizeBB,
   });
 
-  const feedback = gradeDecision("Pré-flop", mapped.engine, {
+  const feedback = gradeDecision("Pré-flop", 'free', mapped.engine, {
     kind: "preflop",
     action: dec.action,
     reason: dec.reason,

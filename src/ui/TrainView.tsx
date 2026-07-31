@@ -46,7 +46,7 @@ export function TrainView() {
       question: t("challenge.imgQuestion"),
       footer: t("challenge.imgFooter"),
     });
-    const res = await shareSpot(img, url, t("challenge.shareText"));
+    const res = await shareSpot(img, url, t("challenge.shareText"), t("disclaimer"));
     if (res === "copied") setChallengeMsg(t("challenge.copied"));
     else if (res === "failed") setChallengeMsg(t("challenge.failed"));
   };
@@ -84,7 +84,7 @@ export function TrainView() {
   if (!moduleId) {
     return (
       <div className="train-view">
-        <div className="panel challenge-cta-panel">
+        <div className="panel challenge-cta-panel" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(/banner.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--gold-dim)' }}>
           <div className="chal-cta-text">
             <b>🎯 {t("challenge.button")}</b>
             <span>{t("challenge.subtitle")}</span>

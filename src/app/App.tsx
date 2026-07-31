@@ -23,6 +23,7 @@ import { Onboarding } from "../ui/Onboarding";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { SpotRangePopup } from "../ui/SpotRangePopup";
 import { handSpots } from "./handSpots";
+import { getParticipantSeats } from "./handParticipants";
 import { HandTipsModal } from "../ui/HandTipsModal";
 import { MoneyRain } from "../ui/MoneyRain";
 import { ChallengeReceived } from "../ui/ChallengeReceived";
@@ -30,12 +31,15 @@ import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
+import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
 export function App() {
   const { t: tr } = useT();
   const { onboarded, setOnboarded, mode } = useSettings();
+  // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
+  const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
   const {
     controller,
@@ -55,7 +59,7 @@ export function App() {
     dismissMissionToasts,
     celebrateItm,
     dismissItmCelebration,
-  } = useGame();
+  } = useGame(userSubscriptionLevel);
   const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
@@ -87,6 +91,7 @@ export function App() {
   // Modo avançado + mão finalizada: clicar num jogador mostra o range que ele
   // deveria jogar naquele spot, com a mão real dele em destaque.
   const spots = handOver && controller.lastHand ? handSpots(controller.lastHand) : [];
+  const participantSeats = handOver && controller.lastHand ? getParticipantSeats(controller.lastHand) : [];
   const selectedSpot =
     mode === "tecnico" && selectedSeat != null ? spots.find((s) => s.seat === selectedSeat) : null;
 
@@ -110,16 +115,13 @@ export function App() {
       ) : null}
       <div className="topbar">
         <div className="brand">
-          <span className="brand-mono" aria-hidden="true">
-            <b>C</b>
-            <i>F</i>
-          </span>
-          <span className="brand-text">
+          <img src="/logo.png" alt="Call ou Fold" className="brand-logo" />
+          <div className="brand-text">
             <span className="brand-name">
               Call<em>ou</em>Fold
             </span>
             <small>aqui é possível</small>
-          </span>
+          </div>
         </div>
         <div className="tabs">
           <button className={`tab ${view === "play" ? "active" : ""}`} onClick={() => setView("play")}>
@@ -190,7 +192,10 @@ export function App() {
             <LangSelect />
           </div>
           <InstallButton />
-          <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
+          <div className="security-info">
+            <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" className="security-seal-icon" />
+            <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
+          </div>
         </div>
       </div>
 
@@ -241,7 +246,7 @@ export function App() {
             celebrate={celebrateItm}
             updateReady={updateReady}
             onUpdate={applyUpdate}
-            rangeSeats={mode === "tecnico" ? spots.map((s) => s.seat) : []}
+            rangeSeats={participantSeats}
           />
 
           {handOver ? (
@@ -286,6 +291,7 @@ export function App() {
         <HandTipsModal
           items={controller.feedback}
           heroHand={controller.lastHand?.holeCards[controller.heroSeat] ?? []}
+          userSubscriptionLevel={userSubscriptionLevel}
           board={controller.lastHand?.finalBoard ?? []}
           onClose={() => setTipsOpen(false)}
         />
@@ -338,7 +344,10 @@ export function App() {
 
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
 
-      <div className={`app-seal${view === "play" ? " on-play" : ""}`}>🔒 {tr("disclaimer")}</div>
+      <div className={`app-seal${view === "play" ? " on-play" : ""}`}>
+        <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" className="app-seal-icon" />
+        <span>{tr("disclaimer")}</span>
+      </div>
     </div>
   );
 }

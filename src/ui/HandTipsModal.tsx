@@ -7,17 +7,20 @@ import { useSettings } from "../app/settings";
 import { findBlockers } from "../bots/blockers";
 import { classifyBoard } from "../bots/boardTexture";
 import type { Card } from "../engine/cards";
+import { UserSubscriptionLevel } from "../app/gameController";
 
 export function HandTipsModal({
   items,
   onClose,
   heroHand = [],
   board = [],
+  userSubscriptionLevel,
 }: {
   items: FeedbackItem[];
   onClose: () => void;
   heroHand?: Card[];
   board?: Card[];
+  userSubscriptionLevel: UserSubscriptionLevel;
 }) {
   const { t } = useT();
   const { mode } = useSettings();
@@ -47,7 +50,7 @@ export function HandTipsModal({
             fechar ✕
           </button>
         </div>
-        <div className="summary">{summarize(items)}</div>
+        <div className="summary">{summarize(items, userSubscriptionLevel)}</div>
 
         {tecnico && texture ? (
           <div className="board-read">

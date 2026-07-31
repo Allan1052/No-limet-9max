@@ -168,7 +168,7 @@ export function buildScenario(module: TrainModule, rng: () => number): Scenario 
 
 /** Avalia a escolha do usuário (mesma lógica de nota do jogo). */
 export function evaluateChoice(scenario: Scenario, choice: TrainAction["key"]): FeedbackItem {
-  return gradeDecision("Pré-flop", choice, scenario.advice);
+  return gradeDecision("Pré-flop", 'free', choice, scenario.advice);
 }
 
 /** Acerto = a decisão está no leque aceitável (nota boa ou ok). */

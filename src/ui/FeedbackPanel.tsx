@@ -6,7 +6,9 @@ import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { useSettings } from "../app/settings";
 
-export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
+import { UserSubscriptionLevel } from "../app/gameController";
+
+export function FeedbackPanel({ items, userSubscriptionLevel }: { items: FeedbackItem[]; userSubscriptionLevel: UserSubscriptionLevel }) {
   const { t } = useT();
   const { mode } = useSettings();
   const tecnico = mode === "tecnico";
@@ -14,7 +16,7 @@ export function FeedbackPanel({ items }: { items: FeedbackItem[] }) {
   return (
     <div className="panel">
       <h3>{t("panel.handFeedback")}</h3>
-      <div className="summary">{summarize(items)}</div>
+      <div className="summary">{summarize(items, userSubscriptionLevel)}</div>
       {items.length === 0 ? (
         <div className="legend">{t("panel.feedbackEmpty")}</div>
       ) : (

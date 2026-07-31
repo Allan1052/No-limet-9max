@@ -58,7 +58,7 @@ export function PokerTable({
   rangeSeats?: number[];
 }) {
   const { t } = useT();
-  const reveal = table.handOver && !!table.result?.showdown;
+  const reveal = table.handOver;
   const ante = table.ante ?? 0;
 
   // Posições (UTG..BTN/SB/BB) dos jogadores ainda na mesa, a partir do botão.

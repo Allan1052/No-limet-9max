@@ -10,7 +10,8 @@ import { CardView } from "./Card";
 import { cardsFromString } from "../engine/cards";
 import { parseHandHistory } from "../import/handHistory";
 import { analyzeSession, type SessionReport, type HandReport } from "../import/analyzeSession";
-import type { Rating } from "../feedback/analyzer";
+import { UserSubscriptionLevel } from "../app/gameController";
+import { summarize, type FeedbackItem, type Rating } from "../feedback/analyzer";
 import { supabase } from "../lib/supabase";
 
 const RATING_CLASS: Record<Rating, string> = {
@@ -28,6 +29,8 @@ const RATING_ICON: Record<Rating, string> = {
 };
 
 export function ImportView() {
+  // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
+  const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("free");
   const { t } = useT();
   const [text, setText] = useState("");
   const [report, setReport] = useState<SessionReport | null>(null);
@@ -125,7 +128,7 @@ export function ImportView() {
         {error ? <div className="import-error">{error}</div> : null}
       </div>
 
-      {report ? <ReportView report={report} onlyProblems={onlyProblems} setOnlyProblems={setOnlyProblems} /> : null}
+      {report ? <ReportView report={report} onlyProblems={onlyProblems} setOnlyProblems={setOnlyProblems} userSubscriptionLevel={userSubscriptionLevel} /> : null}
     </div>
   );
 }
@@ -134,10 +137,12 @@ function ReportView({
   report,
   onlyProblems,
   setOnlyProblems,
+  userSubscriptionLevel,
 }: {
   report: SessionReport;
   onlyProblems: boolean;
   setOnlyProblems: (v: boolean) => void;
+  userSubscriptionLevel: UserSubscriptionLevel;
 }) {
   const { t } = useT();
   const shown = report.hands.filter((h) => {
@@ -167,9 +172,12 @@ function ReportView({
       </div>
 
       <div className="import-hands-head">
-        <h3>
-          🃏 {t("import.handList")} ({shown.length})
-        </h3>
+          <h3>
+            🃏 {t("import.handList")} ({shown.length})
+          </h3>
+          <p className="import-summary-text">
+            {summarize(report.hands.map(h => h.feedback).filter(Boolean) as FeedbackItem[], userSubscriptionLevel)}
+          </p>
         <label className="import-filter">
           <input
             type="checkbox"

@@ -56,7 +56,10 @@ import {
   type FieldStatus,
 } from "../tournament/field";
 
+export type UserSubscriptionLevel = 'free' | 'technical' | 'ultra';
+
 export interface GameOptions {
+  userSubscriptionLevel?: UserSubscriptionLevel;
   smallBlind?: number;
   bigBlind?: number;
   startingStack?: number;
@@ -70,6 +73,7 @@ export interface GameOptions {
   onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   /** Chamado quando a bolha estoura (herói entra no dinheiro) — comemoração. */
   onBubble?: () => void;
+
 }
 
 export interface TournamentConfig {
@@ -150,6 +154,8 @@ const STREET_LABEL: Record<string, string> = {
 };
 
 export class GameController {
+  userSubscriptionLevel: UserSubscriptionLevel;
+
   table: TableState;
   heroSeat = 0;
   phase: "playing" | "handOver" = "handOver";
@@ -189,7 +195,9 @@ export class GameController {
   private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   private onBubble?: () => void;
 
+
   constructor(opts: GameOptions = {}) {
+    this.userSubscriptionLevel = opts.userSubscriptionLevel ?? 'free';
     const stack = opts.startingStack ?? 3000;
     this.payouts = opts.payouts;
     this.onDecision = opts.onDecision;
@@ -511,7 +519,7 @@ export class GameController {
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
       const heroType = action.type === "raise" ? "raise" : action.type;
-      const item = gradeDecision(streetLabel, heroType, advice);
+      const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice);
       this.feedback.push(item);
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;

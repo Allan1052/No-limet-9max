@@ -50,7 +50,7 @@ export function InstallButton() {
 
   if (installed) return null;
 
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent); // Mantém a detecção de iOS para o fluxo manual
   // No Android só mostramos quando o navegador confirmou que dá para instalar;
   // no iOS mostramos sempre (instalação é manual via Compartilhar).
   if (!deferred && !isIos) return null;
@@ -60,7 +60,7 @@ export function InstallButton() {
       await deferred.prompt();
       await deferred.userChoice.catch(() => undefined);
       setDeferred(null);
-    } else if (isIos) {
+    } else if (isIos || !deferred) { // Se for iOS ou se o navegador não disparou o evento PWA (fallback para Android/Desktop)
       setShowIosHelp(true);
     }
   };
@@ -73,16 +73,17 @@ export function InstallButton() {
 
       {showIosHelp ? (
         <div className="overlay" onClick={() => setShowIosHelp(false)}>
-          <div className="replay ios-help" onClick={(e) => e.stopPropagation()}>
-            <h3>{t("install.iosTitle")}</h3>
-            <ol className="ios-steps">
-              <li>{t("install.iosStep1")}</li>
-              <li>{t("install.iosStep2")}</li>
-              <li>{t("install.iosStep3")}</li>
+          <div className="replay pwa-install-help" onClick={(e) => e.stopPropagation()}>
+            <h3>{t("install.pwaTitle")}</h3>
+            <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" style={{ width: '80px', margin: '10px auto' }} />
+            <ol className="pwa-steps">
+              <li>{t("install.pwaStep1")}</li>
+              <li>{t("install.pwaStep2")}</li>
+              <li>{t("install.pwaStep3")}</li>
             </ol>
-            <p className="ios-note">{t("install.iosNote")}</p>
+            <p className="pwa-note">{t("install.pwaNote")}</p>
             <button className="btn primary" onClick={() => setShowIosHelp(false)}>
-              {t("install.iosOk")}
+              {t("install.pwaOk")}
             </button>
           </div>
         </div>

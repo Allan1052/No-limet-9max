@@ -6,7 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 // Caminho base no GitHub Pages (site de projeto): https://allan1052.github.io/No-limet-9max/
 // Precisa bater EXATAMENTE com o nome do repositório (o Pages diferencia
 // maiúsculas). Em desenvolvimento (npm run dev) o Vite usa "/".
-const base = process.env.NODE_ENV === "production" ? "/No-limet-9max/" : "/";
+const base = "/";
 
 // Configuração do Vite: React + Web Worker (Monte Carlo fora da UI) + PWA
 // (torna o app instalável no celular, com ícone e funcionamento offline).
@@ -28,7 +28,7 @@ export default defineConfig({
       // recarregamos no momento seguro, sem interromper uma mão.
       registerType: "prompt",
       injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
-      includeAssets: ["apple-touch-icon.png", "icon-192.png", "icon-512.png"],
+      includeAssets: ["brand-apple-touch.png", "brand-icon-192.png", "brand-icon-512.png", "brand-logo-splash.png"],
       // A página pública do site (/site) é servida direto do servidor — o service
       // worker do app não deve interceptá-la com o fallback do SPA.
       workbox: {
@@ -49,11 +49,11 @@ export default defineConfig({
         orientation: "any",
         // Instala como PWA (WebAPK), não sugere um app nativo relacionado.
         prefer_related_applications: false,
-        icons: [
-          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
+      icons: [
+        { src: "brand-icon-192.png", sizes: "192x192", type: "image/png" },
+        { src: "brand-icon-512.png", sizes: "512x512", type: "image/png" },
+        { src: "brand-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      ],
       },
     }),
   ],
