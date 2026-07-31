@@ -218,7 +218,7 @@ export function App() {
           </div>
           <InstallButton />
           <div className="security-info">
-            <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" className="security-seal-icon" />
+            <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="security-seal-icon" />
             <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
           </div>
         </div>
@@ -371,7 +371,7 @@ export function App() {
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
 
       <div className={`app-seal${view === "play" ? " on-play" : ""}`}>
-        <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" className="app-seal-icon" />
+        <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="app-seal-icon" />
         <span>{tr("disclaimer")}</span>
       </div>
     </div>

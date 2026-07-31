@@ -82,7 +82,7 @@ export function InstallButton() {
         <div className="overlay" onClick={() => setShowIosHelp(false)}>
           <div className="replay pwa-install-help" onClick={(e) => e.stopPropagation()}>
             <h3>{t("install.pwaTitle")}</h3>
-            <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" style={{ width: '80px', margin: '10px auto' }} />
+            <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" style={{ width: '80px', margin: '10px auto' }} />
             <ol className="pwa-steps">
               <li>{t("install.pwaStep1")}</li>
               <li>{t("install.pwaStep2")}</li>
