@@ -6,7 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 // Caminho base no GitHub Pages (site de projeto): https://allan1052.github.io/No-limet-9max/
 // Precisa bater EXATAMENTE com o nome do repositório (o Pages diferencia
 // maiúsculas). Em desenvolvimento (npm run dev) o Vite usa "/".
-const base = "/";
+const base = "/No-limet-9max/";
 
 const buildId = new Date().toISOString();
 
