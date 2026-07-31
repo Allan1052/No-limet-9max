@@ -8,29 +8,31 @@ import { VitePWA } from "vite-plugin-pwa";
 // maiúsculas). Em desenvolvimento (npm run dev) o Vite usa "/".
 const base = "/";
 
-// Configuração do Vite: React + Web Worker (Monte Carlo fora da UI) + PWA
-// (torna o app instalável no celular, com ícone e funcionamento offline).
-// Carimbo de versão (data/hora do build) — exibido no topo para o usuário
-// confirmar, no celular, que a versão nova realmente carregou. Guardamos o ISO
-// completo (UTC); a interface formata no FUSO LOCAL de cada jogador.
 const buildId = new Date().toISOString();
 
 export default defineConfig({
   base,
+  build: {
+    target: "es2022",
+    rollupOptions: {
+      output: {
+        // Forçar formato ESM no output
+        format: "es",
+      },
+    },
+  },
+  esbuild: {
+    target: "es2022",
+  },
   define: {
     __BUILD_ID__: JSON.stringify(buildId),
   },
   plugins: [
     react(),
     VitePWA({
-      // "prompt": o novo service worker fica em espera até a interface aplicar a
-      // atualização (via updateSW(true)) — assim avisamos com o banner/botão e
-      // recarregamos no momento seguro, sem interromper uma mão.
       registerType: "prompt",
-      injectRegister: false, // registramos manualmente em main.tsx (checagem periódica)
+      injectRegister: false,
       includeAssets: ["brand-apple-touch.png", "brand-icon-192.png", "brand-icon-512.png", "brand-logo-splash.png"],
-      // A página pública do site (/site) é servida direto do servidor — o service
-      // worker do app não deve interceptá-la com o fallback do SPA.
       workbox: {
         navigateFallbackDenylist: [/\/site(\/|$)/],
       },
@@ -47,14 +49,13 @@ export default defineConfig({
         background_color: "#0d0f0d",
         display: "standalone",
         orientation: "any",
-        // Instala como PWA (WebAPK), não sugere um app nativo relacionado.
         prefer_related_applications: false,
+      },
       icons: [
         { src: "brand-icon-192.png", sizes: "192x192", type: "image/png" },
         { src: "brand-icon-512.png", sizes: "512x512", type: "image/png" },
         { src: "brand-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
       ],
-      },
     }),
   ],
   worker: {

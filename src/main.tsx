@@ -1,33 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { registerSW } from "virtual:pwa-register";
-import { announceUpdate } from "./app/pwaUpdate";
 import { App } from "./app/App";
 import { I18nProvider } from "./i18n";
 import { SettingsProvider } from "./app/settings";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 
-// Registro do service worker (PWA). Em modo autoUpdate, quando um build novo é
-// detectado o SW é aplicado e a página recarrega sozinha — assim o app instalado
-// no celular não fica preso a uma versão antiga em cache. Além disso, checamos
-// por atualização a cada 60s e ao voltar o foco para a aba/app.
-const updateSW = registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, registration) {
-    if (!registration) return;
-    setInterval(() => registration.update().catch(() => {}), 60_000);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") registration.update().catch(() => {});
-    });
-  },
-  onNeedRefresh() {
-    // Não recarrega no meio de uma mão: apenas avisa a interface, que mostra o
-    // aviso/botão e recarrega num momento seguro (entre mãos) ou ao toque.
-    announceUpdate(() => updateSW(true));
-  },
-});
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element not found");
 
-createRoot(document.getElementById("root")!).render(
+createRoot(root).render(
   <StrictMode>
     <ErrorBoundary>
       <I18nProvider>
@@ -38,3 +19,31 @@ createRoot(document.getElementById("root")!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+// Registro manual do Service Worker para PWA
+if ("serviceWorker" in navigator) {
+  const updateSW = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              // Notifica que há atualização disponível
+              const event = new CustomEvent("sw-update");
+              window.dispatchEvent(event);
+            }
+          });
+        }
+      });
+    } catch (e) {
+      console.warn("SW registration failed:", e);
+    }
+  };
+
+  // Registra o SW apenas em HTTPS ou localhost
+  if (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    updateSW();
+  }
+}
