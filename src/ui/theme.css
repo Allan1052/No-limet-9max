@@ -120,6 +120,12 @@ body {
   row-gap: 6px;
   min-width: 0;
 }
+.topbar-logo {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.5));
+  flex-shrink: 0;
+}
 /* Simples/Técnico + carimbo de versão + idiomas sempre juntos na mesma linha. */
 .topbar-controls {
   display: flex;
@@ -1276,7 +1282,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 
   /* Mesa: tamanho cheio no mobile (os controles cabem porque Simples/versão/
      idiomas ficam numa linha só, liberando espaço vertical). */
-  .table-wrap { aspect-ratio: 5 / 6; width: 100%; max-width: min(100%, 62vh); }
+  .table-wrap { aspect-ratio: 4 / 5; width: 100%; max-width: min(100%, 56vh); }
   .tbl-rank { font-size: 15px; }
   .tbl-tips-btn { font-size: 12px; padding: 8px 13px; }
   .seat { width: 88px; }
@@ -1296,7 +1302,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
   /* Controles e ICM empilham. */
-  .controls { padding: 8px; gap: 6px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .controls { padding: 8px; gap: 6px; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
   .btn { padding: 9px 12px; font-size: 13px; }
   .slider-wrap { flex: 1 1 100%; }
   .icm-cols { flex-direction: column; }
@@ -1319,7 +1325,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .card .rank { font-size: 14px; }
   /* Economiza espaço no topo, mas mantém o botão de atualizar visível. */
   .disclaimer-text { display: none; }
-  .table-wrap { max-width: min(100%, 56vh); }
+  .table-wrap { max-width: min(100%, 50vh); }
 }
 
 /* -------------------------------------------------------------------------

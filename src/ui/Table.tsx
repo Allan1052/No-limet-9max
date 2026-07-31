@@ -77,27 +77,38 @@ export function PokerTable({
   return (
     <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
       <div className="felt">
-        <svg 
+        <div
           style={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '140px',
-            height: '140px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
             pointerEvents: 'none',
             opacity: '0.2'
           }}
-          viewBox="0 0 140 140"
         >
-          <defs>
-            <path id="moonArc" d="M 25,70 A 45,45 0 0,1 115,70" fill="none" />
-          </defs>
-          <image href={`${getBasePath()}brand-logo-splash.png`} x="45" y="45" width="50" height="50" />
-          <text fontSize="9" fill="#d4af37" fontFamily="Georgia, serif" fontWeight="700" letterSpacing="1">
-            <textPath href="#moonArc" startOffset="50%" textAnchor="middle">aqui é possível</textPath>
-          </text>
-        </svg>
+          <img
+            src={`${getBasePath()}brand-logo-splash.png`}
+            alt="Call ou Fold"
+            style={{ width: '50px', height: '50px' }}
+          />
+          <span
+            style={{
+              color: '#d4af37',
+              fontFamily: 'Georgia, serif',
+              fontWeight: 700,
+              fontSize: '9px',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase'
+            }}
+          >
+            aqui é possível
+          </span>
+        </div>
       </div>
 
       {/* Coluna central única (dica + classificação + blinds + pote + board),

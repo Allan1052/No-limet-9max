@@ -194,6 +194,7 @@ export function App() {
           </button>
         </div>
         <div className="topbar-right">
+          <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="security-seal-icon topbar-logo" />
           <div className="topbar-controls">
             <div className="variant-toggle">
               <button
@@ -223,7 +224,6 @@ export function App() {
           </div>
           <InstallButton />
           <div className="security-info">
-            <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="security-seal-icon" />
             <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
           </div>
         </div>
