@@ -29,10 +29,43 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
-      includeAssets: ["brand-apple-touch.png", "brand-icon-192.png", "brand-icon-512.png", "brand-logo-splash.png"],
+      includeAssets: [
+        "brand-apple-touch.png",
+        "brand-icon-192.png",
+        "brand-icon-512.png",
+        "brand-logo-splash.png",
+      ],
       workbox: {
         navigateFallbackDenylist: [/\/site(\/|$)/],
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
+        // Estratégia de cache otimizada para GitHub Pages:
+        // - HTML: cache-first com cleanup agressivo (evita tela branca quando bundle antigo some)
+        // - JS/CSS: cache-first (sempre têm hash, então são seguros)
+        // - Imagens: stale-while-revalidate (carrega do cache, atualiza em background)
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/allan1052\.github\.io\/No-limet-9max\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "pwa-runtime-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 dias
+              },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/No-limet-9max/assets/"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pwa-asset-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 dias (assets têm hash)
+              },
+            },
+          },
+        ],
       },
       manifestFilename: "manifest.webmanifest",
       manifest: {

@@ -13,17 +13,55 @@
       name="description"
       content="Call ou Fold: simulador de poker profissional. Texas Hold'em e Omaha (PLO) com ranges do João Simão. Treine grátis e evolua seu jogo agora."
     />
+    <!-- Cache-buster automático via meta para evitar HTML antigo do browser -->
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
   </head>
   <body>
     <div id="root"></div>
     <div id="fallback-screen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0f0d;z-index:99999;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;font-family:system-ui,sans-serif;color:#e8e6dc">
-      <div style="font-size:40px">&#9824;</div>
+      <div style="font-size:40px">♠️</div>
       <h2 style="color:#d4af37;margin:0">Carregamento travou</h2>
-      <p style="color:#9a988c;max-width:420px;line-height:1.5;margin:0">O app n&#227;o carregou. Toque abaixo para tentar novamente.</p>
-      <button onclick="location.reload()" style="border:1px solid #c9b458;background:linear-gradient(180deg,#d4af37,#c9b458);color:#0d0f0d;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">&#128260; Recarregar</button>
-      <button onclick="(async()=>{if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();await Promise.all(r.map(x=>x.unregister()))}if(typeof caches!=='undefined'){const k=await caches.keys();await Promise.all(k.map(c=>caches.delete(c)))}localStorage.clear();location.reload()})()" style="border:1px solid #c9b458;background:transparent;color:#c9b458;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">&#128465; Limpar cache e recarregar</button>
+      <p style="color:#9a988c;max-width:420px;line-height:1.5;margin:0">O app não carregou. Toque abaixo para tentar novamente — seus dados estão seguros.</p>
+      <button onclick="location.reload()" style="border:1px solid #c9b458;background:linear-gradient(180deg,#d4af37,#c9b458);color:#0d0f0d;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">🔄 Recarregar</button>
+      <button onclick="(async()=>{if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();await Promise.all(r.map(x=>x.unregister()))}if(typeof caches!=='undefined'){const k=await caches.keys();await Promise.all(k.map(c=>caches.delete(c)))}localStorage.clear();location.href=location.pathname+location.search+location.hash})();location.reload()" style="border:1px solid #c9b458;background:transparent;color:#c9b458;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">🗑️ Limpar cache e recarregar</button>
     </div>
-    <script>setTimeout(function(){var root=document.getElementById('root');var fb=document.getElementById('fallback-screen');if(root&&root.children.length===0&&fb)fb.style.display='flex'},5000)</script>
+    <script>
+      // Fallback: se o React não renderizar em 5 segundos, mostra tela de recuperação
+      setTimeout(function(){
+        var root = document.getElementById('root');
+        var fb = document.getElementById('fallback-screen');
+        if(root && root.children.length === 0 && fb) {
+          fb.style.display = 'flex';
+        }
+      }, 5000);
+
+      // Auto-recovery: se o bundle JS falhar, tenta recarregar com cache-buster
+      // (Isso resolve o problema de "app fora do ar" após deploy no GitHub Pages)
+      window.addEventListener('error', function(e) {
+        if (e.filename && e.filename.includes('/assets/')) {
+          // Provavelmente um bundle antigo que não existe mais no servidor
+          console.warn('Bundle antigo não encontrado, fazendo hard reload...');
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              regs.forEach(function(r) { r.unregister(); });
+            });
+          }
+          if (typeof caches !== 'undefined') {
+            caches.keys().then(function(keys) {
+              keys.forEach(function(k) { caches.delete(k); });
+            });
+          }
+          var url = location.href;
+          if (url.indexOf('?u=') === -1) {
+            location.href = url + (url.indexOf('?') === -1 ? '?' : '&') + 'u=' + Date.now();
+          } else {
+            location.href = url.replace(/u=\d+/, 'u=' + Date.now());
+          }
+        }
+      }, true);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

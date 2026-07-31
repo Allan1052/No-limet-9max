@@ -82,6 +82,11 @@ export function App() {
   const heroTurn = controller.isHeroTurn();
   const handOver = controller.phase === "handOver";
 
+  // Sinal global para o SW saber quando é seguro recarregar
+  useEffect(() => {
+    window.__HAND_OVER = handOver;
+  }, [handOver]);
+
   // Atualização do app: avisa quando há versão nova e recarrega num momento
   // seguro (entre mãos, na tela de jogo) para não interromper uma decisão nem
   // fazer perder algo digitado em outra aba (ex.: colar mãos no Importar).
