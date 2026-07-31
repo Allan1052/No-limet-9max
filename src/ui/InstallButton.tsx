@@ -8,6 +8,13 @@
 import { useEffect, useState } from "react";
 import { useT } from "../i18n";
 
+// Get the base URL from the manifest or default to '/'
+function getBasePath(): string {
+  const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
+  // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
+  const match = base.match(/^(\/[^/]+\/)/);
+  return match ? match[1] : '/';
+}
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -75,7 +82,7 @@ export function InstallButton() {
         <div className="overlay" onClick={() => setShowIosHelp(false)}>
           <div className="replay pwa-install-help" onClick={(e) => e.stopPropagation()}>
             <h3>{t("install.pwaTitle")}</h3>
-            <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" style={{ width: '80px', margin: '10px auto' }} />
+            <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" style={{ width: '80px', margin: '10px auto' }} />
             <ol className="pwa-steps">
               <li>{t("install.pwaStep1")}</li>
               <li>{t("install.pwaStep2")}</li>

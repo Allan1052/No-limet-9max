@@ -59,6 +59,14 @@ export function PokerTable({
   rangeSeats?: number[];
 }) {
   const { t } = useT();
+
+  // Get the base URL from the manifest or default to '/'
+  function getBasePath(): string {
+    const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
+    // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
+    const match = base.match(/^(\/[^/]+\/)/);
+    return match ? match[1] : '/';
+  }
   const reveal = table.handOver;
   const ante = table.ante ?? 0;
 
@@ -68,7 +76,23 @@ export function PokerTable({
 
   return (
     <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
-      <div className="felt" />
+      <div className="felt">
+        <img 
+          src={`${getBasePath()}brand-logo-splash.png`} 
+          alt="Call ou Fold" 
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '80px',
+            height: '80px',
+            opacity: '0.15',
+            pointerEvents: 'none',
+            filter: 'grayscale(100%) brightness(200%)'
+          }} 
+        />
+      </div>
 
       {/* Coluna central única (dica + classificação + blinds + pote + board),
           empilhada e centralizada — assim nada se sobrepõe, independente do

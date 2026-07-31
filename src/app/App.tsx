@@ -10,6 +10,14 @@ import { TournamentSetup } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
+
+// Get the base URL from the manifest or default to '/'
+function getBasePath(): string {
+  const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
+  // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
+  const match = base.match(/^(\/[^/]+\/)/);
+  return match ? match[1] : '/';
+}
 import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";
 import { CampaignView } from "../ui/CampaignView";
@@ -116,7 +124,7 @@ export function App() {
       ) : null}
       <div className="topbar">
         <div className="brand">
-          <img src="/logo.png" alt="Call ou Fold" className="brand-logo" />
+          <img src={`${getBasePath()}brand-logo-splash.png`} alt="Call ou Fold" className="brand-logo" />
           <div className="brand-text">
             <span className="brand-name">
               Call<em>ou</em>Fold
@@ -210,7 +218,7 @@ export function App() {
           </div>
           <InstallButton />
           <div className="security-info">
-            <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" className="security-seal-icon" />
+            <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" className="security-seal-icon" />
             <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
           </div>
         </div>
@@ -363,7 +371,7 @@ export function App() {
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
 
       <div className={`app-seal${view === "play" ? " on-play" : ""}`}>
-        <img src="/selo_seguranca_v2.png" alt="Selo de Segurança" className="app-seal-icon" />
+        <img src={`${getBasePath()}selo_seguranca_v2.png`} alt="Selo de Segurança" className="app-seal-icon" />
         <span>{tr("disclaimer")}</span>
       </div>
     </div>

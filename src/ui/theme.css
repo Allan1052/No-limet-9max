@@ -1258,8 +1258,9 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 
 /* ---- Responsivo (celular / telas estreitas) ---- */
 @media (max-width: 860px) {
-  .app { padding: 8px 10px 16px; }
+  .app { padding: 8px 10px calc(16px + env(safe-area-inset-bottom, 0px)); }
   .topbar { flex-wrap: wrap; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; }
+  .topbar-controls { flex-wrap: wrap; }
   .play .controls { margin-top: 6px; }
   .brand { font-size: 17px; }
   .brand small { display: none; }
@@ -1295,7 +1296,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
   /* Controles e ICM empilham. */
-  .controls { padding: 8px; gap: 6px; }
+  .controls { padding: 8px; gap: 6px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
   .btn { padding: 9px 12px; font-size: 13px; }
   .slider-wrap { flex: 1 1 100%; }
   .icm-cols { flex-direction: column; }
