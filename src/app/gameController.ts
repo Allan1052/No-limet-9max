@@ -137,6 +137,8 @@ export interface GameSnapshot {
   tournamentFinishPlace: number | null;
   /** Histórico de mãos jogadas (para o export continuar após retomar). */
   handLog?: HandHistory[];
+  /** Variante do jogo salva ("holdem" ou "omaha"). */
+  variant?: "holdem" | "omaha";
   savedAt: string;
 }
 
@@ -240,7 +242,7 @@ export class GameController {
       { smallBlind: level.sb, bigBlind: level.bb, ante: level.ante },
       seats,
       0,
-      "holdem", // Tournament mode defaults to Hold'em; can be extended for PLO tournaments
+      this.table.variant ?? "holdem", // Preserve a variant atual (Hold'em ou Omaha)
     );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
     const fieldRemaining = initialFieldRemaining(cfg.entrants, cfg.stage, ladder.length);
@@ -691,6 +693,7 @@ export class GameController {
       // Guarda as últimas mãos para o export continuar após retomar (limita
       // para o save não crescer demais).
       handLog: this.handLog.slice(-80),
+      variant: this.table.variant,
       savedAt: new Date().toISOString(),
     };
   }
@@ -716,6 +719,7 @@ export class GameController {
       { smallBlind: snap.blinds.sb, bigBlind: snap.blinds.bb, ante: snap.blinds.ante },
       seats,
       snap.buttonSeat,
+      snap.variant ?? "holdem",
     );
     this.stats = {};
     for (const p of this.table.players) this.stats[p.seat] = snap.stats[p.seat] ?? emptyStats();

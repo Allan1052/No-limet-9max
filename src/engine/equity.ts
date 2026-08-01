@@ -9,8 +9,9 @@
 // determinísticos (mesma semente → mesmo resultado).
 // ---------------------------------------------------------------------------
 
-import { NUM_CARDS, type Card } from "./cards";
+import { NUM_CARDS, type Card, cardToString } from "./cards";
 import { evaluate } from "./evaluator";
+import { evaluateOmahaHand, type HandRanking } from "../game/omahaEvaluator";
 
 export interface EquityResult {
   /** Equity de cada jogador (0..1). A soma dá ≈ 1. */
@@ -321,4 +322,159 @@ export function equityVsRandom(
     tie: tie / iterations,
     loss: (iterations - win - tie) / iterations,
   };
+}
+// =========================================================================
+// Equidade Omaha (PLO) — 4 cartas na mão, usa exatamente 2 + 3 do board.
+// =========================================================================
+
+
+/** Compara dois HandRanking do avaliador Omaha (retorna >0 se a > b). */
+function compareOmahaRanking(a: HandRanking, b: HandRanking): number {
+  if (a.rank !== b.rank) return a.rank - b.rank;
+  for (let i = 0; i < Math.max(a.kickers.length, b.kickers.length); i++) {
+    const ak = a.kickers[i] ?? 0;
+    const bk = b.kickers[i] ?? 0;
+    if (ak !== bk) return ak - bk;
+  }
+  return 0;
+}
+
+/**
+ * Equity Omaha: herói (4 cartas) vs range de vilão (combos de 4 cartas).
+ * Usa Monte Carlo com o avaliador Omaha (2 da mão + 3 do board).
+ */
+export function equityOmahaHandVsRange(
+  hero: Card[],          // 4 cartas do herói
+  villainRange: Card[][], // combos de 4 cartas do range do vilão
+  board: Card[],
+  iterations: number,
+  rng: () => number = Math.random,
+): { equity: number; win: number; tie: number; loss: number; sampled: number } {
+  const deadBase = new Array(NUM_CARDS).fill(false);
+  markUsed(deadBase, hero);
+  markUsed(deadBase, board);
+
+  let eq = 0;
+  let win = 0;
+  let tie = 0;
+  let sampled = 0;
+
+  const need = 5 - board.length;
+  const drawn: Card[] = new Array(need);
+  const fullBoard: Card[] = new Array(5);
+  for (let i = 0; i < board.length; i++) fullBoard[i] = board[i];
+
+  for (let iter = 0; iter < iterations; iter++) {
+    // Escolhe um combo do range compatível (4 cartas sem conflito).
+    let villain: Card[] | null = null;
+    for (let tries = 0; tries < 16; tries++) {
+      const cand = villainRange[Math.floor(rng() * villainRange.length)];
+      if (cand.length !== 4) continue;
+      if (!deadBase[cand[0]] && !deadBase[cand[1]] && !deadBase[cand[2]] && !deadBase[cand[3]]) {
+        villain = cand;
+        break;
+      }
+    }
+    if (!villain) continue;
+    sampled++;
+
+    const used = deadBase.slice();
+    for (const v of villain) used[v] = true;
+    const available = availableFrom(used);
+    drawInto(available, need, drawn, rng);
+    for (let i = 0; i < need; i++) fullBoard[board.length + i] = drawn[i];
+
+    // Monta as strings para o avaliador Omaha.
+    const heroStrs = hero.map(cardToString);
+    const villainStrs = villain.map(cardToString);
+    const boardStrs = fullBoard.map(cardToString);
+
+    const heroRank = evaluateOmahaHand(heroStrs as any, boardStrs);
+    const villainRank = evaluateOmahaHand(villainStrs as any, boardStrs);
+
+    const cmp = compareOmahaRanking(heroRank, villainRank);
+    if (cmp > 0) {
+      win++;
+      eq += 1;
+    } else if (cmp === 0) {
+      tie++;
+      eq += 0.5;
+    }
+  }
+
+  const denom = sampled || 1;
+  return {
+    equity: eq / denom,
+    win: win / denom,
+    tie: tie / denom,
+    loss: (sampled - win - tie) / denom,
+    sampled,
+  };
+}
+
+/**
+ * Equity Omaha multiway: herói (4 cartas) vs N vilões (cada um com 4 cartas).
+ */
+export function equityOmahaMultiway(
+  hands: Card[][],      // cada hand tem 4 cartas
+  board: Card[],
+  iterations: number,
+  rng: () => number = Math.random,
+): { equity: number; sampled: number } {
+  const allUsed = new Set<Card>();
+  for (const hand of hands) for (const c of hand) allUsed.add(c);
+  for (const c of board) allUsed.add(c);
+
+  let eq = 0;
+  let sampled = 0;
+  const need = 5 - board.length;
+  const fullBoard: Card[] = new Array(5);
+  for (let i = 0; i < board.length; i++) fullBoard[i] = board[i];
+
+  const numVillains = hands.length - 1;
+  const villainHoles: Card[][] = hands.slice(1).map(() => new Array<Card>(4));
+
+  for (let iter = 0; iter < iterations; iter++) {
+    // Cria array de booleanos com as cartas usadas.
+    const used = new Array(NUM_CARDS).fill(false);
+    for (const c of allUsed) used[c] = true;
+
+    // Sorteia board restante + mãos dos vilões.
+    const needCards = need + numVillains * 4;
+    const available = availableFrom(used);
+    const bigDraw: Card[] = new Array(needCards);
+    drawInto(available, needCards, bigDraw, rng);
+
+    // Marca as cartas sorteadas como usadas.
+    for (const c of bigDraw) used[c] = true;
+
+    // Distribui board.
+    for (let i = 0; i < need; i++) fullBoard[board.length + i] = bigDraw[i];
+
+    // Distribui mãos dos vilões.
+    let idx = need;
+    for (const vh of villainHoles) {
+      for (let j = 0; j < 4; j++) vh[j] = bigDraw[idx++];
+    }
+
+    // Avalia.
+    const boardStrs = fullBoard.map(cardToString);
+    const ranks: HandRanking[] = hands.map((h, hi) => {
+      const holeStrs = (hi === 0 ? h : villainHoles[hi - 1]).map(cardToString);
+      return evaluateOmahaHand(holeStrs as any, boardStrs);
+    });
+
+    const heroRank = ranks[0];
+    let heroBeaten = false;
+    let ties = 1;
+    for (let i = 1; i < ranks.length; i++) {
+      const cmp = compareOmahaRanking(heroRank, ranks[i]);
+      if (cmp < 0) heroBeaten = true;
+      else if (cmp === 0) ties++;
+    }
+    if (!heroBeaten) eq += 1 / ties;
+    sampled++;
+  }
+
+  return { equity: eq / (sampled || 1), sampled };
 }

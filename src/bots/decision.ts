@@ -19,7 +19,12 @@
 // ---------------------------------------------------------------------------
 
 import type { Card } from "../engine/cards";
-import { equityHandVsRange, equityHandVsRangeMulti } from "../engine/equity";
+import {
+  equityHandVsRange,
+  equityHandVsRangeMulti,
+  equityOmahaHandVsRange,
+  equityOmahaMultiway,
+} from "../engine/equity";
 import type { BotProfile } from "./profiles";
 import { buildTopRange } from "../ranges/build";
 import { rangeCombos } from "../ranges/types";
@@ -54,6 +59,8 @@ export interface PostflopContext {
   icmSpot?: IcmSpot;
   rng?: () => number;
   equityIterations?: number;
+  /** Variante do jogo: "holdem" (2 cartas) ou "omaha" (4 cartas). */
+  variant?: "holdem" | "omaha";
 }
 
 export interface PostflopDecision {
@@ -101,11 +108,31 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   // uma vez), ao contrário de elevar a equity heads-up à potência do nº de
   // oponentes.
   const villainPct = ctx.villainRangePct ?? 0.45;
-  const villainRange = rangeCombos(buildTopRange(villainPct));
-  const equity =
-    numOpp <= 1
-      ? equityHandVsRange(ctx.hand, villainRange, ctx.board, iters, rng).equity
-      : equityHandVsRangeMulti(ctx.hand, villainRange, numOpp, ctx.board, iters, rng).equity;
+  const isOmaha = ctx.variant === "omaha";
+
+  let equity: number;
+  if (isOmaha) {
+    // Omaha: 4 cartas na mão. Usa avaliador Omaha (2 da mão + 3 do board).
+    // Para multiway, passa todas as mãos (herói + vilões aleatórios).
+    if (numOpp <= 1) {
+      // Single villain: usa range de combos de 4 cartas.
+      // Para simplificar, usamos equityOmahaHandVsRange com o range convertido.
+      // No momento, construímos um range aleatório de 4 cartas para Omaha.
+      const omahaRange = buildOmahaRange(villainPct, rng);
+      equity = equityOmahaHandVsRange(ctx.hand, omahaRange, ctx.board, iters, rng).equity;
+    } else {
+      // Multiway: herói + vilões aleatórios com 4 cartas cada.
+      const hands = [ctx.hand, ...Array.from({ length: numOpp }, () => randomOmahaHand(ctx.hand, ctx.board, rng))];
+      equity = equityOmahaMultiway(hands, ctx.board, iters, rng).equity;
+    }
+  } else {
+    // Hold'em: 2 cartas na mão.
+    const villainRange = rangeCombos(buildTopRange(villainPct));
+    equity =
+      numOpp <= 1
+        ? equityHandVsRange(ctx.hand, villainRange, ctx.board, iters, rng).equity
+        : equityHandVsRangeMulti(ctx.hand, villainRange, numOpp, ctx.board, iters, rng).equity;
+  }
 
   // Em posição realiza-se mais equity (controla o tamanho do pote, vê mais showdowns).
   const realization = ctx.inPosition ? 1.05 : 0.9;
@@ -255,4 +282,64 @@ function decision(
 
 function pct(x: number): string {
   return `${Math.round(x * 100)}%`;
+}
+// =========================================================================
+// Helpers Omaha para equity pós-flop.
+// =========================================================================
+
+import { NUM_CARDS } from "../engine/cards";
+
+/** Constrói um range de combos Omaha (4 cartas) baseado na largura do range do vilão. */
+function buildOmahaRange(pct: number, rng: () => number): Card[][] {
+  // Para Omaha, simplificamos: geramos combos aleatórios de 4 cartas que não
+  // conflitam com a mão do herói (blockers). A "largura" controla quantos
+  // combos geramos — mais combos = range mais amplo.
+  const combos: Card[][] = [];
+  const seen = new Set<string>();
+  const targetCombos = Math.round(1000 * pct); // ~1000 combos é um range completo de Omaha
+
+  for (let i = 0; i < targetCombos * 4; i++) {
+    const cards: Card[] = [];
+    const available: Card[] = [];
+    for (let c = 0; c < NUM_CARDS; c++) available.push(c);
+
+    // Sorteia 4 cartas aleatórias (Fisher-Yates parcial).
+    for (let k = 0; k < 4; k++) {
+      const j = k + Math.floor(rng() * (NUM_CARDS - k));
+      const tmp = available[k];
+      available[k] = available[j];
+      available[j] = tmp;
+      cards.push(available[k]);
+    }
+
+    const key = cards.sort().join(",");
+    if (!seen.has(key)) {
+      seen.add(key);
+      combos.push(cards);
+      if (combos.length >= targetCombos) break;
+    }
+  }
+
+  return combos;
+}
+
+/** Sorteia uma mão aleatória de Omaha (4 cartas) que não conflite com o herói/board. */
+function randomOmahaHand(heroCards: Card[], board: Card[], rng: () => number): Card[] {
+  const used = new Set<Card>();
+  for (const c of heroCards) used.add(c);
+  for (const c of board) used.add(c);
+
+  const available: Card[] = [];
+  for (let c = 0; c < NUM_CARDS; c++) if (!used.has(c)) available.push(c);
+
+  const hand: Card[] = [];
+  for (let k = 0; k < 4 && k < available.length; k++) {
+    const j = k + Math.floor(rng() * (available.length - k));
+    const tmp = available[k];
+    available[k] = available[j];
+    available[j] = tmp;
+    hand.push(available[k]);
+  }
+
+  return hand;
 }

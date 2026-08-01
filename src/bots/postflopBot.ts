@@ -93,6 +93,7 @@ export function postflopContextFor(
     icmSpot: buildPostflopIcmSpot(t, seat, payouts),
     rng,
     equityIterations,
+    variant: t.variant,
   };
 }
 

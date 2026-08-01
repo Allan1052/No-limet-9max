@@ -1,7 +1,12 @@
 // Hook React que embrulha o GameController e cuida do tempo dos bots.
-import { useEffect, useReducer, useRef, useState } from "react";
+//
+// Quando a variante muda (Texas → Omaha ou vice-versa), o controller é
+// RECRIADO com a nova variante para que a mesa, os bots e o feedback
+// reflitam corretamente as regras de cada jogo.
+import { useEffect, useReducer, useRef, useState, useCallback } from "react";
 import { GameController, type GameOptions, type TournamentConfig, type UserSubscriptionLevel } from "./gameController";
 import type { Action } from "../game/engine";
+import type { Rating } from "../feedback/analyzer";
 import {
   loadProgress,
   recordDecision,
@@ -47,6 +52,8 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const [toasts, setToasts] = useState<Mission[]>([]);
   const [celebrateItm, setCelebrateItm] = useState(false);
   const ref = useRef<GameController | null>(null);
+  // Rastreia a variante que o controller atual foi criado com.
+  const variantRef = useRef<string>(opts?.variant ?? "holdem");
 
   // Aplica um evento às missões, salva e enfileira as recém-concluídas (aviso).
   const fireMission = (e: MissionEvent) => {
@@ -55,24 +62,35 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     if (r.completed.length) setToasts((prev) => [...prev, ...r.completed]);
   };
 
-  if (!ref.current) {
+  // Callbacks estáveis (memoizados) para não recriar o controller à toa.
+  const onDecision = useCallback(({ rating, heroType }: { rating: Rating; heroType: string }) => {
+    recordDecision(progressRef.current, rating);
+    saveProgress(progressRef.current);
+    fireMission({ type: "decision", rating, heroType });
+  }, []);
+
+  const onHeroHand = useCallback(() => {
+    recordHand(progressRef.current);
+    saveProgress(progressRef.current);
+    fireMission({ type: "hand" });
+  }, []);
+
+  const onTournamentEnd = useCallback(({ result, inMoney }: { result: "campeao" | "eliminado"; inMoney: boolean }) => {
+    fireMission({ type: "tournamentEnd", result, inMoney });
+  }, []);
+
+  const onBubble = useCallback(() => {
+    setCelebrateItm(true);
+  }, []);
+
+  const createController = useCallback(() => {
     const g = new GameController({
       ...opts,
       userSubscriptionLevel,
-      onDecision: ({ rating, heroType }) => {
-        recordDecision(progressRef.current, rating);
-        saveProgress(progressRef.current);
-        fireMission({ type: "decision", rating, heroType });
-      },
-      onHeroHand: () => {
-        recordHand(progressRef.current);
-        saveProgress(progressRef.current);
-        fireMission({ type: "hand" });
-      },
-      onTournamentEnd: ({ result, inMoney }) => {
-        fireMission({ type: "tournamentEnd", result, inMoney });
-      },
-      onBubble: () => setCelebrateItm(true),
+      onDecision,
+      onHeroHand,
+      onTournamentEnd,
+      onBubble,
     });
     // Retoma o torneio mais recente, se houver (sair e voltar de onde parou).
     const recent = listSlots()[0];
@@ -86,8 +104,30 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
         }
       }
     }
-    ref.current = g;
+    return g;
+  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble]);
+
+  // Cria o controller na primeira renderização.
+  if (!ref.current) {
+    ref.current = createController();
+    variantRef.current = opts?.variant ?? "holdem";
   }
+
+  // Quando a variante muda (Texas → Omaha ou vice-versa), recria o controller
+  // para que a mesa, bots e feedback reflitam a variante correta.
+  const currentVariant = opts?.variant ?? "holdem";
+  if (variantRef.current !== currentVariant) {
+    // Não pode trocar no meio de uma mão — espera o handOver.
+    // Se estiver no meio de uma mão, marca para trocar no próximo handOver.
+    if (ref.current && ref.current.phase === "handOver") {
+      ref.current = createController();
+      variantRef.current = currentVariant;
+    }
+    // Se estiver no meio de uma mão, a troca acontece quando o jogador
+    // clicar em "Nova Mão" (que chama newHand → que passa por handOver).
+    // Enquanto isso, a UI mostra o toggle mas a mesa atual continua.
+  }
+
   const g = ref.current;
   const [, force] = useReducer((x) => x + 1, 0);
 
@@ -111,6 +151,14 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       force();
     },
     newHand: () => {
+      // Se a variante mudou e estamos no handOver, recria o controller
+      // antes de iniciar a nova mão.
+      if (variantRef.current !== currentVariant) {
+        ref.current = createController();
+        variantRef.current = currentVariant;
+        force();
+        return;
+      }
       g.newHand();
       persist(g);
       force();
@@ -156,12 +204,14 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     progress: () => summarize(progressRef.current),
     resetProgress: () => {
       progressRef.current = resetProgress();
+      saveProgress(progressRef.current);
       force();
     },
     missions: () => missionViews(missionRef.current),
     missionCounts: () => missionCounts(missionRef.current),
     resetMissions: () => {
       missionRef.current = resetMissions();
+      saveMissions(missionRef.current);
       force();
     },
     missionToasts: toasts,
