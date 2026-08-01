@@ -9,6 +9,7 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
     <div className="overlay" onClick={onClose}>
       <div className="replay onboard" onClick={(e) => e.stopPropagation()}>
         <h3>{t("onboard.title")}</h3>
+        <p className="onboard-subtitle">{t("onboard.subtitle")}</p>
         <ol className="onboard-steps">
           {steps.map((s, i) => (
             <li key={i}>{s}</li>
