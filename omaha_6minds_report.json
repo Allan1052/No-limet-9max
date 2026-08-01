@@ -1,0 +1,102 @@
+{
+  "simulation": {
+    "totalHands": 20000,
+    "blinds": {
+      "sb": 10,
+      "bb": 20
+    },
+    "date": "2026-08-01T20:23:28.505Z"
+  },
+  "ranking": [
+    {
+      "position": 1,
+      "name": "Jogador 1",
+      "style": {
+        "vpip": 45,
+        "aggression": 0.6,
+        "bluffFreq": 0.15,
+        "foldToCbet": 0.35,
+        "threeBetFreq": 0.1
+      },
+      "chipsBB": 52780,
+      "wins": 14719,
+      "winRate": 73.6,
+      "biggestPotBB": 87
+    },
+    {
+      "position": 2,
+      "name": "Jogador 2",
+      "style": {
+        "vpip": 22,
+        "aggression": 0.85,
+        "bluffFreq": 0.1,
+        "foldToCbet": 0.4,
+        "threeBetFreq": 0.18
+      },
+      "chipsBB": 15655,
+      "wins": 4158,
+      "winRate": 20.8,
+      "biggestPotBB": 93
+    },
+    {
+      "position": 3,
+      "name": "Jogador 3",
+      "style": {
+        "vpip": 55,
+        "aggression": 0.4,
+        "bluffFreq": 0.25,
+        "foldToCbet": 0.25,
+        "threeBetFreq": 0.05
+      },
+      "chipsBB": -7124,
+      "wins": 971,
+      "winRate": 4.9,
+      "biggestPotBB": 89
+    },
+    {
+      "position": 4,
+      "name": "Jogador 4",
+      "style": {
+        "vpip": 35,
+        "aggression": 0.9,
+        "bluffFreq": 0.35,
+        "foldToCbet": 0.3,
+        "threeBetFreq": 0.22
+      },
+      "chipsBB": -18160,
+      "wins": 145,
+      "winRate": 0.7,
+      "biggestPotBB": 83
+    },
+    {
+      "position": 5,
+      "name": "Jogador 5",
+      "style": {
+        "vpip": 30,
+        "aggression": 0.55,
+        "bluffFreq": 0.12,
+        "foldToCbet": 0.45,
+        "threeBetFreq": 0.08
+      },
+      "chipsBB": -21465,
+      "wins": 7,
+      "winRate": 0,
+      "biggestPotBB": 48
+    },
+    {
+      "position": 6,
+      "name": "Jogador 6",
+      "style": {
+        "vpip": 40,
+        "aggression": 0.75,
+        "bluffFreq": 0.3,
+        "foldToCbet": 0.35,
+        "threeBetFreq": 0.15
+      },
+      "chipsBB": -21685,
+      "wins": 0,
+      "winRate": 0,
+      "biggestPotBB": 0
+    }
+  ]
+}
