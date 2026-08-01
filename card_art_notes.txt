@@ -1,0 +1,10 @@
+Card artístico final ficou excelente:
+- Imagem do homem de capuz no ônibus com bracelete WSOP no balão (parte superior, ~48% do card)
+- Fade suave da imagem para o fundo escuro
+- Logo CF horizontal dourada abaixo da imagem
+- Título e subtítulo em destaque
+- 4 passos numerados com círculos dourados
+- Texto do ônibus em itálico
+- Botão CTA "Começar a jogar" com borda dourada
+- "AQUI É POSSÍVEL" no rodapé
+- Formato 1080x1920 (9:16)

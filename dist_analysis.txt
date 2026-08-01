@@ -1,0 +1,19 @@
+PROBLEMA IDENTIFICADO:
+
+O dist/ ainda tem caminhos antigos:
+- index.html: src="/No-limet-9max/assets/index-CHY0yvYU.js"
+- manifest.webmanifest: "start_url":"/No-limet-9max/"
+- Logo no HTML: apple-touch-icon href="./brand-apple-touch.png" (relativo, ok)
+
+O dist/ foi gerado ANTES de eu mudar o base para "/".
+O deploy do GitHub Pages usou esse dist/ antigo.
+
+SOLUÇÃO: Fazer build local, commitar e pushar o dist/ novo com base="/".
+Ou melhor: o GitHub Actions faz o build automaticamente. O problema é que o dist/ no repositório pode estar sendo servido diretamente sem rebuild.
+
+Na verdade, o GitHub Actions workflow usa "upload-pages-artifact" com path: dist, então o build é feito pela CI. Mas o dist/ commitado no repositório pode estar sendo usado como fallback.
+
+Verificar: o workflow faz npm run build que deve respeitar o vite.config.ts com base="/".
+Mas o dist/ antigo com base="/No-limet-9max/" pode estar sendo servido se o workflow não rodou corretamente.
+
+Ação: Fazer build local, commitar dist/ com base="/", e pushar.

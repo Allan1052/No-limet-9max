@@ -14,6 +14,11 @@ import {
   saveProgress,
   resetProgress,
   summarize,
+  recordPreflopFold,
+  recordBadCall,
+  recordCbet,
+  recordBotFold,
+  recordVpip,
   type ProgressState,
 } from "./progress";
 import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
@@ -83,6 +88,33 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     setCelebrateItm(true);
   }, []);
 
+  // ---- Disciplina callbacks ----
+  const onPreflopFold = useCallback((chipsSaved: number) => {
+    recordPreflopFold(progressRef.current, chipsSaved);
+    saveProgress(progressRef.current);
+    fireMission({ type: "decision", rating: "boa", heroType: "fold" });
+  }, []);
+
+  const onBadCall = useCallback((chipsLost: number) => {
+    recordBadCall(progressRef.current, chipsLost);
+    saveProgress(progressRef.current);
+  }, []);
+
+  const onCbet = useCallback(() => {
+    recordCbet(progressRef.current);
+    saveProgress(progressRef.current);
+  }, []);
+
+  const onBotFolded = useCallback(() => {
+    recordBotFold(progressRef.current);
+    saveProgress(progressRef.current);
+  }, []);
+
+  const onHeroVpip = useCallback(() => {
+    recordVpip(progressRef.current);
+    saveProgress(progressRef.current);
+  }, []);
+
   const createController = useCallback(() => {
     const g = new GameController({
       ...opts,
@@ -91,6 +123,11 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       onHeroHand,
       onTournamentEnd,
       onBubble,
+      onPreflopFold,
+      onBadCall,
+      onCbet,
+      onBotFolded,
+      onHeroVpip,
     });
     // Retoma o torneio mais recente, se houver (sair e voltar de onde parou).
     const recent = listSlots()[0];
@@ -105,7 +142,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       }
     }
     return g;
-  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble]);
+  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble, onPreflopFold, onBadCall, onCbet, onBotFolded, onHeroVpip]);
 
   // Cria o controller na primeira renderização.
   if (!ref.current) {

@@ -1,0 +1,3 @@
+Card 5 (patrocínio) ficou bom visualmente mas tem problema: a logo aparece DUPLICADA — uma pequena já está na imagem gerada pela IA e outra grande no card montado. Preciso ajustar o crop da imagem para cortar a parte superior onde aparece a logo da IA, ou usar fade mais agressivo no topo.
+
+Card 6 e capa ainda não verificados.

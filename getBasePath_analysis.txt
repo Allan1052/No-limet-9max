@@ -1,0 +1,16 @@
+Análise de getBasePath():
+
+Com base="/":
+- script src = "/assets/index-Dptkjw8H.js"
+- regex /^(\/[^/]+\/)/ tenta extrair "/assets/"
+- match[1] = "/assets/" (não vazio!)
+- Retorna "/assets/" em vez de "/"
+
+BUG! A regex captura "/assets/" como base path, mas os arquivos PNG estão na raiz (dist/brand-logo-splash.png), não em dist/assets/.
+
+Com base="/No-limet-9max/":
+- script src = "/No-limet-9max/assets/index-xxx.js"
+- regex captura "/No-limet-9max/"
+- Retorna "/No-limet-9max/" (correto, pois os PNGs estavam em public/)
+
+SOLUÇÃO: Mudar getBasePath() para retornar "/" quando o base é "/", ou usar import.meta.env.BASE_URL.

@@ -1,0 +1,1 @@
+Card 5 com crop de 350px: ainda aparece logo duplicada no topo da imagem. A imagem original tem logos CF que vão muito abaixo de 350px. Preciso cortar mais, talvez 500px do topo. Ou melhor: verificar a imagem original e cortar exatamente até onde as logos terminam.

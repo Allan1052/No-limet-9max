@@ -76,6 +76,17 @@ export interface GameOptions {
   /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
   variant?: "holdem" | "omaha";
 
+  // ---- Disciplina / progressão ----
+  /** Fold pré-flop correto (para VPIP e badges). */
+  onPreflopFold?: (chipsSaved: number) => void;
+  /** Call avaliado como ruim (para contador de "chips perdidos"). */
+  onBadCall?: (chipsLost: number) => void;
+  /** C-bet do herói. */
+  onCbet?: () => void;
+  /** Bot foldou após aposta do herói. */
+  onBotFolded?: () => void;
+  /** Herói entrou no pote (VPIP++). */
+  onHeroVpip?: () => void;
 }
 
 export interface TournamentConfig {
@@ -84,6 +95,10 @@ export interface TournamentConfig {
   stage: Stage;
   /** Mãos por nível antes de as blinds subirem (0 = não sobem sozinhas). */
   handsPerLevel?: number;
+  /** Variante: "holdem" (padrão) ou "omaha" (PLO). */
+  variant?: "holdem" | "omaha";
+  /** Modo curto (10 mãos) para "Omaha no Ônibus". */
+  shortMode?: boolean;
 }
 
 export interface TournamentState {
@@ -198,6 +213,11 @@ export class GameController {
   private onHeroHand?: () => void;
   private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   private onBubble?: () => void;
+  private onPreflopFold?: (chipsSaved: number) => void;
+  private onBadCall?: (chipsLost: number) => void;
+  private onCbet?: () => void;
+  private onBotFolded?: () => void;
+  private onHeroVpip?: () => void;
 
 
   constructor(opts: GameOptions = {}) {
@@ -208,6 +228,11 @@ export class GameController {
     this.onHeroHand = opts.onHeroHand;
     this.onTournamentEnd = opts.onTournamentEnd;
     this.onBubble = opts.onBubble;
+    this.onPreflopFold = opts.onPreflopFold;
+    this.onBadCall = opts.onBadCall;
+    this.onCbet = opts.onCbet;
+    this.onBotFolded = opts.onBotFolded;
+    this.onHeroVpip = opts.onHeroVpip;
     this.seatDefs = [
       { name: "Você", isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
@@ -238,11 +263,13 @@ export class GameController {
     const stacks = unevenStacks(avgChips, this.seatDefs.length, stageInfo.spread, this.rng, level.bb * 3);
     const seats = this.seatDefs.map((s, i) => ({ ...s, stack: stacks[i] }));
 
+    // A variant do torneio vem do cfg (se fornecido), senão mantém a atual.
+    const newVariant = cfg.variant ?? this.table.variant ?? "holdem";
     this.table = createTable(
       { smallBlind: level.sb, bigBlind: level.bb, ante: level.ante },
       seats,
       0,
-      this.table.variant ?? "holdem", // Preserve a variant atual (Hold'em ou Omaha)
+      newVariant,
     );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
     const fieldRemaining = initialFieldRemaining(cfg.entrants, cfg.stage, ladder.length);
@@ -507,6 +534,10 @@ export class GameController {
     });
 
     this.lastActionLabel[seat] = this.label(action, la);
+    // Bot foldou após aposta do herói (conta para gamificação).
+    if (action.type === "fold" && !p.isHero && !this.isHeroTurn()) {
+      this.onBotFolded?.();
+    }
     applyAction(this.table, action);
     if (this.table.handOver) this.finishHand();
   }
@@ -535,6 +566,26 @@ export class GameController {
       this.heroRatings[item.rating]++;
       // Alimenta o placar de evolução e as missões.
       this.onDecision?.({ rating: item.rating, heroType });
+      // ---- Disciplina / progressão ----
+      const isPreflop = this.table.street === "preflop";
+      // Call ruim = chips perdidos
+      if (heroType === "call" && item.rating === "ruim") {
+        const lost = totalPot(this.table); // chips já no pote que o herói paga
+        this.onBadCall?.(lost);
+      }
+      // Fold pré-flop correto
+      if (heroType === "fold" && isPreflop && (item.rating === "boa" || item.rating === "ok")) {
+        const saved = totalPot(this.table); // chips que o herói NÃO pagou
+        this.onPreflopFold?.(saved);
+      }
+      // C-bet (aposta após ter iniciativa pré-flop)
+      if (heroType === "raise" && !isPreflop && item.rating === "boa") {
+        this.onCbet?.();
+      }
+      // VPIP: herói entrou no pote (não foldou)
+      if (heroType !== "fold" && isPreflop) {
+        this.onHeroVpip?.();
+      }
       // Guarda os erros claros (ruim/imprecisa) para revisar depois — limita a
       // uma lista enxuta com os mais graves primeiro.
       if (item.rating === "ruim" || item.rating === "imprecisa") {

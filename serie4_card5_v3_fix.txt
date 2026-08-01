@@ -1,0 +1,7 @@
+Card 5 ainda tem logo duplicada. O fade in no topo não resolveu porque a logo da IA nesta imagem está mais baixa (aproximadamente a 25-30% do topo, não no topo absoluto).
+
+A imagem do card 5 tem: logo CF pequena + "CALL OU FOLD" + "AQUI É POSSÍVEL" na parte superior da imagem gerada pela IA.
+
+Solução: Aumentar o logo_space para que a área de transição entre a imagem e o card fique acima da logo da IA, OU simplesmente cobrir com um retângulo escuro na região específica onde a logo da IA aparece.
+
+Melhor solução: Usar um retângulo escuro (BG_COLOR) sobre a região do topo da imagem onde a logo da IA aparece, antes de colar a imagem no card.

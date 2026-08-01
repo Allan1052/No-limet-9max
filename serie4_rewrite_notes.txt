@@ -1,0 +1,12 @@
+Card 5 está completamente quebrado. A imagem ficou quase invisível e o texto aparece duplicado. O overlay de 180px + logo_space está cobrindo toda a área útil.
+
+Preciso reescrever a função create_card do zero com uma abordagem mais limpa:
+1. Redimensionar imagem
+2. Aplicar fade no topo e fundo (uniforme para todos os cards)
+3. Criar card com fundo escuro
+4. Colar imagem na metade superior
+5. Adicionar overlay gradiente no topo para cobrir logo da IA
+6. Desenhar logo por cima
+7. Adicionar textos abaixo da imagem
+
+O problema principal é que a imagem do card 5 tem a logo da IA muito baixa na imagem. Preciso de uma abordagem que funcione para todos os cards.

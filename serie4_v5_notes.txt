@@ -1,0 +1,2 @@
+Card 4 (torneio) com overlay escuro: ficou excelente. Logo CF única no topo, imagem limpa, frase e CTA corretos. O overlay de 180px com gradiente funciona perfeitamente.
+Verificar cards 5 e 6 e capa.

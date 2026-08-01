@@ -1,0 +1,6 @@
+Card 4 com 28% fade: ficou perfeito, logo única, imagem limpa.
+Card 5 com 28% fade: ainda tem logo duplicada — a IA gerou a imagem com 3 logos CF no topo (aparentemente a IA repetiu a logo 3 vezes verticalmente). O fade de 28% não é suficiente.
+
+Solução final: para o card 5 especificamente, cortar a imagem por cima (crop de 40% do topo). Para os outros cards, manter o fade de 28%.
+
+OU: solução universal — detectar o fade_top por imagem individualmente.

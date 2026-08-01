@@ -1,0 +1,5 @@
+Cards 4, 5 e 6 têm o mesmo problema: a imagem gerada pela IA já contém a logo CF no topo, e quando montamos o card com a logo nossa, fica duplicada.
+
+Solução: ajustar o crop da imagem para cortar a parte superior (onde está a logo da IA) antes de montar o card. Aumentar o logo_space ou cortar a imagem de cima.
+
+Vou corrigir os scripts para cortar ~200px do topo da imagem.

@@ -1,0 +1,3 @@
+Problema: o crop de 25% cortou demais a imagem e agora o texto aparece duplicado no card 5. O problema original era a logo da IA no topo da imagem.
+
+Nova abordagem: não cortar a imagem do topo. Em vez disso, adicionar um retângulo de cor de fundo (BG_COLOR) sobre a parte superior da imagem para cobrir a logo da IA, antes de colar a nossa logo por cima.

@@ -1,0 +1,8 @@
+O card 5 está completamente quebrado. A imagem original da IA gerada (1632x2176) tem logos CF embutidas. O crop de 350px não removeu todas as logos.
+
+O problema é que estou tentando usar uma imagem que já tem a logo CF embutida pela IA. A solução radical é:
+1. Usar a imagem RAW original (1632x2176) 
+2. Cortar 700px do topo para remover TODAS as logos da IA
+3. Depois redimensionar
+
+Ou melhor: simplesmente NÃO usar a imagem da IA para o card 5 e gerar uma nova imagem sem a logo embutida.

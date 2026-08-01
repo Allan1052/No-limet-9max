@@ -1,0 +1,2 @@
+Problema: O botão CTA "Começar a jogar" não aparece o texto. Provavelmente o fill=(230,196,84,15) está cobrindo o texto, ou o anchor mm está cortando.
+Solução: Desenhar o texto DEPOIS do rounded_rectangle com fill sólido (sem alpha), e usar coordenadas absolutas em vez de anchor mm.

@@ -1,0 +1,3 @@
+Card 5 com 45% fade: as logos da IA ainda aparecem visíveis (ainda mais fracas mas visíveis). A IA gerou a imagem com 4 logos CF empilhadas no topo, o que é muito agressivo.
+
+Solução radical: fazer crop direto do topo da imagem ANTES do resize, cortando ~50% do topo. Depois fazer resize para WIDTH. Isso remove completamente a região com as logos da IA.

@@ -94,8 +94,11 @@ export function TournamentSetup({
             >
               NL Hold'em
             </button>
-            <button className="tab" disabled title="Em breve" style={{ opacity: 0.5 }}>
-              Omaha (em breve)
+            <button
+              className={`tab ${gameType === "plo" ? "active" : ""}`}
+              onClick={() => setGameType("plo")}
+            >
+              Omaha
             </button>
           </div>
         </div>
@@ -173,6 +176,7 @@ export function TournamentSetup({
               entrants: Math.max(2, entrants),
               stage,
               handsPerLevel: SPEED_HANDS[speed],
+              variant: gameType === "plo" ? "omaha" : "holdem",
             })
           }
         >

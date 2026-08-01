@@ -1,0 +1,7 @@
+Card 5 está completamente quebrado com crop de 45%: a imagem quase desapareceu e o texto aparece duplicado. O problema é que a imagem gerada pela IA tem 4 logos CF empilhadas, e qualquer abordagem de crop/fade está causando problemas.
+
+Abordagem final: NÃO usar a imagem gerada pela IA para o card 5. Em vez disso, gerar uma nova imagem SEM a logo CF embutida, ou simplesmente não usar fade/crop e aceitar que a logo aparece (já que o usuário viu nos cards anteriores que a logo CF aparecia na imagem).
+
+OU: a melhor solução é não usar crop_top e fade_top para o card 5, e simplesmente usar o logo_space para cobrir. O logo_space de 140px já cobre bastante do topo.
+
+Vou tentar: remover crop_top e fade_top do card 5, usar logo_space de 200px e adicionar um retângulo escuro sobre a área do topo da imagem.
