@@ -4,10 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0b0d0a" />
-<meta name="description" content="Call ou Fold: simulador de poker profissional. Texas Hold'em e Omaha (PLO) com ranges do João Simão. Treine grátis e evolua seu jogo agora." />
-<title>Call ou Fold — Evoluir no poker é aprender a decidir certo</title>
+<meta name="description" content="Call ou Fold: simulador de poker para jogadores recreativos. Texas Hold'em e Omaha (PLO). Treine grátis, sem dinheiro real, no seu celular." />
+<title>Call ou Fold — O Sonho é Nosso. Degrau por Degrau.</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
 
   :root {
     --ground: #0d0f0d;
@@ -47,7 +47,7 @@
   h1, h2, h3 { 
     text-wrap: balance; 
     margin: 0; 
-    font-family: 'Playfair Display', Georgia, serif; 
+    font-family: 'Noto Serif', Georgia, serif; 
   }
   .cinzel { font-family: 'Cinzel', serif; }
 
@@ -57,7 +57,7 @@
     padding: 18px 22px; max-width: var(--maxw); margin: 0 auto;
   }
   .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-  .brand-logo { height: 40px; width: auto; display: block; }
+  .brand-logo { height: 36px; width: auto; display: block; }
   .brand-tag { color: var(--dim); font-weight: 600; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; border-left: 1px solid #2f331f; padding-left: 11px; }
   .nav-right { display: flex; align-items: center; gap: 16px; }
   .nav-link { text-decoration: none; color: var(--gold-soft); font-weight: 700; font-size: 14px; letter-spacing: .3px; }
@@ -261,6 +261,24 @@
   .sl-punch { border-left:4px solid var(--gold); padding-left:18px; color:var(--cream) !important; font-weight:800; font-size: clamp(18px,2.6vw,23px) !important; line-height:1.4 !important; }
   .sl-sign { text-align:center; margin-top:22px; color: var(--gold-soft); font-weight:800; font-size:17px; letter-spacing:.3px; }
 
+  /* ---- Selo AQUI É POSSÍVEL ---- */
+  .aqui-possivel {
+    text-align: center; padding: 20px 0; margin: 30px 0 10px;
+  }
+  .aqui-possivel .seal {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(14px, 2.4vw, 18px);
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 10px 28px;
+    background: rgba(212,175,55,.06);
+  }
+
   /* ---- Ranking ---- */
   .rank { margin: 74px 0 20px; }
   .rank .section-h { margin-top: 0; }
@@ -290,9 +308,10 @@
     transition: transform .1s ease, border-color .1s ease, color .1s ease;
   }
   .tier:hover { transform: translateY(-1px); }
-  .tier.on { color: #14120a; background: linear-gradient(180deg, var(--gold-soft), var(--gold)); border-color: var(--gold-dim); }
-  .tier .buyin { display: block; font-size: 10px; font-weight: 600; opacity: .8; letter-spacing: 0; }
-  .lead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tier.on { color: #14120a; background: linear-gradient(160deg,#f7e79b,#e6c454 45%,#b8912e); border-color: var(--gold); }
+  .tier .buyin { display: block; font-size: 10px; color: var(--dim); font-weight: 500; }
+  .tier.on .buyin { color: #14120a; }
+  .lead { list-style: none; padding: 0; margin: 0; }
   .lead li {
     display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 11px; background: #10130c; border: 1px solid #22261899;
@@ -317,15 +336,23 @@
     background: rgba(0,0,0,.25); border: 1px dashed rgba(216,178,74,.3); border-radius: 12px; padding: 13px 16px;
   }
   .rank-note b { color: var(--gold-soft); }
+
+  /* ---- Selo top do site ---- */
+  .site-seal {
+    text-align: center; padding: 8px 0;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--gold-dim);
+  }
 </style>
 </head>
 <body>
 
+<div class="site-seal">Sem dinheiro real · Só estudo · Aqui é possível</div>
 
 <nav class="nav" id="top">
   <a class="brand" href="#top">
     <img src="logo.png" alt="Call ou Fold" class="brand-logo" />
-    <span class="brand-tag">ferramenta de estudo</span>
+    <span class="brand-tag">aqui é possível</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#ranking">Ranking</a>
@@ -335,12 +362,11 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow">Poker pra quem joga por diversão</span>
-    <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
-    <p class="sub">Agora com suporte completo a **Omaha (PLO)**! Treine com os ranges profissionais de João Simão e domine as duas variantes mais populares do mundo.</p>
-    <p class="sub">A maioria das mãos é decisão simples. Quem chega longe não erra as simples — e treina as poucas difíceis. Sem curso caro, sem jargão, no seu tempo.</p>
+    <span class="eyebrow">Feito por um recreativo, para recreativos</span>
+    <h1>O Sonho é Nosso.<br><span class="g">Degrau por Degrau.</span></h1>
+    <p class="sub">Texas Hold'em e Omaha (PLO). Treine decisões reais no seu celular — sem dinheiro, sem jargão, no seu tempo.</p>
     <div class="cta-row">
-      <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Começar agora — grátis</a>
+      <a class="btn primary" href="https://calloufold.com.br/">♠ Plante aqui a primeira semente</a>
       <a class="btn ghost" href="#demo">Ver como funciona ↓</a>
     </div>
     <div class="cards" aria-hidden="true">
@@ -491,7 +517,7 @@
     <h2>Vou ser honesto com você</h2>
     <p>Eu não sou profissional de poker. Sou recreativo — desses que dão aquela <b>call ruim na esperança de bater o flop</b>. Que paga, paga e paga esperando o baralho ajudar. Que pensa "essa mão eu ganho pra crescer no torneio". Quando eu sento pra jogar, muitas vezes são as minhas emoções e os meus sonhos que estão jogando por mim.</p>
     <p>Descobri isso fazendo este projeto — e talvez seja a coisa mais útil que eu aprendi sobre o meu próprio jogo.</p>
-    <p>Então por que eu ia querer te ensinar? Porque tem uma coisa que eu <b>sei</b> fazer. Trabalho com transformador de energia há <b>18 anos</b>, e nesse tempo já ensinei <b>mais de 70 pessoas</b> a fazer o serviço. Aprendi que ninguém aprende com termo complicado. A pessoa aprende quando você fala simples, direto, na língua dela.</p>
+    <p>Então por que eu ia querer te ensinar? Porque tem uma coisa que eu <b>sei</b> fazer: ensinar de um jeito que entra. Não com termo complicado. Fala simples, direto, na língua de quem tá do outro lado.</p>
     <p>Esses dias descobri que isso tem nome: <b>Andragogia</b> — a ciência de como o adulto aprende de verdade. Eu já fazia sem saber. E foi aí que caiu a ficha: este app inteiro nasceu disso.</p>
     <p>Eu não sei analisar uma mão por 30 minutos, com dez termos difíceis. Isso eu não sei — e tudo bem. Porque, na maioria das vezes, você não precisa disso.</p>
 
@@ -504,7 +530,7 @@
     <p>Não vou te transformar em profissional. Mas posso te ajudar a parar de jogar no automático da emoção — e começar a <b>decidir melhor</b>.</p>
     <p>E se você leu tudo isso pensando <b>"esse sou eu"</b> — é porque a gente é o mesmo jogador. Essa carta é sua também.</p>
 
-    <div class="sign">— O recreativo dos sonhos
+    <div class="sign">— Um recreativo com um sonho
       <small>criador do Call ou Fold · e, no fundo, você também</small>
     </div>
   </div>
@@ -513,11 +539,15 @@
 <section class="final wrap">
   <h2>Pronto pra decidir melhor?</h2>
   <p>Abra no celular, resolva uma mão e veja seu feedback na hora. Leva um minuto.</p>
-  <a class="btn primary" href="https://allan1052.github.io/No-limet-9max/">♠ Abrir o Call ou Fold agora</a>
+  <a class="btn primary" href="https://calloufold.com.br/">♠ Plante aqui a primeira semente</a>
 </section>
 
+<div class="aqui-possivel">
+  <span class="seal">AQUI É POSSÍVEL</span>
+</div>
+
 <footer>
-  <div><span class="disc">SEM DINHEIRO REAL · SÓ ESTUDO</span></div>
+  <div><span class="disc">SEM DINHEIRO REAL · SÓ ESTUDO · AQUI É POSSÍVEL</span></div>
   <div style="margin-top:8px">Call ou Fold — simulador de estudo NLHE 9-max · feito para o jogador recreativo</div>
 </footer>
 
