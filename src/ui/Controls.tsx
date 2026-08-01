@@ -40,38 +40,42 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
 
   return (
     <div className="controls">
-      <button
-        className="btn danger"
-        disabled={!active || !legal.canFold}
-        onClick={() => onAction({ type: "fold" })}
-      >
-        {t("ctrl.fold")}
-      </button>
-
-      {legal.canCheck ? (
-        <button className="btn" disabled={!active} onClick={() => onAction({ type: "check" })}>
-          {t("ctrl.check")}
-        </button>
-      ) : (
+      {/* Linha 1: Fold / Call / bb — lado a lado à esquerda */}
+      <div className="action-row">
         <button
-          className="btn"
-          disabled={!active || !legal.canCall}
-          onClick={() => onAction({ type: "call" })}
+          className="btn danger"
+          disabled={!active || !legal.canFold}
+          onClick={() => onAction({ type: "fold" })}
         >
-          {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
+          {t("ctrl.fold")}
         </button>
-      )}
 
-      <button
-        className="btn unit-toggle"
-        type="button"
-        onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}
-        title={t("unit.toggle")}
-      >
-        {unit === "bb" ? "bb" : "fichas"}
-      </button>
+        {legal.canCheck ? (
+          <button className="btn" disabled={!active} onClick={() => onAction({ type: "check" })}>
+            {t("ctrl.check")}
+          </button>
+        ) : (
+          <button
+            className="btn"
+            disabled={!active || !legal.canCall}
+            onClick={() => onAction({ type: "call" })}
+          >
+            {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
+          </button>
+        )}
 
-      <div className="slider-wrap">
+        <button
+          className="btn unit-toggle"
+          type="button"
+          onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}
+          title={t("unit.toggle")}
+        >
+          {unit === "bb" ? "bb" : "fichas"}
+        </button>
+      </div>
+
+      {/* Linha 2: Percentuais e input */}
+      <div className="pct-row">
         {isOmaha && (
           <button
             className="btn size pot-btn"
@@ -111,6 +115,10 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
             {t("ctrl.pctApply")}
           </button>
         </span>
+      </div>
+
+      {/* Linha 3: Slider + valor */}
+      <div className="slider-row">
         <input
           type="range"
           min={legal.minRaiseTo}
@@ -122,6 +130,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
       </div>
 
+      {/* Linha 4: RAISE (full width) */}
       <div className="raise-row">
         <button
           className="btn primary raise-btn"
@@ -134,6 +143,10 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         >
           {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
         </button>
+      </div>
+
+      {/* Linha 5: ALL-IN (full width) */}
+      <div className="allin-row">
         <button
           className="btn allin-btn"
           disabled={!active || !legal.canRaise}

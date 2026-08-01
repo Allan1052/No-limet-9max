@@ -869,7 +869,7 @@ body {
 .btn.danger { border-color: #6a2f2c; color: #e0958c; }
 .btn.danger:hover:not(:disabled) { border-color: #a6493f; background: linear-gradient(180deg, #2a1a17 0%, #1c1310 100%); }
 .btn.size { padding: 8px 9px; font-size: 12px; font-weight: 600; }
-.slider-wrap { display: flex; align-items: center; gap: 6px; flex: 1 1 260px; min-width: 200px; flex-wrap: wrap; }
+.slider-wrap { display: none; }
 .slider-wrap input[type="range"] { flex: 1; accent-color: var(--gold); }
 .raise-amount { color: var(--gold); font-weight: 700; min-width: 64px; text-align: right; }
 .pct-input { display: inline-flex; align-items: center; gap: 4px; }
@@ -1302,9 +1302,11 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
   /* Controles e ICM empilham. */
-  .controls { padding: 8px; gap: 6px; padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px)); }
+  .controls { padding: 8px; gap: 6px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
   .btn { padding: 9px 12px; font-size: 13px; }
   .slider-wrap { flex: 1 1 100%; }
+  .raise-btn { width: 100%; padding: 11px; font-size: 14px; }
+  .allin-btn { width: 100%; padding: 11px; font-size: 14px; }
   .icm-cols { flex-direction: column; }
   .icm-result { flex-direction: column; align-items: flex-start; gap: 8px; }
   .tourney { flex-direction: column; }
@@ -1581,10 +1583,15 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 /* -------------------------------------------------------------------------
    Ajustes: Raise+All-in em linha própria, posição e marcação nos assentos.
    ------------------------------------------------------------------------- */
-.raise-row { display: flex; gap: 8px; flex: 1 1 100%; }
-.raise-btn { flex: 1 1 auto; }
-.allin-btn {
-  flex: 0 0 auto;
+/* Novo layout dos controles: linhas separadas */
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pct-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.slider-row { display: flex; align-items: center; gap: 8px; flex: 1 1 100%; width: 100%; }
+.slider-row input[type="range"] { flex: 1; accent-color: var(--gold); }
+.raise-row { display: flex; gap: 8px; flex: 1 1 100%; width: 100%; }
+.allin-row { display: flex; gap: 8px; flex: 1 1 100%; width: 100%; }
+.raise-btn { flex: 1 1 auto; width: 100%; }
+.allin-btn { flex: 1 1 auto; width: 100%;
   background: linear-gradient(180deg, #b5462f 0%, #7d2f20 100%);
   color: #fff;
   border-color: #8a3a29;
@@ -1592,6 +1599,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   box-shadow: 0 2px 10px rgba(181, 70, 47, 0.28);
 }
 .allin-btn:hover:not(:disabled) { border-color: #e0765c; box-shadow: 0 4px 16px rgba(224, 118, 92, 0.36); }
+
 
 /* Etiqueta de posição e marca de "ver range" no assento. */
 .seat .pod { position: relative; }

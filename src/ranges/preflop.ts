@@ -278,48 +278,54 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         icmFactor,
       });
       const openPct = rangePercent(range);
-  
-      if (freqIn(range, handType) > 0) {
-      if (sd.pushFold) {
+      
+      // Threshold mínimo: a mão precisa ter freq >= 0.1 (10%) para abrir.
+      // Isso elimina "borderline" absurdas (ex: QJo em UTG com freq 0.01).
+      const RFI_MIN_FREQ = 0.1;
+      
+      if (freqIn(range, handType) >= RFI_MIN_FREQ) {
+        // Dentro do range → abre (raise ou jam)
+        if (sd.pushFold) {
+          return {
+            action: "jam",
+            sizeBB: ctx.effectiveBB,
+            reason: `Stack raso (${Math.round(ctx.effectiveBB)}bb): abertura vira all-in (push/fold).`,
+            handType,
+            mix: bandMix("jam", openPct, handType),
+          };
+        }
         return {
-          action: "jam",
-          sizeBB: ctx.effectiveBB,
-          reason: `Stack raso (${Math.round(ctx.effectiveBB)}bb): abertura vira all-in (push/fold).`,
+          action: "raise",
+          sizeBB: 2.3,
+          reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
           handType,
-          mix: bandMix("jam", openPct, handType),
+          mix: bandMix("raise", openPct, handType),
         };
       }
-    }
-    return {
-      action: "raise",
-      sizeBB: 2.3,
-      reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
-      handType,
-      mix: bandMix("raise", openPct, handType),
-    };
 
-    // Limp especulativo: perfis passivos entram de limp com mãos logo abaixo da
-    // abertura — é assim que o recreativo/station veem tantos flops.
-    if (ctx.profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
-      const limpRange = rangeSubtract(
-        buildTopRange(openPct + ctx.profile.limpFactor * 0.4),
-        range,
-      );
-      if (freqIn(limpRange, handType) > 0) {
-        return {
-          action: "call",
-          sizeBB: 1,
-          reason: `${handType}: limp especulativo (perfil ${ctx.profile.archetype}).`,
-          handType,
-        };
+      // Fora do range de abertura → limp especulativo ou fold
+      // Threshold mínimo de 15% para limp (evita limp com mãos marginal).
+      const LIMP_MIN_FREQ = 0.15;
+      if (ctx.profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
+        const limpRange = rangeSubtract(
+          buildTopRange(openPct + ctx.profile.limpFactor * 0.4),
+          range,
+        );
+        if (freqIn(limpRange, handType) >= LIMP_MIN_FREQ) {
+          return {
+            action: "call",
+            sizeBB: 1,
+            reason: `${handType}: limp especulativo (perfil ${ctx.profile.archetype}).`,
+            handType,
+          };
+        }
       }
-    }
-    return {
-      action: "fold",
-      sizeBB: 0,
-      reason: `${handType} está fora da range de abertura de ${ctx.heroPosition}.`,
-      handType,
-    };
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType} está fora da range de abertura de ${ctx.heroPosition}.`,
+        handType,
+      };
     }
   }
 
