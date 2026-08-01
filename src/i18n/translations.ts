@@ -137,7 +137,7 @@ export const TRANSLATIONS = {
     "onboard.s3": "Errou? Tudo bem. O app te mostra a jogada certa na hora. É aqui que você evolui sem julgamentos.",
     "onboard.s4": "Sem dinheiro real. Apenas você e sua evolução. Vamos subir esse degrau?",
     "onboard.cta": "Começar a jogar",
-    "onboard.mode": "",
+    "onboard.bus": "Esse app foi feito no ônibus, caminho pro trabalho. Igual você, estou aprendendo tudo. No poker e aqui. Erros vão acontecer — mas igual na mesa, a gente evolui jogando.",
     "tab.missions": "Missões",
     "missions.title": "Missões e desafios",
     "missions.done": "{done}/{total} concluídas",

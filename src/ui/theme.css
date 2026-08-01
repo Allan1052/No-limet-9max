@@ -225,6 +225,7 @@ body {
 .onboard-steps { text-align: left; margin: 0 0 12px; padding-left: 22px; line-height: 1.6; font-size: 14px; }
 .onboard-steps li { margin-bottom: 9px; }
 .onboard-mode { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.onboard-bus { font-size: 12px; color: var(--text-dim); font-style: italic; line-height: 1.5; margin: 0 0 14px; opacity: 0.85; }
 .onboard .btn.primary { width: 100%; }
 
 /* ---- Missões e desafios ---- */

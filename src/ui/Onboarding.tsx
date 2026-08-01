@@ -14,7 +14,7 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
             <li key={i}>{s}</li>
           ))}
         </ol>
-        {t("onboard.mode") ? <p className="onboard-mode">{t("onboard.mode")}</p> : null}
+        <p className="onboard-bus">{t("onboard.bus")}</p>
         <button className="btn primary" onClick={onClose}>
           {t("onboard.cta")}
         </button>
