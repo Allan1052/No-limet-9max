@@ -1,4 +1,4 @@
-// Controles do herói: Fold, Check/Call e Raise com slider.
+// Controles do herói: Fold, Check/Call, Raise, BB e All-in reorganizados.
 import { useEffect, useState } from "react";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
@@ -19,8 +19,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
-  // Porcentagem digitável do pote (campo livre ao lado dos atalhos).
-  const [customPct, setCustomPct] = useState("50");
 
   // Reajusta o slider sempre que o spot muda.
   useEffect(() => {
@@ -32,15 +30,10 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
     const target = Math.round((legal.callAmount + pot) * frac) + legal.callAmount;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, target)));
   };
-  // Aplica a % digitada (aceita valores fora de 0–100, o clamp cuida dos limites).
-  const applyCustomPct = () => {
-    const n = Number(customPct.replace(",", "."));
-    if (Number.isFinite(n) && n > 0) potBet(n / 100);
-  };
 
   return (
     <div className="controls">
-      {/* Linha 1: Fold / Call / bb — lado a lado à esquerda */}
+      {/* Linha 1: Fold / Call / Raise / BB — lado a lado */}
       <div className="action-row">
         <button
           className="btn danger"
@@ -65,6 +58,18 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         )}
 
         <button
+          className="btn primary"
+          disabled={!canRaise}
+          onClick={() =>
+            onAction(
+              raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
+            )
+          }
+        >
+          {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
+        </button>
+
+        <button
           className="btn unit-toggle"
           type="button"
           onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}
@@ -74,7 +79,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         </button>
       </div>
 
-      {/* Linha 2: Percentuais e input */}
+      {/* Linha 2: Percentuais + All-in */}
       <div className="pct-row">
         {isOmaha && (
           <button
@@ -98,23 +103,13 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>
           120%
         </button>
-        <span className="pct-input" title={t("ctrl.pctHint")}>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step={5}
-            value={customPct}
-            disabled={!canRaise}
-            onChange={(e) => setCustomPct(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") applyCustomPct();
-            }}
-          />
-          <button className="btn size" disabled={!canRaise} onClick={applyCustomPct}>
-            {t("ctrl.pctApply")}
-          </button>
-        </span>
+        <button
+          className="btn allin-btn"
+          disabled={!active || !legal.canRaise}
+          onClick={() => onAction({ type: "allin" })}
+        >
+          {t("ctrl.allin")}
+        </button>
       </div>
 
       {/* Linha 3: Slider + valor */}
@@ -128,32 +123,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
           onChange={(e) => setRaiseTo(Number(e.target.value))}
         />
         <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
-      </div>
-
-      {/* Linha 4: RAISE (full width) */}
-      <div className="raise-row">
-        <button
-          className="btn primary raise-btn"
-          disabled={!canRaise}
-          onClick={() =>
-            onAction(
-              raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
-            )
-          }
-        >
-          {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
-        </button>
-      </div>
-
-      {/* Linha 5: ALL-IN (full width) */}
-      <div className="allin-row">
-        <button
-          className="btn allin-btn"
-          disabled={!active || !legal.canRaise}
-          onClick={() => onAction({ type: "allin" })}
-        >
-          {t("ctrl.allin")}
-        </button>
       </div>
     </div>
   );
