@@ -15,8 +15,17 @@ import { MissionToast } from "../ui/MissionToast";
 function getBasePath(): string {
   const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
   // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
-  const match = base.match(/^(\/[^/]+\/)/);
-  return match ? match[1] : '/';
+  // Exclude /assets/ — it's the Vite assets folder, not the base path
+  const match = base.match(/^(\/[a-zA-Z][^/]+\/(?:assets|dist)\/)/);
+  if (match) {
+    return match[1].replace(/\/(?:assets|dist)\/$/, '/');
+  }
+  // Fallback: detect if we're at root (no project folder in path)
+  const rootMatch = base.match(/^(\/assets\/)/);
+  if (rootMatch) return '/';
+  // Old format: /ProjectName/assets/...
+  const legacy = base.match(/^(\/[^/]+\/)/);
+  return legacy ? legacy[1] : '/';
 }
 import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";

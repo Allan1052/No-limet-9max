@@ -63,7 +63,9 @@ export function PokerTable({
   // Get the base URL from the manifest or default to '/'
   function getBasePath(): string {
     const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
-    // Extract base path from script src (e.g., "/No-limet-9max/assets/index-xxx.js")
+    // Detect if we're at root (script src = "/assets/...")
+    if (base.startsWith('/assets/')) return '/';
+    // Old format: /ProjectName/assets/...
     const match = base.match(/^(\/[^/]+\/)/);
     return match ? match[1] : '/';
   }
