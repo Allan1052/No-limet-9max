@@ -3,8 +3,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-// Caminho base no GitHub Pages (site de projeto): https://allan1052.github.io/No-limet-9max/
-const base = "/No-limet-9max/";
+// Caminho base: "/" para domínio customizado calloufold.com.br
+// Se voltar para GitHub Pages padrão (allan1052.github.io/No-limet-9max/), mudar para "/No-limet-9max/"
+const base = "/";
 
 const buildId = new Date().toISOString();
 
