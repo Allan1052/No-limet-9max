@@ -436,10 +436,10 @@
     <div class="label">Você joga o quê?</div>
     <h2>Call ou Fold?</h2>
     <p class="lead">Repara: você vai acertar isso aqui sem saber nenhum termo técnico. Só com uma boa decisão.</p>
-    <p class="spot-meta">Você no <b>Big Blind</b> com <b>4bb</b> · o botão deu <b>all-in</b></p>
+    <p class="spot-meta">Você no <b>CO</b> com <b>25bb</b> · <b>UTG</b> deu <b>3x raise</b> (7.5bb)</p>
     <div class="demo-cards" aria-hidden="true">
-      <div class="card red"><span class="r">A</span><span class="s">♦</span></div>
-      <div class="card red"><span class="r">T</span><span class="s">♦</span></div>
+      <div class="card black"><span class="r">K</span><span class="s">♠</span></div>
+      <div class="card black"><span class="r">Q</span><span class="s">♠</span></div>
     </div>
     <div class="demo-actions">
       <button class="act fold" data-a="fold">Fold</button>
@@ -562,8 +562,8 @@
         var call = b.dataset.a === "call";
         verdict.className = "verdict show";
         verdict.innerHTML = call
-          ? '<span class="tag ok">✓ Boa decisão!</span> Com apenas <b>4bb</b> e o pote já enorme, A♦T♦ paga o all-in fácil — as odds são ótimas e não dá pra desistir. Viu? Você decidiu certo sem precisar de nenhuma palavra difícil.'
-          : '<span class="tag no">✗ Aqui o Fold custa caro.</span> Com <b>4bb</b> e essas odds, A♦T♦ é call tranquilo. No app você vê o porquê em números — e treina até virar automático.';
+          ? '<span class="tag ok">✓ Boa decisão!</span> K♠Q♠ parecendo forte demais — mas UTG é o primeiro a falar na mesa. Quando ele dá 3x, quase sempre tem <b>AA, KK ou AK</b>. Contra esse range, KQ♠ perde em 3 de 4 vezes. Dobrar a aposta (fold ou 3-bet) é o que pro faz — o recreativo paga e perde ficha. No app você vê o porquê em números.'
+          : '<span class="tag no">✗ Cuidado com a mão "bonita" demais.</span> KQ♠ parece forte, mas contra o raise de UTG você está atrás na maioria das vezes. O recreativo paga, o pro dobra. No app você aprende a diferença — e treina até virar automático.';
         verdict.scrollIntoView({ behavior: "smooth", block: "center" });
       });
     });
