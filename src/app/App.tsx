@@ -194,7 +194,6 @@ export function App() {
           </button>
         </div>
         <div className="topbar-right">
-          <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="security-seal-icon topbar-logo" />
           <div className="topbar-controls">
             <div className="variant-toggle">
               <button
@@ -221,6 +220,7 @@ export function App() {
               🔄 {formatBuild(__BUILD_ID__)}
             </button>
             <LangSelect />
+            <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="topbar-logo" />
           </div>
           <InstallButton />
           <div className="security-info">
