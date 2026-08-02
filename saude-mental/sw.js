@@ -1,5 +1,5 @@
 // Service worker simples: deixa o app funcionar offline.
-const CACHE = "respira-v1";
+const CACHE = "respira-v2";
 const ASSETS = [
   "./",
   "./index.html",

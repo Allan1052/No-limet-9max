@@ -85,6 +85,90 @@ function clearHistory() {
   try { localStorage.removeItem(STORE_KEY); } catch {}
 }
 
+/* ---------- Diário de humor (também só no aparelho) ---------- */
+const MOOD_KEY = "respira.humor.v1";
+const MOODS = [
+  { value: 1, emoji: "😢", label: "Muito mal", color: "#d5766a" },
+  { value: 2, emoji: "😟", label: "Mal",       color: "#e08a52" },
+  { value: 3, emoji: "😐", label: "Mais ou menos", color: "#e0b352" },
+  { value: 4, emoji: "🙂", label: "Bem",       color: "#8fb46a" },
+  { value: 5, emoji: "😄", label: "Muito bem", color: "#7bb0a3" },
+];
+function loadMoods() {
+  try { return JSON.parse(localStorage.getItem(MOOD_KEY)) || []; }
+  catch { return []; }
+}
+function saveMood(entry) {
+  const m = loadMoods();
+  m.push(entry);
+  try { localStorage.setItem(MOOD_KEY, JSON.stringify(m.slice(-365))); } catch {}
+}
+function clearMoods() {
+  try { localStorage.removeItem(MOOD_KEY); } catch {}
+}
+function moodInfo(v) { return MOODS.find((m) => m.value === v) || MOODS[2]; }
+
+/* ---------- Conteúdo educativo ---------- */
+const ARTICLES = [
+  {
+    id: "depressao",
+    icon: "🌧️",
+    title: "O que é depressão?",
+    lead: "Não é frescura, nem falta de fé ou de força de vontade.",
+    body: [
+      { h: "Uma doença de verdade", p: "A depressão é uma condição de saúde, como diabetes ou pressão alta. Ela afeta o humor, o corpo e a forma de pensar. Não é escolha da pessoa, e ninguém sai dela só “se esforçando mais”." },
+      { h: "Sinais comuns", p: "Tristeza ou vazio que não passa, perda de interesse por coisas que antes davam prazer, cansaço constante, mudanças no sono e no apetite, dificuldade de concentração, sensação de culpa ou de ser um peso. Quando isso dura mais de duas semanas, vale procurar ajuda." },
+      { h: "A boa notícia", p: "A depressão tem tratamento e a maioria das pessoas melhora. Psicoterapia, e em alguns casos medicação, funcionam. Quanto mais cedo se busca ajuda, mais fácil é o caminho." },
+    ],
+  },
+  {
+    id: "ansiedade",
+    icon: "🌀",
+    title: "O que é ansiedade?",
+    lead: "Sentir ansiedade é normal. O problema é quando ela toma conta.",
+    body: [
+      { h: "Ansiedade normal x transtorno", p: "Ficar ansioso antes de uma prova ou entrevista é natural e até útil. Vira transtorno quando a preocupação é intensa, frequente, difícil de controlar e começa a atrapalhar o sono, o trabalho e as relações." },
+      { h: "Como ela aparece", p: "Coração acelerado, respiração curta, tensão no corpo, mente que não desliga, medo de que algo ruim vá acontecer, irritação e dificuldade para relaxar." },
+      { h: "O que ajuda", p: "Técnicas de respiração e de atenção plena ajudam no dia a dia. Mas se a ansiedade está grande, um psicólogo pode te ensinar ferramentas que fazem muita diferença — e um médico avaliar se algo mais é necessário." },
+    ],
+  },
+  {
+    id: "mitos",
+    icon: "💡",
+    title: "Mitos e verdades sobre suicídio",
+    lead: "Falar sobre isso, do jeito certo, salva vidas.",
+    body: [
+      { h: "Mito: falar sobre suicídio “dá a ideia”", p: "Verdade: perguntar com cuidado e ouvir sem julgar alivia a dor e reduz o risco. O silêncio é que isola. Falar abre uma porta para a pessoa buscar ajuda." },
+      { h: "Mito: quem fala que quer morrer não faz", p: "Verdade: a maioria das pessoas dá sinais antes. Todo sinal deve ser levado a sério, sempre — nunca é “só chamar atenção”." },
+      { h: "Mito: é fraqueza ou falta de fé", p: "Verdade: pensamentos suicidas quase sempre vêm de um sofrimento intenso e de uma dor que parece sem saída, muitas vezes ligada a uma doença tratável, como a depressão. Não é caráter, é dor." },
+      { h: "Verdade: a crise passa", p: "O desejo de morrer costuma ser sobre parar de sofrer, não sobre a vida em si. Com apoio, a maioria das pessoas atravessa a crise e volta a querer viver. Por isso pedir ajuda no momento certo muda tudo." },
+    ],
+  },
+  {
+    id: "ajudar",
+    icon: "🤝",
+    title: "Como ajudar alguém",
+    lead: "Você não precisa ter as respostas. Presença já é muito.",
+    body: [
+      { h: "Escute de verdade", p: "Deixe a pessoa falar sem interromper, sem julgar e sem tentar “consertar” na hora. Frases como “estou aqui com você” valem mais do que conselhos." },
+      { h: "Não minimize", p: "Evite “isso é bobagem”, “tem gente pior” ou “é só pensar positivo”. Isso, mesmo sem querer, faz a pessoa se sentir mais sozinha. Valide a dor: “deve estar sendo muito difícil”." },
+      { h: "Pergunte diretamente", p: "Se você suspeita, pode perguntar com carinho: “você tem pensado em desistir de viver?”. Perguntar não coloca a ideia — mostra que você se importa e abre espaço para a pessoa dividir o peso." },
+      { h: "Incentive a ajuda certa", p: "Ofereça-se para procurar junto um profissional, ligar para o CVV (188) ou acompanhar a pessoa a um serviço de saúde. Em risco imediato, não a deixe sozinha e acione o SAMU (192)." },
+    ],
+  },
+  {
+    id: "sinais",
+    icon: "🚩",
+    title: "Sinais de alerta",
+    lead: "Quando é hora de buscar ajuda com mais urgência.",
+    body: [
+      { h: "Preste atenção se você (ou alguém) apresenta", p: "Falar em morrer, em ser um peso ou em não ver saída; se isolar de todos; dar adeus ou doar objetos importantes; mudanças bruscas de humor; aumento no uso de álcool ou drogas; perda de esperança no futuro." },
+      { h: "Procure ajuda hoje se", p: "A dor parece insuportável, os pensamentos de se ferir aparecem com frequência, ou você sente que não consegue mais dar conta sozinho(a). Não é preciso esperar “piorar” para pedir ajuda." },
+      { h: "Onde", p: "CVV 188 (24h, gratuito e sigiloso), CAPS e postos de saúde do SUS. Em emergência com risco à vida, SAMU 192 ou o pronto-socorro mais próximo." },
+    ],
+  },
+];
+
 /* ---------- Estado da avaliação em andamento ---------- */
 let session = null; // { test, index, answers[] }
 
@@ -124,6 +208,16 @@ function renderHome() {
       <button class="menu-tile" data-go="test:gad7">
         <span class="menu-tile__icon">🌀</span>
         <span class="menu-tile__text"><strong>Avaliar minha ansiedade</strong><small>Preocupação e tensão · 7 perguntas · 2 min</small></span>
+      </button>
+
+      <button class="menu-tile" data-go="mood">
+        <span class="menu-tile__icon">📔</span>
+        <span class="menu-tile__text"><strong>Diário de humor</strong><small>Registre como você está e acompanhe sua evolução</small></span>
+      </button>
+
+      <button class="menu-tile" data-go="learn">
+        <span class="menu-tile__icon">📚</span>
+        <span class="menu-tile__text"><strong>Aprender sobre saúde mental</strong><small>Depressão, ansiedade, mitos e como ajudar</small></span>
       </button>
 
       <button class="menu-tile" data-go="breathe">
@@ -301,6 +395,101 @@ function renderHistory() {
     </section>`;
 }
 
+/* ---------- Diário de humor ---------- */
+let moodDraft = { value: undefined, note: "" };
+
+function renderMood() {
+  moodDraft = { value: undefined, note: "" };
+  const moods = loadMoods();
+  app.innerHTML = `
+    <section class="screen">
+      <button class="back-link" data-go="home">&larr; Início</button>
+      <h1>Diário de humor</h1>
+      <p>Registrar como você está ajuda a perceber padrões ao longo do tempo. Fica só no seu aparelho.</p>
+
+      <div class="card">
+        <h2>Como você está se sentindo hoje?</h2>
+        <div class="mood-picker" id="moodPicker">
+          ${MOODS.map((m) => `
+            <button class="mood-opt" data-mood="${m.value}" title="${m.label}">
+              <span class="mood-opt__emoji">${m.emoji}</span>
+              <span class="mood-opt__label">${m.label}</span>
+            </button>`).join("")}
+        </div>
+        <textarea id="moodNote" class="mood-note" rows="2" placeholder="Quer anotar algo? (opcional)"></textarea>
+        <button class="btn btn--primary" id="saveMoodBtn" disabled>Salvar de hoje</button>
+      </div>
+
+      ${moods.length ? `
+      <div class="card">
+        <h2>Sua evolução</h2>
+        ${buildMoodChart(moods)}
+        <p class="muted" style="text-align:center; margin-top:10px">Últimos ${Math.min(moods.length, 30)} registros</p>
+      </div>
+      <button class="btn btn--ghost" data-go="clearMood">Apagar meu diário</button>
+      ` : `<p class="disclaimer">Faça seu primeiro registro para começar a acompanhar sua evolução. 🌱</p>`}
+    </section>`;
+}
+
+function buildMoodChart(moods) {
+  const data = moods.slice(-30);
+  const W = 300, H = 140, padX = 14, padY = 18;
+  const n = data.length;
+  const stepX = n > 1 ? (W - padX * 2) / (n - 1) : 0;
+  const y = (v) => padY + (5 - v) / 4 * (H - padY * 2);
+  const x = (i) => padX + i * stepX;
+
+  const points = data.map((d, i) => `${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(" ");
+  const dots = data.map((d, i) => {
+    const c = moodInfo(d.value).color;
+    return `<circle cx="${x(i).toFixed(1)}" cy="${y(d.value).toFixed(1)}" r="4" fill="${c}"><title>${fmtDate(d.ts)}: ${moodInfo(d.value).label}</title></circle>`;
+  }).join("");
+  const grid = [1, 2, 3, 4, 5].map((v) => `<line x1="${padX}" y1="${y(v)}" x2="${W - padX}" y2="${y(v)}" stroke="rgba(91,124,157,0.12)" stroke-width="1"/>`).join("");
+
+  return `
+    <div class="chart-wrap">
+      <div class="chart-emojis">${[5,4,3,2,1].map((v)=>`<span>${moodInfo(v).emoji}</span>`).join("")}</div>
+      <svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="none">
+        ${grid}
+        ${n > 1 ? `<polyline points="${points}" fill="none" stroke="#5b7c9d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+        ${dots}
+      </svg>
+    </div>`;
+}
+
+function renderLearn() {
+  app.innerHTML = `
+    <section class="screen">
+      <button class="back-link" data-go="home">&larr; Início</button>
+      <h1>Aprender sobre saúde mental</h1>
+      <p>Entender ajuda a cuidar — de você e de quem você ama.</p>
+      ${ARTICLES.map((a) => `
+        <button class="menu-tile" data-article="${a.id}">
+          <span class="menu-tile__icon">${a.icon}</span>
+          <span class="menu-tile__text"><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(a.lead)}</small></span>
+        </button>`).join("")}
+      <p class="disclaimer">Estes textos são informativos e não substituem a orientação de um profissional de saúde.</p>
+    </section>`;
+}
+
+function renderArticle(id) {
+  const a = ARTICLES.find((x) => x.id === id);
+  if (!a) return renderLearn();
+  app.innerHTML = `
+    <section class="screen">
+      <button class="back-link" data-go="learn">&larr; Voltar</button>
+      <h1>${a.icon} ${escapeHtml(a.title)}</h1>
+      <p style="font-size:1.05rem; color:var(--ink)">${escapeHtml(a.lead)}</p>
+      ${a.body.map((s) => `
+        <div class="card">
+          <h2>${escapeHtml(s.h)}</h2>
+          <p>${escapeHtml(s.p)}</p>
+        </div>`).join("")}
+      <button class="btn btn--accent" data-go="resources">Onde buscar ajuda</button>
+      <button class="btn btn--ghost" data-go="learn">Ver outros temas</button>
+    </section>`;
+}
+
 /* ---------- Exercício de respiração ---------- */
 let breatheTimer = null;
 function renderBreathe() {
@@ -342,11 +531,19 @@ function go(route) {
   if (route === "resources") return renderResources();
   if (route === "history") return renderHistory();
   if (route === "breathe") return renderBreathe();
+  if (route === "mood") return renderMood();
+  if (route === "learn") return renderLearn();
   if (route === "clear") {
     if (confirm("Tem certeza que deseja apagar todo o seu histórico? Isso não pode ser desfeito.")) {
       clearHistory();
     }
     return renderHistory();
+  }
+  if (route === "clearMood") {
+    if (confirm("Apagar todos os registros do seu diário de humor? Isso não pode ser desfeito.")) {
+      clearMoods();
+    }
+    return renderMood();
   }
   if (route.startsWith("test:")) return startTest(route.split(":")[1]);
 }
@@ -354,6 +551,29 @@ function go(route) {
 app.addEventListener("click", (e) => {
   const goEl = e.target.closest("[data-go]");
   if (goEl) { e.preventDefault(); return go(goEl.dataset.go); }
+
+  // Abrir um artigo educativo
+  const artEl = e.target.closest("[data-article]");
+  if (artEl) return renderArticle(artEl.dataset.article);
+
+  // Diário de humor: escolher o humor
+  const moodEl = e.target.closest("[data-mood]");
+  if (moodEl) {
+    moodDraft.value = Number(moodEl.dataset.mood);
+    document.querySelectorAll(".mood-opt").forEach((el) => el.classList.remove("selected"));
+    moodEl.classList.add("selected");
+    const btn = document.getElementById("saveMoodBtn");
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  // Diário de humor: salvar
+  if (e.target.closest("#saveMoodBtn")) {
+    if (moodDraft.value === undefined) return;
+    const noteEl = document.getElementById("moodNote");
+    saveMood({ value: moodDraft.value, note: noteEl ? noteEl.value.trim().slice(0, 280) : "", ts: Date.now() });
+    return renderMood();
+  }
 
   const opt = e.target.closest("[data-answer]");
   if (opt && session) {
