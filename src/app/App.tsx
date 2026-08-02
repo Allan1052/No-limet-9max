@@ -214,10 +214,14 @@ export function App() {
               </button>
               <button
                 className={`variant-btn ${gameVariant === "omaha" ? "active" : ""}`}
-                onClick={() => setGameVariant("omaha")}
-                title="Omaha (PLO)"
+                onClick={() => {
+                  // Omaha em desenvolvimento — não disponível ainda
+                  alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+                }}
+                title="Em breve — Omaha (PLO)"
+                style={{ opacity: 0.5, cursor: "not-allowed" }}
               >
-                Omaha
+                Omaha 🔒
               </button>
             </div>
             <ModeToggle />

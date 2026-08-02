@@ -96,9 +96,13 @@ export function TournamentSetup({
             </button>
             <button
               className={`tab ${gameType === "plo" ? "active" : ""}`}
-              onClick={() => setGameType("plo")}
+              onClick={() => {
+                alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+              }}
+              title="Em breve — Omaha (PLO)"
+              style={{ opacity: 0.5, cursor: "not-allowed" }}
             >
-              Omaha
+              Omaha 🔒
             </button>
           </div>
         </div>
