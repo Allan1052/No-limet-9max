@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#5b7c9d" />
+  <meta name="description" content="Um espaço acolhedor para você perceber cedo como está a sua saúde mental. Não substitui ajuda profissional." />
+  <title>Respira — cuidando de você</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Barra de crise: sempre acessível -->
+  <a href="#" id="crisisBar" class="crisis-bar" aria-label="Preciso de ajuda agora">
+    <span class="crisis-bar__pulse" aria-hidden="true"></span>
+    <span>Preciso de ajuda agora</span>
+  </a>
+
+  <main id="app" class="app" aria-live="polite">
+    <!-- Conteúdo renderizado pelo app.js -->
+  </main>
+
+  <!-- Modal de crise -->
+  <div id="crisisModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="crisisTitle">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__card">
+      <button class="modal__close" data-close aria-label="Fechar">&times;</button>
+      <h2 id="crisisTitle" class="modal__title">Você não está sozinho(a)</h2>
+      <p class="modal__lead">Se você está passando por um momento muito difícil ou pensando em se machucar, procure falar com alguém agora. Existe gente pronta para te ouvir, com carinho e sem julgamento.</p>
+
+      <a class="help-card help-card--call" href="tel:188">
+        <span class="help-card__badge">188</span>
+        <span class="help-card__body">
+          <strong>Ligar para o CVV</strong>
+          <small>Centro de Valorização da Vida · 24h · ligação gratuita e sigilosa</small>
+        </span>
+      </a>
+
+      <a class="help-card" href="https://www.cvv.org.br/chat/" target="_blank" rel="noopener">
+        <span class="help-card__badge">💬</span>
+        <span class="help-card__body">
+          <strong>Conversar por chat com o CVV</strong>
+          <small>cvv.org.br · se preferir escrever em vez de ligar</small>
+        </span>
+      </a>
+
+      <a class="help-card" href="tel:192">
+        <span class="help-card__badge">192</span>
+        <span class="help-card__body">
+          <strong>SAMU — emergência médica</strong>
+          <small>Se há risco imediato à sua vida ou de alguém</small>
+        </span>
+      </a>
+
+      <p class="modal__note">Procurar ajuda é um ato de coragem, não de fraqueza. 💚</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

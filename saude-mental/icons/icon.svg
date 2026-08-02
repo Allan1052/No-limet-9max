@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Respira">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6b93b8"/>
+      <stop offset="1" stop-color="#7bb0a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <!-- Folha / broto: cuidado e recomeço -->
+  <path d="M256 392c0-96 40-168 128-208-8 104-56 176-128 208z" fill="#ffffff" opacity="0.95"/>
+  <path d="M256 392c0-72-32-128-96-156 4 80 40 132 96 156z" fill="#ffffff" opacity="0.8"/>
+  <path d="M256 400V300" stroke="#ffffff" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+</svg>
