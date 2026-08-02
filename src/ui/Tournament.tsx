@@ -40,6 +40,9 @@ export function TournamentSetup({
   const [stage, setStage] = useState<Stage>("inicio");
   const [speed, setSpeed] = useState<Speed>("normal");
   const [gameType, setGameType] = useState<"nlhe" | "plo">("nlhe");
+  const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
+    return localStorage.getItem("omaha_dev_unlock") === "true";
+  });
 
   const pool = prizePool(buyIn, Math.max(1, entrants));
   const ladder = payoutLadder(Math.max(1, entrants), pool);
@@ -97,12 +100,23 @@ export function TournamentSetup({
             <button
               className={`tab ${gameType === "plo" ? "active" : ""}`}
               onClick={() => {
-                alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+                if (omahaUnlocked) {
+                  setGameType("plo");
+                } else {
+                  const code = prompt("🔒");
+                  if (code === "omaha2026") {
+                    localStorage.setItem("omaha_dev_unlock", "true");
+                    setOmahaUnlocked(true);
+                    setGameType("plo");
+                  } else {
+                    alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+                  }
+                }
               }}
-              title="Em breve — Omaha (PLO)"
-              style={{ opacity: 0.5, cursor: "not-allowed" }}
+              title={omahaUnlocked ? "Omaha (PLO)" : "Em breve — Omaha (PLO)"}
+              style={omahaUnlocked ? {} : { opacity: 0.5, cursor: "not-allowed" }}
             >
-              Omaha 🔒
+              {omahaUnlocked ? "Omaha" : "Omaha 🔒"}
             </button>
           </div>
         </div>

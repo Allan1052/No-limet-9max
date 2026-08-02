@@ -59,6 +59,9 @@ export function App() {
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
   const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
+  const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
+    return localStorage.getItem("omaha_dev_unlock") === "true";
+  });
   const {
     controller,
     heroAct,
@@ -213,15 +216,26 @@ export function App() {
                 Texas
               </button>
               <button
-                className={`variant-btn ${gameVariant === "omaha" ? "active" : ""}`}
+                className={`variant-btn ${gameVariant === "omaha" && omahaUnlocked ? "active" : ""}`}
                 onClick={() => {
-                  // Omaha em desenvolvimento — não disponível ainda
-                  alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+                  if (omahaUnlocked) {
+                    setGameVariant("omaha");
+                  } else {
+                    // Porta secreta: digitar a chave para destravar
+                    const code = prompt("🔒");
+                    if (code === "omaha2026") {
+                      localStorage.setItem("omaha_dev_unlock", "true");
+                      setOmahaUnlocked(true);
+                      setGameVariant("omaha");
+                    } else {
+                      alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
+                    }
+                  }
                 }}
-                title="Em breve — Omaha (PLO)"
-                style={{ opacity: 0.5, cursor: "not-allowed" }}
+                title={omahaUnlocked ? "Omaha (PLO)" : "Em breve — Omaha (PLO)"}
+                style={omahaUnlocked ? {} : { opacity: 0.5, cursor: "not-allowed" }}
               >
-                Omaha 🔒
+                {omahaUnlocked ? "Omaha" : "Omaha 🔒"}
               </button>
             </div>
             <ModeToggle />
