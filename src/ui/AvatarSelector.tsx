@@ -284,7 +284,9 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           <div className="immersion-quote">
             "{t(selectedAvatarData.immersionKey as TransKey)}"
           </div>
-          <button className="btn primary immersion-enter" onClick={onDone}>
+          <button className="btn primary immersion-enter" onClick={() => {
+            onDone();
+          }}>
             {t("onboarding.enter")}
           </button>
         </div>
