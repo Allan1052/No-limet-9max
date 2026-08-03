@@ -37,6 +37,7 @@ import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
+import { OnboardingScreen, isFirstOpen } from "../ui/AvatarSelector";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { SpotRangePopup } from "../ui/SpotRangePopup";
 import { handSpots } from "./handSpots";
@@ -382,7 +383,12 @@ export function App() {
         />
       ) : null}
 
-      {!onboarded ? <Onboarding onClose={() => setOnboarded(true)} /> : null}
+      {/* Onboarding de avatar: mostra na primeira vez que abre o app */}
+      {isFirstOpen() ? (
+        <OnboardingScreen onDone={() => setOnboarded(true)} />
+      ) : !onboarded ? (
+        <Onboarding onClose={() => setOnboarded(true)} />
+      ) : null}
 
       {challenge ? (
         <ChallengeReceived

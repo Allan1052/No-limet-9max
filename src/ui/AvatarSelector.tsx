@@ -1,9 +1,11 @@
 // ---------------------------------------------------------------------------
-// AvatarSelector — o jogador escolhe seu rosto para a arena de duelo.
+// AvatarSelector — o jogador escolhe sua máscara para a arena de duelo.
 // Avatares fotorrealistas com iluminação cinematográfica.
-// Persistido em localStorage.
+// Persistido em localStorage com sistema de cooldown (1 troca/semana grátis).
+// Tela de onboarding na primeira abertura do app.
+// Frase de imersão personalizada após escolher.
 // ---------------------------------------------------------------------------
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 
@@ -12,10 +14,11 @@ import type { TransKey } from "../i18n/translations";
 // ---------------------------------------------------------------------------
 export interface AvatarType {
   id: string;
-  nameKey: string; // key de tradução
-  color: string; // cor de destaque (borda)
+  nameKey: string;
+  color: string;
   descriptionKey: string;
-  image: string; // caminho da imagem
+  image: string;
+  immersionKey: string; // frase de imersão ao escolher
 }
 
 export const HERO_AVATARS: AvatarType[] = [
@@ -25,6 +28,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#d4af37",
     descriptionKey: "avatar.casual.desc",
     image: "avatars/01-casual.png",
+    immersionKey: "avatar.casual.immersion",
   },
   {
     id: "paga-tudo",
@@ -32,6 +36,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#e0645f",
     descriptionKey: "avatar.pagatudo.desc",
     image: "avatars/02-paga-tudo.png",
+    immersionKey: "avatar.pagatudo.immersion",
   },
   {
     id: "muralha",
@@ -39,6 +44,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#8b8d8f",
     descriptionKey: "avatar.muralha.desc",
     image: "avatars/03-muralha.png",
+    immersionKey: "avatar.muralha.immersion",
   },
   {
     id: "certinho",
@@ -46,6 +52,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#5cbe8d",
     descriptionKey: "avatar.certinho.desc",
     image: "avatars/04-certinho.png",
+    immersionKey: "avatar.certinho.immersion",
   },
   {
     id: "cartilha",
@@ -53,6 +60,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#7cc0ff",
     descriptionKey: "avatar.cartilha.desc",
     image: "avatars/05-cartilha.png",
+    immersionKey: "avatar.cartilha.immersion",
   },
   {
     id: "furacao",
@@ -60,6 +68,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#ff4444",
     descriptionKey: "avatar.furacao.desc",
     image: "avatars/06-furacao.png",
+    immersionKey: "avatar.furacao.immersion",
   },
   {
     id: "tudo-ou-nada",
@@ -67,6 +76,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#f59e0b",
     descriptionKey: "avatar.tudoounada.desc",
     image: "avatars/07-tudo-ou-nada.png",
+    immersionKey: "avatar.tudoounada.immersion",
   },
   {
     id: "doidao",
@@ -74,6 +84,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#a78bfa",
     descriptionKey: "avatar.doidao.desc",
     image: "avatars/08-doidao.png",
+    immersionKey: "avatar.doidao.immersion",
   },
   {
     id: "ceifador",
@@ -81,6 +92,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#1a1a1a",
     descriptionKey: "avatar.ceifador.desc",
     image: "avatars/09-ceifador.png",
+    immersionKey: "avatar.ceifador.immersion",
   },
   {
     id: "iniciante",
@@ -88,6 +100,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#ff6b9d",
     descriptionKey: "avatar.iniciante.desc",
     image: "avatars/10-iniciante.png",
+    immersionKey: "avatar.iniciante.immersion",
   },
   {
     id: "veterano",
@@ -95,6 +108,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#c9a96e",
     descriptionKey: "avatar.veterano.desc",
     image: "avatars/11-veterano.png",
+    immersionKey: "avatar.veterano.immersion",
   },
   {
     id: "blefadora",
@@ -102,6 +116,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#e8b4d9",
     descriptionKey: "avatar.blefadora.desc",
     image: "avatars/12-blefadora.png",
+    immersionKey: "avatar.blefadora.immersion",
   },
   {
     id: "estrategista",
@@ -109,6 +124,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#d4af37",
     descriptionKey: "avatar.estrategista.desc",
     image: "avatars/13-estrategista.png",
+    immersionKey: "avatar.estrategista.immersion",
   },
   {
     id: "rainha",
@@ -116,6 +132,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#c084fc",
     descriptionKey: "avatar.rainha.desc",
     image: "avatars/14-rainha.png",
+    immersionKey: "avatar.rainha.immersion",
   },
   {
     id: "silencioso",
@@ -123,6 +140,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#78716c",
     descriptionKey: "avatar.silencioso.desc",
     image: "avatars/15-silencioso.png",
+    immersionKey: "avatar.silencioso.immersion",
   },
   {
     id: "acelerador",
@@ -130,6 +148,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#ef4444",
     descriptionKey: "avatar.acelerador.desc",
     image: "avatars/16-acelerador.png",
+    immersionKey: "avatar.acelerador.immersion",
   },
   {
     id: "matematica",
@@ -137,6 +156,7 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#38bdf8",
     descriptionKey: "avatar.matematica.desc",
     image: "avatars/17-matematica.png",
+    immersionKey: "avatar.matematica.immersion",
   },
   {
     id: "lendario",
@@ -144,11 +164,22 @@ export const HERO_AVATARS: AvatarType[] = [
     color: "#a16207",
     descriptionKey: "avatar.lendario.desc",
     image: "avatars/18-lendario.png",
+    immersionKey: "avatar.lendario.immersion",
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Storage keys
+// ---------------------------------------------------------------------------
 const STORAGE_KEY = "cof-hero-avatar";
+const FIRST_OPEN_KEY = "cof-first-open"; // marca se já escolheu na primeira vez
+const LAST_SWAP_KEY = "cof-last-avatar-swap"; // timestamp da última troca
 
+const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 1 semana
+
+// ---------------------------------------------------------------------------
+// Funções de acesso
+// ---------------------------------------------------------------------------
 export function getHeroAvatar(): string {
   try {
     return localStorage.getItem(STORAGE_KEY) || "casual";
@@ -160,9 +191,7 @@ export function getHeroAvatar(): string {
 export function setHeroAvatar(id: string): void {
   try {
     localStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    // ignora
-  }
+  } catch { /* ignora */ }
 }
 
 export function getHeroAvatarData(): AvatarType {
@@ -170,17 +199,197 @@ export function getHeroAvatarData(): AvatarType {
   return HERO_AVATARS.find((a) => a.id === id) || HERO_AVATARS[0];
 }
 
+export function isFirstOpen(): boolean {
+  try {
+    return !localStorage.getItem(FIRST_OPEN_KEY);
+  } catch {
+    return true;
+  }
+}
+
+export function markFirstOpen(): void {
+  try {
+    localStorage.setItem(FIRST_OPEN_KEY, Date.now().toString());
+  } catch { /* ignora */ }
+}
+
+export function getLastSwapTimestamp(): number {
+  try {
+    return parseInt(localStorage.getItem(LAST_SWAP_KEY) || "0", 10);
+  } catch {
+    return 0;
+  }
+}
+
+export function setLastSwapTimestamp(): void {
+  try {
+    localStorage.setItem(LAST_SWAP_KEY, Date.now().toString());
+  } catch { /* ignora */ }
+}
+
+export function canSwapAvatar(): { allowed: boolean; remainingMs: number } {
+  const lastSwap = getLastSwapTimestamp();
+  const now = Date.now();
+  const remaining = Math.max(0, COOLDOWN_MS - (now - lastSwap));
+  return { allowed: remaining === 0, remainingMs: remaining };
+}
+
+export function formatCooldown(remainingMs: number): string {
+  const totalSec = Math.ceil(remainingMs / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
 // ---------------------------------------------------------------------------
-// Modal de seleção de avatar — rostos reais com borda colorida
+// Tela de ONBOARDING — primeira vez que abre o app
+// ---------------------------------------------------------------------------
+export function OnboardingScreen({ onDone }: { onDone: () => void }) {
+  const { t } = useT();
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showImmersion, setShowImmersion] = useState(false);
+  const [selectedAvatarData, setSelectedAvatarData] = useState<AvatarType | null>(null);
+
+  const handleConfirm = useCallback(() => {
+    if (!selected) return;
+    const avatar = HERO_AVATARS.find((a) => a.id === selected);
+    if (!avatar) return;
+    setHeroAvatar(selected);
+    markFirstOpen();
+    setLastSwapTimestamp();
+    setSelectedAvatarData(avatar);
+    setShowImmersion(true);
+  }, [selected]);
+
+  // Tela de imersão após escolher
+  if (showImmersion && selectedAvatarData) {
+    return (
+      <div className="onboarding-overlay" onClick={onDone}>
+        <div className="immersion-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="immersion-avatar"
+            style={{
+              borderColor: selectedAvatarData.color,
+              boxShadow: `0 0 24px ${selectedAvatarData.color}55, 0 0 60px ${selectedAvatarData.color}22`,
+            }}
+          >
+            <img src={selectedAvatarData.image} alt="" className="immersion-avatar-img" />
+          </div>
+          <div className="immersion-name" style={{ color: selectedAvatarData.color }}>
+            {t(selectedAvatarData.nameKey as TransKey)}
+          </div>
+          <div className="immersion-quote">
+            "{t(selectedAvatarData.immersionKey as TransKey)}"
+          </div>
+          <button className="btn primary immersion-enter" onClick={onDone}>
+            {t("onboarding.enter")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela de seleção de máscara
+  return (
+    <div className="onboarding-overlay">
+      <div className="onboarding-content" onClick={(e) => e.stopPropagation()}>
+        <div className="onboarding-brand">
+          <div className="onboarding-spade">♠</div>
+          <h1 className="onboarding-title">{t("onboarding.title")}</h1>
+        </div>
+        <p className="onboarding-subtitle">{t("onboarding.subtitle")}</p>
+        <p className="onboarding-mask-phrase">"{t("avatar.maskPhrase")}"</p>
+
+        <div className="onboarding-grid">
+          {HERO_AVATARS.map((avatar) => {
+            const isSelected = selected === avatar.id;
+            return (
+              <button
+                key={avatar.id}
+                className={`onboarding-card ${isSelected ? "selected" : ""}`}
+                style={
+                  isSelected
+                    ? {
+                        borderColor: avatar.color,
+                        boxShadow: `0 0 16px ${avatar.color}55`,
+                      }
+                    : {}
+                }
+                onClick={() => setSelected(avatar.id)}
+              >
+                <img src={avatar.image} alt="" className="onboarding-card-img" loading="lazy" />
+                <div className="onboarding-card-label" style={{ color: isSelected ? avatar.color : undefined }}>
+                  {t(avatar.nameKey as TransKey)}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          className="btn primary onboarding-confirm"
+          disabled={!selected}
+          onClick={handleConfirm}
+        >
+          {selected ? t("onboarding.confirm") : t("onboarding.select")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Modal de seleção de avatar (reutilizável na aba Missão)
 // ---------------------------------------------------------------------------
 export function AvatarSelector({ onClose }: { onClose: () => void }) {
   const { t } = useT();
   const [selected, setSelected] = useState(getHeroAvatar());
+  const [showImmersion, setShowImmersion] = useState(false);
+  const [selectedAvatarData, setSelectedAvatarData] = useState<AvatarType | null>(null);
+  const cooldown = canSwapAvatar();
 
   const handleConfirm = () => {
     setHeroAvatar(selected);
-    onClose();
+    setLastSwapTimestamp();
+    const avatar = HERO_AVATARS.find((a) => a.id === selected);
+    if (avatar) {
+      setSelectedAvatarData(avatar);
+      setShowImmersion(true);
+    } else {
+      onClose();
+    }
   };
+
+  // Imersão após trocar
+  if (showImmersion && selectedAvatarData) {
+    return (
+      <div className="onboarding-overlay" onClick={onClose}>
+        <div className="immersion-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="immersion-avatar"
+            style={{
+              borderColor: selectedAvatarData.color,
+              boxShadow: `0 0 24px ${selectedAvatarData.color}55, 0 0 60px ${selectedAvatarData.color}22`,
+            }}
+          >
+            <img src={selectedAvatarData.image} alt="" className="immersion-avatar-img" />
+          </div>
+          <div className="immersion-name" style={{ color: selectedAvatarData.color }}>
+            {t(selectedAvatarData.nameKey as TransKey)}
+          </div>
+          <div className="immersion-quote">
+            "{t(selectedAvatarData.immersionKey as TransKey)}"
+          </div>
+          <button className="btn primary immersion-enter" onClick={onClose}>
+            {t("onboarding.continue")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="avatar-overlay" onClick={onClose}>
@@ -188,6 +397,14 @@ export function AvatarSelector({ onClose }: { onClose: () => void }) {
         <h3 className="avatar-title">♠ {t("avatar.title")}</h3>
         <p className="avatar-subtitle">{t("avatar.subtitle")}</p>
         <p className="avatar-mask-phrase">"{t("avatar.maskPhrase")}"</p>
+
+        {/* Cooldown indicator */}
+        {!cooldown.allowed && cooldown.remainingMs > 0 && (
+          <div className="avatar-cooldown">
+            <span className="cooldown-icon">⏳</span>
+            {t("avatar.cooldown", { time: formatCooldown(cooldown.remainingMs) })}
+          </div>
+        )}
 
         <div className="avatar-grid-real">
           {HERO_AVATARS.map((avatar) => {
@@ -206,12 +423,7 @@ export function AvatarSelector({ onClose }: { onClose: () => void }) {
                 }
                 onClick={() => setSelected(avatar.id)}
               >
-                <img
-                  src={avatar.image}
-                  alt=""
-                  className="avatar-real-img"
-                  loading="lazy"
-                />
+                <img src={avatar.image} alt="" className="avatar-real-img" loading="lazy" />
                 <div className="avatar-real-label" style={{ color: isSelected ? avatar.color : undefined }}>
                   {t(avatar.nameKey as TransKey)}
                 </div>

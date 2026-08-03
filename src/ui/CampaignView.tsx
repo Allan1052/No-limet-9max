@@ -10,7 +10,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
-import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
+import { AvatarSelector, getHeroAvatarData, canSwapAvatar, formatCooldown } from "./AvatarSelector";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
@@ -379,10 +379,15 @@ export function CampaignView() {
           <span className="mp-label">{t("mission.progress", { done: stats.done, total: stats.total })}</span>
         </div>
 
-        {/* Botão de avatar */}
+        {/* Botão de avatar com cooldown */}
         <button className="btn avatar-picker-btn" onClick={() => setShowAvatar(true)}>
           <img src={heroAvatar.image} alt="" className="avatar-picker-img" />
           {t("avatar.button")}
+          {!canSwapAvatar().allowed && (
+            <span className="avatar-cooldown-badge">
+              ⏳ {formatCooldown(canSwapAvatar().remainingMs)}
+            </span>
+          )}
         </button>
 
         {/* Estágios como cards de duelo */}
