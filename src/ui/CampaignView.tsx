@@ -10,7 +10,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
-import { AvatarSelector, HeroSilhouette, HERO_AVATARS, getHeroAvatar } from "./AvatarSelector";
+import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
@@ -181,8 +181,7 @@ export function CampaignView() {
     const prevResults = progress.best[stage.id];
     const taunt = PRE_MATCH_TAUNTS[Math.floor(Math.random() * PRE_MATCH_TAUNTS.length)];
     const streakAlert = prevResults != null && prevResults < stage.passNeeded;
-    const heroAvatarId = getHeroAvatar();
-    const heroAvatar = HERO_AVATARS.find((a) => a.id === heroAvatarId) || HERO_AVATARS[0];
+    const heroAvatar = getHeroAvatarData();
 
     return (
       <div className="train-view">
@@ -198,7 +197,7 @@ export function CampaignView() {
             <div className="confirm-arena">
               <div className="confirm-side hero-side">
                 <div className="confirm-avatar hero-avatar" style={{ borderColor: heroAvatar.color, boxShadow: `0 0 16px ${heroAvatar.color}44` }}>
-                  <HeroSilhouette size={48} color={heroAvatar.color} />
+                  <img src={heroAvatar.image} alt="" className="confirm-hero-img" />
                 </div>
                 <div className="confirm-name">{t(heroAvatar.nameKey as TransKey)}</div>
                 <div className="confirm-detail">Posição {stage.heroPosition}</div>
@@ -363,8 +362,7 @@ export function CampaignView() {
   // ---------------------------------------------------------------------------
   // MAPA DE ESTÁGIOS — ARENA DE DUELO (visual cinematográfico)
   // ---------------------------------------------------------------------------
-  const heroAvatarId = getHeroAvatar();
-  const heroAvatar = HERO_AVATARS.find((a) => a.id === heroAvatarId) || HERO_AVATARS[0];
+  const heroAvatar = getHeroAvatarData();
   return (
     <div className="train-view">
       <div className="panel mission-panel">
@@ -383,7 +381,7 @@ export function CampaignView() {
 
         {/* Botão de avatar */}
         <button className="btn avatar-picker-btn" onClick={() => setShowAvatar(true)}>
-          <HeroSilhouette size={28} color={heroAvatar.color} />
+          <img src={heroAvatar.image} alt="" className="avatar-picker-img" />
           {t("avatar.button")}
         </button>
 

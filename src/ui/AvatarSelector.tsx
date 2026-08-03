@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
-// AvatarSelector — o jogador escolhe sua silhueta para a arena de duelo.
-// Avatares sombreados (sem rosto) consistentes com a marca.
+// AvatarSelector — o jogador escolhe seu rosto para a arena de duelo.
+// Avatares fotorrealistas com iluminação cinematográfica.
 // Persistido em localStorage.
 // ---------------------------------------------------------------------------
 import { useState } from "react";
@@ -8,58 +8,100 @@ import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 
 // ---------------------------------------------------------------------------
-// Tipos de avatar — cada um é uma silhueta diferente (sem rosto)
+// Tipos de avatar — rostos fotorrealistas
 // ---------------------------------------------------------------------------
 export interface AvatarType {
   id: string;
   nameKey: string; // key de tradução
-  icon: string; // emoji representativo
-  color: string; // cor de destaque
+  color: string; // cor de destaque (borda)
   descriptionKey: string;
+  image: string; // caminho da imagem
 }
 
 export const HERO_AVATARS: AvatarType[] = [
   {
-    id: "strategist",
-    nameKey: "avatar.strategist.name",
-    icon: "♟️",
+    id: "casual",
+    nameKey: "avatar.casual.name",
     color: "#d4af37",
-    descriptionKey: "avatar.strategist.desc",
+    descriptionKey: "avatar.casual.desc",
+    image: "avatars/01-casual.png",
   },
   {
-    id: "aggressor",
-    nameKey: "avatar.aggressor.name",
-    icon: "⚔️",
+    id: "paga-tudo",
+    nameKey: "avatar.pagatudo.name",
     color: "#e0645f",
-    descriptionKey: "avatar.aggressor.desc",
+    descriptionKey: "avatar.pagatudo.desc",
+    image: "avatars/02-paga-tudo.png",
   },
   {
-    id: "patient",
-    nameKey: "avatar.patient.name",
-    icon: "🎯",
+    id: "muralha",
+    nameKey: "avatar.muralha.name",
+    color: "#8b8d8f",
+    descriptionKey: "avatar.muralha.desc",
+    image: "avatars/03-muralha.png",
+  },
+  {
+    id: "certinho",
+    nameKey: "avatar.certinho.name",
     color: "#5cbe8d",
-    descriptionKey: "avatar.patient.desc",
+    descriptionKey: "avatar.certinho.desc",
+    image: "avatars/04-certinho.png",
   },
   {
-    id: "dreamer",
-    nameKey: "avatar.dreamer.name",
-    icon: "🌟",
+    id: "cartilha",
+    nameKey: "avatar.cartilha.name",
     color: "#7cc0ff",
-    descriptionKey: "avatar.dreamer.desc",
+    descriptionKey: "avatar.cartilha.desc",
+    image: "avatars/05-cartilha.png",
   },
   {
-    id: "ghost",
-    nameKey: "avatar.ghost.name",
-    icon: "👻",
-    color: "#a78bfa",
-    descriptionKey: "avatar.ghost.desc",
+    id: "furacao",
+    nameKey: "avatar.furacao.name",
+    color: "#ff4444",
+    descriptionKey: "avatar.furacao.desc",
+    image: "avatars/06-furacao.png",
   },
   {
-    id: "warrior",
-    nameKey: "avatar.warrior.name",
-    icon: "🛡️",
+    id: "tudo-ou-nada",
+    nameKey: "avatar.tudoounada.name",
     color: "#f59e0b",
-    descriptionKey: "avatar.warrior.desc",
+    descriptionKey: "avatar.tudoounada.desc",
+    image: "avatars/07-tudo-ou-nada.png",
+  },
+  {
+    id: "doidao",
+    nameKey: "avatar.doidao.name",
+    color: "#a78bfa",
+    descriptionKey: "avatar.doidao.desc",
+    image: "avatars/08-doidao.png",
+  },
+  {
+    id: "ceifador",
+    nameKey: "avatar.ceifador.name",
+    color: "#1a1a1a",
+    descriptionKey: "avatar.ceifador.desc",
+    image: "avatars/09-ceifador.png",
+  },
+  {
+    id: "iniciante",
+    nameKey: "avatar.iniciante.name",
+    color: "#ff6b9d",
+    descriptionKey: "avatar.iniciante.desc",
+    image: "avatars/10-iniciante.png",
+  },
+  {
+    id: "veterano",
+    nameKey: "avatar.veterano.name",
+    color: "#c9a96e",
+    descriptionKey: "avatar.veterano.desc",
+    image: "avatars/11-veterano.png",
+  },
+  {
+    id: "blefadora",
+    nameKey: "avatar.blefadora.name",
+    color: "#e8b4d9",
+    descriptionKey: "avatar.blefadora.desc",
+    image: "avatars/12-blefadora.png",
   },
 ];
 
@@ -67,9 +109,9 @@ const STORAGE_KEY = "cof-hero-avatar";
 
 export function getHeroAvatar(): string {
   try {
-    return localStorage.getItem(STORAGE_KEY) || "strategist";
+    return localStorage.getItem(STORAGE_KEY) || "casual";
   } catch {
-    return "strategist";
+    return "casual";
   }
 }
 
@@ -81,44 +123,13 @@ export function setHeroAvatar(id: string): void {
   }
 }
 
-// Silhueta SVG do jogador (sem rosto)
-function HeroSilhouette({ size = 48, color = "#d4af37" }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden focusable="false">
-      <defs>
-        <linearGradient id={`heroGrad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={color} stopOpacity="0.9" />
-          <stop offset="1" stopColor="#0b0d11" stopOpacity="1" />
-        </linearGradient>
-      </defs>
-      {/* Corpo/silhueta */}
-      <path
-        d="M50 8C32 8 22 22 22 48c0 26 12 48 28 48s28-22 28-48C78 22 68 8 50 8Z"
-        fill={`url(#heroGrad-${color.replace('#', '')})`}
-        stroke={color}
-        strokeWidth="1.5"
-        strokeOpacity="0.6"
-      />
-      {/* Sombra do rosto (encapuzado) */}
-      <ellipse cx="50" cy="52" rx="20" ry="26" fill="#1a1d22" />
-      <path d="M30 48C30 30 38 20 50 20s20 10 20 28Z" fill="#0c0e12" opacity="0.95" />
-      {/* Olhos sombreados */}
-      <g fill="#0a0b0d" opacity="0.8">
-        <rect x="34" y="46" width="14" height="10" rx="4" />
-        <rect x="52" y="46" width="14" height="10" rx="4" />
-        <rect x="45" y="49" width="10" height="3" rx="1.5" />
-      </g>
-      {/* Brilho nos olhos */}
-      <rect x="37" y="48" width="5" height="2.5" rx="1.2" fill={color} opacity="0.4" />
-      <rect x="58" y="48" width="5" height="2.5" rx="1.2" fill={color} opacity="0.4" />
-    </svg>
-  );
+export function getHeroAvatarData(): AvatarType {
+  const id = getHeroAvatar();
+  return HERO_AVATARS.find((a) => a.id === id) || HERO_AVATARS[0];
 }
 
-export { HeroSilhouette };
-
 // ---------------------------------------------------------------------------
-// Modal de seleção de avatar
+// Modal de seleção de avatar — rostos reais com borda colorida
 // ---------------------------------------------------------------------------
 export function AvatarSelector({ onClose }: { onClose: () => void }) {
   const { t } = useT();
@@ -134,19 +145,34 @@ export function AvatarSelector({ onClose }: { onClose: () => void }) {
       <div className="avatar-modal" onClick={(e) => e.stopPropagation()}>
         <h3 className="avatar-title">♠ {t("avatar.title")}</h3>
         <p className="avatar-subtitle">{t("avatar.subtitle")}</p>
+        <p className="avatar-mask-phrase">"{t("avatar.maskPhrase")}"</p>
 
-        <div className="avatar-grid">
+        <div className="avatar-grid-real">
           {HERO_AVATARS.map((avatar) => {
             const isSelected = selected === avatar.id;
             return (
               <button
                 key={avatar.id}
-                className={`avatar-card ${isSelected ? "selected" : ""}`}
+                className={`avatar-card-real ${isSelected ? "selected" : ""}`}
+                style={
+                  isSelected
+                    ? {
+                        borderColor: avatar.color,
+                        boxShadow: `0 0 16px ${avatar.color}55`,
+                      }
+                    : {}
+                }
                 onClick={() => setSelected(avatar.id)}
               >
-                <HeroSilhouette size={44} color={avatar.color} />
-                <span className="avatar-label">{t(avatar.nameKey as TransKey)}</span>
-                <span className="avatar-icon">{avatar.icon}</span>
+                <img
+                  src={avatar.image}
+                  alt=""
+                  className="avatar-real-img"
+                  loading="lazy"
+                />
+                <div className="avatar-real-label" style={{ color: isSelected ? avatar.color : undefined }}>
+                  {t(avatar.nameKey as TransKey)}
+                </div>
               </button>
             );
           })}

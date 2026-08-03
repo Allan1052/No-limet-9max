@@ -2898,3 +2898,96 @@ body {
   flex: 2;
   letter-spacing: 0.5px !important;
 }
+/* =========================================================================
+   AVATAR REAL — rostos fotorrealistas (grid com imagens)
+   ========================================================================= */
+
+.avatar-mask-phrase {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--gold-soft);
+  line-height: 1.5;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  background: rgba(212, 175, 55, 0.04);
+  border-radius: 0 8px 8px 0;
+  letter-spacing: 0.3px;
+}
+
+.avatar-grid-real {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.avatar-card-real {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: linear-gradient(180deg, #171b10, #0d100a);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+.avatar-card-real:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.avatar-card-real.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.35);
+  background: linear-gradient(180deg, #1e2215, #12150d);
+}
+
+.avatar-real-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  filter: brightness(0.92) contrast(1.05);
+  transition: filter 0.25s ease;
+}
+.avatar-card-real:hover .avatar-real-img {
+  filter: brightness(1) contrast(1.08);
+}
+.avatar-card-real.selected .avatar-real-img {
+  filter: brightness(1) contrast(1.1);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.avatar-real-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-align: center;
+  line-height: 1.2;
+  padding-top: 2px;
+}
+/* Botão de avatar na barra de progresso */
+.avatar-picker-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold-dim);
+}
+
+/* Imagem do herói na tela de confirmação */
+.confirm-hero-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
