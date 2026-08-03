@@ -1,10 +1,9 @@
 // ---------------------------------------------------------------------------
-// Hook de áudio para a missão 1×1 — toca sons de tensão ao entrar,
-// sons curtos por decisão (acerto/erro), e sons de vitória/derrota ao
-// concluir um duelo. Usa Web Audio API (sem arquivos externos) para
-// sons curtos de feedback e MP3 do public/ para sons mais longos.
+// Hook de áudio para a missão 1×1 — música ambiente com loop contínuo
+// enquanto o jogador está na tela da missão, sons curtos por decisão
+// (acerto/erro), e sons de vitória/derrota ao concluir um duelo.
 // ---------------------------------------------------------------------------
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 
 function getBasePath(): string {
   const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
@@ -20,7 +19,6 @@ function getBasePath(): string {
 function playCorrectSound(): void {
   try {
     const ctx = new AudioContext();
-    // Dois tons curtos e brilhantes
     const freqs = [880, 1320]; // A5, E6
     freqs.forEach((f, i) => {
       const osc = ctx.createOscillator();
@@ -59,7 +57,7 @@ function playWrongSound(): void {
   }
 }
 
-// ---- SOM DE TENSÃO (entrada na missão) ----
+// ---- SOM DE TENSÃO (sting ao clicar no duelo) ----
 function playTensionSting(): void {
   try {
     const ctx = new AudioContext();
@@ -133,6 +131,7 @@ function playDefeatSting(): void {
 }
 
 export function useDuelSound() {
+  const loopRef = useRef<HTMLAudioElement | null>(null);
   const audioEntryRef = useRef<HTMLAudioElement | null>(null);
   const audioWinRef = useRef<HTMLAudioElement | null>(null);
   const audioLoseRef = useRef<HTMLAudioElement | null>(null);
@@ -153,7 +152,44 @@ export function useDuelSound() {
     }
   }, [basePath]);
 
+  // Loop ambiente — toca enquanto está na missão
+  const startLoop = useCallback(() => {
+    if (loopRef.current) {
+      loopRef.current.play().catch(() => {
+        // fallback silencioso
+      });
+      return;
+    }
+    try {
+      const audio = new Audio(`${basePath}mission-loop.mp3`);
+      audio.loop = true;
+      audio.volume = 0.25;
+      audio.play().catch(() => {
+        // fallback silencioso
+      });
+      loopRef.current = audio;
+    } catch {
+      // silencioso
+    }
+  }, [basePath]);
+
+  const stopLoop = useCallback(() => {
+    if (loopRef.current) {
+      loopRef.current.pause();
+      loopRef.current.currentTime = 0;
+      loopRef.current = null;
+    }
+  }, []);
+
+  // Limpa o loop quando o componente desmonta
+  useEffect(() => {
+    return () => {
+      stopLoop();
+    };
+  }, [stopLoop]);
+
   const playEntry = useCallback(() => {
+    // Sting rápido ao clicar no duelo
     loadAudios();
     if (audioEntryRef.current) {
       audioEntryRef.current.currentTime = 0;
@@ -197,5 +233,5 @@ export function useDuelSound() {
     }
   }, [loadAudios]);
 
-  return { playEntry, playCorrect, playWrong, playVictory, playDefeat };
+  return { playEntry, playCorrect, playWrong, playVictory, playDefeat, startLoop, stopLoop };
 }

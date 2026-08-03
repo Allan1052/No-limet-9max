@@ -76,7 +76,7 @@ function getRivalInfo(position?: string): { name: string; title: string } {
 // ---------------------------------------------------------------------------
 export function CampaignView() {
   const { t } = useT();
-  const { playEntry, playCorrect, playWrong, playVictory, playDefeat } = useDuelSound();
+  const { playCorrect, playWrong, playVictory, playDefeat, startLoop, stopLoop } = useDuelSound();
   const [progress, setProgress] = useState<CampaignProgress>(loadCampaign);
   const [stageIdx, setStageIdx] = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -92,9 +92,10 @@ export function CampaignView() {
 
   const stats = campaignStats(progress);
 
-  // Entrar na aba missão — toca música de tensão
+  // Loop ambiente — toca enquanto está na missão
   useEffect(() => {
-    playEntry();
+    startLoop();
+    return () => { stopLoop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
