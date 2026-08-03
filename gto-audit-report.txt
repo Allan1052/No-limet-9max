@@ -1,0 +1,81 @@
+
+  UTG RFI: App=15% GTO=15% diff=0.2%
+    ✅ OK
+
+  UTG1 RFI: App=17% GTO=15% diff=2.2%
+    ✅ OK
+
+  MP RFI: App=20% GTO=18% diff=2.1%
+    ✅ OK
+
+  LJ RFI: App=24% GTO=21% diff=2.7%
+    ✅ OK
+
+  HJ RFI: App=27% GTO=26% diff=1.2%
+    ✅ OK
+
+  CO RFI: App=34% GTO=31% diff=3.3%
+    ⚠️ DIVERGÊNCIA
+
+  BTN RFI: App=51% GTO=48% diff=2.9%
+    ✅ OK
+
+  SB RFI: App=49% GTO=44% diff=4.5%
+    ⚠️ DIVERGÊNCIA
+
+  SB vs BTN: App=20% GTO=52%
+
+  SB vs CO: App=18% GTO=42%
+
+  SB vs LJ: App=16% GTO=30%
+
+  SB vs HJ: App=17% GTO=24%
+
+  BB vs BTN: App=48% GTO=42%
+
+  BB vs CO: App=40% GTO=32%
+
+  BB vs LJ: App=28% GTO=22%
+
+  BB vs HJ: App=33% GTO=18%
+
+  BB vs MP: App=24% GTO=14%
+
+  BTN 10bb shove: 86 mãos (51%)
+  GTO referência: ~35-40%
+  Top: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55
+
+  UTG 10bb shove: 25 mãos (15%)
+  GTO referência: ~15-18%
+  Top: AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AKo
+
+  SB 3-bet: 8.739999999999998bb (3bet)
+  BTN 3-bet: 6.8999999999999995bb (3bet)
+  GTO referência: SB ~8.5bb, BTN ~7bb
+
+
+========== RANGE GRIDS RFI ==========
+
+  UTG: 25 mãos (15%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, AKs, AKo, AQs, AQo, AJs, AJo, ATs, A9s, A8s, A7s, A5s, KQs, KQo, KJs, KTs, QJs, QTs
+
+  UTG1: 29 mãos (17%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, AKs, AKo, AQs, AQo, AJs, AJo, ATs, A9s, A8s, A7s, A5s, A3s, KQs, KQo, KJs, KJo, KTs, K9s, QJs, QTs
+
+  MP: 34 mãos (20%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KQo, KJs, KJo, KTs, K9s, QJs, QTs, JTs
+
+  LJ: 40 mãos (24%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A9o, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KQo, KJs, KJo, KTs, KTo, K9s, K8s, K7s, QJs, QTs, Q9s, JTs
+
+  HJ: 46 mãos (27%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A9o, A8s, A8o, A7s, A7o, A6s, A6o, A5s, A4s, A3s, A2s, KQs, KQo, KJs, KJo, KTs, KTo, K9s, K8s, K7s, K6s, QJs, QJo, QTs, Q9s, JTs, J9s
+
+  CO: 58 mãos (34%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A9o, A8s, A8o, A7s, A7o, A6s, A6o, A5s, A4s, A4o, A3s, A2s, KQs, KQo, KJs, KJo, KTs, KTo, K9s, K8s, K7s, K6s, K5s, K4s, K3s, QJs, QJo, QTs, QTo, Q9s, Q8s, Q7s, Q6s, JTs, JTo, J9s, J8s, T9s
+
+  BTN: 86 mãos (51%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A9o, A8s, A8o, A7s, A7o, A6s, A6o, A5s, A5o, A4s, A4o, A3s, A3o, A2s, A2o, KQs, KQo, KJs, KJo, KTs, KTo, K9s, K9o, K8s, K8o, K7s, K7o, K6s, K6o, K5s, K5o, K4s, K3s, K2s, QJs, QJo, QTs, QTo, Q9s, Q9o, Q8s, Q8o, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, JTo, J9s, J9o, J8s, J8o, J7s, J6s, J5s, J4s, T9s, T9o, T8s, T8o, T7s, 98s, 97s, 87s
+
+  SB: 82 mãos (49%)
+    Mãos: AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, A9s, A9o, A8s, A8o, A7s, A7o, A6s, A6o, A5s, A5o, A4s, A4o, A3s, A3o, A2s, A2o, KQs, KQo, KJs, KJo, KTs, KTo, K9s, K9o, K8s, K8o, K7s, K7o, K6s, K6o, K5s, K5o, K4s, K3s, K2s, QJs, QJo, QTs, QTo, Q9s, Q9o, Q8s, Q8o, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, JTs, JTo, J9s, J9o, J8s, J7s, J6s, J5s, J4s, T9s, T8s, T7s, 98s, 87s

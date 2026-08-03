@@ -98,15 +98,16 @@ interface FacingParams {
 }
 
 // Defesa do BIG BLIND por posição do abridor (fecha a ação, melhores odds).
+// Ajustado para evitar defender lixo vs early positions (HJ, MP).
 const BB_DEFEND: Partial<Record<Position, { defend: number; v3b: number }>> = {
-  UTG: { defend: 0.16, v3b: 0.045 },
-  UTG1: { defend: 0.17, v3b: 0.05 },
-  MP: { defend: 0.19, v3b: 0.05 },
-  LJ: { defend: 0.22, v3b: 0.055 },
-  HJ: { defend: 0.26, v3b: 0.06 },
-  CO: { defend: 0.32, v3b: 0.07 },
-  BTN: { defend: 0.42, v3b: 0.08 },
-  SB: { defend: 0.5, v3b: 0.09 },
+  UTG: { defend: 0.14, v3b: 0.04 },
+  UTG1: { defend: 0.15, v3b: 0.045 },
+  MP: { defend: 0.16, v3b: 0.05 },
+  LJ: { defend: 0.20, v3b: 0.055 },
+  HJ: { defend: 0.24, v3b: 0.06 },
+  CO: { defend: 0.30, v3b: 0.07 },
+  BTN: { defend: 0.38, v3b: 0.08 },
+  SB: { defend: 0.44, v3b: 0.09 },
 };
 
 function facingRaiseParams(hero: Position, raiser: Position): FacingParams {
@@ -129,9 +130,9 @@ function facingRaiseParams(hero: Position, raiser: Position): FacingParams {
   if (hero === "SB") {
     // SB defende mais largo: já tem 0.5bb invested, só precisa completar 1bb.
     // Valor 3-bet: AKo+, AQs+, KQs, TT+ sempre 3-betam. Blefe: Axs, K9s+, suited connectors.
-    const value3betPct = 0.07 + 0.04 * raiserWide; // vs LJ=18%: ~7.7%
-    const flatPct = 0.04 + 0.06 * raiserWide; // flat com mãos suited/medium pairs
-    const defendPct = value3betPct + flatPct;
+    const value3betPct = 0.08 + 0.05 * raiserWide; // vs BTN=45%: ~10.3%
+    const flatPct = 0.05 + 0.08 * raiserWide; // flat com mãos suited/medium pairs
+    const defendPct = value3betPct + flatPct; // vs BTN: ~4.1%
     return {
       defendPct,
       value3betPct,
@@ -294,9 +295,10 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       });
       const openPct = rangePercent(range);
       
-      // Threshold mínimo: a mão precisa ter freq >= 0.1 (10%) para abrir.
-      // Isso elimina "borderline" absurdas (ex: QJo em UTG com freq 0.01).
-      const RFI_MIN_FREQ = 0.1;
+      // Threshold mínimo: a mão precisa ter freq >= 0.15 (15%) para abrir.
+      // Isso elimina "borderline" absurdas (ex: KQo em UTG com freq 0.01, QJo com freq 0.02).
+      // Mas não elimina mãos marginais válidas como 65s no BTN (freq ~0.30).
+      const RFI_MIN_FREQ = 0.15;
       
       if (freqIn(range, handType) >= RFI_MIN_FREQ) {
         // Dentro do range → abre (raise ou jam)
@@ -427,18 +429,52 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const callsOutOfPosition = ctx.profile.coldCallFactor >= 1.5;
 
     const openSize = ctx.openSizeBB ?? 2.3;
-    const threeBetSize = p.inPosition ? openSize * 3 : openSize * 3.8;
+    // 3-bet size: OOP (SB, CO, HJ, LJ) devolve maior (~3.8x). IP (BTN) devolve menor (~3x).
+    // SB precisa do maior porque está sem posição pós-flop.
+    // BTN 3-bet pode ser menor porque tem posição e pode jogar melhor pós-flop.
+    const threeBetSize = ctx.heroPosition === "BTN"
+      ? openSize * 3.0
+      : ctx.heroPosition === "CO"
+        ? openSize * 3.5
+        : openSize * 3.8;
 
-    // Override: mãos premium (AA, KK, QQ, AKo, AKs, AQs) SEMPRE 3-betam do SB,
-    // mesmo em spot profundo, porque foldar AKo OOP é erro conceitual grave.
-    const SB_PREMIUM_3BET = ["AA", "KK", "QQ", "AKo", "AKs", "AQs"];
-    if (ctx.heroPosition === "SB" && SB_PREMIUM_3BET.includes(handType)) {
+    // Overrides: mãos premium SEMPRE 3-betam, independente da posição OOP.
+    // Isso é poker fundamental — AKo+ nunca é fold OOP contra raiser.
+    const PREMIUM_3BET = ["AA", "KK", "QQ", "AKo", "AKs", "AQs"];
+    const EXTENDED_3BET = [...PREMIUM_3BET, "AQo", "KQs", "JJ", "TT"];
+
+    // SB premium: AA, KK, QQ, AKo, AKs, AQs, AQo, KQs, JJ, TT
+    if (ctx.heroPosition === "SB" && EXTENDED_3BET.includes(handType)) {
       return {
         action: sd.pushFold ? "jam" : "3bet",
         sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
         reason: `${handType}: 3-bet obrigatório do SB — mão premium, nunca foldar aqui.`,
         handType,
-        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.09), handType, "call"),
+        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.10), handType, "call"),
+      };
+    }
+
+    // BB premium: AA, KK, QQ, AKo, AKs, AQs, AQo, KQs, JJ, TT, 99, A5s, A4s
+    const BB_PREMIUM_3BET = [...EXTENDED_3BET, "99", "88", "A5s", "A4s", "A3s", "K9s"];
+    if (ctx.heroPosition === "BB" && BB_PREMIUM_3BET.includes(handType)) {
+      return {
+        action: sd.pushFold ? "jam" : "3bet",
+        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
+        reason: `${handType}: 3-bet obrigatório do BB — mão premium, nunca foldar aqui.`,
+        handType,
+        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.08), handType, "call"),
+      };
+    }
+
+    // CO 3-bet vs BTN: AA, KK, QQ, AKo, AKs, AQs, JJ, TT
+    const CO_3BET = ["AA", "KK", "QQ", "AKo", "AKs", "AQs", "JJ", "TT"];
+    if (ctx.heroPosition === "CO" && ctx.raiserPosition === "BTN" && CO_3BET.includes(handType)) {
+      return {
+        action: sd.pushFold ? "jam" : "3bet",
+        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
+        reason: `${handType}: 3-bet obrigatório do CO vs BTN — mão premium.`,
+        handType,
+        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.10), handType, "call"),
       };
     }
 
