@@ -1,11 +1,20 @@
 // ---------------------------------------------------------------------------
 // MISSÃO 1×1 — campanha de posições.
 //
-// O jogador começa no BOTÃO e, estágio a estágio, domina cada posição da mesa,
-// enfrentando quem abriu antes dele. Passa de estágio com um CRITÉRIO de
-// aprovação (não precisa acertar tudo — poker tem jogada mista) e vai subindo:
-// poucas rodadas no começo, mais conforme avança. Ao concluir, pode marcar os
-// amigos. Reaproveita o mesmo motor de cenários do Ultra 1×1.
+// Estágios ordenados por DIFICULDADE REAL de poker pré-flop:
+//   1. BTN  (fácil — abre de botão, range largo)
+//   2. CO   (fácil — abre de CO, range largo)
+//   3. HJ   (médio — abre de HJ, range moderado)
+//   4. LJ   (médio — abre de LJ, range mais tight)
+//   5. MP   (médio — abre de MP, range tight)
+//   6. BB   (difícil — defender de BB é complexo, decisões de call/3bet/fold)
+//   7. SB   (muito difícil — posição mais difícil do poker, decisões OOP)
+//   8. UTG1 (difícil — abre de UTG1, range muito tight)
+//   9. UTG  (difícil — abre de UTG, range mais tight do jogo)
+//
+// CRITÉRIO DE APROVAÇÃO: no máximo 1 erro por estágio.
+// O jogador precisa de rounds - 1 acertos para passar.
+// Isso cria disputa real — cada mão importa.
 // ---------------------------------------------------------------------------
 
 import { POSITIONS, type Position } from "../ranges/types";
@@ -25,17 +34,21 @@ function before(pos: Position): Position[] {
   return POSITIONS.slice(0, POSITIONS.indexOf(pos)) as Position[];
 }
 
-// Ordem da campanha: do botão às blinds e fecha na abertura de UTG.
-const ORDER: Position[] = ["BTN", "CO", "HJ", "LJ", "MP", "UTG1", "SB", "BB", "UTG"];
+// Ordem por dificuldade real de poker pré-flop (mais fácil → mais difícil).
+// RFI é mais fácil que defender, e dentro de RFI, posições laterais são mais
+// fáceis que posições iniciais. SB/BB são as mais difíceis por serem OOP.
+const ORDER: Position[] = ["BTN", "CO", "HJ", "LJ", "MP", "BB", "SB", "UTG1", "UTG"];
 
 export const STAGES: Stage[] = ORDER.map((pos, i) => {
   const rounds = i < 3 ? 6 : i < 6 ? 8 : 10; // estágios crescentes
+  // CRITÉRIO DE 1 ERRO MÁXIMO: precisa de (rounds - 1) acertos.
+  // Ex: 6 rodadas → precisa de 5 certas. 8 rodadas → 7 certas. 10 rodadas → 9 certas.
   return {
     id: `s${i + 1}-${pos}`,
     heroPosition: pos,
     villainPool: before(pos),
     rounds,
-    passNeeded: Math.ceil(rounds * 0.75),
+    passNeeded: rounds - 1,
     stacks: [20, 40, 60, 100],
   };
 });

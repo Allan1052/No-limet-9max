@@ -123,8 +123,23 @@ function facingRaiseParams(hero: Position, raiser: Position): FacingParams {
   }
 
   // Fora do BB: spots de "3-bet ou fold", com algum flat só quando em posição.
-  // A largura acompanha o quão larga é a abertura do vilão.
+  // SB e BB são exceções — SB defende mais porque já tem 0.5bb invested.
   const raiserWide = RFI_BASE_PERCENT[raiser];
+  
+  if (hero === "SB") {
+    // SB defende mais largo: já tem 0.5bb invested, só precisa completar 1bb.
+    // Valor 3-bet: AKo+, AQs+, KQs, TT+ sempre 3-betam. Blefe: Axs, K9s+, suited connectors.
+    const value3betPct = 0.07 + 0.04 * raiserWide; // vs LJ=18%: ~7.7%
+    const flatPct = 0.04 + 0.06 * raiserWide; // flat com mãos suited/medium pairs
+    const defendPct = value3betPct + flatPct;
+    return {
+      defendPct,
+      value3betPct,
+      bluffExtraPct: value3betPct * 0.9,
+      inPosition: false, // SB fica OOP pós-flop
+    };
+  }
+  
   const value3betPct = 0.03 + 0.05 * raiserWide; // vs BTN mais valor, vs UTG menos
   const flat = inPosition ? 0.05 + 0.15 * raiserWide : 0.0; // flat só IP
   const defendPct = value3betPct + flat;
@@ -413,6 +428,19 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
 
     const openSize = ctx.openSizeBB ?? 2.3;
     const threeBetSize = p.inPosition ? openSize * 3 : openSize * 3.8;
+
+    // Override: mãos premium (AA, KK, QQ, AKo, AKs, AQs) SEMPRE 3-betam do SB,
+    // mesmo em spot profundo, porque foldar AKo OOP é erro conceitual grave.
+    const SB_PREMIUM_3BET = ["AA", "KK", "QQ", "AKo", "AKs", "AQs"];
+    if (ctx.heroPosition === "SB" && SB_PREMIUM_3BET.includes(handType)) {
+      return {
+        action: sd.pushFold ? "jam" : "3bet",
+        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
+        reason: `${handType}: 3-bet obrigatório do SB — mão premium, nunca foldar aqui.`,
+        handType,
+        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.09), handType, "call"),
+      };
+    }
 
     if (freqIn(value3betRange, handType) > 0) {
       const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
