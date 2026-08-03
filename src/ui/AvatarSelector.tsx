@@ -103,6 +103,48 @@ export const HERO_AVATARS: AvatarType[] = [
     descriptionKey: "avatar.blefadora.desc",
     image: "avatars/12-blefadora.png",
   },
+  {
+    id: "estrategista",
+    nameKey: "avatar.estrategista.name",
+    color: "#d4af37",
+    descriptionKey: "avatar.estrategista.desc",
+    image: "avatars/13-estrategista.png",
+  },
+  {
+    id: "rainha",
+    nameKey: "avatar.rainha.name",
+    color: "#c084fc",
+    descriptionKey: "avatar.rainha.desc",
+    image: "avatars/14-rainha.png",
+  },
+  {
+    id: "silencioso",
+    nameKey: "avatar.silencioso.name",
+    color: "#78716c",
+    descriptionKey: "avatar.silencioso.desc",
+    image: "avatars/15-silencioso.png",
+  },
+  {
+    id: "acelerador",
+    nameKey: "avatar.acelerador.name",
+    color: "#ef4444",
+    descriptionKey: "avatar.acelerador.desc",
+    image: "avatars/16-acelerador.png",
+  },
+  {
+    id: "matematica",
+    nameKey: "avatar.matematica.name",
+    color: "#38bdf8",
+    descriptionKey: "avatar.matematica.desc",
+    image: "avatars/17-matematica.png",
+  },
+  {
+    id: "lendario",
+    nameKey: "avatar.lendario.name",
+    color: "#a16207",
+    descriptionKey: "avatar.lendario.desc",
+    image: "avatars/18-lendario.png",
+  },
 ];
 
 const STORAGE_KEY = "cof-hero-avatar";
