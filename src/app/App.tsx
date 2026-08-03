@@ -32,6 +32,7 @@ import { UltraTrainer } from "../ui/UltraTrainer";
 import { CampaignView } from "../ui/CampaignView";
 import { ImportView } from "../ui/ImportView";
 import { Leaderboard } from "../ui/Leaderboard";
+import { AnatomiaTorneio } from "../ui/AnatomiaTorneio";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -88,7 +89,7 @@ export function App() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<
-    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha" | "ranking"
+    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha" | "ranking" | "anatomia"
   >("play");
   const t = controller.table;
   const la = legalActions(t);
@@ -185,6 +186,12 @@ export function App() {
             🏆 {tr("tab.ranking")}
           </button>
           <button
+            className={`tab ${view === "anatomia" ? "active" : ""}`}
+            onClick={() => setView("anatomia")}
+          >
+            📊 {tr("tab.anatomia")}
+          </button>
+          <button
             className={`tab ${view === "importar" ? "active" : ""}`}
             onClick={() => setView("importar")}
           >
@@ -267,6 +274,8 @@ export function App() {
         <TrainView />
       ) : view === "ranking" ? (
         <Leaderboard />
+      ) : view === "anatomia" ? (
+        <AnatomiaTorneio />
       ) : view === "importar" ? (
         <ImportView />
       ) : view === "missoes" ? (

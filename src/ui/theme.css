@@ -3282,3 +3282,29 @@ body {
   object-fit: cover;
   display: block;
 }
+
+/* ---- Anatomia do Torneio (comparação recreativo × ideal) ---- */
+.anat-panel { text-align: center; }
+.anat-chart { display: flex; gap: 26px; justify-content: center; align-items: flex-end; margin: 18px 0 6px; }
+.anat-col { width: 120px; text-align: center; }
+.anat-bar { height: 260px; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.anat-seg { display: flex; align-items: center; justify-content: center; min-height: 20px; }
+.anat-seg span { font-weight: 800; font-size: 15px; }
+.anat-seg.fold { background: linear-gradient(180deg,#454e5f,#333a48); color: #dfe4ec; }
+.anat-seg.call { background: linear-gradient(180deg,#e46b60,#c2473d); color: #2a0d0a; }
+.anat-seg.raise { background: linear-gradient(180deg,#f2dd8c,#d9b544); color: #0b0d0a; }
+.anat-vs { align-self: center; font-weight: 900; font-size: 24px; color: var(--dim,#9c9a86); padding-bottom: 60px; }
+.anat-lab { margin-top: 12px; font-size: 16px; font-weight: 800; }
+.anat-lab.rec { color: #e88b83; }
+.anat-lab.ide { color: var(--gold,#e6c454); }
+.anat-lab small { display: block; font-weight: 600; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--dim,#9c9a86); margin-top: 2px; }
+.anat-legend { display: flex; gap: 18px; justify-content: center; margin: 10px 0; font-size: 13px; color: var(--dim,#9c9a86); }
+.anat-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.anat-legend i.fold { background: #454e5f; }
+.anat-legend i.call { background: #d9584e; }
+.anat-legend i.raise { background: #e6c454; }
+.anat-leak { background: rgba(217,88,78,.1); border: 1px solid rgba(217,88,78,.45); border-radius: 12px; padding: 12px 14px; margin: 12px auto; max-width: 36ch; }
+.anat-leak-t { font-weight: 800; font-size: 16px; color: #ef8f87; }
+.anat-leak-s { font-size: 13px; color: var(--dim,#9c9a86); margin-top: 3px; }
+.anat-punch { font-weight: 800; font-size: 18px; margin: 12px 0 4px; }
+.anat-note { font-size: 11.5px; color: var(--dim,#9c9a86); margin-top: 6px; }
