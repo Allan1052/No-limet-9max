@@ -10,6 +10,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
+import { AvatarSelector, HeroSilhouette, HERO_AVATARS, getHeroAvatar } from "./AvatarSelector";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
@@ -75,7 +76,7 @@ function getRivalInfo(position?: string): { name: string; title: string } {
 // ---------------------------------------------------------------------------
 export function CampaignView() {
   const { t } = useT();
-  const { playEntry, playVictory, playDefeat } = useDuelSound();
+  const { playEntry, playCorrect, playWrong, playVictory, playDefeat } = useDuelSound();
   const [progress, setProgress] = useState<CampaignProgress>(loadCampaign);
   const [stageIdx, setStageIdx] = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -84,6 +85,7 @@ export function CampaignView() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<FeedbackItem | null>(null);
   const [done, setDone] = useState<{ passed: boolean; correct: number } | null>(null);
+  const [showAvatar, setShowAvatar] = useState(false);
 
   const appUrl =
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
@@ -128,7 +130,12 @@ export function CampaignView() {
     if (!scenario || result) return;
     const item = evaluateChoice(scenario, key);
     setResult(item);
-    if (isCorrect(item)) setCorrect((c) => c + 1);
+    if (isCorrect(item)) {
+      setCorrect((c) => c + 1);
+      playCorrect();
+    } else {
+      playWrong();
+    }
   };
 
   const next = () => {
@@ -173,6 +180,8 @@ export function CampaignView() {
     const prevResults = progress.best[stage.id];
     const taunt = PRE_MATCH_TAUNTS[Math.floor(Math.random() * PRE_MATCH_TAUNTS.length)];
     const streakAlert = prevResults != null && prevResults < stage.passNeeded;
+    const heroAvatarId = getHeroAvatar();
+    const heroAvatar = HERO_AVATARS.find((a) => a.id === heroAvatarId) || HERO_AVATARS[0];
 
     return (
       <div className="train-view">
@@ -187,10 +196,10 @@ export function CampaignView() {
             {/* Os dois lados */}
             <div className="confirm-arena">
               <div className="confirm-side hero-side">
-                <div className="confirm-avatar hero-avatar">
-                  <span className="hero-symbol">♠</span>
+                <div className="confirm-avatar hero-avatar" style={{ borderColor: heroAvatar.color, boxShadow: `0 0 16px ${heroAvatar.color}44` }}>
+                  <HeroSilhouette size={48} color={heroAvatar.color} />
                 </div>
-                <div className="confirm-name">{t("ultra.you")}</div>
+                <div className="confirm-name">{t(heroAvatar.nameKey as TransKey)}</div>
                 <div className="confirm-detail">Posição {stage.heroPosition}</div>
               </div>
 
@@ -353,6 +362,8 @@ export function CampaignView() {
   // ---------------------------------------------------------------------------
   // MAPA DE ESTÁGIOS — ARENA DE DUELO (visual cinematográfico)
   // ---------------------------------------------------------------------------
+  const heroAvatarId = getHeroAvatar();
+  const heroAvatar = HERO_AVATARS.find((a) => a.id === heroAvatarId) || HERO_AVATARS[0];
   return (
     <div className="train-view">
       <div className="panel mission-panel">
@@ -368,6 +379,12 @@ export function CampaignView() {
           <div className="mp-fill" style={{ width: `${(stats.done / stats.total) * 100}%` }} />
           <span className="mp-label">{t("mission.progress", { done: stats.done, total: stats.total })}</span>
         </div>
+
+        {/* Botão de avatar */}
+        <button className="btn avatar-picker-btn" onClick={() => setShowAvatar(true)}>
+          <HeroSilhouette size={28} color={heroAvatar.color} />
+          {t("avatar.button")}
+        </button>
 
         {/* Estágios como cards de duelo */}
         <div className="duel-stages">
@@ -423,6 +440,7 @@ export function CampaignView() {
           })}
         </div>
       </div>
+      {showAvatar ? <AvatarSelector onClose={() => setShowAvatar(false)} /> : null}
     </div>
   );
 }

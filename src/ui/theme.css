@@ -2755,3 +2755,146 @@ body {
   0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
   50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
 }
+/* =========================================================================
+   AVATAR SELETOR
+   ========================================================================= */
+
+/* Botão no mapa de estágios */
+.avatar-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #171b10, #0d100a);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+  color: var(--gold-soft);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  justify-content: center;
+}
+.avatar-picker-btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Overlay do avatar */
+.avatar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(10, 15, 10, 0.95) 0%, rgba(5, 6, 4, 0.98) 100%);
+  animation: avatar-in 0.3s ease-out;
+}
+@keyframes avatar-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal */
+.avatar-modal {
+  width: 90%;
+  max-width: 360px;
+  background:
+    radial-gradient(100% 80% at 50% 10%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0d100a 0%, #050604 100%);
+  border: 2px solid var(--gold-dim);
+  border-radius: 20px;
+  padding: 24px 18px;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.12), 0 20px 60px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+.avatar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--gold-bright);
+  margin: 0 0 6px;
+  letter-spacing: 0.5px;
+}
+
+.avatar-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0 0 18px;
+}
+
+/* Grid de avatares */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: linear-gradient(180deg, #171b10, #0d100a);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: all 0.25s ease;
+}
+.avatar-card:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.avatar-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  background: linear-gradient(180deg, #1e2215, #12150d);
+}
+
+.avatar-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.avatar-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* Botões */
+.avatar-actions {
+  display: flex;
+  gap: 10px;
+}
+.avatar-cancel {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.avatar-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.avatar-confirm {
+  flex: 2;
+  letter-spacing: 0.5px !important;
+}
