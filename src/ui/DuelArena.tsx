@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
-// Arena 1×1 — o "duelo" heads-up com o vilão encapuzado, pote e VS.
+// Arena 1×1 — o "duelo" heads-up com o rival fotorrealista, pote e VS.
 // Componente visual compartilhado (Missão e, no futuro, outros modos), pra dar
 // a cara da marca aos treinos. Só apresentação — a matemática vem de fora.
+// Agora com avatares fotorrealistas tanto do rival quanto do herói.
 // ---------------------------------------------------------------------------
 import { useMemo } from "react";
 import { CardView, CardBack } from "./Card";
@@ -62,16 +63,28 @@ export function HoodedFace({ size = 44 }: { size?: number }) {
   );
 }
 
+// Rival avatar data — passed in from CampaignView for photorealistic rivals
+export interface RivalAvatar {
+  image: string;
+  color: string;
+  name: string;
+  taunt: string;
+}
+
 export function DuelArena({
   spec,
   hand,
   result,
   villain,
+  rivalAvatar,
+  heroAvatar,
 }: {
   spec: ScenarioSpec;
   hand: Card[];
   result: FeedbackItem | null;
   villain: DuelVillain;
+  rivalAvatar?: RivalAvatar;
+  heroAvatar?: { image: string; color: string };
 }) {
   const { t } = useT();
   const openSize = spec.openSizeBB ?? 2.3;
@@ -102,17 +115,31 @@ export function DuelArena({
 
       <div className="duel spotlight">
         <div className="duel-seat villain terror">
-          <div className="villain-av">
-            {"art" in villain ? <HoodedFace /> : <span className="villain-emoji">{villain.emoji}</span>}
+          <div className="villain-av" style={rivalAvatar ? {
+            borderColor: rivalAvatar.color,
+            boxShadow: `0 0 16px ${rivalAvatar.color}66`,
+            animation: "none",
+          } : undefined}>
+            {rivalAvatar ? (
+              <img src={rivalAvatar.image} alt="" className="villain-av-img" />
+            ) : (
+              <>
+                {"art" in villain ? <HoodedFace /> : <span className="villain-emoji">{villain.emoji}</span>}
+              </>
+            )}
             {spec.raiserPosition ? <span className="duel-pos vil">{spec.raiserPosition}</span> : null}
           </div>
-          <div className="villain-name">{t(villain.nameKey)}</div>
+          <div className="villain-name" style={rivalAvatar ? { color: rivalAvatar.color } : undefined}>
+            {rivalAvatar ? rivalAvatar.name : t(villain.nameKey)}
+          </div>
           <div className="villain-taunt">
             {result
               ? isCorrect(result)
                 ? t("ultra.survive")
                 : t("ultra.gloat")
-              : `“${t(villain.tauntKey)}”`}
+              : rivalAvatar
+                ? `"${rivalAvatar.taunt}"`
+                : `“${t(villain.tauntKey)}”`}
           </div>
           <div className="duel-cards">
             <CardBack small />
@@ -130,6 +157,12 @@ export function DuelArena({
         </div>
 
         <div className="duel-seat hero">
+          {/* Avatar do herói na mesa */}
+          {heroAvatar ? (
+            <div className="duel-hero-av" style={{ borderColor: heroAvatar.color }}>
+              <img src={heroAvatar.image} alt="" className="hero-av-img" />
+            </div>
+          ) : null}
           <div className="duel-badge turn">{t("ultra.yourTurn")}</div>
           <div className="duel-cards big">
             {hand.map((c, i) => (

@@ -8,9 +8,9 @@
 // Reaproveita o motor de cenários e a grade de range do Ultra 1×1.
 // ---------------------------------------------------------------------------
 import { useMemo, useState, useEffect } from "react";
-import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
+import { DuelArena, HOODED_VILLAIN, type RivalAvatar } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
-import { AvatarSelector, getHeroAvatarData, canSwapAvatar, formatCooldown } from "./AvatarSelector";
+import { AvatarSelector, getHeroAvatarData, canSwapAvatar, formatCooldown, HERO_AVATARS } from "./AvatarSelector";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
@@ -69,6 +69,51 @@ function getRivalInfo(position?: string): { name: string; title: string } {
   if (!position) return { name: "O Ceifador", title: "A sombra da mesa" };
   const info = POSITION_RIVAL_NAMES[position];
   return info || { name: "O Desconhecido", title: "Posição oculta" };
+}
+
+// Mapeamento de rival por estágio — cada posição tem um avatar fotorrealista
+const RIVAL_AVATAR_MAP: Record<string, string> = {
+  BTN: "paga-tudo",       // O Carteiro — paga-tudo agressivo
+  CO: "furacao",           // O Acelerador — corta antes de você
+  HJ: "certinho",          // O Intermediário — certinho
+  LJ: "estrategista",      // O Estrategista — lê o campo
+  MP: "silencioso",        // O Paciente — monge do poker
+  UTG1: "acelerador",      // O Corajoso — jovem, tinta, adrenalina
+  SB: "cartilha",          // O Provocador — blue dourado, calculista
+  BB: "muralha",           // O Muro — cinza, inabalável
+  UTG: "ceifador",         // O Pioneiro — O Ceifador, encapuzado
+};
+
+function getRivalAvatar(_stageIdx: number, stage: Stage): RivalAvatar {
+  const rivalInfo = getRivalInfo(stage.heroPosition);
+  // Usar o avatar mapeado para a posição do rival
+  const avatarId = RIVAL_AVATAR_MAP[stage.heroPosition] || "ceifador";
+  const avatar = HERO_AVATARS.find((a) => a.id === avatarId) || HERO_AVATARS[8]; // fallback O Ceifador
+  
+  // Taunts personalizados por avatar
+  const taunts: Record<string, string> = {
+    "paga-tudo": "Toda ficha sua acaba na minha pilha.",
+    "furacao": "Eu não blefo. Eu ataco.",
+    "certinho": "Seguindo o manual. Sempre.",
+    "estrategista": "Antes de eu sentar, já sei como termina essa mão.",
+    "silencioso": "Enquanto você pensa... eu já decidi.",
+    "acelerador": "Cada mão que eu jogo, alguém fica nervoso.",
+    "cartilha": "A matemática está do meu lado.",
+    "muralha": "Tente passar por mim.",
+    "ceifador": "Ninguém sabe meu nome. Ninguém precisa saber.",
+  };
+  
+  return {
+    image: avatar.image,
+    color: avatar.color,
+    name: rivalInfo.name,
+    taunt: taunts[avatarId] || "Hora de decidir.",
+  };
+}
+
+function getRivalAvatarByStageIdx(stageIdx: number): RivalAvatar {
+  const stage = STAGES[stageIdx];
+  return getRivalAvatar(stageIdx, stage);
 }
 
 // ---------------------------------------------------------------------------
@@ -178,6 +223,7 @@ export function CampaignView() {
   if (showConfirm && stageIdx != null) {
     const stage = STAGES[stageIdx];
     const rivalInfo = getRivalInfo(stage.heroPosition);
+    const rivalAvatar = getRivalAvatarByStageIdx(stageIdx);
     const prevResults = progress.best[stage.id];
     const taunt = PRE_MATCH_TAUNTS[Math.floor(Math.random() * PRE_MATCH_TAUNTS.length)];
     const streakAlert = prevResults != null && prevResults < stage.passNeeded;
@@ -206,10 +252,10 @@ export function CampaignView() {
               <div className="confirm-vs-badge">VS</div>
 
               <div className="confirm-side villain-side">
-                <div className="confirm-avatar villain-avatar">
-                  <HoodedFace size={48} />
+                <div className="confirm-avatar villain-avatar" style={{ borderColor: rivalAvatar.color, boxShadow: `0 0 16px ${rivalAvatar.color}66`, animation: 'none' }}>
+                  <img src={rivalAvatar.image} alt="" className="confirm-rival-img" />
                 </div>
-                <div className="confirm-name">{rivalInfo.name}</div>
+                <div className="confirm-name" style={{ color: rivalAvatar.color }}>{rivalAvatar.name}</div>
                 <div className="confirm-detail">{rivalInfo.title}</div>
               </div>
             </div>
@@ -260,6 +306,7 @@ export function CampaignView() {
   // ---------------------------------------------------------------------------
   if (done && stageIdx != null) {
     const stage = STAGES[stageIdx];
+    const rivalAvatar = getRivalAvatarByStageIdx(stageIdx);
     const shareText = t("mission.shareText", { n: stageIdx + 1, pos: stage.heroPosition });
     const onShare = () => void shareSpot(null, appUrl, shareText);
     const onWhats = () =>
@@ -269,14 +316,14 @@ export function CampaignView() {
       <div className="train-view">
         <div className={`panel mission-done ${done.passed ? "won" : "lost"}`}>
           <div className={`mission-villain ${done.passed ? "beaten" : "gloat"}`}>
-            <HoodedFace size={80} />
+            <img src={rivalAvatar.image} alt="" className="mission-villain-img" />
             {done.passed ? <span className="mission-medal-badge">🏅</span> : null}
           </div>
           <h3>{done.passed ? t("mission.passed") : t("mission.almost")}</h3>
           <div className="mission-villain-cap">
             {done.passed
-              ? t("mission.beat", { name: t(HOODED_VILLAIN.nameKey) })
-              : `“${t(HOODED_VILLAIN.tauntKey)}”`}
+              ? t("mission.beat", { name: rivalAvatar.name })
+              : `“${rivalAvatar.taunt}”`}
           </div>
           <div className="mission-score">
             {done.correct}/{stage.rounds} · {t("mission.needed", { n: stage.passNeeded })}
@@ -327,7 +374,14 @@ export function CampaignView() {
             </span>
           </div>
 
-          <DuelArena spec={s} hand={scenario.hand} result={result} villain={HOODED_VILLAIN} />
+          <DuelArena
+            spec={s}
+            hand={scenario.hand}
+            result={result}
+            villain={HOODED_VILLAIN}
+            rivalAvatar={getRivalAvatarByStageIdx(stageIdx)}
+            heroAvatar={getHeroAvatarData()}
+          />
 
           {!result ? (
             <div className="train-actions">
@@ -409,9 +463,7 @@ export function CampaignView() {
                   {cleared ? (
                     <span className="duel-stage-medal">🏅</span>
                   ) : unlocked ? (
-                    <div className="duel-stage-silhouette">
-                      <HoodedFace size={32} />
-                    </div>
+                    <img src={getRivalAvatarByStageIdx(i).image} alt="" className="duel-stage-rival-img" />
                   ) : (
                     <span className="duel-stage-lock">🔒</span>
                   )}
