@@ -2374,3 +2374,384 @@ body {
   transform: scale(1.1);
   box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
 }
+/* =========================================================================
+   MISSÃO 1×1 — ARENA DE DUELO CINEMATOGRÁFICA
+   ========================================================================= */
+
+/* Header cinematográfico da missão */
+.mission-header-cinema {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 12px 0;
+}
+.mission-crown {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 4px;
+  animation: crown-glow 2s ease-in-out infinite;
+}
+@keyframes crown-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(230, 196, 84, 0.4)); }
+  50% { filter: drop-shadow(0 0 16px rgba(230, 196, 84, 0.8)); }
+}
+.mission-title-cinema {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(230, 196, 84, 0.4);
+  margin: 0 0 6px;
+}
+.mission-subtitle-cinema {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Estágios como cards de duelo */
+.duel-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.duel-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  width: 100%;
+  background: linear-gradient(180deg, #171b10, #0d100a);
+  border: 1px solid #2c2f22;
+  border-radius: 12px;
+  padding: 14px 14px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.duel-stage::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gold-dim);
+  transition: all 0.3s ease;
+}
+.duel-stage.unlocked::before {
+  background: var(--gold);
+}
+.duel-stage.cleared::before {
+  background: var(--good);
+}
+.duel-stage.unlocked {
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.08);
+}
+.duel-stage.cleared {
+  border-color: rgba(92, 190, 141, 0.3);
+  box-shadow: 0 0 12px rgba(92, 190, 141, 0.08);
+}
+.duel-stage.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.duel-stage.locked::before {
+  background: #3c3f32;
+}
+.duel-stage:hover:not(:disabled) {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Avatar do rival no card de estágio */
+.duel-stage-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #2a1010, #120707);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  position: relative;
+}
+.duel-stage.cleared .duel-stage-avatar {
+  background: radial-gradient(circle at 50% 40%, #1a3a2a, #0a1a10);
+  border-color: rgba(92, 190, 141, 0.4);
+}
+.duel-stage.locked .duel-stage-avatar {
+  background: #1a1d16;
+  border-color: #2c2f22;
+}
+.duel-stage-silhouette svg {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+.duel-stage-medal {
+  font-size: 24px;
+}
+.duel-stage-lock {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+/* Info do estágio */
+.duel-stage-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.duel-stage-level {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+.duel-stage-rival {
+  font-size: 12px;
+  color: var(--gold-soft);
+  font-weight: 700;
+  font-style: italic;
+  margin-top: 1px;
+}
+.duel-stage-rounds {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.duel-stage-best {
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Indicador visual */
+.duel-stage-indicator {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* =========================================================================
+   TELA DE CONFIRMAÇÃO PRÉ-DUELO
+   ========================================================================= */
+
+.arena-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(10, 15, 10, 0.95) 0%, rgba(5, 6, 4, 0.98) 100%);
+  animation: confirm-in 0.4s ease-out;
+}
+@keyframes confirm-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.arena-confirm-card {
+  width: 90%;
+  max-width: 380px;
+  background:
+    radial-gradient(100% 80% at 50% 10%, rgba(212, 175, 55, 0.10) 0%, transparent 60%),
+    linear-gradient(180deg, #0d100a 0%, #050604 100%);
+  border: 2px solid var(--gold-dim);
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+.confirm-header {
+  margin-bottom: 16px;
+}
+.confirm-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  background: rgba(212, 175, 55, 0.1);
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+.confirm-vs-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold-bright);
+  letter-spacing: 3px;
+  margin-top: 10px;
+  text-shadow: 0 0 20px rgba(230, 196, 84, 0.5);
+}
+
+/* Os dois lados do duelo */
+.confirm-arena {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+}
+.confirm-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.confirm-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-avatar {
+  background: radial-gradient(circle at 50% 40%, #1a3a2a, #0a1a10);
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+}
+.villain-avatar {
+  background: radial-gradient(circle at 50% 40%, #2a1010, #120707);
+  border: 2px solid rgba(255, 70, 50, 0.7);
+  box-shadow: 0 0 16px rgba(255, 60, 40, 0.3);
+  animation: villain-pulse 2s ease-in-out infinite;
+}
+@keyframes villain-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255, 60, 40, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(255, 60, 40, 0.55); }
+}
+.hero-symbol {
+  font-size: 28px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 10px rgba(230, 196, 84, 0.6);
+}
+.confirm-name {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.hero-side .confirm-name {
+  color: var(--gold-soft);
+}
+.villain-side .confirm-name {
+  color: #ff6a4d;
+}
+.confirm-detail {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Badge VS no centro */
+.confirm-vs-badge {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 900;
+  font-style: italic;
+  color: #fff;
+  opacity: 0.7;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Informações do confronto */
+.confirm-info {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+.confirm-rounds {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-soft);
+  margin-bottom: 6px;
+}
+.confirm-history {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.confirm-streak-alert {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff6a4d;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 70, 50, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 70, 50, 0.2);
+  animation: alert-blink 1.5s ease-in-out infinite;
+}
+@keyframes alert-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.confirm-streak-info {
+  font-size: 11px;
+  color: var(--good);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* Taunt antes do duelo */
+.confirm-taunt {
+  font-size: 13px;
+  font-style: italic;
+  color: #ffd7cc;
+  margin: 16px 0;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+/* Botões da confirmação */
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.confirm-back {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.confirm-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.confirm-start {
+  flex: 2;
+  font-size: 14px !important;
+  letter-spacing: 1px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4) !important;
+  animation: challenge-glow 1.5s ease-in-out infinite;
+}
+@keyframes challenge-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
+}

@@ -1,9 +1,13 @@
 // ---------------------------------------------------------------------------
-// MISSÃO 1×1 — a campanha de posições (UI).
-// Mapa de estágios → joga um estágio (rodadas) → conquista + marcar amigos.
+// MISSÃO 1×1 — ARENA DE DUELO (versão cinematográfica).
+//
+// A campanha agora parece um torneio real: cada estágio é um "desafiante"
+// encapuzado com nível, barra de confronto e alerta de sequência.
+// Antes de entrar, uma tela de confirmação mostra "Quem vai se curvar primeiro?".
+// Sons de tensão/vitória/derrota acompanham cada momento.
 // Reaproveita o motor de cenários e a grade de range do Ultra 1×1.
 // ---------------------------------------------------------------------------
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { DuelArena, HoodedFace, HOODED_VILLAIN } from "./DuelArena";
 import { SpotRangeGrid } from "./SpotRangeGrid";
 import { useT } from "../i18n";
@@ -30,23 +34,51 @@ import {
 } from "../train/campaign";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
+import { useDuelSound } from "./useDuelSound";
 
-function roundSpec(stage: Stage): ScenarioSpec {
-  const pool = stage.villainPool;
-  const villain = pool.length ? pool[Math.floor(Math.random() * pool.length)] : undefined;
-  const stack = stage.stacks[Math.floor(Math.random() * stage.stacks.length)];
-  return {
-    heroPosition: stage.heroPosition,
-    effectiveBB: stack,
-    raiserPosition: villain,
-    openSizeBB: villain ? 2.3 : undefined,
-  };
+// ---------------------------------------------------------------------------
+// Nomes imersivos para cada posição — o rival não é "Player42", é um personagem.
+// ---------------------------------------------------------------------------
+const POSITION_RIVAL_NAMES: Record<string, { name: string; title: string }> = {
+  BTN: { name: "O Carteiro", title: "Domina o botão" },
+  CO: { name: "O Acelerador", title: "Corta antes de você" },
+  HJ: { name: "O Intermediário", title: "Abre do hijack" },
+  LJ: { name: "O Estrategista", title: "Sabe ler o campo" },
+  MP: { name: "O Paciente", title: "Abre do meio da mesa" },
+  UTG1: { name: "O Corajoso", title: "Abre cedo, sem medo" },
+  SB: { name: "O Provocador", title: "Defende a small" },
+  BB: { name: "O Muro", title: "Defende o big blind" },
+  UTG: { name: "O Pioneiro", title: "O primeiro a abrir" },
+};
+
+// Frases de taunt antes do duelo — tensão pré-jogo
+const PRE_MATCH_TAUNTS = [
+  "Quem vai se curvar primeiro?",
+  "Ele já venceu as últimas. Sua vez de mudar isso.",
+  "A mesa é pequena, mas o tamanho do momento é gigante.",
+  "Dois lados. Um pote. Nenhum meio-termo.",
+  "Ele riu do seu fold anterior. Agora é sua vez.",
+  "Sem misericórdia. Sem remorso. Só decisão.",
+  "O feltro não perdoa. Nem você.",
+  "A última mão que ele ganhou ainda está fresca na sua cabeça.",
+];
+
+// Nomes dos vilões por posição (fallback imersivo)
+function getRivalInfo(position?: string): { name: string; title: string } {
+  if (!position) return { name: "O Ceifador", title: "A sombra da mesa" };
+  const info = POSITION_RIVAL_NAMES[position];
+  return info || { name: "O Desconhecido", title: "Posição oculta" };
 }
 
+// ---------------------------------------------------------------------------
+// Componente principal — Mapa de Estágios → Tela de Confirmação → Duelo → Conquista
+// ---------------------------------------------------------------------------
 export function CampaignView() {
   const { t } = useT();
+  const { playEntry, playVictory, playDefeat } = useDuelSound();
   const [progress, setProgress] = useState<CampaignProgress>(loadCampaign);
   const [stageIdx, setStageIdx] = useState<number | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [round, setRound] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [scenario, setScenario] = useState<Scenario | null>(null);
@@ -56,7 +88,21 @@ export function CampaignView() {
   const appUrl =
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
 
+  const stats = campaignStats(progress);
+
+  // Entrar na aba missão — toca música de tensão
+  useEffect(() => {
+    playEntry();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const startStage = (i: number) => {
+    setStageIdx(i);
+    setShowConfirm(true);
+  };
+
+  const confirmStage = (i: number) => {
+    setShowConfirm(false);
     setStageIdx(i);
     setRound(0);
     setCorrect(0);
@@ -64,18 +110,27 @@ export function CampaignView() {
     setDone(null);
     setScenario(buildScenarioFromSpec(roundSpec(STAGES[i]), Math.random));
   };
+
+  const cancelStage = () => {
+    setShowConfirm(false);
+    setStageIdx(null);
+  };
+
   const backToMap = () => {
     setStageIdx(null);
+    setShowConfirm(false);
     setScenario(null);
     setResult(null);
     setDone(null);
   };
+
   const choose = (key: "fold" | "call" | "raise" | "allin") => {
     if (!scenario || result) return;
     const item = evaluateChoice(scenario, key);
     setResult(item);
     if (isCorrect(item)) setCorrect((c) => c + 1);
   };
+
   const next = () => {
     if (stageIdx == null) return;
     const stage = STAGES[stageIdx];
@@ -84,6 +139,12 @@ export function CampaignView() {
       saveCampaign(np);
       setProgress(np);
       setDone({ passed, correct });
+      // Toca som de vitória ou derrota
+      if (passed) {
+        playVictory();
+      } else {
+        playDefeat();
+      }
     } else {
       setRound((r) => r + 1);
       setResult(null);
@@ -103,7 +164,91 @@ export function CampaignView() {
     });
   }, [scenario]);
 
-  // ---------- Conquista (fim do estágio) ----------
+  // ---------------------------------------------------------------------------
+  // TELA DE CONFIRMAÇÃO PRÉ-DUELO
+  // ---------------------------------------------------------------------------
+  if (showConfirm && stageIdx != null) {
+    const stage = STAGES[stageIdx];
+    const rivalInfo = getRivalInfo(stage.heroPosition);
+    const prevResults = progress.best[stage.id];
+    const taunt = PRE_MATCH_TAUNTS[Math.floor(Math.random() * PRE_MATCH_TAUNTS.length)];
+    const streakAlert = prevResults != null && prevResults < stage.passNeeded;
+
+    return (
+      <div className="train-view">
+        <div className="arena-confirm-overlay">
+          <div className="arena-confirm-card">
+            {/* Topo — arena header */}
+            <div className="confirm-header">
+              <span className="confirm-label">{t("mission.badge")}</span>
+              <div className="confirm-vs-title">DUELO IMINENTE</div>
+            </div>
+
+            {/* Os dois lados */}
+            <div className="confirm-arena">
+              <div className="confirm-side hero-side">
+                <div className="confirm-avatar hero-avatar">
+                  <span className="hero-symbol">♠</span>
+                </div>
+                <div className="confirm-name">{t("ultra.you")}</div>
+                <div className="confirm-detail">Posição {stage.heroPosition}</div>
+              </div>
+
+              <div className="confirm-vs-badge">VS</div>
+
+              <div className="confirm-side villain-side">
+                <div className="confirm-avatar villain-avatar">
+                  <HoodedFace size={48} />
+                </div>
+                <div className="confirm-name">{rivalInfo.name}</div>
+                <div className="confirm-detail">{rivalInfo.title}</div>
+              </div>
+            </div>
+
+            {/* Informações do confronto */}
+            <div className="confirm-info">
+              <div className="confirm-rounds">
+                {stage.rounds} rodadas · precisa de {stage.passNeeded} certas
+              </div>
+              {prevResults != null ? (
+                <div className="confirm-history">
+                  Último recorde: {prevResults}/{stage.rounds} ({prevResults >= stage.passNeeded ? "✅" : "❌"})
+                </div>
+              ) : (
+                <div className="confirm-history">Primeiro confronto com {rivalInfo.name}</div>
+              )}
+              {streakAlert ? (
+                <div className="confirm-streak-alert">
+                  ⚠️ Você ainda não passou deste estágio. Hora de mudar.
+                </div>
+              ) : (
+                <div className="confirm-streak-info">
+                  Recorde anterior: {prevResults}/{stage.rounds}
+                </div>
+              )}
+            </div>
+
+            {/* Taunt */}
+            <div className="confirm-taunt">"{taunt}"</div>
+
+            {/* Botões */}
+            <div className="confirm-actions">
+              <button className="btn confirm-back" onClick={cancelStage}>
+                Voltar
+              </button>
+              <button className="btn primary confirm-start" onClick={() => confirmStage(stageIdx)}>
+                ⚔️ DESAFIAR AGORA
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // CONQUISTA (fim do estágio)
+  // ---------------------------------------------------------------------------
   if (done && stageIdx != null) {
     const stage = STAGES[stageIdx];
     const shareText = t("mission.shareText", { n: stageIdx + 1, pos: stage.heroPosition });
@@ -156,7 +301,9 @@ export function CampaignView() {
     );
   }
 
-  // ---------- Jogando um estágio ----------
+  // ---------------------------------------------------------------------------
+  // JOGANDO UM ESTÁGIO
+  // ---------------------------------------------------------------------------
   if (stageIdx != null && scenario) {
     const stage = STAGES[stageIdx];
     const s = scenario.spec;
@@ -203,40 +350,74 @@ export function CampaignView() {
     );
   }
 
-  // ---------- Mapa de estágios ----------
-  const stats = campaignStats(progress);
+  // ---------------------------------------------------------------------------
+  // MAPA DE ESTÁGIOS — ARENA DE DUELO (visual cinematográfico)
+  // ---------------------------------------------------------------------------
   return (
     <div className="train-view">
       <div className="panel mission-panel">
-        <div className="ultra-badge">🎯 {t("mission.badge")}</div>
-        <h3>{t("mission.title")}</h3>
-        <p className="ultra-sub">{t("mission.subtitle")}</p>
+        {/* Header da missão */}
+        <div className="mission-header-cinema">
+          <div className="mission-crown">⚔️</div>
+          <h3 className="mission-title-cinema">{t("mission.title")}</h3>
+          <p className="mission-subtitle-cinema">{t("mission.subtitle")}</p>
+        </div>
+
+        {/* Barra de progresso */}
         <div className="mission-progressbar">
           <div className="mp-fill" style={{ width: `${(stats.done / stats.total) * 100}%` }} />
           <span className="mp-label">{t("mission.progress", { done: stats.done, total: stats.total })}</span>
         </div>
-        <div className="mission-stages">
+
+        {/* Estágios como cards de duelo */}
+        <div className="duel-stages">
           {STAGES.map((stage, i) => {
             const unlocked = isStageUnlocked(progress, i);
             const cleared = progress.cleared.includes(stage.id);
+            const rivalInfo = getRivalInfo(stage.heroPosition);
+            const bestScore = progress.best[stage.id];
             return (
               <button
                 key={stage.id}
-                className={`mission-stage ${cleared ? "cleared" : unlocked ? "unlocked" : "locked"}`}
+                className={`duel-stage ${cleared ? "cleared" : unlocked ? "unlocked" : "locked"}`}
                 disabled={!unlocked}
                 onClick={() => unlocked && startStage(i)}
               >
-                <span className="ms-icon">{cleared ? "🏅" : unlocked ? "▶" : "🔒"}</span>
-                <span className="ms-body">
-                  <span className="ms-title">
+                {/* Avatar do rival */}
+                <div className="duel-stage-avatar">
+                  {cleared ? (
+                    <span className="duel-stage-medal">🏅</span>
+                  ) : unlocked ? (
+                    <div className="duel-stage-silhouette">
+                      <HoodedFace size={32} />
+                    </div>
+                  ) : (
+                    <span className="duel-stage-lock">🔒</span>
+                  )}
+                </div>
+
+                {/* Info do estágio */}
+                <div className="duel-stage-info">
+                  <span className="duel-stage-level">
                     {t("mission.stage", { n: i + 1 })} · {stage.heroPosition}
                   </span>
-                  <span className="ms-sub">
+                  <span className="duel-stage-rival">{rivalInfo.name}</span>
+                  <span className="duel-stage-rounds">
                     {stage.villainPool.length
                       ? t("mission.faceField", { r: stage.rounds })
                       : t("mission.rfiField", { r: stage.rounds })}
                   </span>
-                </span>
+                  {bestScore != null ? (
+                    <span className="duel-stage-best">
+                      Recorde: {bestScore}/{stage.rounds}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Indicador visual */}
+                <div className="duel-stage-indicator">
+                  {cleared ? "✅" : unlocked ? "⚔️" : "🔒"}
+                </div>
               </button>
             );
           })}
@@ -244,4 +425,16 @@ export function CampaignView() {
       </div>
     </div>
   );
+}
+
+function roundSpec(stage: Stage): ScenarioSpec {
+  const pool = stage.villainPool;
+  const villain = pool.length ? pool[Math.floor(Math.random() * pool.length)] : undefined;
+  const stack = stage.stacks[Math.floor(Math.random() * stage.stacks.length)];
+  return {
+    heroPosition: stage.heroPosition,
+    effectiveBB: stack,
+    raiserPosition: villain,
+    openSizeBB: villain ? 2.3 : undefined,
+  };
 }
