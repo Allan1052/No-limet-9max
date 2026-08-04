@@ -27,7 +27,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.casual.name",
     color: "#d4af37",
     descriptionKey: "avatar.casual.desc",
-    image: "avatars/01-casual.png",
+    image: "avatars/01-casual.jpg",
     immersionKey: "avatar.casual.immersion",
   },
   {
@@ -35,7 +35,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.pagatudo.name",
     color: "#e0645f",
     descriptionKey: "avatar.pagatudo.desc",
-    image: "avatars/02-paga-tudo.png",
+    image: "avatars/02-paga-tudo.jpg",
     immersionKey: "avatar.pagatudo.immersion",
   },
   {
@@ -43,7 +43,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.muralha.name",
     color: "#8b8d8f",
     descriptionKey: "avatar.muralha.desc",
-    image: "avatars/03-muralha.png",
+    image: "avatars/03-muralha.jpg",
     immersionKey: "avatar.muralha.immersion",
   },
   {
@@ -51,7 +51,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.certinho.name",
     color: "#5cbe8d",
     descriptionKey: "avatar.certinho.desc",
-    image: "avatars/04-certinho.png",
+    image: "avatars/04-certinho.jpg",
     immersionKey: "avatar.certinho.immersion",
   },
   {
@@ -59,7 +59,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.cartilha.name",
     color: "#7cc0ff",
     descriptionKey: "avatar.cartilha.desc",
-    image: "avatars/05-cartilha.png",
+    image: "avatars/05-cartilha.jpg",
     immersionKey: "avatar.cartilha.immersion",
   },
   {
@@ -67,7 +67,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.furacao.name",
     color: "#ff4444",
     descriptionKey: "avatar.furacao.desc",
-    image: "avatars/06-furacao.png",
+    image: "avatars/06-furacao.jpg",
     immersionKey: "avatar.furacao.immersion",
   },
   {
@@ -75,7 +75,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.tudoounada.name",
     color: "#f59e0b",
     descriptionKey: "avatar.tudoounada.desc",
-    image: "avatars/07-tudo-ou-nada.png",
+    image: "avatars/07-tudo-ou-nada.jpg",
     immersionKey: "avatar.tudoounada.immersion",
   },
   {
@@ -83,7 +83,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.doidao.name",
     color: "#a78bfa",
     descriptionKey: "avatar.doidao.desc",
-    image: "avatars/08-doidao.png",
+    image: "avatars/08-doidao.jpg",
     immersionKey: "avatar.doidao.immersion",
   },
   {
@@ -91,7 +91,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.ceifador.name",
     color: "#1a1a1a",
     descriptionKey: "avatar.ceifador.desc",
-    image: "avatars/09-ceifador.png",
+    image: "avatars/09-ceifador.jpg",
     immersionKey: "avatar.ceifador.immersion",
   },
   {
@@ -99,7 +99,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.iniciante.name",
     color: "#ff6b9d",
     descriptionKey: "avatar.iniciante.desc",
-    image: "avatars/10-iniciante.png",
+    image: "avatars/10-iniciante.jpg",
     immersionKey: "avatar.iniciante.immersion",
   },
   {
@@ -107,7 +107,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.veterano.name",
     color: "#c9a96e",
     descriptionKey: "avatar.veterano.desc",
-    image: "avatars/11-veterano.png",
+    image: "avatars/11-veterano.jpg",
     immersionKey: "avatar.veterano.immersion",
   },
   {
@@ -115,7 +115,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.blefadora.name",
     color: "#e8b4d9",
     descriptionKey: "avatar.blefadora.desc",
-    image: "avatars/12-blefadora.png",
+    image: "avatars/12-blefadora.jpg",
     immersionKey: "avatar.blefadora.immersion",
   },
   {
@@ -123,7 +123,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.estrategista.name",
     color: "#d4af37",
     descriptionKey: "avatar.estrategista.desc",
-    image: "avatars/13-estrategista.png",
+    image: "avatars/13-estrategista.jpg",
     immersionKey: "avatar.estrategista.immersion",
   },
   {
@@ -131,7 +131,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.rainha.name",
     color: "#c084fc",
     descriptionKey: "avatar.rainha.desc",
-    image: "avatars/14-rainha.png",
+    image: "avatars/14-rainha.jpg",
     immersionKey: "avatar.rainha.immersion",
   },
   {
@@ -139,7 +139,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.silencioso.name",
     color: "#78716c",
     descriptionKey: "avatar.silencioso.desc",
-    image: "avatars/15-silencioso.png",
+    image: "avatars/15-silencioso.jpg",
     immersionKey: "avatar.silencioso.immersion",
   },
   {
@@ -147,7 +147,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.acelerador.name",
     color: "#ef4444",
     descriptionKey: "avatar.acelerador.desc",
-    image: "avatars/16-acelerador.png",
+    image: "avatars/16-acelerador.jpg",
     immersionKey: "avatar.acelerador.immersion",
   },
   {
@@ -155,7 +155,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.matematica.name",
     color: "#38bdf8",
     descriptionKey: "avatar.matematica.desc",
-    image: "avatars/17-matematica.png",
+    image: "avatars/17-matematica.jpg",
     immersionKey: "avatar.matematica.immersion",
   },
   {
@@ -163,7 +163,7 @@ export const HERO_AVATARS: AvatarType[] = [
     nameKey: "avatar.lendario.name",
     color: "#a16207",
     descriptionKey: "avatar.lendario.desc",
-    image: "avatars/18-lendario.png",
+    image: "avatars/18-lendario.jpg",
     immersionKey: "avatar.lendario.immersion",
   },
 ];
