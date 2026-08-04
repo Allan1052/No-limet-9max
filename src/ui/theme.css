@@ -3414,3 +3414,59 @@ body {
   margin-top: 8px; text-align: center; font-size: 11px; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dim, #8a7326);
 }
+
+/* ---- Ranking (reescrito no estilo do app) ---- */
+.lb-panel { text-align: center; }
+.lb-preview {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 14px;
+}
+.lb-preview-badge {
+  font-family: system-ui, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--gold-bright, #e6c454);
+  border: 1px solid var(--gold-dim, #8a7326); border-radius: 20px; padding: 5px 14px;
+}
+.lb-preview-note { font-size: 12px; color: var(--dim, #9c9a86); max-width: 40ch; line-height: 1.4; }
+
+.lb-tabs {
+  display: flex; gap: 6px; background: #10130c; border: 1px solid #22261899;
+  border-radius: 12px; padding: 4px; margin: 6px auto 14px; max-width: 360px;
+}
+.lb-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: inherit; font-size: 14px; font-weight: 800; padding: 9px 8px; border: 0;
+  border-radius: 9px; background: none; color: var(--dim, #9c9a86); cursor: pointer;
+}
+.lb-tab.on { color: #14120a; background: linear-gradient(180deg, var(--gold-soft, #e8cf7f), var(--gold, #d8b24a)); }
+
+.lb-tiers { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 14px; }
+.lb-tier {
+  display: flex; flex-direction: column; align-items: center; line-height: 1.15;
+  font-family: inherit; font-size: 12px; font-weight: 800; letter-spacing: .3px;
+  padding: 7px 13px; border-radius: 9px; border: 1px solid #2f331f; background: #12140d;
+  color: var(--dim, #9c9a86); cursor: pointer;
+}
+.lb-tier.on { color: #14120a; background: linear-gradient(180deg, var(--gold-soft, #e8cf7f), var(--gold, #d8b24a)); border-color: var(--gold-dim, #8a7326); }
+.lb-tier-buyin { font-size: 9.5px; font-weight: 600; opacity: .85; letter-spacing: 0; }
+
+.lb-loading { color: var(--dim, #9c9a86); padding: 40px 0; font-style: italic; }
+
+.lb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.lb-row {
+  display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px; background: #10130c; border: 1px solid #22261899;
+}
+.lb-row.me { border-color: var(--gold-dim, #8a7326); background: rgba(230, 196, 84, 0.07); }
+.lb-pos { font-weight: 800; font-size: 16px; text-align: center; color: var(--dim, #9c9a86); font-variant-numeric: tabular-nums; }
+.lb-who { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.lb-av {
+  width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  font-size: 17px; background: radial-gradient(120% 120% at 50% 25%, #232830, #0b0d11); border: 1px solid #3c414b;
+}
+.lb-nick { font-weight: 700; font-size: 15px; color: var(--ink, #ece7d6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-nick small { display: block; font-weight: 500; font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--dim, #9c9a86); }
+.lb-pts { text-align: right; font-weight: 800; font-size: 17px; color: var(--gold-bright, #e6c454); font-variant-numeric: tabular-nums; }
+.lb-pts small { display: block; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--dim, #9c9a86); }
+
+.lb-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid #1e2216; }
+.lb-quote { font-style: italic; font-size: 12.5px; color: var(--gold-soft, #e8cf7f); max-width: 44ch; margin: 0 auto 10px; line-height: 1.5; }
+.lb-seal { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dim, #8a7326); }
