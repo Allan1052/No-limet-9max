@@ -5,9 +5,14 @@ import { I18nProvider } from "./i18n";
 import { SettingsProvider } from "./app/settings";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { announceUpdate } from "./app/pwaUpdate";
+import { initAnalytics } from "./app/analytics";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");
+
+// Analytics privacy-first: liga os eventos de instalação/abertura (no-op até o
+// script de medição existir no index.html).
+initAnalytics();
 
 createRoot(root).render(
   <StrictMode>
