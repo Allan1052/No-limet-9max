@@ -3470,3 +3470,14 @@ body {
 .lb-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid #1e2216; }
 .lb-quote { font-style: italic; font-size: 12.5px; color: var(--gold-soft, #e8cf7f); max-width: 44ch; margin: 0 auto 10px; line-height: 1.5; }
 .lb-seal { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dim, #8a7326); }
+
+/* ---- "Ajude a manter grátis" (engajamento sutil no Perfil) ---- */
+.profile-help {
+  margin-top: 14px; padding: 14px 16px; border-radius: 14px;
+  background: rgba(230, 196, 84, 0.06); border: 1px solid var(--gold-dim, #8a7326);
+  text-align: center;
+}
+.profile-help-title { font-weight: 800; font-size: 15px; color: var(--gold-bright, #e6c454); }
+.profile-help-note { font-size: 12.5px; color: var(--dim, #9c9a86); margin: 4px auto 12px; max-width: 42ch; line-height: 1.45; }
+.profile-help-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.profile-help-row .btn { flex: 1 1 auto; min-width: 100px; font-size: 13.5px; padding: 10px 12px; }

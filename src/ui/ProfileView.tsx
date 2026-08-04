@@ -32,6 +32,24 @@ export function ProfileView({
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatar = getHeroAvatarData();
 
+  // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
+  // TODO: confirme o @ do Instagram (troque abaixo se for diferente).
+  const INSTAGRAM_URL = "https://instagram.com/calloufold";
+  const appUrl =
+    typeof window !== "undefined" ? window.location.origin : "https://calloufold.com.br";
+  const shareApp = () => {
+    const text = t("profile.shareText");
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: "Call ou Fold", text, url: appUrl }).catch(() => {});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${appUrl}`)}`, "_blank");
+    }
+  };
+  const inviteFriend = () => {
+    const text = t("profile.inviteText");
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${appUrl}`)}`, "_blank");
+  };
+
   return (
     <div className="train-view">
       <div className="panel profile-panel">
@@ -118,6 +136,22 @@ export function ProfileView({
           <button className="btn tiny" onClick={onCheckUpdate}>
             🔄 {buildLabel}
           </button>
+        </div>
+
+        <div className="profile-help">
+          <div className="profile-help-title">🤝 {t("profile.helpTitle")}</div>
+          <div className="profile-help-note">{t("profile.helpNote")}</div>
+          <div className="profile-help-row">
+            <button className="btn" onClick={() => window.open(INSTAGRAM_URL, "_blank")}>
+              📸 {t("profile.follow")}
+            </button>
+            <button className="btn" onClick={shareApp}>
+              📣 {t("profile.share")}
+            </button>
+            <button className="btn" onClick={inviteFriend}>
+              💬 {t("profile.invite")}
+            </button>
+          </div>
         </div>
 
         <div className="profile-seal">🔒 {t("disclaimer")}</div>
