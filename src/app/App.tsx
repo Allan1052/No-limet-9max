@@ -33,6 +33,7 @@ import { CampaignView } from "../ui/CampaignView";
 import { ImportView } from "../ui/ImportView";
 import { Leaderboard } from "../ui/Leaderboard";
 import { AnatomiaTorneio } from "../ui/AnatomiaTorneio";
+import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
 import { InstallButton } from "../ui/InstallButton";
 import { LangSelect } from "../ui/LangSelect";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -88,13 +89,15 @@ export function App() {
   const [tipsOpen, setTipsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
-  const [view, setView] = useState<
-    "play" | "icm" | "torneio" | "ranges" | "missoes" | "treino" | "importar" | "ultra" | "campanha" | "ranking" | "anatomia"
-  >("play");
+  const [view, setView] = useState<AppView>("play");
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
   const handOver = controller.phase === "handOver";
+  // A barra de baixo some durante a mão (na mesa), pra os controles de ação
+  // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
+  // Ela volta entre as mãos e nas outras telas.
+  const navHidden = view === "play" && !handOver;
 
   // Sinal global para o SW saber quando é seguro recarregar
   useEffect(() => {
@@ -132,7 +135,7 @@ export function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${navHidden ? " nav-hidden" : ""}`}>
       {updateReady ? (
         <div className="update-banner">
           <span>✨ {tr("update.available")}</span>
@@ -150,68 +153,6 @@ export function App() {
             </span>
             <small>aqui é possível</small>
           </div>
-        </div>
-        <div className="tabs">
-          <button className={`tab ${view === "play" ? "active" : ""}`} onClick={() => setView("play")}>
-            {tr("tab.play")}
-          </button>
-          <button
-            className={`tab ${view === "torneio" ? "active" : ""}`}
-            onClick={() => setView("torneio")}
-          >
-            {tr("tab.tournament")}
-          </button>
-          <button
-            className={`tab ${view === "treino" ? "active" : ""}`}
-            onClick={() => setView("treino")}
-          >
-            {tr("tab.train")}
-          </button>
-          <button
-            className={`tab tab-ultra ${view === "ultra" ? "active" : ""}`}
-            onClick={() => setView("ultra")}
-          >
-            {tr("tab.ultra")}
-          </button>
-          <button
-            className={`tab tab-mission ${view === "campanha" ? "active" : ""}`}
-            onClick={() => setView("campanha")}
-          >
-            {tr("tab.mission")}
-          </button>
-          <button
-            className={`tab ${view === "ranking" ? "active" : ""}`}
-            onClick={() => setView("ranking")}
-          >
-            🏆 {tr("tab.ranking")}
-          </button>
-          <button
-            className={`tab ${view === "anatomia" ? "active" : ""}`}
-            onClick={() => setView("anatomia")}
-          >
-            📊 {tr("tab.anatomia")}
-          </button>
-          <button
-            className={`tab ${view === "importar" ? "active" : ""}`}
-            onClick={() => setView("importar")}
-          >
-            {tr("tab.import")}
-          </button>
-          <button
-            className={`tab ${view === "missoes" ? "active" : ""}`}
-            onClick={() => setView("missoes")}
-          >
-            {tr("tab.missions")}
-          </button>
-          <button
-            className={`tab ${view === "ranges" ? "active" : ""}`}
-            onClick={() => setView("ranges")}
-          >
-            {tr("tab.ranges")}
-          </button>
-          <button className={`tab ${view === "icm" ? "active" : ""}`} onClick={() => setView("icm")}>
-            {tr("tab.icm")}
-          </button>
         </div>
         <div className="topbar-right">
           <div className="topbar-controls">
@@ -263,6 +204,8 @@ export function App() {
           </div>
         </div>
       </div>
+
+      <HubSubNav view={view} setView={setView} />
 
       {view === "icm" ? (
         <IcmCalculator />
@@ -424,6 +367,8 @@ export function App() {
         <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="app-seal-icon" />
         <span>{tr("disclaimer")}</span>
       </div>
+
+      <BottomNav view={view} setView={setView} hidden={navHidden} />
     </div>
   );
 }
