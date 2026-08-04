@@ -21,6 +21,8 @@ import {
   type Scenario,
   type ScenarioSpec,
 } from "../train/scenarios";
+import { awardDecisionAura } from "../train/aura";
+import { AuraChip } from "./AuraChip";
 import type { FeedbackItem } from "../feedback/analyzer";
 
 const STACK_PRESETS = [10, 20, 40, 60, 100];
@@ -88,6 +90,7 @@ export function UltraTrainer() {
 
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<FeedbackItem | null>(null);
+  const [auraDelta, setAuraDelta] = useState<number | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
   const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
 
@@ -100,23 +103,28 @@ export function UltraTrainer() {
 
   const start = () => {
     setResult(null);
+    setAuraDelta(null);
     setSession({ correct: 0, total: 0 });
     setVillain(pickVillain()); // novo carrasco a cada sessão de treino
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
   };
   const next = () => {
     setResult(null);
+    setAuraDelta(null);
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
   };
   const back = () => {
     setScenario(null);
     setResult(null);
+    setAuraDelta(null);
   };
   const choose = (key: "fold" | "call" | "raise" | "allin") => {
     if (!scenario || result) return;
     const item = evaluateChoice(scenario, key);
+    const ok = isCorrect(item);
     setResult(item);
-    setSession((s) => ({ correct: s.correct + (isCorrect(item) ? 1 : 0), total: s.total + 1 }));
+    setAuraDelta(awardDecisionAura(ok).delta);
+    setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     // Errou = o carrasco leva o pote. Um tranco háptico pra doer de verdade.
     if (!isCorrect(item)) {
       try {
@@ -323,6 +331,7 @@ export function UltraTrainer() {
             <div className={`fb-item ${result.rating}`}>
               <div className="fb-text">{result.text}</div>
             </div>
+            {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
             {cells ? (
               <>
                 <div className="ultra-grid-title">{t("ultra.rangeTitle")}</div>

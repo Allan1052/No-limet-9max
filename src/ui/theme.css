@@ -3456,6 +3456,17 @@ body {
 .aura-farmline { font-style: italic; font-size: 13px; color: var(--gold-soft, #b9973f); margin-top: 4px; }
 .aura-total { font-size: 12.5px; color: var(--dim, #9a9686); margin-top: 6px; }
 .aura-total b { color: var(--gold-bright, #e6c454); }
+.aura-share-btn { margin-top: 10px; }
+
+/* Chip de +/− áurea por decisão (treino) */
+.aura-chip-row { text-align: center; margin: 8px 0 2px; }
+.aura-chip {
+  display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .3px;
+  padding: 4px 13px; border-radius: 20px; animation: auraGainPop .4s ease both;
+}
+.aura-chip.plus { color: #0b0d0a; background: linear-gradient(180deg, var(--gold-bright, #e6c454), var(--gold-dim, #8a7326)); }
+.aura-chip.minus { color: #d1544f; background: rgba(209, 84, 79, .12); border: 1px solid rgba(209, 84, 79, .4); }
+@media (prefers-reduced-motion: reduce) { .aura-chip { animation: none; } }
 @media (prefers-reduced-motion: reduce) {
   .aura-avatar-img, .aura-ring, .aura-gain, .aura-spark { animation: none; }
   .aura-ring { opacity: .3; }

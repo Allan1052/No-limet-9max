@@ -34,6 +34,7 @@ import {
   type CampaignProgress,
 } from "../train/campaign";
 import { shareSpot } from "../app/share";
+import { drawAuraCard } from "../app/auraImage";
 import { addAura, auraForStage, auraTier } from "../train/aura";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { useDuelSound } from "./useDuelSound";
@@ -326,6 +327,19 @@ export function CampaignView() {
     const tier = auraTier(done.auraTotal);
     const shareText = t("mission.shareText", { n: stageIdx + 1, pos: stage.heroPosition });
     const onShare = () => void shareSpot(null, appUrl, shareText);
+    const onShareAura = async () => {
+      const blob = await drawAuraCard({
+        avatarUrl: heroAvatar.image,
+        avatarColor: heroAvatar.color,
+        auraTotal: done.auraTotal,
+        word: t("aura.word"),
+        tierEmoji: tier.emoji,
+        tierLabel: t(tier.key as TransKey),
+        kicker: t("aura.cardKicker"),
+        footer: t("aura.cardFooter"),
+      });
+      void shareSpot(blob, appUrl, t("aura.shareText", { total: done.auraTotal }), t("disclaimer"));
+    };
     const onWhats = () =>
       window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${appUrl}`)}`, "_blank");
     const hasNext = stageIdx + 1 < STAGES.length;
@@ -372,6 +386,9 @@ export function CampaignView() {
               <div className="aura-total">
                 {t("aura.totalLabel")}: <b>{done.auraTotal}</b> · {tier.emoji} {t(tier.key as TransKey)}
               </div>
+              <button className="btn aura-share-btn" onClick={onShareAura}>
+                ✨ {t("aura.shareBtn")}
+              </button>
             </div>
           ) : null}
           {done.passed ? (

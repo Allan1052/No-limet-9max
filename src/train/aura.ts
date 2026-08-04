@@ -51,6 +51,23 @@ export function auraForStage(
   return base + flawless + firstTime;
 }
 
+// +/− áurea por decisão no treino: acertou a jogada certa = farma; caiu no
+// vazamento = perde um pouco (mas o total nunca fica negativo — é convite, não
+// punição). Devolve o delta (pra mostrar "+6"/"−4") e o novo total.
+const DECISION_GAIN = 6;
+const DECISION_LOSS = 4;
+
+export function awardDecisionAura(correct: boolean): { delta: number; total: number } {
+  const delta = correct ? DECISION_GAIN : -DECISION_LOSS;
+  const total = Math.max(0, loadAuraTotal() + delta);
+  try {
+    localStorage.setItem(AURA_KEY, String(total));
+  } catch {
+    /* ignore */
+  }
+  return { delta, total };
+}
+
 export interface AuraTier {
   key: string; // chave de i18n
   emoji: string;
