@@ -65,11 +65,29 @@
   .nav-right { display: flex; align-items: center; gap: 16px; }
   .nav-link { text-decoration: none; color: var(--gold-soft); font-weight: 700; font-size: 14px; letter-spacing: .3px; }
   .nav-link:hover { color: var(--gold); }
-  @media (max-width: 520px){ .brand-tag { display: none; } .nav-link { display: none; } }
   .nav .disc {
     font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
     color: #0b0d0a; background: linear-gradient(180deg, var(--gold), var(--gold-dim));
     padding: 4px 9px; border-radius: 6px;
+  }
+  /* Botão "Compartilhar" no topo — ajuda a espalhar sem rolar até o rodapé. */
+  .nav-share {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-family: inherit; font-weight: 800; font-size: 13px; letter-spacing: .3px; line-height: 1;
+    color: #0b0d0a; background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+    border: 1px solid var(--gold-dim); border-radius: 8px; padding: 8px 13px;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .nav-share:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(212,175,55,.25); }
+  .nav-share:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 2px; }
+  @media (max-width: 520px){
+    .brand-tag { display: none; }
+    .nav-link { display: none; }
+    .brand-logo { height: 50px; }
+    .nav { padding: 13px 14px; }
+    .nav-right { gap: 9px; }
+    .nav-share .ns-t { display: none; }   /* no celular fica só o 📣 pra caber com o selo */
+    .nav-share { padding: 8px 10px; font-size: 15px; }
   }
 
   /* ---- Buttons ---- */
@@ -418,12 +436,12 @@
     <a class="nav-link" href="#planos">Planos</a>
     <a class="nav-link" href="#ranking">Ranking</a>
     <span class="disc">Sem dinheiro real</span>
+    <button class="nav-share" type="button" onclick="shareSite()" aria-label="Compartilhar o Call ou Fold">📣 <span class="ns-t">Compartilhar</span></button>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <img src="logo.png" alt="Call ou Fold" class="hero-logo" />
     <span class="eyebrow">Poker pra quem joga por diversão</span>
     <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
     <p class="sub">Agora com suporte completo a <b>Omaha (PLO)</b>! Treine Texas Hold'em e Omaha — as duas variantes mais populares do mundo.</p>
@@ -738,6 +756,17 @@
 </footer>
 
 <script>
+  /* ---- Compartilhar (topo) ---- */
+  function shareSite() {
+    var url = "https://calloufold.com.br";
+    var text = "Call ou Fold — poker de estudo grátis, sem dinheiro real. Vem treinar:";
+    if (navigator.share) {
+      navigator.share({ title: "Call ou Fold", text: text, url: url }).catch(function () {});
+    } else {
+      window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank");
+    }
+  }
+
   /* ---- Demo interativo ---- */
   (function () {
     var verdict = document.getElementById("verdict");
