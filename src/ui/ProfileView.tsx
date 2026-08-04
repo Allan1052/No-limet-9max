@@ -33,8 +33,7 @@ export function ProfileView({
   const avatar = getHeroAvatarData();
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
-  // TODO: confirme o @ do Instagram (troque abaixo se for diferente).
-  const INSTAGRAM_URL = "https://instagram.com/calloufold";
+  const INSTAGRAM_URL = "https://instagram.com/calloufold.sonho";
   const appUrl =
     typeof window !== "undefined" ? window.location.origin : "https://calloufold.com.br";
   const shareApp = () => {
