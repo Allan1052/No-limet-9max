@@ -34,9 +34,7 @@ import { ImportView } from "../ui/ImportView";
 import { Leaderboard } from "../ui/Leaderboard";
 import { AnatomiaTorneio } from "../ui/AnatomiaTorneio";
 import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
-import { InstallButton } from "../ui/InstallButton";
-import { LangSelect } from "../ui/LangSelect";
-import { ModeToggle } from "../ui/ModeToggle";
+import { ProfileView } from "../ui/ProfileView";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { OnboardingScreen, isFirstOpen, markFirstOpen } from "../ui/AvatarSelector";
@@ -154,55 +152,6 @@ export function App() {
             <small>aqui é possível</small>
           </div>
         </div>
-        <div className="topbar-right">
-          <div className="topbar-controls">
-            <div className="variant-toggle">
-              <button
-                className={`variant-btn ${gameVariant === "holdem" ? "active" : ""}`}
-                onClick={() => setGameVariant("holdem")}
-                title="Texas Hold'em"
-              >
-                Texas
-              </button>
-              <button
-                className={`variant-btn ${gameVariant === "omaha" && omahaUnlocked ? "active" : ""}`}
-                onClick={() => {
-                  if (omahaUnlocked) {
-                    setGameVariant("omaha");
-                  } else {
-                    // Porta secreta: digitar a chave para destravar
-                    const code = prompt("🔒");
-                    if (code === "omaha2026") {
-                      localStorage.setItem("omaha_dev_unlock", "true");
-                      setOmahaUnlocked(true);
-                      setGameVariant("omaha");
-                    } else {
-                      alert("Omaha (PLO) em desenvolvimento. Disponível em breve!");
-                    }
-                  }
-                }}
-                title={omahaUnlocked ? "Omaha (PLO)" : "Em breve — Omaha (PLO)"}
-                style={omahaUnlocked ? {} : { opacity: 0.5, cursor: "not-allowed" }}
-              >
-                {omahaUnlocked ? "Omaha" : "Omaha 🔒"}
-              </button>
-            </div>
-            <ModeToggle />
-            <button
-              className="build-id"
-              title={tr("version.update")}
-              onClick={forceUpdate}
-            >
-              🔄 {formatBuild(__BUILD_ID__)}
-            </button>
-            <LangSelect />
-            <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="topbar-logo" />
-          </div>
-          <InstallButton />
-          <div className="security-info">
-            <span className="disclaimer disclaimer-text">{tr("disclaimer")}</span>
-          </div>
-        </div>
       </div>
 
       <HubSubNav view={view} setView={setView} />
@@ -219,6 +168,16 @@ export function App() {
         <Leaderboard />
       ) : view === "anatomia" ? (
         <AnatomiaTorneio />
+      ) : view === "perfil" ? (
+        <ProfileView
+          gameVariant={gameVariant}
+          setGameVariant={setGameVariant}
+          omahaUnlocked={omahaUnlocked}
+          setOmahaUnlocked={setOmahaUnlocked}
+          onOpenProgress={() => setProgressOpen(true)}
+          buildLabel={formatBuild(__BUILD_ID__)}
+          onCheckUpdate={forceUpdate}
+        />
       ) : view === "importar" ? (
         <ImportView />
       ) : view === "missoes" ? (

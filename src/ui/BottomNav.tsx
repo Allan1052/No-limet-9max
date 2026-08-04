@@ -18,7 +18,8 @@ export type AppView =
   | "ultra"
   | "campanha"
   | "ranking"
-  | "anatomia";
+  | "anatomia"
+  | "perfil";
 
 type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
 
@@ -28,7 +29,7 @@ export const HUBS: Hub[] = [
   { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "campanha"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "icm", "importar"] },
   { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
-  { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["missoes"] },
+  { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
 ];
 
 // Rótulo de cada sub-view (reaproveita as chaves tab.* onde faz sentido).
@@ -43,7 +44,8 @@ const SUB_LABEL: Record<AppView, TransKey> = {
   icm: "tab.icm",
   importar: "tab.import",
   ranking: "tab.ranking",
-  missoes: "tab.missions",
+  perfil: "nav.profile",
+  missoes: "profile.challenges",
 };
 
 export function hubForView(view: AppView): Hub {
