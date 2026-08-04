@@ -25,6 +25,8 @@ export function Leaderboard() {
   const [activeTier, setActiveTier] = useState<Tier>("micro");
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  // Verdadeiro quando o placar mostra dados de exemplo (sem backend real ainda).
+  const [isPreview, setIsPreview] = useState(false);
   
   // Dados de exemplo (fallback) baseados na landing page
   const mockEntries: Record<string, LeaderboardEntry[]> = {
@@ -52,6 +54,7 @@ export function Leaderboard() {
         if (!supabase.supabaseUrl) {
           // Se nao houver URL do Supabase, usa mocks
           setEntries(mockEntries[activeTab]);
+          setIsPreview(true);
           setLoading(false);
           return;
         }
@@ -75,6 +78,7 @@ export function Leaderboard() {
             points: d.points
           }));
           setEntries(formatted.length > 0 ? formatted : mockEntries.tourney);
+          setIsPreview(formatted.length === 0);
         } else {
           const { data, error } = await supabase
             .from("mission_progress")
@@ -93,10 +97,12 @@ export function Leaderboard() {
             points: d.stages_cleared
           }));
           setEntries(formatted.length > 0 ? formatted : mockEntries.mission);
+          setIsPreview(formatted.length === 0);
         }
       } catch (err) {
         console.error("Erro ao carregar ranking:", err);
         setEntries(mockEntries[activeTab]);
+        setIsPreview(true);
       } finally {
         setLoading(false);
       }
@@ -112,10 +118,39 @@ export function Leaderboard() {
           {activeTab === "tourney" ? tr("tab.ranking") + " de Torneios" : tr("tab.ranking") + " 1×1 · Missão"}
         </h2>
         <p className="text-text-dim text-sm italic">
-          {activeTab === "tourney" 
-            ? "A elite dos feltros virtuais por categoria." 
+          {activeTab === "tourney"
+            ? "A elite dos feltros virtuais por categoria."
             : "Quem domina a arena contra O Ceifador."}
         </p>
+        {isPreview && (
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                color: "#e6c454",
+                border: "1px solid #8a7326",
+                borderRadius: 20,
+                padding: "5px 14px",
+              }}
+            >
+              ◔ {tr("rank.previewBadge")}
+            </span>
+            <span style={{ fontSize: 12, color: "#9c9a86", maxWidth: 340, lineHeight: 1.4 }}>
+              {tr("rank.previewNote")}
+            </span>
+          </div>
+        )}
       </header>
 
       {/* Tabs Principais */}
