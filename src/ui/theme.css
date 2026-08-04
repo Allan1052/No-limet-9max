@@ -3404,6 +3404,24 @@ body {
 }
 .profile-aura-badge b { color: var(--gold-bright, #e6c454); }
 
+/* ---- Áurea: o boneco animado farmando áurea na tela de conquista ---- */
+.aura-char-wrap {
+  position: relative; width: 176px; height: 176px; margin: 4px auto 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.aura-char-glow {
+  position: absolute; width: 150px; height: 150px; border-radius: 50%;
+  /* Brilho dourado atrás — separa a silhueta escura do fundo escuro. */
+  background: radial-gradient(circle, rgba(230,196,84,0.5), rgba(230,196,84,0.14) 45%, transparent 70%);
+  filter: blur(4px); animation: auraGlowPulse 2s ease-in-out infinite;
+}
+.aura-char-img { position: relative; z-index: 2; height: 176px; width: auto; display: block; }
+@keyframes auraGlowPulse {
+  0%, 100% { transform: scale(.9); opacity: .8; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .aura-char-glow { animation: none; } }
+
 /* ---- Áurea: o avatar farmando áurea na tela de conquista ---- */
 .aura-burst { text-align: center; margin: 10px 0 2px; }
 .aura-avatar-wrap {

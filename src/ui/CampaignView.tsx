@@ -361,23 +361,19 @@ export function CampaignView() {
           </div>
           {done.passed && done.aura > 0 ? (
             <div className="aura-burst">
-              <div
-                className="aura-avatar-wrap"
-                style={{ "--aura-color": heroAvatar.color } as Record<string, string>}
-              >
-                <span className="aura-ring" />
-                <span className="aura-ring d2" />
-                <img
-                  src={heroAvatar.image}
-                  alt=""
-                  className="aura-avatar-img"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                  }}
-                />
-                <span className="aura-spark s1">✨</span>
-                <span className="aura-spark s2">✨</span>
-                <span className="aura-spark s3">✨</span>
+              <div className="aura-char-wrap">
+                <span className="aura-char-glow" />
+                <picture>
+                  <source srcSet={`${import.meta.env.BASE_URL}aura/farm.webp`} type="image/webp" />
+                  <img
+                    src={`${import.meta.env.BASE_URL}aura/farm.gif`}
+                    alt=""
+                    className="aura-char-img"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </picture>
               </div>
               <div className="aura-gain">
                 +{done.aura} <span>{t("aura.word")}</span>
