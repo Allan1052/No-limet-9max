@@ -125,7 +125,7 @@ export function ProfileView({
           </div>
         </div>
 
-        <div className="profile-setting">
+        <div className="profile-setting profile-install-row">
           <span className="ps-label">{t("profile.install")}</span>
           <InstallButton />
         </div>
