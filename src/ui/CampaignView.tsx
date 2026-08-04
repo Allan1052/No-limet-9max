@@ -34,6 +34,7 @@ import {
   type CampaignProgress,
 } from "../train/campaign";
 import { shareSpot } from "../app/share";
+import { addAura, auraForStage, auraTier } from "../train/aura";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { useDuelSound } from "./useDuelSound";
 
@@ -129,7 +130,12 @@ export function CampaignView() {
   const [correct, setCorrect] = useState(0);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<FeedbackItem | null>(null);
-  const [done, setDone] = useState<{ passed: boolean; correct: number } | null>(null);
+  const [done, setDone] = useState<{
+    passed: boolean;
+    correct: number;
+    aura: number;
+    auraTotal: number;
+  } | null>(null);
   const [showAvatar, setShowAvatar] = useState(false);
 
   const appUrl =
@@ -188,10 +194,19 @@ export function CampaignView() {
     if (stageIdx == null) return;
     const stage = STAGES[stageIdx];
     if (round + 1 >= stage.rounds) {
+      // Primeira vez que bate este estágio? (checar ANTES de registrar)
+      const firstClear = !progress.cleared.includes(stage.id);
       const { passed, progress: np } = recordStage(progress, stage.id, correct);
       saveCampaign(np);
       setProgress(np);
-      setDone({ passed, correct });
+      // Farmar áurea — só quando passa. Guarda no celular.
+      let aura = 0;
+      let auraTotal = 0;
+      if (passed) {
+        aura = auraForStage(stageIdx, correct, stage.rounds, firstClear);
+        auraTotal = addAura(aura);
+      }
+      setDone({ passed, correct, aura, auraTotal });
       // Toca som de vitória ou derrota
       if (passed) {
         playVictory();
@@ -307,6 +322,8 @@ export function CampaignView() {
   if (done && stageIdx != null) {
     const stage = STAGES[stageIdx];
     const rivalAvatar = getRivalAvatarByStageIdx(stageIdx);
+    const heroAvatar = getHeroAvatarData();
+    const tier = auraTier(done.auraTotal);
     const shareText = t("mission.shareText", { n: stageIdx + 1, pos: stage.heroPosition });
     const onShare = () => void shareSpot(null, appUrl, shareText);
     const onWhats = () =>
@@ -328,6 +345,35 @@ export function CampaignView() {
           <div className="mission-score">
             {done.correct}/{stage.rounds} · {t("mission.needed", { n: stage.passNeeded })}
           </div>
+          {done.passed && done.aura > 0 ? (
+            <div className="aura-burst">
+              <div
+                className="aura-avatar-wrap"
+                style={{ "--aura-color": heroAvatar.color } as Record<string, string>}
+              >
+                <span className="aura-ring" />
+                <span className="aura-ring d2" />
+                <img
+                  src={heroAvatar.image}
+                  alt=""
+                  className="aura-avatar-img"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                  }}
+                />
+                <span className="aura-spark s1">✨</span>
+                <span className="aura-spark s2">✨</span>
+                <span className="aura-spark s3">✨</span>
+              </div>
+              <div className="aura-gain">
+                +{done.aura} <span>{t("aura.word")}</span>
+              </div>
+              <div className="aura-farmline">{t("aura.farmLine")}</div>
+              <div className="aura-total">
+                {t("aura.totalLabel")}: <b>{done.auraTotal}</b> · {tier.emoji} {t(tier.key as TransKey)}
+              </div>
+            </div>
+          ) : null}
           {done.passed ? (
             <>
               <p className="mission-share-cta">{t("mission.shareCta")}</p>

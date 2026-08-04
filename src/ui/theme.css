@@ -3399,6 +3399,68 @@ body {
 .profile-avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .profile-hero-info { display: flex; flex-direction: column; gap: 5px; }
 .profile-hero-name { font-size: 17px; font-weight: 800; color: var(--gold-bright, #e6c454); }
+.profile-aura-badge {
+  font-size: 11.5px; color: var(--dim, #9a9686); letter-spacing: .2px;
+}
+.profile-aura-badge b { color: var(--gold-bright, #e6c454); }
+
+/* ---- Áurea: o avatar farmando áurea na tela de conquista ---- */
+.aura-burst { text-align: center; margin: 10px 0 2px; }
+.aura-avatar-wrap {
+  position: relative; width: 100px; height: 100px; margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.aura-avatar-img {
+  width: 82px; height: 82px; border-radius: 50%; object-fit: cover; position: relative; z-index: 2;
+  border: 2px solid var(--aura-color, #e6c454);
+  box-shadow: 0 0 26px var(--aura-color, #e6c454), 0 0 6px var(--aura-color, #e6c454);
+  animation: auraBob 1.4s ease-in-out infinite;
+}
+.aura-ring {
+  position: absolute; inset: 8px; border-radius: 50%;
+  border: 2px solid var(--aura-color, #e6c454); opacity: 0;
+  animation: auraPulse 1.7s ease-out infinite;
+}
+.aura-ring.d2 { animation-delay: .85s; }
+@keyframes auraPulse {
+  0%   { transform: scale(.72); opacity: .75; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+@keyframes auraBob {
+  0%,100% { transform: translateY(0) rotate(-1.5deg); }
+  50%     { transform: translateY(-5px) rotate(1.5deg); }
+}
+.aura-gain {
+  font-family: Georgia, "Times New Roman", serif; font-weight: 800; font-size: 30px;
+  color: var(--gold-bright, #e6c454); line-height: 1;
+  text-shadow: 0 0 18px rgba(230, 196, 84, .55); animation: auraGainPop .5s ease both;
+}
+.aura-gain span { font-size: 13px; letter-spacing: 2px; }
+@keyframes auraGainPop {
+  0%  { transform: scale(.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100%{ transform: scale(1); opacity: 1; }
+}
+.aura-spark {
+  position: absolute; font-size: 15px; z-index: 3; opacity: 0;
+  animation: auraSpark 1.9s ease-in-out infinite;
+}
+.aura-spark.s1 { left: 8px; bottom: 16px; animation-delay: .1s; }
+.aura-spark.s2 { right: 10px; bottom: 24px; animation-delay: .8s; }
+.aura-spark.s3 { left: 46%; bottom: 6px; animation-delay: 1.3s; }
+@keyframes auraSpark {
+  0%   { transform: translateY(8px) scale(.5); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(-28px) scale(1); opacity: 0; }
+}
+.aura-farmline { font-style: italic; font-size: 13px; color: var(--gold-soft, #b9973f); margin-top: 4px; }
+.aura-total { font-size: 12.5px; color: var(--dim, #9a9686); margin-top: 6px; }
+.aura-total b { color: var(--gold-bright, #e6c454); }
+@media (prefers-reduced-motion: reduce) {
+  .aura-avatar-img, .aura-ring, .aura-gain, .aura-spark { animation: none; }
+  .aura-ring { opacity: .3; }
+  .aura-spark { opacity: .8; }
+}
 .profile-evolution { width: 100%; justify-content: center; padding: 9px 12px; }
 .profile-section-title {
   font-family: system-ui, sans-serif; font-size: 11px; font-weight: 800;

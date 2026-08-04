@@ -10,6 +10,7 @@ import { ModeToggle } from "./ModeToggle";
 import { LangSelect } from "./LangSelect";
 import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
+import { loadAuraTotal, auraTier } from "../train/aura";
 
 export function ProfileView({
   gameVariant,
@@ -31,6 +32,8 @@ export function ProfileView({
   const { t } = useT();
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatar = getHeroAvatarData();
+  const auraTotal = loadAuraTotal();
+  const tier = auraTier(auraTotal);
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
   const INSTAGRAM_URL = "https://instagram.com/calloufold.sonho";
@@ -69,6 +72,9 @@ export function ProfileView({
           </div>
           <div className="profile-hero-info">
             <div className="profile-hero-name">{t(avatar.nameKey as TransKey)}</div>
+            <div className="profile-aura-badge">
+              ✨ <b>{auraTotal}</b> {t("aura.word").toLowerCase()} · {tier.emoji} {t(tier.key as TransKey)}
+            </div>
             <button className="btn tiny" onClick={() => setAvatarOpen(true)}>
               {t("profile.changeAvatar")}
             </button>
