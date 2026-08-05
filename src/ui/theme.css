@@ -521,6 +521,14 @@ body {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+/* Total de fichas em jogo no torneio — dá o clima de torneio grande de verdade. */
+.tbl-inplay {
+  font-size: 11px;
+  color: rgba(230, 196, 84, 0.85);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+}
 .tbl-tips-btn {
   position: absolute;
   top: 66%;

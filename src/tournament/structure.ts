@@ -88,6 +88,16 @@ export function prizePool(buyIn: number, entrants: number): number {
   return buyIn * Math.max(1, Math.floor(entrants));
 }
 
+// Stack inicial (em fichas) de cada jogador no começo do torneio: 100bb no
+// nível 1 (bb 50) = 5.000 fichas. As fichas são CONSERVADAS, então o total em
+// jogo é constante = inscritos × stack inicial, em qualquer fase.
+export const TOURNEY_STARTING_STACK = STAGES.inicio.avgBB * BLIND_LEVELS[0].bb;
+
+/** Total de fichas em jogo no torneio (conservado): inscritos × stack inicial. */
+export function totalChipsInPlay(entrants: number): number {
+  return Math.max(1, Math.floor(entrants)) * TOURNEY_STARTING_STACK;
+}
+
 /** Nº de lugares pagos (~15% do campo, no mínimo 1). */
 export function paidPlaces(entrants: number): number {
   return Math.max(1, Math.round(entrants * 0.15));
