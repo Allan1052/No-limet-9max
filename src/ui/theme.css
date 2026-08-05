@@ -3502,6 +3502,20 @@ body {
 /* Botão "Compartilhar esse acerto" no treino — cada print é uma porta de entrada. */
 .hit-share-btn { margin: 8px auto 0; display: block; border-color: var(--gold-dim, #8a7326); color: var(--gold-soft, #b9973f); }
 
+/* ---- Mão do dia ---- */
+.daily-panel {
+  border: 1px solid var(--gold-dim, #8a7326);
+  background: linear-gradient(180deg, rgba(230,196,84,0.07), rgba(230,196,84,0.02)), #14170f;
+}
+.daily-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.daily-badge { font-weight: 800; font-size: 15px; color: var(--gold-bright, #e6c454); }
+.daily-sub { font-size: 12px; color: var(--dim, #9a9686); }
+.daily-start { width: 100%; }
+.daily-spot { text-align: center; margin-bottom: 6px; }
+.daily-done-msg { font-size: 13.5px; color: var(--ink, #ece7d6); margin-bottom: 10px; }
+.daily-share { display: inline-block; }
+.daily-come-back { text-align: center; font-size: 12px; color: var(--dim, #9a9686); margin-top: 8px; font-style: italic; }
+
 /* Chip de +/− áurea por decisão (treino) */
 .aura-chip-row { text-align: center; margin: 8px 0 2px; }
 .aura-chip {
