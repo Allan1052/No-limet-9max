@@ -82,6 +82,9 @@ export function preflopContextFor(
           positions.get(o.seat) !== "BB",
       ).length;
 
+  // Quantos adversários já estão all-in na frente (confronto múltiplo aperta o call).
+  const allInsAhead = t.players.filter((o) => o.seat !== seat && o.status === "allin").length;
+
   return {
     heroPosition,
     hand: p.holeCards,
@@ -90,6 +93,7 @@ export function preflopContextFor(
     raiserPosition,
     openSizeBB: facingRaise ? t.currentBet / t.bigBlind : undefined,
     limpers,
+    allInsAhead,
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
     variant: t.variant ?? "holdem",
   };

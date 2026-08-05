@@ -47,6 +47,12 @@ export interface PreflopContext {
    * aberto. Cada limper aumenta a abertura padrão em +1bb (isolamento).
    */
   limpers?: number;
+  /**
+   * Quantos adversários já estão ALL-IN na frente quando o herói decide. Com
+   * 2+ all-ins (confronto múltiplo) a range de pagar aperta MUITO — não basta
+   * bater um range, tem que bater vários. Ausente/0/1 = comportamento normal.
+   */
+  allInsAhead?: number;
   /** Contexto de ICM para o confronto herói×vilão (opcional). */
   icmSpot?: IcmSpot;
   /**
@@ -86,6 +92,20 @@ const BASE_OPEN_BB = 2.3;
  */
 function openRaiseSize(ctx: PreflopContext): number {
   return BASE_OPEN_BB + Math.max(0, Math.floor(ctx.limpers ?? 0));
+}
+
+/**
+ * Aperto por CONFRONTO MÚLTIPLO ao pagar all-in: com 2+ adversários já all-in,
+ * a mão precisa bater VÁRIOS ranges de uma vez (e pode estar dominada por
+ * qualquer um deles), então a largura de call encolhe forte. 0/1 all-in não
+ * mexe (é o call normal heads-up). Devolve a nova largura e uma nota de texto.
+ */
+function multiwayAllInTighten(width: number, allInsAhead: number): { width: number; note: string } {
+  const n = Math.max(0, Math.floor(allInsAhead));
+  if (n <= 1) return { width, note: "" };
+  let w = width * Math.pow(0.5, n - 1); // cada all-in extra ~corta pela metade
+  w = Math.min(w, n >= 3 ? 0.1 : 0.16); // teto duro: só o topo paga confronto múltiplo
+  return { width: w, note: ` — ${n} all-ins na frente, confronto múltiplo aperta a range` };
 }
 
 
@@ -287,20 +307,23 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     if (sd.pushFold && callIsAllIn) {
       const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
       const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
-      const callWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
-      const callRange = buildTopRange(callWidth);
+      const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+      const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
+      const callRange = buildTopRange(mw.width);
       if (freqIn(callRange, handType) > 0) {
         return {
           action: "call",
           sizeBB: ctx.effectiveBB,
-          reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in.`,
+          reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
           handType,
         };
       }
       return {
         action: "fold",
         sizeBB: 0,
-        reason: `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+        reason: mw.note
+          ? `${handType} folda${mw.note}: contra vários shoves, só as mãos de topo pagam.`
+          : `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
         handType,
       };
     }
@@ -488,20 +511,23 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
   if (sd.pushFold && callIsAllIn) {
     const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
     const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor; // station paga mais largo
-    const callWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
-    const callRange = buildTopRange(callWidth);
+    const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+    const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
+    const callRange = buildTopRange(mw.width);
     if (freqIn(callRange, handType) > 0) {
       return {
         action: "call",
         sizeBB: ctx.effectiveBB,
-        reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in.`,
+        reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
         handType,
       };
     }
     return {
       action: "fold",
       sizeBB: 0,
-      reason: `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+      reason: mw.note
+        ? `${handType} folda${mw.note}: contra vários shoves, só as mãos de topo pagam.`
+        : `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
       handType,
     };
   }

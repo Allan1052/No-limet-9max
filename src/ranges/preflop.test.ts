@@ -152,3 +152,36 @@ describe("pré-flop — ICM aperta a defesa", () => {
     expect(bubble).toBeTruthy();
   });
 });
+
+describe("pré-flop — confronto múltiplo (vários all-ins) aperta o call", () => {
+  // BB curto (6bb) enfrentando um shove que já é all-in.
+  const spot = { effectiveBB: 6, raiserPosition: "CO" as const, openSizeBB: 8 };
+  const cont = (a: string) => a === "call" || a === "jam";
+
+  it("mão marginal (J9s) paga UM all-in mas FOLDA contra dois", () => {
+    const one = decide("Js9s", "BB", { ...spot, allInsAhead: 1 });
+    const two = decide("Js9s", "BB", { ...spot, allInsAhead: 2 });
+    expect(cont(one.action)).toBe(true);
+    expect(two.action).toBe("fold");
+  });
+
+  it("premium (AA) paga mesmo com três all-ins na frente", () => {
+    expect(cont(decide("AsAh", "BB", { ...spot, allInsAhead: 3 }).action)).toBe(true);
+  });
+
+  it("quanto mais all-ins na frente, menos mãos continuam", () => {
+    let one = 0, two = 0, three = 0;
+    for (const combo of ["AsAh","KsKh","QsQd","JsJh","TsTd","AsKs","AsKd","AsQs","KsQs","Js9s","Ts9s","Ks9s","Qs9s","9s8s","7s6s","Ad2c","Kd5c"]) {
+      if (cont(decide(combo, "BB", { ...spot, allInsAhead: 1 }).action)) one++;
+      if (cont(decide(combo, "BB", { ...spot, allInsAhead: 2 }).action)) two++;
+      if (cont(decide(combo, "BB", { ...spot, allInsAhead: 3 }).action)) three++;
+    }
+    expect(two).toBeLessThan(one);
+    expect(three).toBeLessThanOrEqual(two);
+  });
+
+  it("a escrita muda: com 2+ all-ins o texto cita o confronto múltiplo", () => {
+    const two = decide("Js9s", "BB", { ...spot, allInsAhead: 2 });
+    expect(two.reason).toMatch(/all-ins na frente|confronto múltiplo/i);
+  });
+});
