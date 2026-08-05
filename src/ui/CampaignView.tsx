@@ -37,6 +37,7 @@ import { shareSpot } from "../app/share";
 import { drawAuraCard } from "../app/auraImage";
 import { addAura, auraForStage, auraTier } from "../train/aura";
 import { markActiveToday } from "../train/streak";
+import { recordDecision } from "../train/decisionStats";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { useDuelSound } from "./useDuelSound";
 
@@ -185,6 +186,7 @@ export function CampaignView() {
     const item = evaluateChoice(scenario, key);
     setResult(item);
     markActiveToday();
+    recordDecision(key);
     if (isCorrect(item)) {
       setCorrect((c) => c + 1);
       playCorrect();

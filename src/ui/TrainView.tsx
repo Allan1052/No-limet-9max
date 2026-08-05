@@ -26,6 +26,7 @@ import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import { awardDecisionAura } from "../train/aura";
 import { markActiveToday } from "../train/streak";
+import { recordDecision } from "../train/decisionStats";
 import { AuraChip } from "./AuraChip";
 import { DailyHand } from "./DailyHand";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -101,6 +102,7 @@ export function TrainView() {
     setResult(item);
     setAuraDelta(awardDecisionAura(ok).delta);
     markActiveToday();
+    recordDecision(key);
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     persist(recordResult(mastery, moduleId, ok));
   };
