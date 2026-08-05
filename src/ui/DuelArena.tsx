@@ -132,6 +132,7 @@ export function DuelArena({
           <div className="villain-name" style={rivalAvatar ? { color: rivalAvatar.color } : undefined}>
             {rivalAvatar ? rivalAvatar.name : t(villain.nameKey)}
           </div>
+          <div className="duel-substack">{spec.effectiveBB}bb</div>
           <div className="villain-taunt">
             {result
               ? isCorrect(result)

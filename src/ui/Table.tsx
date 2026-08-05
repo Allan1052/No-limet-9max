@@ -121,7 +121,10 @@ export function PokerTable({
         {field ? (
           <div className="tbl-rankline">
             <span className="tbl-rank">
-              {field.heroRank}º<span className="tbl-of"> / {field.entrants.toLocaleString("en-US")}</span>
+              {field.heroRank}º
+              <span className="tbl-of">
+                {" "}de {field.remaining.toLocaleString("en-US")} {t("hud.alive")}
+              </span>
             </span>
             <span className={`tbl-money ${field.inMoney ? "itm" : ""}`}>
               {field.inMoney
@@ -133,7 +136,7 @@ export function PokerTable({
         <div className="tbl-blinds">
           {t("hud.blinds")} {table.smallBlind}/{table.bigBlind}
           {ante > 0 ? ` (ante ${ante})` : ""}
-          {field ? ` · ${field.remaining.toLocaleString("en-US")} ${t("hud.alive")}` : ""}
+          {field ? ` · ${t("hud.field")} ${field.entrants.toLocaleString("en-US")}` : ""}
         </div>
         <Board
           board={table.board}
