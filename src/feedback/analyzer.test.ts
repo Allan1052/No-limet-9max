@@ -14,6 +14,28 @@ function advice(mix: { action: string; freq: number }[], over: Partial<HeroAdvic
   };
 }
 
+describe("all-in fundo quando o certo era raise (overbet)", () => {
+  const openMix = [{ action: "raise", freq: 1 }];
+  it("all-in com 84bb (deep) e conselho de raise → ruim (não 'boa')", () => {
+    const item = gradeDecision("Pré-flop", "free", "allin", {
+      kind: "preflop", action: "raise", reason: "abrir", mix: openMix, effectiveBB: 84,
+    });
+    expect(item.rating).toBe("ruim");
+  });
+  it("all-in com 35bb e conselho de raise → imprecisa", () => {
+    const item = gradeDecision("Pré-flop", "free", "allin", {
+      kind: "preflop", action: "raise", reason: "abrir", mix: openMix, effectiveBB: 35,
+    });
+    expect(item.rating).toBe("imprecisa");
+  });
+  it("all-in com stack curto (12bb) e conselho de JAM → boa (push/fold ok)", () => {
+    const item = gradeDecision("Pré-flop", "free", "allin", {
+      kind: "preflop", action: "jam", reason: "shove", mix: [{ action: "jam", freq: 1 }], effectiveBB: 12,
+    });
+    expect(item.rating).toBe("boa");
+  });
+});
+
 describe("nota por frequência (estratégia mista)", () => {
   it("ação principal do mix recebe nota boa", () => {
     // Padrão: aposta 70% / check 30%. Herói apostou → jogada principal.

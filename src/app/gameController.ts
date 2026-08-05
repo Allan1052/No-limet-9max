@@ -613,7 +613,7 @@ export class GameController {
     if (this.table.street === "preflop") {
       const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix };
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);

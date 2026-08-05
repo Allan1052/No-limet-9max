@@ -35,6 +35,8 @@ export interface HeroAdvice {
   mix?: AdviceFreq[];
   /** EV (em big blinds) de PAGAR neste spot; foldar vale 0. Só em spots com aposta. */
   evBB?: number;
+  /** Stack efetivo em big blinds — pra distinguir all-in fundo (overbet) de jam curto. */
+  effectiveBB?: number;
 }
 
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
@@ -193,6 +195,30 @@ function gradeCore(
     potOdds: odds,
     mix: advice.mix,
   };
+
+  // ----- All-in FUNDO quando o certo era um raise/3-bet NORMAL (não jam) -----
+  // Com stack fundo, dar all-in não é "raise": é um overbet gigante. Você faz
+  // as mãos piores foldarem e só é pago por mãos melhores — jogada perdedora.
+  // O all-in só equivale ao raise em stack CURTO (push/fold), quando o próprio
+  // conselho recomenda jam. Sem isso, o app dava "excelente" pra qualquer jam.
+  if (
+    heroAction === "allin" &&
+    advice.action !== "jam" &&
+    family(advice.action) === "aggro" &&
+    (advice.effectiveBB ?? 100) > 30
+  ) {
+    const eff = Math.round(advice.effectiveBB ?? 0);
+    const deep = eff >= 50;
+    return {
+      ...base,
+      rating: deep ? "ruim" : "imprecisa",
+      text: `All-in aqui é overbet: com ${eff}bb, o certo era um ${actionLabel(
+        advice.action,
+      )} de tamanho normal. Jogando all-in você faz mão pior largar e só é pago por mão melhor — ${
+        deep ? "vira jogada perdedora" : "perde valor"
+      }. Guarde o all-in pra stack curto (push/fold).`,
+    };
+  }
 
   // ----- Nota por FREQUÊNCIA (estratégia mista) -----
   // O poker é misto: uma mão pode ser 60% aposta / 40% check. Avaliar por

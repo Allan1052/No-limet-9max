@@ -163,7 +163,7 @@ export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Sc
     variant: spec.variant || "holdem",
   };
   const d = preflopDecision(ctx);
-  const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix };
+  const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: spec.effectiveBB };
   return { spec, hand, advice, actions: actionsFor(spec) };
 }
 
