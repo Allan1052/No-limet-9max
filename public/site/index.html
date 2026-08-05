@@ -125,6 +125,14 @@
   /* ---- Hero ---- */
   .hero { text-align: center; padding: 34px 0 20px; position: relative; }
   .hero-logo { display: block; margin: 0 auto 20px; max-width: 380px; width: 80%; height: auto; }
+  .community-bar {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: clamp(12px, 1.8vw, 15px); color: var(--dim);
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .community-bar a { color: var(--gold-soft); text-decoration: none; transition: color .15s; }
+  .community-bar a:hover { color: var(--gold); }
+  .community-bar .flag { font-size: 18px; }
   .tagline {
     font-size: clamp(14px, 2.2vw, 18px);
     color: var(--gold);
@@ -480,6 +488,12 @@
 
 <header class="hero">
   <div class="wrap">
+    <div class="community-bar">
+      <span class="flag">🇧🇷</span>
+      <span>Grátis pra sempre, <b style="color:var(--gold-soft)">mantido pela comunidade</b></span>
+      <span>·</span>
+      <a href="https://instagram.com/calloufold.sonho" target="_blank" rel="noopener">📸 @calloufold.sonho</a>
+    </div>
     <p class="tagline">Feito por um brasileiro. No ônibus. Entre turnos.</p>
     <span class="eyebrow">Poker pra quem joga por diversão</span>
     <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
