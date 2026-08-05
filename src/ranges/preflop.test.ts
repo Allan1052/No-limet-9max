@@ -29,6 +29,20 @@ describe("pré-flop — abertura (pote não aberto)", () => {
     expect(decide("Ks9s", "UTG").action).toBe("fold");
     expect(decide("Ks9s", "BTN").action).toBe("raise");
   });
+
+  it("sem limper, a abertura é a padrão de 2.3bb", () => {
+    expect(decide("AsAh", "CO").sizeBB).toBeCloseTo(2.3, 5);
+  });
+
+  it("com limpers, o raise sobe +1bb por limper (isolamento)", () => {
+    expect(decide("AsAh", "CO", { limpers: 1 }).sizeBB).toBeCloseTo(3.3, 5);
+    expect(decide("AsAh", "CO", { limpers: 2 }).sizeBB).toBeCloseTo(4.3, 5);
+    expect(decide("AsAh", "CO", { limpers: 3 }).sizeBB).toBeCloseTo(5.3, 5);
+  });
+
+  it("o raise com limper aparece na justificativa (isola)", () => {
+    expect(decide("AsAh", "CO", { limpers: 2 }).reason).toMatch(/isol/i);
+  });
 });
 
 describe("pré-flop — perfis diferenciam o comportamento", () => {

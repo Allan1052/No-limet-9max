@@ -607,6 +607,27 @@ export class GameController {
     return this.adviceForSeat(this.heroSeat);
   }
 
+  /**
+   * Tamanho de raise sugerido (em fichas) para o slider do herói já começar no
+   * valor certo no pré-flop: 2.3bb padrão, +1bb por limper (isolamento). Sem
+   * limper, é a abertura padrão de sempre. Retorna undefined quando não há um
+   * raise a sugerir (pós-flop, ou recomendação de pagar/foldar).
+   */
+  suggestedRaiseTo(): number | undefined {
+    if (!this.isHeroTurn() || this.table.street !== "preflop" || this.table.handOver) {
+      return undefined;
+    }
+    const la = legalActions(this.table);
+    if (!la.canRaise) return undefined;
+    const ctx = preflopContextFor(this.table, this.heroSeat, BASELINE_PROFILE, {
+      payouts: this.payouts,
+    });
+    const d = preflopDecision(ctx);
+    if (d.action !== "raise" && d.action !== "3bet") return undefined;
+    const to = Math.round(d.sizeBB * this.table.bigBlind);
+    return Math.max(la.minRaiseTo, Math.min(la.maxRaiseTo, to));
+  }
+
   /** Recomendação da linha de base (quase-GTO) para o assento que vai agir. */
   private adviceForSeat(seat: number): HeroAdvice | null {
     if (this.table.toAct !== seat || this.table.handOver) return null;

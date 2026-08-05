@@ -70,6 +70,18 @@ export function preflopContextFor(
   const facingRaise = t.currentBet > t.bigBlind && t.lastAggressor >= 0;
   const raiserPosition = facingRaise ? positions.get(t.lastAggressor) : undefined;
 
+  // Pote não aberto: conta quem já limpou (pagou exatamente o BB, sem ser o BB).
+  // Cada limper faz a abertura padrão subir +1bb (isolamento).
+  const limpers = facingRaise
+    ? 0
+    : t.players.filter(
+        (o) =>
+          o.seat !== seat &&
+          (o.status === "active" || o.status === "allin") &&
+          o.committed === t.bigBlind &&
+          positions.get(o.seat) !== "BB",
+      ).length;
+
   return {
     heroPosition,
     hand: p.holeCards,
@@ -77,6 +89,7 @@ export function preflopContextFor(
     profile,
     raiserPosition,
     openSizeBB: facingRaise ? t.currentBet / t.bigBlind : undefined,
+    limpers,
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
     variant: t.variant ?? "holdem",
   };

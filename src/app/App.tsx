@@ -248,6 +248,7 @@ export function App() {
               bigBlind={t.bigBlind}
               onAction={heroAct}
               isOmaha={t.variant === "omaha"}
+              defaultRaiseTo={controller.suggestedRaiseTo()}
             />
           )}
         </div>

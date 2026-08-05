@@ -13,17 +13,22 @@ interface ControlsProps {
   bigBlind: number;
   onAction: (a: Action) => void;
   isOmaha?: boolean; // Indica se é Omaha (PLO)
+  /** Valor sugerido para o slider começar (pré-flop: abertura padrão + limpers). */
+  defaultRaiseTo?: number;
 }
 
-export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false, defaultRaiseTo }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
-  const [raiseTo, setRaiseTo] = useState(legal.minRaiseTo);
+  const startTo = defaultRaiseTo ?? legal.minRaiseTo;
+  const [raiseTo, setRaiseTo] = useState(startTo);
 
-  // Reajusta o slider sempre que o spot muda.
+  // Reajusta o slider sempre que o spot muda: começa na abertura sugerida
+  // (2.3bb + limpers no pré-flop), limitada ao intervalo legal.
   useEffect(() => {
-    setRaiseTo(legal.minRaiseTo);
-  }, [legal.minRaiseTo, legal.maxRaiseTo]);
+    const start = defaultRaiseTo ?? legal.minRaiseTo;
+    setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
+  }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
 
   const canRaise = active && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo;
   const potBet = (frac: number) => {

@@ -6,7 +6,6 @@ import { OmahaSeat } from "./OmahaSeat";
 import { Board } from "./Board";
 import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
-import { totalChipsInPlay } from "../tournament/structure";
 import type { TableState } from "../game/state";
 import type { FieldStatus } from "../tournament/field";
 
@@ -139,11 +138,6 @@ export function PokerTable({
           {ante > 0 ? ` (ante ${ante})` : ""}
           {field ? ` · ${t("hud.field")} ${field.entrants.toLocaleString("en-US")}` : ""}
         </div>
-        {field ? (
-          <div className="tbl-inplay">
-            💰 {totalChipsInPlay(field.entrants).toLocaleString("en-US")} {t("hud.inPlay")}
-          </div>
-        ) : null}
         <Board
           board={table.board}
           pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}

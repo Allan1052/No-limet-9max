@@ -43,6 +43,11 @@ export interface PreflopContext {
   raiserPosition?: Position;
   /** Tamanho da abertura do vilão em BB (default 2.3). */
   openSizeBB?: number;
+  /**
+   * Quantos limpers (jogadores que só pagaram o BB) já entraram no pote não
+   * aberto. Cada limper aumenta a abertura padrão em +1bb (isolamento).
+   */
+  limpers?: number;
   /** Contexto de ICM para o confronto herói×vilão (opcional). */
   icmSpot?: IcmSpot;
   /**
@@ -69,6 +74,19 @@ export interface PreflopDecision {
 
 function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
+}
+
+/** Abertura padrão (2.3bb) num pote sem limper. */
+const BASE_OPEN_BB = 2.3;
+
+/**
+ * Tamanho da abertura: mantém 2.3bb quando ninguém limpou, e sobe +1bb por
+ * limper (isolamento). Ex.: 1 limper → 3.3bb, 2 limpers → 4.3bb. É a matemática
+ * de mesa ao vivo — cada limper que já pôs uma ficha no pote pede um raise maior
+ * para cobrar quem quer ver flop barato.
+ */
+function openRaiseSize(ctx: PreflopContext): number {
+  return BASE_OPEN_BB + Math.max(0, Math.floor(ctx.limpers ?? 0));
 }
 
 
@@ -276,7 +294,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       if (omahaOpenRange.includes(handType)) {
         return {
           action: "raise",
-          sizeBB: 2.3, // Tamanho de abertura padrão para Omaha
+          sizeBB: openRaiseSize(ctx), // 2.3bb padrão, +1bb por limper
           reason: `${handType} está na range de abertura de Omaha de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
           handType,
         };
@@ -311,10 +329,14 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
             mix: bandMix("jam", openPct, handType),
           };
         }
+        const limpers = Math.max(0, Math.floor(ctx.limpers ?? 0));
         return {
           action: "raise",
-          sizeBB: 2.3,
-          reason: `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
+          sizeBB: openRaiseSize(ctx),
+          reason:
+            limpers > 0
+              ? `${handType}: abre isolando ${limpers} limper${limpers > 1 ? "s" : ""} — raise maior (${openRaiseSize(ctx).toFixed(1)}bb) para cobrar quem quer flop barato.`
+              : `${handType} está na range de abertura de ${ctx.heroPosition} (perfil ${ctx.profile.archetype}).`,
           handType,
           mix: bandMix("raise", openPct, handType),
         };
