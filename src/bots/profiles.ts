@@ -187,6 +187,44 @@ export function profileById(id: string): BotProfile {
   return p;
 }
 
+/**
+ * "Dureza" do campo pelo buy-in: 0 no micro ($5, campo largo e passivo) até 1
+ * no alto ($109, campo apertado-agressivo de regulares). Escala logarítmica —
+ * a diferença entre $5 e $22 pesa como a de $22 e $109.
+ */
+export function buyInToughness(buyIn?: number): number {
+  if (!buyIn || buyIn <= 5) return 0;
+  const lo = Math.log10(5);
+  const hi = Math.log10(109);
+  return Math.max(0, Math.min(1, (Math.log10(buyIn) - lo) / (hi - lo)));
+}
+
+/**
+ * Ajusta um perfil conforme o buy-in: em stakes altas o campo vê MENOS flops
+ * (quase ninguém limpa, menos flat) e ROUBA mais (mais 3-bet e agressão de
+ * posição tardia). No micro nada muda — os bots ficam largos e passivos como
+ * são. É o que faz o $109 "sentir" diferente do $5, como no GG/Stars.
+ */
+export function adjustProfileForBuyIn(p: BotProfile, buyIn?: number): BotProfile {
+  const t = buyInToughness(buyIn);
+  if (t <= 0) return p;
+  const positional: Record<Position, number> = { ...p.positional };
+  for (const pos of ["HJ", "CO", "BTN", "SB"] as Position[]) {
+    positional[pos] = positional[pos] * (1 + 0.28 * t); // mais roubo de blind
+  }
+  return {
+    ...p,
+    positional,
+    limpFactor: p.limpFactor * (1 - 0.75 * t), // stakes altas quase não limpam
+    coldCallFactor: p.coldCallFactor * (1 - 0.5 * t), // menos flat → menos flops multiway
+    threeBetFactor: p.threeBetFactor * (1 + 0.5 * t), // mais 3-bet/pressão
+    bluffFactor: p.bluffFactor * (1 + 0.25 * t),
+    aggression: Math.min(1, p.aggression * (1 + 0.15 * t)),
+    stickiness: p.stickiness * (1 - 0.15 * t), // campo mais duro paga menos leve
+    skill: Math.min(1, p.skill * (1 + 0.1 * t)),
+  };
+}
+
 /** Perfil "neutro" (base) — referência de quase-GTO e conselho do herói. */
 export const BASELINE_PROFILE: BotProfile = {
   id: "baseline",

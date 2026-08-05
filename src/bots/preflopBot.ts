@@ -11,7 +11,7 @@
 // pagam apostas pequenas e desistem de apostas grandes.
 // ---------------------------------------------------------------------------
 
-import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
+import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, type BotProfile } from "./profiles";
 import { seatPositions } from "./seatPosition";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { legalActions } from "../game/betting";
@@ -23,6 +23,8 @@ import type { TableState } from "../game/state";
 export interface BotContext {
   /** Prêmios do torneio (para ICM), se aplicável. */
   payouts?: number[];
+  /** Buy-in do torneio: ajusta o campo (stakes altas jogam mais apertado-agressivo). */
+  buyIn?: number;
 }
 
 /** Profundidade efetiva (em BB) do assento contra o maior adversário na mão. */
@@ -102,7 +104,8 @@ export function preflopContextFor(
 /** Decide a ação de um bot no PRÉ-FLOP. */
 export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = {}): Action {
   const p = t.players[seat];
-  const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
+  const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
+  const profile = adjustProfileForBuyIn(base, ctx.buyIn);
   const la = legalActions(t);
   const decision = preflopDecision(preflopContextFor(t, seat, profile, ctx));
   return toEngineAction(t, decision.action, decision.sizeBB, la);

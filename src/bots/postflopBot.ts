@@ -6,7 +6,7 @@
 // resultado numa ação válida do motor, respeitando `legalActions`.
 // ---------------------------------------------------------------------------
 
-import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
+import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, type BotProfile } from "./profiles";
 import { postflopDecision, type PostflopContext } from "./decision";
 import { estimateVillainRangePct } from "./villainRange";
 import { legalActions } from "../game/betting";
@@ -103,9 +103,11 @@ export function botPostflopAction(
   rng: () => number = Math.random,
   equityIterations?: number,
   payouts?: number[],
+  buyIn?: number,
 ): Action {
   const p = t.players[seat];
-  const profile: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
+  const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
+  const profile = adjustProfileForBuyIn(base, buyIn);
   const la = legalActions(t);
   const decision = postflopDecision(
     postflopContextFor(t, seat, profile, rng, equityIterations, payouts),

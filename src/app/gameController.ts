@@ -546,10 +546,11 @@ export class GameController {
   botStep(): void {
     if (this.phase !== "playing" || this.isHeroTurn() || this.table.handOver) return;
     const seat = this.table.toAct;
+    const buyIn = this.tournament?.buyIn;
     const action =
       this.table.street === "preflop"
-        ? botPreflopAction(this.table, seat, { payouts: this.payouts })
-        : botPostflopAction(this.table, seat, this.rng, 1500, this.payouts);
+        ? botPreflopAction(this.table, seat, { payouts: this.payouts, buyIn })
+        : botPostflopAction(this.table, seat, this.rng, 1500, this.payouts, buyIn);
     this.applyLabeled(action);
   }
 
