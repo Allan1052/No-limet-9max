@@ -3,9 +3,10 @@
 // Mostra que a maioria das mãos é fold e onde a ficha escorre (o CALL).
 // Só apresentação: números ilustrativos, alinhados ao motor pré-flop do app.
 // ---------------------------------------------------------------------------
+import { useState } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
-import { loadDecisionStats } from "../train/decisionStats";
+import { loadDecisionStats, tournamentStatsFor, TIERS, type Tier } from "../train/decisionStats";
 
 type Dist = { fold: number; call: number; raise: number };
 const REC: Dist = { fold: 62, call: 24, raise: 14 }; // recreativo típico
@@ -38,13 +39,15 @@ function Bar({ d }: { d: Dist }) {
 
 export function AnatomiaTorneio() {
   const { t } = useT();
-  const stats = loadDecisionStats();
+  const [mode, setMode] = useState<"treino" | "torneio">("treino");
+  const [tier, setTier] = useState<Tier>("micro");
+  const src = mode === "torneio" ? tournamentStatsFor(tier) : loadDecisionStats();
   const you: Dist =
-    stats.total > 0
+    src.total > 0
       ? {
-          fold: Math.round((stats.fold / stats.total) * 100),
-          call: Math.round((stats.call / stats.total) * 100),
-          raise: Math.round((stats.raise / stats.total) * 100),
+          fold: Math.round((src.fold / src.total) * 100),
+          call: Math.round((src.call / src.total) * 100),
+          raise: Math.round((src.raise / src.total) * 100),
         }
       : { fold: 0, call: 0, raise: 0 };
   const leak = leakKey(you);
@@ -101,14 +104,41 @@ export function AnatomiaTorneio() {
         {/* Seu Raio-X — o SEU perfil real vs o ideal */}
         <div className="raiox">
           <div className="raiox-head">🩻 {t("raiox.title")}</div>
-          {stats.total >= RAIOX_MIN ? (
+          <div className="raiox-modes">
+            <button
+              className={`raiox-mode ${mode === "treino" ? "on" : ""}`}
+              onClick={() => setMode("treino")}
+            >
+              {t("raiox.modeTrain")}
+            </button>
+            <button
+              className={`raiox-mode ${mode === "torneio" ? "on" : ""}`}
+              onClick={() => setMode("torneio")}
+            >
+              {t("raiox.modeTourney")}
+            </button>
+          </div>
+          {mode === "torneio" ? (
+            <div className="raiox-tiers">
+              {TIERS.map((tt) => (
+                <button
+                  key={tt}
+                  className={`raiox-tier ${tier === tt ? "on" : ""}`}
+                  onClick={() => setTier(tt)}
+                >
+                  {t(`raiox.tier.${tt}` as TransKey)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {src.total >= RAIOX_MIN ? (
             <>
               <div className="anat-chart">
                 <div className="anat-col">
                   <Bar d={you} />
                   <div className="anat-lab you">
                     {t("raiox.you")}
-                    <small>{t("raiox.decisions", { n: stats.total })}</small>
+                    <small>{t("raiox.decisions", { n: src.total })}</small>
                   </div>
                 </div>
                 <div className="anat-vs">×</div>
@@ -125,7 +155,11 @@ export function AnatomiaTorneio() {
               </div>
             </>
           ) : (
-            <div className="raiox-empty">{t("raiox.needMore", { n: RAIOX_MIN - stats.total })}</div>
+            <div className="raiox-empty">
+              {mode === "torneio"
+                ? t("raiox.needMoreTourney", { n: RAIOX_MIN - src.total })
+                : t("raiox.needMore", { n: RAIOX_MIN - src.total })}
+            </div>
           )}
         </div>
       </div>

@@ -22,6 +22,7 @@ import {
   type ProgressState,
 } from "./progress";
 import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
+import { recordTournamentDecision } from "../train/decisionStats";
 import {
   loadMissions,
   saveMissions,
@@ -68,11 +69,26 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   };
 
   // Callbacks estáveis (memoizados) para não recriar o controller à toa.
-  const onDecision = useCallback(({ rating, heroType }: { rating: Rating; heroType: string }) => {
-    recordDecision(progressRef.current, rating);
-    saveProgress(progressRef.current);
-    fireMission({ type: "decision", rating, heroType });
-  }, []);
+  const onDecision = useCallback(
+    ({
+      rating,
+      heroType,
+      isPreflop,
+      buyIn,
+    }: {
+      rating: Rating;
+      heroType: string;
+      isPreflop: boolean;
+      buyIn?: number;
+    }) => {
+      recordDecision(progressRef.current, rating);
+      saveProgress(progressRef.current);
+      fireMission({ type: "decision", rating, heroType });
+      // Raio-X de torneio por buy-in — só decisões pré-flop do jogo de verdade.
+      if (isPreflop && buyIn != null) recordTournamentDecision(buyIn, heroType);
+    },
+    [],
+  );
 
   const onHeroHand = useCallback(() => {
     recordHand(progressRef.current);

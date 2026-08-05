@@ -66,7 +66,7 @@ export interface GameOptions {
   /** Prêmios do torneio (ativam o ICM nas decisões de all-in pós-flop). */
   payouts?: number[];
   /** Chamado a cada decisão sua avaliada (placar de evolução + missões). */
-  onDecision?: (d: { rating: Rating; heroType: string }) => void;
+  onDecision?: (d: { rating: Rating; heroType: string; isPreflop: boolean; buyIn?: number }) => void;
   /** Chamado quando o herói recebe cartas numa nova mão. */
   onHeroHand?: () => void;
   /** Chamado quando um torneio termina para o herói (missões de torneio). */
@@ -209,7 +209,7 @@ export class GameController {
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
   private rng = Math.random;
-  private onDecision?: (d: { rating: Rating; heroType: string }) => void;
+  private onDecision?: (d: { rating: Rating; heroType: string; isPreflop: boolean; buyIn?: number }) => void;
   private onHeroHand?: () => void;
   private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   private onBubble?: () => void;
@@ -565,7 +565,12 @@ export class GameController {
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;
       // Alimenta o placar de evolução e as missões.
-      this.onDecision?.({ rating: item.rating, heroType });
+      this.onDecision?.({
+        rating: item.rating,
+        heroType,
+        isPreflop: this.table.street === "preflop",
+        buyIn: this.tournament?.buyIn,
+      });
       // ---- Disciplina / progressão ----
       const isPreflop = this.table.street === "preflop";
       // Call ruim = chips perdidos
