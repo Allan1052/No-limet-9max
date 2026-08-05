@@ -3475,6 +3475,8 @@ body {
 .aura-total { font-size: 12.5px; color: var(--dim, #9a9686); margin-top: 6px; }
 .aura-total b { color: var(--gold-bright, #e6c454); }
 .aura-share-btn { margin-top: 10px; }
+/* Botão "Compartilhar esse acerto" no treino — cada print é uma porta de entrada. */
+.hit-share-btn { margin: 8px auto 0; display: block; border-color: var(--gold-dim, #8a7326); color: var(--gold-soft, #b9973f); }
 
 /* Chip de +/− áurea por decisão (treino) */
 .aura-chip-row { text-align: center; margin: 8px 0 2px; }

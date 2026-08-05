@@ -36,6 +36,7 @@ import {
 import { shareSpot } from "../app/share";
 import { drawAuraCard } from "../app/auraImage";
 import { addAura, auraForStage, auraTier } from "../train/aura";
+import { markActiveToday } from "../train/streak";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { useDuelSound } from "./useDuelSound";
 
@@ -183,6 +184,7 @@ export function CampaignView() {
     if (!scenario || result) return;
     const item = evaluateChoice(scenario, key);
     setResult(item);
+    markActiveToday();
     if (isCorrect(item)) {
       setCorrect((c) => c + 1);
       playCorrect();
@@ -288,15 +290,17 @@ export function CampaignView() {
               ) : (
                 <div className="confirm-history">Primeiro confronto com {rivalInfo.name}</div>
               )}
-              {streakAlert ? (
-                <div className="confirm-streak-alert">
-                  ⚠️ Você ainda não passou deste estágio. Hora de mudar.
-                </div>
-              ) : (
-                <div className="confirm-streak-info">
-                  Recorde anterior: {prevResults}/{stage.rounds}
-                </div>
-              )}
+              {prevResults != null ? (
+                streakAlert ? (
+                  <div className="confirm-streak-alert">
+                    ⚠️ Você ainda não passou deste estágio. Hora de mudar.
+                  </div>
+                ) : (
+                  <div className="confirm-streak-info">
+                    Recorde anterior: {prevResults}/{stage.rounds}
+                  </div>
+                )
+              ) : null}
             </div>
 
             {/* Taunt */}

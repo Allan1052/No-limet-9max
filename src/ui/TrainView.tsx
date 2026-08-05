@@ -25,6 +25,7 @@ import { makeRandomChallenge } from "../app/challenge";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import { awardDecisionAura } from "../train/aura";
+import { markActiveToday } from "../train/streak";
 import { AuraChip } from "./AuraChip";
 import type { FeedbackItem } from "../feedback/analyzer";
 
@@ -76,12 +77,29 @@ export function TrainView() {
     setScenario(buildScenario(moduleById(moduleId), Math.random));
   };
 
+  // Compartilhar um acerto — cada print é uma porta de entrada nova.
+  const appUrl =
+    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+  const onShareHit = async () => {
+    if (!scenario) return;
+    const s = scenario.spec;
+    const img = await drawSpotImage({
+      hand: scenario.hand,
+      title: t("share.hitTitle"),
+      context: `${s.heroPosition} · ${s.effectiveBB}bb`,
+      question: t("share.hitQuestion"),
+      footer: t("share.hitFooter"),
+    });
+    await shareSpot(img, appUrl, t("share.hitText"), t("disclaimer"));
+  };
+
   const choose = (key: "fold" | "call" | "raise" | "allin") => {
     if (!scenario || result || !moduleId) return;
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
     setAuraDelta(awardDecisionAura(ok).delta);
+    markActiveToday();
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     persist(recordResult(mastery, moduleId, ok));
   };
@@ -177,6 +195,11 @@ export function TrainView() {
               <div className="fb-text">{result.text}</div>
             </div>
             {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
+            {isCorrect(result) ? (
+              <button className="btn hit-share-btn" onClick={onShareHit}>
+                📣 {t("share.hitBtn")}
+              </button>
+            ) : null}
             <button className="btn primary train-next" onClick={next}>
               {t("train.next")}
             </button>

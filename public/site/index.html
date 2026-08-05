@@ -137,6 +137,18 @@
   .trust { margin-top: 22px; font-size: 13px; color: var(--dim); display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
   .trust b { color: var(--cream); }
 
+  /* ---- Espiada no app (mockup de celular) ---- */
+  .peek { text-align: center; margin: 56px auto 20px; }
+  .peek h2 { font-size: clamp(24px, 4.4vw, 36px); color: var(--gold); margin: 10px 0 12px; }
+  .peek-sub { max-width: 46ch; margin: 0 auto 30px; color: var(--dim); font-size: clamp(15px, 2vw, 17px); }
+  .phone-mock { display: flex; justify-content: center; }
+  .phone {
+    width: 284px; max-width: 78vw; padding: 10px; border-radius: 38px;
+    background: linear-gradient(160deg, #23271b, #070806);
+    border: 1px solid #33381f; box-shadow: 0 34px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(212,175,55,.12);
+  }
+  .phone img { width: 100%; display: block; border-radius: 29px; }
+
   /* ---- Playing cards ---- */
   .cards { display: flex; gap: 10px; justify-content: center; margin: 34px 0 0; }
   .card {
@@ -478,6 +490,17 @@
     </div>
   </div>
 </header>
+
+<section class="peek wrap">
+  <span class="eyebrow">Dá uma espiada</span>
+  <h2>O duelo 1×1 por dentro</h2>
+  <p class="peek-sub">Enfrente 9 rivais, decida Call ou Fold em mãos de verdade e farme áurea ao vencer. Tudo grátis, sem dinheiro real.</p>
+  <div class="phone-mock">
+    <div class="phone">
+      <img src="/app-preview.png" alt="Tela do Call ou Fold — o duelo 1×1" loading="lazy" />
+    </div>
+  </div>
+</section>
 
 <section class="story wrap">
   <div class="card-lg">

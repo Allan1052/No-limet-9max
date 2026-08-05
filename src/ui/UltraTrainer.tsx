@@ -22,7 +22,10 @@ import {
   type ScenarioSpec,
 } from "../train/scenarios";
 import { awardDecisionAura } from "../train/aura";
+import { markActiveToday } from "../train/streak";
 import { AuraChip } from "./AuraChip";
+import { drawSpotImage } from "../app/handImage";
+import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
 
 const STACK_PRESETS = [10, 20, 40, 60, 100];
@@ -118,12 +121,27 @@ export function UltraTrainer() {
     setResult(null);
     setAuraDelta(null);
   };
+  const appUrl =
+    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+  const onShareHit = async () => {
+    if (!scenario) return;
+    const sp = scenario.spec;
+    const img = await drawSpotImage({
+      hand: scenario.hand,
+      title: t("share.hitTitle"),
+      context: `${sp.heroPosition} · ${sp.effectiveBB}bb`,
+      question: t("share.hitQuestion"),
+      footer: t("share.hitFooter"),
+    });
+    await shareSpot(img, appUrl, t("share.hitText"), t("disclaimer"));
+  };
   const choose = (key: "fold" | "call" | "raise" | "allin") => {
     if (!scenario || result) return;
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
     setAuraDelta(awardDecisionAura(ok).delta);
+    markActiveToday();
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     // Errou = o carrasco leva o pote. Um tranco háptico pra doer de verdade.
     if (!isCorrect(item)) {
@@ -332,6 +350,11 @@ export function UltraTrainer() {
               <div className="fb-text">{result.text}</div>
             </div>
             {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
+            {isCorrect(result) ? (
+              <button className="btn hit-share-btn" onClick={onShareHit}>
+                📣 {t("share.hitBtn")}
+              </button>
+            ) : null}
             {cells ? (
               <>
                 <div className="ultra-grid-title">{t("ultra.rangeTitle")}</div>
