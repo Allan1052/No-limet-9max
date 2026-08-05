@@ -534,6 +534,56 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   };
 }
 
+// Ordem PÓS-FLOP dos assentos (blinds agem primeiro; BTN por último). Serve pra
+// saber se o herói joga o pós-flop EM POSIÇÃO contra quem deu o 3-bet.
+const POSTFLOP_ORDER: Position[] = ["SB", "BB", "UTG", "UTG1", "MP", "LJ", "HJ", "CO", "BTN"];
+function heroIpVsThreeBettor(hero: Position, threeBettor: Position): boolean {
+  return POSTFLOP_ORDER.indexOf(hero) > POSTFLOP_ORDER.indexOf(threeBettor);
+}
+
+// Núcleos vs 3-bet (Hold'em). É apertado por natureza — a maioria FOLDA.
+const VS3BET_VALUE = new Set(["AA", "KK", "QQ", "AKs", "AKo"]); // 4-bet sempre
+const VS3BET_BLUFF = new Set(["A5s", "A4s"]); // bloqueadores de ás — 4-bet de blefe fino
+const VS3BET_IP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs", "ATs"]); // flat só EM POSIÇÃO
+
+/** Decisão Hold'em quando o herói abriu e levou 3-bet: 4-bet / pagar (IP) / foldar. */
+function holdemVsThreeBet(ctx: PreflopContext, handType: string, sd: { pushFold?: boolean }): PreflopDecision {
+  const eff = ctx.effectiveBB;
+  const short = !!sd.pushFold || eff <= 25;
+  const inPos = ctx.raiserPosition ? heroIpVsThreeBettor(ctx.heroPosition, ctx.raiserPosition) : false;
+  const openSize = ctx.openSizeBB ?? 7;
+  const fourBetSize = Math.min(eff, openSize * 2.2);
+
+  // Valor: 4-bet sempre (all-in se stack curto). Nunca folda.
+  if (VS3BET_VALUE.has(handType)) {
+    return short
+      ? { action: "jam", sizeBB: eff, reason: `${handType}: 4-bet all-in por valor vs 3-bet.`, handType }
+      : { action: "3bet", sizeBB: fourBetSize, reason: `${handType}: 4-bet por valor vs 3-bet.`, handType };
+  }
+
+  // Stack curto: joga jam/fold. Premium+ jamam; o resto folda (não se paga 3-bet raso).
+  if (short) {
+    const jamPct = Math.min(0.14, Math.max(0.06, (25 - eff) * 0.006 + 0.06));
+    if (freqIn(buildTopRange(jamPct), handType) > 0) {
+      return { action: "jam", sizeBB: eff, reason: `${handType}: com stack curto, 4-bet all-in vs 3-bet.`, handType };
+    }
+    return { action: "fold", sizeBB: 0, reason: `${handType}: folda vs 3-bet com stack curto — fora do jam.`, handType };
+  }
+
+  // Blefe de 4-bet (só com stack jogável): bloqueadores de ás.
+  if (VS3BET_BLUFF.has(handType)) {
+    return { action: "3bet", sizeBB: fourBetSize, reason: `${handType}: 4-bet de blefe (bloqueador de ás) vs 3-bet.`, handType };
+  }
+
+  // Pagar: só EM POSIÇÃO e com um leque estreito de broadways/pares.
+  if (inPos && VS3BET_IP_CALL.has(handType)) {
+    return { action: "call", sizeBB: openSize, reason: `${handType}: paga o 3-bet em posição.`, handType };
+  }
+
+  // Todo o resto folda — contra a re-agressão, a maioria das mãos não continua.
+  return { action: "fold", sizeBB: 0, reason: `${handType}: folda vs 3-bet — contra a re-agressão, aperte.`, handType };
+}
+
 function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmFactor: number): PreflopDecision {
   // STACK ULTRACURTO (push/fold): se pagar já significa ir all-in (ou quase), a
   // decisão é de POT ODDS — não de "aperto por tamanho". Com poucos bb as odds
@@ -560,6 +610,13 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
       reason: `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
       handType,
     };
+  }
+
+  // HOLD'EM vs 3-bet: range apertado de verdade (4-bet valor + poucos calls só em
+  // posição + o resto folda). Substitui a antiga lógica que reaproveitava a defesa
+  // vs OPEN (larga demais — pagava A2s, K3s etc. contra um 3-bet). Omaha segue abaixo.
+  if ((ctx.variant ?? "holdem") !== "omaha") {
+    return holdemVsThreeBet(ctx, handType, sd);
   }
 
   // Tamanho da abertura importa MUITO: contra um open pequeno (2.3bb) defende-se
