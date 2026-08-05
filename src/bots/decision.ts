@@ -27,6 +27,7 @@ import {
 } from "../engine/equity";
 import type { BotProfile } from "./profiles";
 import { buildTopRange } from "../ranges/build";
+import { omahaPreflopScore } from "../ranges/omahaPreflop";
 import { rangeCombos } from "../ranges/types";
 import { requiredEquityToCall, type IcmSpot } from "../ranges/icm";
 import { classifyBoard, type BoardTexture } from "./boardTexture";
@@ -118,7 +119,7 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       // Single villain: usa range de combos de 4 cartas.
       // Para simplificar, usamos equityOmahaHandVsRange com o range convertido.
       // No momento, construímos um range aleatório de 4 cartas para Omaha.
-      const omahaRange = buildOmahaRange(villainPct, rng);
+      const omahaRange = buildOmahaRange(villainPct, rng, ctx.hand, ctx.board);
       equity = equityOmahaHandVsRange(ctx.hand, omahaRange, ctx.board, iters, rng).equity;
     } else {
       // Multiway: herói + vilões aleatórios com 4 cartas cada.
@@ -289,38 +290,49 @@ function pct(x: number): string {
 
 import { NUM_CARDS } from "../engine/cards";
 
-/** Constrói um range de combos Omaha (4 cartas) baseado na largura do range do vilão. */
-function buildOmahaRange(pct: number, rng: () => number): Card[][] {
-  // Para Omaha, simplificamos: geramos combos aleatórios de 4 cartas que não
-  // conflitam com a mão do herói (blockers). A "largura" controla quantos
-  // combos geramos — mais combos = range mais amplo.
-  const combos: Card[][] = [];
+/**
+ * Constrói o range de combos Omaha (4 cartas) do vilão FILTRADO POR FORÇA: um
+ * vilão que continua com `pct` das mãos segura as `pct` MAIS FORTES (por
+ * `omahaPreflopScore`), não um punhado aleatório. Exclui os blockers (cartas do
+ * herói e do board), então os combos são todos possíveis. É o que torna a
+ * equity vs range realista — a antiga versão usava combos totalmente aleatórios.
+ */
+export function buildOmahaRange(
+  pct: number,
+  rng: () => number,
+  heroCards: Card[] = [],
+  board: Card[] = [],
+): Card[][] {
+  const used = new Set<Card>([...heroCards, ...board]);
+  const available: Card[] = [];
+  for (let c = 0; c < NUM_CARDS; c++) if (!used.has(c)) available.push(c);
+
+  // Amostra um conjunto de combos possíveis, pontua cada um e guarda os mais
+  // fortes conforme a largura do range.
+  const poolTarget = 1200;
+  const pool: { cards: Card[]; score: number }[] = [];
   const seen = new Set<string>();
-  const targetCombos = Math.round(1000 * pct); // ~1000 combos é um range completo de Omaha
-
-  for (let i = 0; i < targetCombos * 4; i++) {
+  const A = available.length;
+  for (let i = 0; i < poolTarget * 4 && pool.length < poolTarget; i++) {
+    // Fisher-Yates parcial sobre `available`.
+    const local = available.slice();
     const cards: Card[] = [];
-    const available: Card[] = [];
-    for (let c = 0; c < NUM_CARDS; c++) available.push(c);
-
-    // Sorteia 4 cartas aleatórias (Fisher-Yates parcial).
     for (let k = 0; k < 4; k++) {
-      const j = k + Math.floor(rng() * (NUM_CARDS - k));
-      const tmp = available[k];
-      available[k] = available[j];
-      available[j] = tmp;
-      cards.push(available[k]);
+      const j = k + Math.floor(rng() * (A - k));
+      const tmp = local[k];
+      local[k] = local[j];
+      local[j] = tmp;
+      cards.push(local[k]);
     }
-
-    const key = cards.sort().join(",");
-    if (!seen.has(key)) {
-      seen.add(key);
-      combos.push(cards);
-      if (combos.length >= targetCombos) break;
-    }
+    const key = [...cards].sort((a, b) => a - b).join(",");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pool.push({ cards, score: omahaPreflopScore(cards) });
   }
 
-  return combos;
+  pool.sort((a, b) => b.score - a.score);
+  const keep = Math.max(1, Math.round(pool.length * Math.min(1, Math.max(0.02, pct))));
+  return pool.slice(0, keep).map((x) => x.cards);
 }
 
 /** Sorteia uma mão aleatória de Omaha (4 cartas) que não conflite com o herói/board. */
