@@ -10,6 +10,7 @@ import { ModeToggle } from "./ModeToggle";
 import { LangSelect } from "./LangSelect";
 import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
+import { SupportPix } from "./SupportPix";
 import { loadAuraTotal, auraTier } from "../train/aura";
 import { getStreak } from "../train/streak";
 
@@ -32,6 +33,7 @@ export function ProfileView({
 }) {
   const { t } = useT();
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const avatar = getHeroAvatarData();
   const auraTotal = loadAuraTotal();
   const tier = auraTier(auraTotal);
@@ -164,12 +166,16 @@ export function ProfileView({
               💬 {t("profile.invite")}
             </button>
           </div>
+          <button className="btn profile-support-btn" onClick={() => setSupportOpen(true)}>
+            💚 {t("support.button")}
+          </button>
         </div>
 
         <div className="profile-seal">🔒 {t("disclaimer")}</div>
       </div>
 
       {avatarOpen ? <AvatarSelector onClose={() => setAvatarOpen(false)} /> : null}
+      {supportOpen ? <SupportPix onClose={() => setSupportOpen(false)} /> : null}
     </div>
   );
 }
