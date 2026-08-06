@@ -23,6 +23,7 @@ import type { TableState } from "../game/state";
 import { botPreflopAction, preflopContextFor } from "../bots/preflopBot";
 import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
 import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
+import { buildFieldSeats, pickReplacement } from "../bots/field";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
 import { gradeDecision, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
@@ -259,6 +260,12 @@ export class GameController {
     const ladder = payoutLadder(cfg.entrants, pool);
     this.payouts = tablePayouts(stageInfo.icm, ladder);
 
+    // Monta o CAMPO conforme o buy-in: micro = mais peixe, alto = mais regular.
+    this.seatDefs = [
+      { name: "Você", isHero: true },
+      ...buildFieldSeats(cfg.buyIn, PROFILES.length, this.rng),
+    ];
+
     const avgChips = stageInfo.avgBB * level.bb;
     const stacks = unevenStacks(avgChips, this.seatDefs.length, stageInfo.spread, this.rng, level.bb * 3);
     const seats = this.seatDefs.map((s, i) => ({ ...s, stack: stacks[i] }));
@@ -329,16 +336,16 @@ export class GameController {
     const avgRaw = withChips.reduce((s, p) => s + p.stack, 0) / withChips.length;
     const avg = Math.max(bb * 5, Math.round(avgRaw / bb) * bb);
 
+    // Nomes já em uso na mesa (para o substituto não repetir apelido).
+    const usedNames = new Set(players.filter((x) => x.stack > 0 || x.isHero).map((x) => x.name));
     let count = 0;
     for (const p of players) {
       if (p.isHero || p.stack > 0) continue;
-      const activeIds = new Set(
-        players.filter((x) => x.stack > 0 && x.profileId).map((x) => x.profileId),
-      );
-      const pool = PROFILES.filter((pr) => !activeIds.has(pr.id));
-      const chosen = (pool.length ? pool : PROFILES)[Math.floor(this.rng() * (pool.length || PROFILES.length))];
-      p.profileId = chosen.id;
-      p.name = chosen.name;
+      // Novo jogador entra pesado pelo buy-in (campo do micro ≠ campo do alto).
+      const rep = pickReplacement(this.tournament?.buyIn, usedNames, this.rng);
+      usedNames.add(rep.name);
+      p.profileId = rep.profileId;
+      p.name = rep.name;
       p.stack = avg;
       p.status = "active";
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
@@ -778,10 +785,10 @@ export class GameController {
 
   /** Restaura um torneio salvo, pronto para continuar na próxima mão. */
   restore(snap: GameSnapshot): void {
-    // Re-deriva o nome pelo profileId (assim renomeações dos perfis chegam
-    // também aos torneios salvos antes da mudança). O herói mantém "Você".
+    // Preserva o apelido do assento (agora há duplicatas por arquétipo, então o
+    // nome é POR ASSENTO, não por perfil). Fallback: nome canônico do perfil.
     const nameFor = (s: { name: string; profileId?: string; isHero?: boolean }) =>
-      s.isHero || !s.profileId ? s.name : profileById(s.profileId).name;
+      s.isHero ? "Você" : s.name || (s.profileId ? profileById(s.profileId).name : "Bot");
     const seats = snap.seats.map((s) => ({
       name: nameFor(s),
       profileId: s.profileId,
