@@ -1,6 +1,7 @@
 // Mesa 9-max: assentos ao redor do oval, board, botão do dealer e uma camada
 // de informação SOBRE a mesa (posição no torneio, blinds, dica e atalhos) —
 // tudo concentrado aqui para caber na tela sem rolagem.
+import { useEffect, useRef, useState } from "react";
 import { Seat } from "./Seat";
 import { OmahaSeat } from "./OmahaSeat";
 import { Board } from "./Board";
@@ -27,6 +28,32 @@ function towardCenter(pos: { top: string; left: string }, f: number) {
   const t = parseFloat(pos.top);
   const l = parseFloat(pos.left);
   return { top: `${t + (50 - t) * f}%`, left: `${l + (50 - l) * f}%` };
+}
+
+// Onde o pote fica (centro): as fichas recolhidas deslizam pra cá.
+const POT_CENTER = { top: "45%", left: "50%" };
+
+/** Ficha voando da frente do jogador pro pote (o "dealer recolhe"). */
+function SweepChip({
+  from,
+  amount,
+  bigBlind,
+}: {
+  from: { top: string; left: string };
+  amount: number;
+  bigBlind: number;
+}) {
+  const [go, setGo] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setGo(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const pos = go ? POT_CENTER : from;
+  return (
+    <div className="chip-sweep" style={{ top: pos.top, left: pos.left }}>
+      <ChipStack amount={amount} bigBlind={bigBlind} showLabel={false} />
+    </div>
+  );
 }
 
 function usd(n: number): string {
@@ -72,6 +99,45 @@ export function PokerTable({
   }
   const reveal = table.handOver;
   const ante = table.ante ?? 0;
+
+  // Varrida do dealer: quando uma aposta da frente é RECOLHIDA (committed vai a
+  // 0 ao fechar a rua), dispara uma ficha voando daquele assento pro pote.
+  const [sweeps, setSweeps] = useState<Array<{ id: string; from: { top: string; left: string }; amount: number }>>([]);
+  const prevCommitted = useRef<Record<number, number>>({});
+  const prevBoardLen = useRef(0);
+  const commitSig =
+    table.players.map((p) => `${p.seat}:${p.committed}`).join(",") + `|${table.street}|${table.handOver}`;
+  useEffect(() => {
+    const prev = prevCommitted.current;
+    // Virada de mão nova (board zerou): não é recolhimento — não varre.
+    const newHand = table.board.length < prevBoardLen.current;
+    const born: Array<{ id: string; from: { top: string; left: string }; amount: number }> = [];
+    if (!newHand) {
+      for (const p of table.players) {
+        const before = prev[p.seat] ?? 0;
+        if (before > 0 && (p.committed ?? 0) === 0 && p.status !== "out") {
+          const pos = SEAT_POS[p.seat];
+          if (pos) {
+            born.push({
+              id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              from: towardCenter(pos, 0.36),
+              amount: before,
+            });
+          }
+        }
+      }
+    }
+    const cur: Record<number, number> = {};
+    for (const p of table.players) cur[p.seat] = p.committed;
+    prevCommitted.current = cur;
+    prevBoardLen.current = table.board.length;
+    if (born.length) {
+      setSweeps((s) => [...s, ...born]);
+      const ids = new Set(born.map((b) => b.id));
+      const timer = setTimeout(() => setSweeps((s) => s.filter((x) => !ids.has(x.id))), 520);
+      return () => clearTimeout(timer);
+    }
+  }, [commitSig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Posições (UTG..BTN/SB/BB) dos jogadores ainda na mesa, a partir do botão.
   const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
@@ -195,6 +261,11 @@ export function PokerTable({
           </div>
         );
       })}
+
+      {/* Dealer recolhendo: fichas deslizando pro pote. */}
+      {sweeps.map((s) => (
+        <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />
+      ))}
 
       {(() => {
         const pos = SEAT_POS[table.buttonSeat];
