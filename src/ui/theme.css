@@ -1346,7 +1346,10 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 
 /* ---- Responsivo (celular / telas estreitas) ---- */
 @media (max-width: 860px) {
-  .app { padding: 8px 10px calc(16px + env(safe-area-inset-bottom, 0px)); }
+  /* Com o menu inferior visível, deixa espaço pra não tampar o último item
+     (ex.: o botão "Apoiar" no Perfil). No jogo o menu some e o espaço encolhe. */
+  .app { padding: 8px 10px calc(78px + env(safe-area-inset-bottom, 0px)); }
+  .app.nav-hidden { padding: 8px 10px calc(16px + env(safe-area-inset-bottom, 0px)); }
   .topbar { flex-wrap: wrap; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; }
   .topbar-controls { flex-wrap: wrap; }
   .play .controls { margin-top: 6px; }
