@@ -15,6 +15,8 @@ export interface ReplayAdvice {
   reason: string;
   equity?: number;
   potOdds?: number;
+  /** Rótulo do raise pelo nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
+  nBet?: string;
 }
 
 export interface ReplayEvent {

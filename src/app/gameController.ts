@@ -536,7 +536,7 @@ export class GameController {
       board: this.table.board.slice(),
       pot: totalPot(this.table),
       advice: ev
-        ? { action: ev.action, reason: ev.reason, equity: ev.equity, potOdds: ev.potOdds }
+        ? { action: ev.action, reason: ev.reason, equity: ev.equity, potOdds: ev.potOdds, nBet: ev.nBet }
         : undefined,
     });
 
@@ -642,7 +642,7 @@ export class GameController {
     if (this.table.street === "preflop") {
       const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB };
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);

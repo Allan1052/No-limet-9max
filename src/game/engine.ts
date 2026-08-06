@@ -68,6 +68,7 @@ export function createTable(
     board: [],
     street: "complete",
     currentBet: 0,
+    preflopRaises: 0,
     minRaiseAmount: config.bigBlind,
     toAct: -1,
     lastAggressor: -1,
@@ -149,6 +150,7 @@ export function startHand(t: TableState, deck: Card[]): TableState {
   postBlind(t.players[sbSeat], t.smallBlind);
   postBlind(t.players[bbSeat], t.bigBlind);
   t.currentBet = t.bigBlind;
+  t.preflopRaises = 0; // blinds não contam como raise
   t.lastAggressor = -1; // o BB é forçado, não conta como "abertura"
   t.preflopAggressor = -1;
   t.lastStreetAggressor = -1;
@@ -237,6 +239,9 @@ function applyRaise(t: TableState, p: PlayerState, target: number): void {
     throw new Error("Raise precisa superar a aposta atual (ou ser all-in).");
   }
   const raiseSize = target - t.currentBet;
+  // Conta o nível da aposta pré-flop (abertura → 3-bet → 4-bet...). Um all-in
+  // que só PAGA (não supera a aposta) não é raise, então não conta.
+  if (t.street === "preflop" && raiseSize > 0) t.preflopRaises += 1;
   const delta = target - p.committed;
   moveChips(p, delta);
 

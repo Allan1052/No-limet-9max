@@ -53,6 +53,12 @@ export interface PreflopContext {
    * bater um range, tem que bater vários. Ausente/0/1 = comportamento normal.
    */
   allInsAhead?: number;
+  /**
+   * Nível de aposta enfrentado no pré-flop: 0 sem raise, 1 = abertura, 2 = 3-bet
+   * (seu raise seria um 4-bet), 3 = 4-bet (5-bet)... Usado para ROTULAR a ação
+   * corretamente (3-bet vs 4-bet vs 5-bet).
+   */
+  betLevelFaced?: number;
   /** Contexto de ICM para o confronto herói×vilão (opcional). */
   icmSpot?: IcmSpot;
   /**
@@ -75,6 +81,18 @@ export interface PreflopDecision {
   handType: string;
   /** Estratégia mista aproximada (frequências), para o feedback por frequência. */
   mix?: PreflopFreq[];
+  /** Rótulo do raise conforme o nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
+  nBet?: string;
+}
+
+/** Nome do raise conforme o nível de aposta enfrentado. */
+export function nBetLabel(betLevelFaced: number): string {
+  const n = Math.max(0, Math.floor(betLevelFaced));
+  if (n <= 0) return "abertura";
+  if (n === 1) return "3-bet";
+  if (n === 2) return "4-bet";
+  if (n === 3) return "5-bet";
+  return `${n + 2}-bet`;
 }
 
 function posIndex(p: Position): number {
@@ -204,9 +222,12 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     ? icmTightenFactor(ctx.icmSpot, ctx.profile.icmSensitivity)
     : 1;
 
-  // ----- Caso 3: o herói abriu e enfrenta um 3-bet → 4-bet / pagar / foldar -----
+  // ----- Caso 3: re-agressão (open + 3-bet já ocorreram) → 4-bet / pagar / foldar -----
   if (ctx.threeBet && ctx.raiserPosition) {
-    return vsThreeBetDecision(ctx, handType, sd, icmFactor);
+    const d = vsThreeBetDecision(ctx, handType, sd, icmFactor);
+    // Rotula o raise pelo nível: com 2 raises na frente é 4-bet, com 3 é 5-bet.
+    const isAggro = d.action === "3bet" || d.action === "jam" || d.action === "raise";
+    return isAggro ? { ...d, nBet: nBetLabel(ctx.betLevelFaced ?? 2) } : d;
   }
 
   // ----- Caso 1: pote não aberto → abertura (RFI) -----

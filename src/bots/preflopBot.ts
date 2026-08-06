@@ -87,6 +87,10 @@ export function preflopContextFor(
   // Quantos adversários já estão all-in na frente (confronto múltiplo aperta o call).
   const allInsAhead = t.players.filter((o) => o.seat !== seat && o.status === "allin").length;
 
+  // Nível de aposta enfrentado: 0 sem raise, 1 = abertura, 2 = 3-bet (spot de
+  // 4-bet), 3 = 4-bet (spot de 5-bet)... Com 2+, é re-agressão → range apertado.
+  const betLevelFaced = t.preflopRaises;
+
   return {
     heroPosition,
     hand: p.holeCards,
@@ -96,6 +100,9 @@ export function preflopContextFor(
     openSizeBB: facingRaise ? t.currentBet / t.bigBlind : undefined,
     limpers,
     allInsAhead,
+    betLevelFaced,
+    threeBet: betLevelFaced >= 2, // re-raise (open+3bet já ocorreram) → lógica de 4-bet
+
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
     variant: t.variant ?? "holdem",
   };

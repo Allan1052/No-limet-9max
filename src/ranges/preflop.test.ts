@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { cardsFromString } from "../engine/cards";
-import { preflopDecision } from "./preflop";
+import { preflopDecision, nBetLabel } from "./preflop";
 import { profileById, BASELINE_PROFILE } from "../bots/profiles";
 
 function decide(
@@ -183,5 +183,31 @@ describe("pré-flop — confronto múltiplo (vários all-ins) aperta o call", ()
   it("a escrita muda: com 2+ all-ins o texto cita o confronto múltiplo", () => {
     const two = decide("Js9s", "BB", { ...spot, allInsAhead: 2 });
     expect(two.reason).toMatch(/all-ins na frente|confronto múltiplo/i);
+  });
+});
+
+describe("pré-flop — nível de aposta (3-bet vs 4-bet vs 5-bet)", () => {
+  it("nBetLabel rotula pelo nível", () => {
+    expect(nBetLabel(0)).toBe("abertura");
+    expect(nBetLabel(1)).toBe("3-bet");
+    expect(nBetLabel(2)).toBe("4-bet");
+    expect(nBetLabel(3)).toBe("5-bet");
+  });
+
+  it("QQ num spot de 4-bet (open + 3-bet na frente) re-agride e é rotulada 4-bet", () => {
+    const d = decide("QsQd", "SB", {
+      effectiveBB: 40, raiserPosition: "BTN", openSizeBB: 7, threeBet: true, betLevelFaced: 2,
+    });
+    expect(["3bet", "jam"]).toContain(d.action);
+    expect(d.nBet).toBe("4-bet");
+  });
+
+  it("mão marginal (KJs) continua vs abertura mas FOLDA vs 3-bet (spot de 4-bet)", () => {
+    const vsOpen = decide("KsJs", "SB", { effectiveBB: 40, raiserPosition: "BTN", openSizeBB: 2.3 });
+    const vs3bet = decide("KsJs", "SB", {
+      effectiveBB: 40, raiserPosition: "BTN", openSizeBB: 7, threeBet: true, betLevelFaced: 2,
+    });
+    expect(vsOpen.action).not.toBe("fold");
+    expect(vs3bet.action).toBe("fold");
   });
 });

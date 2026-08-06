@@ -68,13 +68,13 @@ export function Replayer({ hand, onClose }: { hand: HandHistory; onClose: () => 
                 optimalMatches(ev.actionType, ev.advice.action) ? (
                   <span className="ok-tag"> ✓ alinhado com o ótimo</span>
                 ) : (
-                  <span className="bad-tag"> ✗ ótimo era {actionLabel(ev.advice.action)}</span>
+                  <span className="bad-tag"> ✗ ótimo era {ev.advice.nBet ?? actionLabel(ev.advice.action)}</span>
                 )
               ) : null}
             </div>
             {ev.advice ? (
               <div className="rs-advice">
-                <b>Decisão ótima:</b> {actionLabel(ev.advice.action)} — {ev.advice.reason}
+                <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
                 {ev.advice.equity !== undefined
                   ? ` (equity ${Math.round(ev.advice.equity * 100)}%${
                       ev.advice.potOdds !== undefined

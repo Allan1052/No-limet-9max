@@ -37,6 +37,8 @@ export interface HeroAdvice {
   evBB?: number;
   /** Stack efetivo em big blinds — pra distinguir all-in fundo (overbet) de jam curto. */
   effectiveBB?: number;
+  /** Rótulo do raise pelo nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
+  nBet?: string;
 }
 
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */

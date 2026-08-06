@@ -63,6 +63,8 @@ export interface TableState {
   street: Street;
   /** Maior valor apostado NESTA rua (o "bet a igualar"). */
   currentBet: number;
+  /** Quantos RAISES já houve no pré-flop (abertura=1, 3-bet=2, 4-bet=3...). */
+  preflopRaises: number;
   /** Tamanho do último aumento cheio — o próximo raise deve ser ≥ isto. */
   minRaiseAmount: number;
   /** Assento que deve agir. -1 quando a rua/mão está resolvida. */

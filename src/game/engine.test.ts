@@ -107,6 +107,23 @@ describe("motor — mãos completas", () => {
   });
 });
 
+describe("motor — nível de aposta pré-flop (preflopRaises)", () => {
+  it("conta abertura → 3-bet → 4-bet e ignora o call", () => {
+    const t = makeTable(6);
+    startHand(t, freshShuffledDeck(seededRng(11)));
+    expect(t.preflopRaises).toBe(0); // só blinds
+    applyAction(t, { type: "raise", to: 60 }); // abertura
+    expect(t.preflopRaises).toBe(1);
+    applyAction(t, { type: "raise", to: 180 }); // 3-bet
+    expect(t.preflopRaises).toBe(2);
+    applyAction(t, { type: "raise", to: 480 }); // 4-bet
+    expect(t.preflopRaises).toBe(3);
+    // um call NÃO incrementa
+    applyAction(t, { type: "call" });
+    expect(t.preflopRaises).toBe(3);
+  });
+});
+
 describe("motor — raise e all-in", () => {
   it("um raise seguido de folds entrega o pote ao agressor", () => {
     const t = makeTable(6);
