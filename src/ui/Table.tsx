@@ -4,6 +4,7 @@
 import { Seat } from "./Seat";
 import { OmahaSeat } from "./OmahaSeat";
 import { Board } from "./Board";
+import { ChipStack } from "./ChipStack";
 import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
@@ -141,6 +142,7 @@ export function PokerTable({
         <Board
           board={table.board}
           pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
+          chipPot={table.players.reduce((s, p) => s + p.totalCommitted - p.committed, 0)}
           bigBlind={table.bigBlind}
           inline
         />
@@ -178,6 +180,19 @@ export function PokerTable({
             style={{ top: pos.top, left: pos.left }}
             isOmaha={isOmaha}
           />
+        );
+      })}
+
+      {/* Fichas apostadas na frente de cada jogador (a aposta "na mesa" da rua). */}
+      {table.players.map((p) => {
+        if (!p.committed || p.committed <= 0 || p.status === "out") return null;
+        const pos = SEAT_POS[p.seat];
+        if (!pos) return null;
+        const b = towardCenter(pos, 0.36);
+        return (
+          <div key={`bet-${p.seat}`} className="seat-bet" style={{ top: b.top, left: b.left }}>
+            <ChipStack amount={p.committed} bigBlind={table.bigBlind} />
+          </div>
         );
       })}
 

@@ -828,6 +828,52 @@ body {
   z-index: 5;
 }
 
+/* ---- Fichas na mesa (aposta na frente do jogador + pilha do pote) ---- */
+.chipstack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.chipstack svg {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+  display: block;
+}
+.chipstack-amt {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--gold-bright, #e6c454);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  margin-top: 1px;
+}
+.seat-bet {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  animation: bet-in 0.24s ease-out both;
+}
+@keyframes bet-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.pot-chips {
+  margin: 2px auto 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seat-bet {
+    animation: none;
+  }
+}
+
 /* ---- Controles ---- */
 .controls {
   margin-top: 14px;
