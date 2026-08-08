@@ -1,7 +1,7 @@
 // Mão do dia — card no topo do Treino. Uma mão igual pra todo mundo, por dia.
 // Resolve uma vez; depois trava até amanhã. Ganha áurea, conta streak e dá pra
 // compartilhar (cada print é uma porta de entrada).
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardView } from "./Card";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
@@ -10,6 +10,7 @@ import { buildDailyScenario, loadDaily, saveDaily } from "../train/daily";
 import { awardDecisionAura } from "../train/aura";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
+import { trackEvent } from "../app/analytics";
 import { AuraChip } from "./AuraChip";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
@@ -38,7 +39,13 @@ export function DailyHand() {
     markActiveToday();
     recordDecision(key);
     saveDaily(day, ok);
+    trackEvent("daily_challenge_completed", { day, correct: ok, action: key });
   };
+
+  // Track when user views the daily challenge (once per mount)
+  useEffect(() => {
+    trackEvent("daily_challenge_viewed", { day });
+  }, [day]);
 
   const onShare = async () => {
     const img = await drawSpotImage({

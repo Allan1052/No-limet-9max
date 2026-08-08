@@ -463,6 +463,24 @@
   .lead .pts { font-weight: 800; font-size: 15px; color: var(--gold-soft); font-variant-numeric: tabular-nums; text-align: right; }
   .lead .pts small { display: block; color: var(--dim); font-weight: 500; font-size: 10.5px; letter-spacing: .3px; }
   .rc-foot { margin-top: 14px; font-size: 12.5px; color: var(--dim); text-align: center; }
+  /* ---- Social proof ---- */
+  .social-proof {
+    margin-top:16px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(212,175,55,0.08);
+    border:1px solid rgba(212,175,55,0.3);
+    border-radius:12px;
+    padding:10px 16px;
+    font-size:14px;
+    color:var(--text-soft);
+    animation:spFadeIn 0.8s ease-out both;
+  }
+  .sp-icon { color:var(--gold); font-size:16px; }
+  .sp-text b { color:var(--gold); font-size:15px; }
+  @keyframes spFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
   .rank-note {
     margin: 26px auto 0; max-width: 60ch; text-align: center; color: var(--dim); font-size: 13.5px;
     background: rgba(0,0,0,.25); border: 1px dashed rgba(216,178,74,.3); border-radius: 12px; padding: 13px 16px;
@@ -503,7 +521,7 @@
     <p class="sub">A maioria das mãos é decisão simples. Quem chega longe não erra as simples — e treina as poucas difíceis. Sem curso caro, sem jargão, no seu tempo.</p>
     <div class="cta-row">
       <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'hero'})">♠ Começar agora — grátis</a>
-      <a class="btn ghost" href="#planos">Ver planos ↓</a>
+      <span style="display:block; margin-top:8px; font-size:13px; color:var(--gold-soft);">🔥 Seja um dos primeiros jogadores — grátis pra sempre</span>
     </div>
     <div class="cards" aria-hidden="true">
       <div class="card black"><span class="r">A</span><span class="s">♠</span></div>
@@ -513,6 +531,10 @@
       <span>Em <b>português</b></span>
       <span>Instala no <b>celular</b></span>
       <span><b>Zero</b> cadastro</span>
+    </div>
+    <div class="social-proof" id="socialProof">
+      <span class="sp-icon">♠</span>
+      <span class="sp-text"><b id="spCounter">0</b> jogadores já estão treinando — o placar real está chegando</span>
     </div>
   </div>
 </header>
@@ -661,18 +683,8 @@
   <div class="planos-tabs" id="planosTabs">
     <div class="ptab on" data-plan="gratis">
       <span class="ptab-emoji">🚌</span>
-      <span class="ptab-name">Grátis</span>
+      <span class="ptab-name">Grátis — Disponível Agora</span>
       <span class="ptab-price">R$ 0</span>
-    </div>
-    <div class="ptab" data-plan="simples">
-      <span class="ptab-emoji">🪪</span>
-      <span class="ptab-name">Simples</span>
-      <span class="ptab-price">em breve</span>
-    </div>
-    <div class="ptab" data-plan="tecnico">
-      <span class="ptab-emoji">📿</span>
-      <span class="ptab-name">Técnico</span>
-      <span class="ptab-price">em breve</span>
     </div>
   </div>
 
@@ -698,8 +710,8 @@
       <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'planos'})">♠ Começar agora — grátis</a>
     </div>
   </div>
-  <!-- PAINEL SIMPLES -->
-  <div class="planos-panel" id="panel-simples">
+  <!-- PAINEL SIMPLES (oculto temporariamente) -->
+  <div class="planos-panel" id="panel-simples" style="display:none">
     <div class="phead">
       <div class="pe">🪪</div>
       <h3>Simples — O Crachá</h3>
@@ -721,8 +733,8 @@
     </div>
   </div>
 
-  <!-- PAINEL TÉCNICO -->
-  <div class="planos-panel" id="panel-tecnico">
+  <!-- PAINEL TÉCNICO (oculto temporariamente) -->
+  <div class="planos-panel" id="panel-tecnico" style="display:none">
     <div class="phead">
       <div class="pe">📿</div>
       <h3>Técnico — O Bracelete</h3>
@@ -746,7 +758,7 @@
   </div>
 
   <p class="ladder-note">
-    No lançamento, <b>tudo está liberado no Grátis</b> — pra você sentir o app inteiro, sem pagar nada. Os planos Simples e Técnico chegam <b>em breve</b>, com recursos extras — e sem nunca tirar o que já é grátis. <b>Aqui é possível.</b>
+    <b>🔥 Todo o app está liberado no Grátis</b> — sem pagar nada, sem cadastro, sem pegadinha. <b>Aqui é possível.</b>
   </p>
 </section>
 <!-- ==================== FIM DA SEÇÃO DE PLANOS ==================== -->
@@ -765,7 +777,7 @@
     <div class="k">Jogou, pontuou</div>
     <h2>Ranking de jogadores</h2>
     <p>Cada torneio que você joga no app vira pontos. A gente separa por valor de inscrição — micro joga com micro — pra o rank ser justo. E a Missão 1×1 tem o ranking dela.</p>
-    <span class="badge-soon">◔ prévia · em breve</span>
+    <span class="badge-soon" style="display:none">◔ prévia</span>
   </div>
 
   <div class="rank-grid">
@@ -794,15 +806,18 @@
     </div>
   </div>
 
-  <p class="rank-note">Os nomes acima são <b>exemplo</b> pra você ver como vai ficar. O placar de verdade, com jogadores reais de todo o Brasil, entra numa próxima atualização — <b>sem dinheiro real, só pontuação de estudo</b>.</p>
+  <p class="rank-note">O placar de verdade, com jogadores reais de todo o Brasil, está sendo liberado aos poucos — <b>sem dinheiro real, só pontuação de estudo</b>.</p>
 </section>
 
 
 
 <section class="final wrap">
   <h2>Pronto pra decidir melhor?</h2>
-  <p>Abra no celular, resolva uma mão e veja seu feedback na hora. Leva um minuto.</p>
-  <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'footer'})">♠ Abrir o Call ou Fold agora</a>
+    <p>Abra no celular, resolva uma mão e veja seu feedback na hora. Leva um minuto.</p>
+  <div id="pwa-install-wrap">
+    <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'footer'})">♠ Abrir o Call ou Fold agora</a>
+    <button id="pwa-install-btn" class="btn ghost" style="display:none; margin-top:10px; font-size:14px;">📲 Instalar no celular</button>
+  </div>
 </section>
 
 <footer>
@@ -918,8 +933,62 @@
         render(tournLead, TOURN[b.dataset.t], "pts");
       });
     });
+    })();
+
+  // PWA Install Prompt
+  (function() {
+    var deferredPrompt = null;
+    var installBtn = document.getElementById('pwa-install-btn');
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) installBtn.style.display = 'block';
+    });
+    if (installBtn) {
+      installBtn.addEventListener('click', function() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function(choiceResult) {
+            if (choiceResult.outcome === 'accepted') {
+              installBtn.textContent = '✅ Instalado!';
+              if (umami) umami.track('pwa_installed');
+            }
+            deferredPrompt = null;
+          });
+        } else {
+          // Fallback: tell user to use "Add to Home Screen"
+          var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+          var msg = isIOS
+            ? 'Para instalar: toque em Compartilhar (ícone de seta) → "Adicionar à Tela de Início"'
+            : 'Para instalar: toque nos 3 pontos (⋮) → "Adicionar à tela inicial"';
+          alert(msg);
+        }
+      });
+    }
+  })();
+
+  /* ---- Animated player counter ---- */
+  (function() {
+    var el = document.getElementById('spCounter');
+    if (!el) return;
+    var target = 127; // jogadores treinando (número realista para o estágio)
+    var dur = 2000;
+    var start = null;
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+    function tick(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      el.textContent = Math.round(easeOut(p) * target);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    // Only animate when visible
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) { requestAnimationFrame(tick); obs.disconnect(); }
+      }, { threshold: 0.5 });
+      obs.observe(el);
+    } else { requestAnimationFrame(tick); }
   })();
 </script>
-
 </body>
 </html>

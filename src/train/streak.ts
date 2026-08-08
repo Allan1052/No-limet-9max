@@ -5,6 +5,7 @@
 // Tudo local (localStorage), sem backend, sem login. Usa a data LOCAL do
 // aparelho (não UTC) pra "hoje" bater com o dia real do usuário.
 // ---------------------------------------------------------------------------
+import { trackEvent } from "../app/analytics";
 
 const KEY = "cof-streak-v1";
 
@@ -58,6 +59,14 @@ export function markActiveToday(): { current: number; best: number; incremented:
   const current = s.last === yesterday ? s.current + 1 : 1;
   const best = Math.max(s.best, current);
   save({ current, best, last: today });
+
+  // Analytics: registra milestone de streak
+  if (current === 1) {
+    trackEvent("streak_started", { day: today });
+  } else {
+    trackEvent("streak_day", { day: today, streak: current, best });
+  }
+
   return { current, best, incremented: true };
 }
 

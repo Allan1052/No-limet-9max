@@ -29,6 +29,7 @@ import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
 import { AuraChip } from "./AuraChip";
 import { DailyHand } from "./DailyHand";
+import { StreakBanner } from "./StreakBanner";
 import type { FeedbackItem } from "../feedback/analyzer";
 
 export function TrainView() {
@@ -111,6 +112,7 @@ export function TrainView() {
   if (!moduleId) {
     return (
       <div className="train-view">
+        <StreakBanner />
         <DailyHand />
         <div className="panel challenge-cta-panel" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(/banner.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--gold-dim)' }}>
           <div className="chal-cta-text">
