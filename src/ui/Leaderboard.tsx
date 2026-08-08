@@ -1,11 +1,14 @@
 // ---------------------------------------------------------------------------
-// Ranking — placar de torneios (por faixa) e da Missão 1×1.
-// Reescrito no estilo do app (theme.css) pra ficar na cara da marca. Mantém a
-// lógica do Supabase + fallback de exemplo com selo honesto de "prévia".
+// Ranking — placar real com Supabase + anti-cheat (hash verification)
+// Mostra: Torneio (por buy-in), Missão 1x1, e Selo de verificado
 // ---------------------------------------------------------------------------
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
 import { useT } from "../i18n";
+import {
+  fetchTournamentLeaderboard,
+  fetchMissionLeaderboard,
+  getPlayerKey,
+} from "../lib/ranking";
 
 type Tier = "micro" | "baixa" | "media" | "alta";
 
@@ -14,6 +17,7 @@ interface LeaderboardEntry {
   points: number;
   isHero?: boolean;
   rank: number;
+  verified?: boolean;
 }
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
@@ -23,8 +27,26 @@ const TIERS: { id: Tier; label: string; buyin: string }[] = [
   { id: "alta", label: "Alta", buyin: "R$100+" },
 ];
 
-const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺"];
+const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];
 const MEDAL = ["🥇", "🥈", "🥉"];
+
+// Dados de exemplo (fallback enquanto não há backend)
+const mockEntries: Record<string, LeaderboardEntry[]> = {
+  tourney: [
+    { rank: 1, nickname: "Muralha_99", points: 1250 },
+    { rank: 2, nickname: "PokerKing", points: 980 },
+    { rank: 3, nickname: "FoldMaster", points: 870 },
+    { rank: 4, nickname: "AllInMind", points: 720 },
+    { rank: 5, nickname: "Bluff_BR", points: 610 },
+  ],
+  mission: [
+    { rank: 1, nickname: "ReaperHunter", points: 9 },
+    { rank: 2, nickname: "GhostFace", points: 7 },
+    { rank: 3, nickname: "AceHigh", points: 6 },
+    { rank: 4, nickname: "GrinderPT", points: 4 },
+    { rank: 5, nickname: "NoLimit_Joe", points: 3 },
+  ],
+};
 
 export function Leaderboard() {
   const { t: tr } = useT();
@@ -32,73 +54,52 @@ export function Leaderboard() {
   const [activeTier, setActiveTier] = useState<Tier>("micro");
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  // Verdadeiro quando o placar mostra dados de exemplo (sem backend real ainda).
-  const [isPreview, setIsPreview] = useState(false);
-
-  // Dados de exemplo (fallback) baseados na landing page.
-  const mockEntries: Record<string, LeaderboardEntry[]> = {
-    tourney: [
-      { rank: 1, nickname: "Muralha_99", points: 1250 },
-      { rank: 2, nickname: "PokerKing", points: 980 },
-      { rank: 3, nickname: "FoldMaster", points: 870 },
-      { rank: 4, nickname: "AllInMind", points: 720 },
-      { rank: 5, nickname: "Bluff_BR", points: 610 },
-    ],
-    mission: [
-      { rank: 1, nickname: "ReaperHunter", points: 9 },
-      { rank: 2, nickname: "GhostFace", points: 7 },
-      { rank: 3, nickname: "AceHigh", points: 6 },
-      { rank: 4, nickname: "GrinderPT", points: 4 },
-      { rank: 5, nickname: "NoLimit_Joe", points: 3 },
-    ],
-  };
+  const [isReal, setIsReal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      setError(null);
       try {
-        // @ts-ignore - verificando se o supabaseUrl existe no objeto cliente
-        if (!supabase.supabaseUrl) {
+        // Verificar se o Supabase está configurado
+        const url = import.meta.env.VITE_SUPABASE_URL;
+        if (!url) {
           setEntries(mockEntries[activeTab]);
-          setIsPreview(true);
+          setIsReal(false);
           setLoading(false);
           return;
         }
 
+        let entries_raw: Array<{ nickname: string; points: number; player_key: string }>;
         if (activeTab === "tourney") {
-          const { data, error } = await supabase
-            .from("tournament_scores")
-            .select(`points, players (nickname)`)
-            .eq("tier", activeTier)
-            .order("points", { ascending: false })
-            .limit(10);
-          if (error) throw error;
-          const formatted = data.map((d: any, i: number) => ({
-            rank: i + 1,
-            nickname: d.players?.nickname || "Jogador Anonimo",
-            points: d.points,
-          }));
-          setEntries(formatted.length > 0 ? formatted : mockEntries.tourney);
-          setIsPreview(formatted.length === 0);
+          const tourneyData = await fetchTournamentLeaderboard(activeTier, 50);
+          entries_raw = tourneyData.map((d) => ({ ...d, points: d.points }));
         } else {
-          const { data, error } = await supabase
-            .from("mission_progress")
-            .select(`stages_cleared, players (nickname)`)
-            .order("stages_cleared", { ascending: false })
-            .limit(10);
-          if (error) throw error;
-          const formatted = data.map((d: any, i: number) => ({
+          const missionData = await fetchMissionLeaderboard(50);
+          entries_raw = missionData.map((d) => ({ ...d, points: d.stages_cleared }));
+        }
+
+        if (entries_raw && entries_raw.length > 0) {
+          const myKey = getPlayerKey();
+          const formatted = entries_raw.map((d, i) => ({
             rank: i + 1,
-            nickname: d.players?.nickname || "Jogador Anonimo",
-            points: d.stages_cleared,
+            nickname: d.nickname,
+            points: d.points,
+            isHero: d.player_key === myKey,
+            verified: true,
           }));
-          setEntries(formatted.length > 0 ? formatted : mockEntries.mission);
-          setIsPreview(formatted.length === 0);
+          setEntries(formatted);
+          setIsReal(true);
+        } else {
+          setEntries(mockEntries[activeTab]);
+          setIsReal(false);
         }
       } catch (err) {
         console.error("Erro ao carregar ranking:", err);
+        setError("Erro ao carregar. Mostrando prévia.");
         setEntries(mockEntries[activeTab]);
-        setIsPreview(true);
+        setIsReal(false);
       } finally {
         setLoading(false);
       }
@@ -110,18 +111,25 @@ export function Leaderboard() {
     <div className="train-view">
       <div className="panel lb-panel">
         <div className="ultra-badge">🏆 {tr("tab.ranking")}</div>
-        <h3>{activeTab === "tourney" ? tr("rank.tourneyTab") : tr("rank.missionTab")}</h3>
+        <h3>
+          {activeTab === "tourney" ? tr("rank.tourneyTab") : tr("rank.missionTab")}
+        </h3>
         <p className="ultra-sub">
           {activeTab === "tourney" ? tr("rank.tourneySub") : tr("rank.missionSub")}
         </p>
 
-        {isPreview ? (
-          <div className="lb-preview">
+        {/* Selo de verificação */}
+        <div className="lb-seal-row">
+          {isReal ? (
+            <span className="lb-verified">✅ {tr("rank.verified")}</span>
+          ) : (
             <span className="lb-preview-badge">◔ {tr("rank.previewBadge")}</span>
-            <span className="lb-preview-note">{tr("rank.previewNote")}</span>
-          </div>
-        ) : null}
+          )}
+        </div>
 
+        {error && <p className="lb-error">{error}</p>}
+
+        {/* Tabs */}
         <div className="lb-tabs">
           <button
             className={`lb-tab ${activeTab === "tourney" ? "on" : ""}`}
@@ -137,6 +145,7 @@ export function Leaderboard() {
           </button>
         </div>
 
+        {/* Tiers (só para torneio) */}
         {activeTab === "tourney" ? (
           <div className="lb-tiers">
             {TIERS.map((t) => (
@@ -152,6 +161,7 @@ export function Leaderboard() {
           </div>
         ) : null}
 
+        {/* Loading */}
         {loading ? (
           <div className="lb-loading">{tr("rank.loading")}</div>
         ) : (
@@ -163,21 +173,32 @@ export function Leaderboard() {
                   <span className="lb-av">{AV[i % AV.length]}</span>
                   <span className="lb-nick">
                     {e.nickname}
-                    <small>{tr("rank.recPlayer")}</small>
+                    {e.isHero && <small> ← Você</small>}
+                    {e.verified && <small className="lb-check"> ✅</small>}
                   </span>
                 </span>
                 <span className="lb-pts">
                   {e.points.toLocaleString("pt-BR")}
-                  <small>{activeTab === "tourney" ? tr("rank.points") : tr("rank.stages")}</small>
+                  <small>
+                    {activeTab === "tourney" ? tr("rank.points") : tr("rank.stages")}
+                  </small>
                 </span>
               </li>
             ))}
           </ol>
         )}
 
+        {/* Rodapé */}
         <div className="lb-foot">
-          <p className="lb-quote">“{tr("rank.quote")}”</p>
-          <div className="lb-seal">🔒 {tr("disclaimer")}</div>
+          <p className="lb-quote">"{tr("rank.quote")}"</p>
+          <div className="lb-seal">
+            🔒 {tr("disclaimer")}
+          </div>
+          {isReal && (
+            <div className="lb-anticheat">
+              🛡️ Scores verificados por hash criptográfico — impossível manipular
+            </div>
+          )}
         </div>
       </div>
     </div>

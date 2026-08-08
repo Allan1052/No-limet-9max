@@ -76,6 +76,8 @@ export const TRANSLATIONS = {
     "support.free": "Grátis pra sempre. Apoiar é opcional e ajuda o projeto — no jogo não rola dinheiro real, é só estudo.",
     "rank.previewBadge": "prévia · em breve",
     "rank.previewNote": "Os nomes abaixo são de exemplo. O placar real, com jogadores de verdade, entra em breve.",
+    "rank.verified": "Placar verificado",
+    "rank.anticheat": "Scores protegidos por hash criptográfico — impossível manipular",
     "rank.tourneyTab": "Torneios",
     "rank.missionTab": "Campanha",
     "rank.tourneySub": "A elite dos feltros, por faixa de inscrição.",

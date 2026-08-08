@@ -14,9 +14,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.111.0",
+    "@supabase/supabase-js": "^2.112.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.43.0",
+    "js-sha256": "^1.0.0",
     "lucide-react": "^1.27.0",
     "qrcode-generator": "^1.4.4",
     "react": "^18.3.1",
