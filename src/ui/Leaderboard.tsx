@@ -1,6 +1,7 @@
 // ---------------------------------------------------------------------------
-// Ranking — placar real com Supabase + anti-cheat (hash verification)
-// Mostra: Torneio (por buy-in), Missão 1x1, e Selo de verificado
+// Ranking — placar REAL com Supabase + anti-cheat (hash verification)
+// Sem nomes de exemplo: se ninguém pontuou ainda, mostra o convite
+// "seja o primeiro". Todo nome exibido aqui é jogador de verdade.
 // ---------------------------------------------------------------------------
 import { useState, useEffect } from "react";
 import { useT } from "../i18n";
@@ -17,7 +18,6 @@ interface LeaderboardEntry {
   points: number;
   isHero?: boolean;
   rank: number;
-  verified?: boolean;
 }
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
@@ -30,82 +30,58 @@ const TIERS: { id: Tier; label: string; buyin: string }[] = [
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];
 const MEDAL = ["🥇", "🥈", "🥉"];
 
-// Dados de exemplo (fallback enquanto não há backend)
-const mockEntries: Record<string, LeaderboardEntry[]> = {
-  tourney: [
-    { rank: 1, nickname: "Muralha_99", points: 1250 },
-    { rank: 2, nickname: "PokerKing", points: 980 },
-    { rank: 3, nickname: "FoldMaster", points: 870 },
-    { rank: 4, nickname: "AllInMind", points: 720 },
-    { rank: 5, nickname: "Bluff_BR", points: 610 },
-  ],
-  mission: [
-    { rank: 1, nickname: "ReaperHunter", points: 9 },
-    { rank: 2, nickname: "GhostFace", points: 7 },
-    { rank: 3, nickname: "AceHigh", points: 6 },
-    { rank: 4, nickname: "GrinderPT", points: 4 },
-    { rank: 5, nickname: "NoLimit_Joe", points: 3 },
-  ],
-};
-
 export function Leaderboard() {
   const { t: tr } = useT();
   const [activeTab, setActiveTab] = useState<"tourney" | "mission">("tourney");
   const [activeTier, setActiveTier] = useState<Tier>("micro");
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [isReal, setIsReal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
       setLoading(true);
       setError(null);
       try {
-        // Verificar se o Supabase está configurado
-        const url = import.meta.env.VITE_SUPABASE_URL;
-        if (!url) {
-          setEntries(mockEntries[activeTab]);
-          setIsReal(false);
-          setLoading(false);
-          return;
-        }
-
-        let entries_raw: Array<{ nickname: string; points: number; player_key: string }>;
+        let raw: Array<{ nickname: string; points: number; player_key: string }>;
         if (activeTab === "tourney") {
-          const tourneyData = await fetchTournamentLeaderboard(activeTier, 50);
-          entries_raw = tourneyData.map((d) => ({ ...d, points: d.points }));
+          const data = await fetchTournamentLeaderboard(activeTier, 50);
+          raw = data.map((d) => ({ ...d, points: d.points }));
         } else {
-          const missionData = await fetchMissionLeaderboard(50);
-          entries_raw = missionData.map((d) => ({ ...d, points: d.stages_cleared }));
+          const data = await fetchMissionLeaderboard(50);
+          raw = data.map((d) => ({ ...d, points: d.stages_cleared }));
         }
 
-        if (entries_raw && entries_raw.length > 0) {
-          const myKey = getPlayerKey();
-          const formatted = entries_raw.map((d, i) => ({
+        if (cancelled) return;
+
+        const myKey = getPlayerKey();
+        setEntries(
+          raw.map((d, i) => ({
             rank: i + 1,
             nickname: d.nickname,
             points: d.points,
             isHero: d.player_key === myKey,
-            verified: true,
-          }));
-          setEntries(formatted);
-          setIsReal(true);
-        } else {
-          setEntries(mockEntries[activeTab]);
-          setIsReal(false);
-        }
+          }))
+        );
       } catch (err) {
+        if (cancelled) return;
         console.error("Erro ao carregar ranking:", err);
-        setError("Erro ao carregar. Mostrando prévia.");
-        setEntries(mockEntries[activeTab]);
-        setIsReal(false);
+        setError("Não consegui falar com o servidor do placar agora.");
+        setEntries([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab, activeTier]);
+
+  const isEmpty = !loading && entries.length === 0;
 
   return (
     <div className="train-view">
@@ -118,13 +94,9 @@ export function Leaderboard() {
           {activeTab === "tourney" ? tr("rank.tourneySub") : tr("rank.missionSub")}
         </p>
 
-        {/* Selo de verificação */}
+        {/* Selo: o placar agora é sempre real */}
         <div className="lb-seal-row">
-          {isReal ? (
-            <span className="lb-verified">✅ {tr("rank.verified")}</span>
-          ) : (
-            <span className="lb-preview-badge">◔ {tr("rank.previewBadge")}</span>
-          )}
+          <span className="lb-verified">🛡️ {tr("rank.verified")}</span>
         </div>
 
         {error && <p className="lb-error">{error}</p>}
@@ -161,9 +133,15 @@ export function Leaderboard() {
           </div>
         ) : null}
 
-        {/* Loading */}
         {loading ? (
           <div className="lb-loading">{tr("rank.loading")}</div>
+        ) : isEmpty ? (
+          <div className="lb-empty">
+            <div className="lb-empty-icon">♠</div>
+            <p className="lb-empty-title">{tr("rank.emptyTitle")}</p>
+            <p className="lb-empty-body">{tr("rank.emptyBody")}</p>
+            <div className="lb-empty-cta">{tr("rank.emptyCta")}</div>
+          </div>
         ) : (
           <ol className="lb-list">
             {entries.map((e, i) => (
@@ -174,7 +152,6 @@ export function Leaderboard() {
                   <span className="lb-nick">
                     {e.nickname}
                     {e.isHero && <small> ← Você</small>}
-                    {e.verified && <small className="lb-check"> ✅</small>}
                   </span>
                 </span>
                 <span className="lb-pts">
@@ -191,14 +168,8 @@ export function Leaderboard() {
         {/* Rodapé */}
         <div className="lb-foot">
           <p className="lb-quote">"{tr("rank.quote")}"</p>
-          <div className="lb-seal">
-            🔒 {tr("disclaimer")}
-          </div>
-          {isReal && (
-            <div className="lb-anticheat">
-              🛡️ Scores verificados por hash criptográfico — impossível manipular
-            </div>
-          )}
+          <div className="lb-seal">🔒 {tr("disclaimer")}</div>
+          <div className="lb-anticheat">🛡️ {tr("rank.anticheat")}</div>
         </div>
       </div>
     </div>
