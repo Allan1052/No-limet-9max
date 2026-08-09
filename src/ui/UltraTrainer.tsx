@@ -6,12 +6,13 @@
 // você decide, e recebe a nota + a GRADE de range daquele spot com a sua mão
 // destacada. Reaproveita o mesmo motor do jogo — nada de regra nova.
 // ---------------------------------------------------------------------------
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CardView, CardBack } from "./Card";
 import { SpotRangeGrid } from "./SpotRangeGrid";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
+import type { HandLabSpec } from "../train/stage";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { POSITIONS, comboToHandType, type Position } from "../ranges/types";
 import {
@@ -87,6 +88,58 @@ function HoodedFace({ size = 44 }: { size?: number }) {
 
 export function UltraTrainer() {
   const { t } = useT();
+  const [prefill, setPrefill] = useState<ScenarioSpec | null>(null);
+
+  // "Treinar esse spot" da Sua Mão: o HandLab grava o spec do spot
+  // (cof-sua-mao-spec) e dispara cof-open-ultra — aqui ele é capturado
+  // e a sessão 1×1 começa já configurada no spot analisado.
+  useEffect(() => {
+    // O spec da Sua Mão é um HandLabSpec (da análise) — converte pra um
+    // ScenarioSpec do Treino 1×1 (mesmos campos de posição/stack/abertura).
+    const readSpec = (): ScenarioSpec | null => {
+      const raw = localStorage.getItem("cof-sua-mao-spec");
+      if (!raw) return null;
+      try {
+        const s = JSON.parse(raw) as HandLabSpec;
+        return {
+          heroPosition: s.heroPosition,
+          effectiveBB: s.stackBB,
+          raiserPosition: s.situation === "open" ? undefined : s.villainPosition,
+          openSizeBB: s.situation === "vsopen" ? 2.3 : s.situation === "vs3bet" ? 6 : undefined,
+        } as ScenarioSpec;
+      } catch {
+        return null;
+      }
+    };
+    // Se já veio de fora (link/navegação), aplica logo no mount.
+    const existing = readSpec();
+    if (existing) {
+      localStorage.removeItem("cof-sua-mao-spec");
+      setPrefill(existing);
+    }
+    const onOpenUltra = () => {
+      const spec = readSpec();
+      localStorage.removeItem("cof-sua-mao-spec");
+      if (spec) setPrefill(spec);
+    };
+    window.addEventListener("cof-open-ultra", onOpenUltra);
+    return () => window.removeEventListener("cof-open-ultra", onOpenUltra);
+  }, []);
+
+  useEffect(() => {
+    if (!prefill) return;
+    // A mão pré-configurada vira uma sessão 1×1 determinística (mesmo spot).
+    setHeroPos(prefill.heroPosition);
+    // Se há aberta, a posição do vilão vem do spec; senão mantém a atual (CO).
+    setVillainPos((cur) => (prefill.raiserPosition != null ? prefill.raiserPosition! : cur));
+    setFacing(prefill.raiserPosition != null);
+    setEffBB(prefill.effectiveBB);
+    setVillain(pickVillain());
+    setScenario(buildScenarioFromSpec(prefill, Math.random));
+    setPrefill(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill]);
+
   const [heroPos, setHeroPos] = useState<Position>("BTN");
   const [facing, setFacing] = useState(true); // true = vilão abre; false = você abre
   const [villainPos, setVillainPos] = useState<Position>("CO");
