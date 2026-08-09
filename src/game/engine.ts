@@ -362,6 +362,11 @@ function endHandNoShowdown(t: TableState, winnerSeat?: number): void {
   t.street = "complete";
   t.handOver = true;
   t.toAct = -1;
+  // Zera as apostas da rua no fim da mão: sem isso as pilhas de fichas
+  // continuam pintadas na frente dos jogadores até a próxima mão — e, se
+  // alguém apostar de novo antes, a pilha velha fica sobreposta à nova.
+  for (const p of t.players) p.committed = 0;
+  t.currentBet = 0;
 }
 
 function showdown(t: TableState): void {
@@ -384,6 +389,11 @@ function showdown(t: TableState): void {
   t.street = "complete";
   t.handOver = true;
   t.toAct = -1;
+  // Zera as apostas da rua no fim da mão: sem isso as pilhas de fichas
+  // continuam pintadas na frente dos jogadores até a próxima mão — e, se
+  // alguém apostar de novo antes, a pilha velha fica sobreposta à nova.
+  for (const p of t.players) p.committed = 0;
+  t.currentBet = 0;
   t.log.push(`Showdown. Board: ${t.board.length} cartas. Potes: ${pots.length}.`);
 }
 

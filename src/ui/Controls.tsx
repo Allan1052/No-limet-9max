@@ -1,4 +1,6 @@
-// Controles do herói: Fold, Check/Call, Raise, BB e All-in reorganizados.
+// Controles do herói: Fold, Check/Call, Raise, BB. All-in foi removido por
+// pedido do Allan (08/08): botão grande perto do slider causava toques
+// acidentais. All-in continua possível: slider no máximo vira all-in.
 import { useEffect, useState } from "react";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
@@ -107,13 +109,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         </button>
         <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>
           120%
-        </button>
-        <button
-          className="btn allin-btn"
-          disabled={!active || !legal.canRaise}
-          onClick={() => onAction({ type: "allin" })}
-        >
-          {t("ctrl.allin")}
         </button>
       </div>
 
