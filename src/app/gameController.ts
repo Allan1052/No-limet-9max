@@ -161,6 +161,8 @@ export interface TournamentSummary {
   mistakes: FeedbackItem[];
   /** Todas as decisões não "boa" (ok+imprecisa+ruim), para filtrar por categoria. */
   review: FeedbackItem[];
+  /** Histórico de TODAS as ações do herói — alimenta a anatomia (Fold/Call/Raise/Re-raise). */
+  decisions: Array<{ heroAction: string }>;
 }
 
 /** Estado serializável para salvar/retomar um torneio (entre mãos). */
@@ -227,6 +229,8 @@ export class GameController {
   // Todas as decisões NÃO "boa" (ok + imprecisa + ruim), para o resumo do
   // torneio deixar clicar em cada categoria e ver as mãos.
   private sessionReview: FeedbackItem[] = [];
+  // Todas as ações do herói na sessão — a "anatomia" de fim de torneio.
+  private sessionDecisions: Array<{ heroAction: string }> = [];
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
@@ -329,6 +333,7 @@ export class GameController {
     this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
     this.sessionMistakes = [];
     this.sessionReview = [];
+    this.sessionDecisions = [];
     this.tournamentResult = null;
     this.tournamentFinishPlace = null;
     this.setMessage("msg.tourneyConfigured", { stage: stageInfo.label });
@@ -647,6 +652,9 @@ export class GameController {
       }
       if (item.rating !== "boa") this.sessionReview.push(item);
     }
+    // Anatomia: registra toda ação do herói (mesmo sem advice, para o check
+    // contar como "não investiu") no raio-X Fold/Call/Raise/Re-raise.
+    this.sessionDecisions.push({ heroAction: action.type === "raise" ? "raise" : action.type });
     this.applyLabeled(action, advice);
   }
 
@@ -776,6 +784,7 @@ export class GameController {
       qualityNote,
       mistakes,
       review: [...this.sessionReview],
+      decisions: [...this.sessionDecisions],
     };
   }
 

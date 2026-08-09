@@ -11,6 +11,7 @@ import type { Rating } from "../feedback/analyzer";
 import { submitTournamentResult, type TournamentSubmitResult } from "../lib/ranking";
 import { getNickname } from "../lib/nickname";
 import { circuitStage } from "../tournament/circuit";
+import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
 
 const RATING_LABEL: Record<string, string> = {
   boa: "Boa",
@@ -64,6 +65,8 @@ export function TournamentSummary({
   }, [summary]);
 
   const stageInfo = summary.circuitStage ? circuitStage(summary.circuitStage) : undefined;
+  const anatomy: AnatomyResult = anatomyFromDecisions(summary.decisions ?? []);
+  const a = (n: number) => `${n}%`;
 
   // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
   // Sem filtro (null), mostra as "mãos para rever" (imprecisa + ruim).
@@ -144,7 +147,7 @@ export function TournamentSummary({
         <div className="summary-stats">
           <div className="ss-item">
             <div className="ss-num">{summary.handsPlayed}</div>
-            <div className="ss-lbl">mãos jogadas</div>
+            <div className="ss-lbl">mãos disputadas</div>
           </div>
           <div className="ss-item">
             <div className="ss-num">{summary.vpip}%</div>
@@ -158,6 +161,42 @@ export function TournamentSummary({
             <div className="ss-num">{summary.threeBet}%</div>
             <div className="ss-lbl">3-bet</div>
           </div>
+        </div>
+
+        {/* Anatomia do torneio — o raio-X Fold/Call/Raise/Re-raise. */}
+        <div className="anatomy-box">
+          <div className="anatomy-title">Sua anatomia neste torneio</div>
+          <div className="anatomy-bars">
+            <div className="an-row">
+              <span className="an-lbl">Fold</span>
+              <div className="an-track">
+                <div className="an-fill fold" style={{ width: `${Math.max(anatomy.foldPct, 2)}%` }} />
+              </div>
+              <span className="an-num">{a(anatomy.foldPct)}</span>
+            </div>
+            <div className="an-row">
+              <span className="an-lbl">Call</span>
+              <div className="an-track">
+                <div className="an-fill call" style={{ width: `${Math.max(anatomy.callPct, 2)}%` }} />
+              </div>
+              <span className="an-num">{a(anatomy.callPct)}</span>
+            </div>
+            <div className="an-row">
+              <span className="an-lbl">Raise</span>
+              <div className="an-track">
+                <div className="an-fill raise" style={{ width: `${Math.max(anatomy.raisePct, 2)}%` }} />
+                {anatomy.counts.reRaises > 0 && (
+                  <div className="an-reraise" title={`${anatomy.counts.reRaises} re-raises`}>↕ {anatomy.counts.reRaises}</div>
+                )}
+              </div>
+              <span className="an-num">{a(anatomy.raisePct)}</span>
+            </div>
+          </div>
+          <div className="anatomy-ref">
+            Padrão de torneio: Fold {anatomy.ref.fold}% · Call {anatomy.ref.call}% · Raise {anatomy.ref.raise}%
+            {anatomy.counts.reRaises > 0 && ` · Você fez ${anatomy.counts.reRaises} re-raise`}
+          </div>
+          <div className="anatomy-note">{anatomy.note}</div>
         </div>
 
         <div className="summary-note">

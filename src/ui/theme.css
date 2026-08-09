@@ -4121,3 +4121,84 @@ body {
 .lb-rules-body ul { margin: 8px 0; padding-left: 18px; }
 .lb-rules-body li { margin-bottom: 5px; }
 .lb-rules-foot { color: var(--good); font-size: 11px; margin: 8px 0 0; }
+/* =========================================================================
+   Anatomia do torneio — raio-X Fold/Call/Raise/Re-raise (fim de torneio)
+   ========================================================================= */
+.anatomy-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  margin: 10px 0 14px;
+}
+.anatomy-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.an-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.an-lbl {
+  width: 44px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.an-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.an-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+.an-fill.fold { background: #556b2f; }
+.an-fill.call { background: #c9a227; }
+.an-fill.raise { background: #b8860b; }
+.an-reraise {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #1a1a1a;
+  background: var(--gold);
+  border-radius: 6px;
+  padding: 0 4px;
+  line-height: 14px;
+}
+.an-num {
+  width: 34px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.anatomy-ref {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin: 6px 0 4px;
+  letter-spacing: 0.02em;
+}
+.anatomy-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #f5e9c8;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  padding-top: 6px;
+}
