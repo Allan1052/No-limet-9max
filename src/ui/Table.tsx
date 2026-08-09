@@ -208,7 +208,11 @@ export function PokerTable({
         <Board
           board={table.board}
           pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
-          chipPot={table.players.reduce((s, p) => s + p.totalCommitted - p.committed, 0)}
+          chipPot={
+            table.handOver
+              ? table.players.reduce((s, p) => s + p.totalCommitted, 0)
+              : table.players.reduce((s, p) => s + p.totalCommitted - p.committed, 0)
+          }
           bigBlind={table.bigBlind}
           inline
         />
@@ -249,8 +253,11 @@ export function PokerTable({
         );
       })}
 
-      {/* Fichas apostadas na frente de cada jogador (a aposta "na mesa" da rua). */}
+      {/* Fichas apostadas na frente de cada jogador (a aposta "na mesa" da rua).
+          Na mão encerrada (showdown) as apostas já pertencem ao pote — não
+          pintamos pilhas na frente dos assentos pra não sobrepor nada. */}
       {table.players.map((p) => {
+        if (table.handOver) return null;
         if (!p.committed || p.committed <= 0 || p.status === "out") return null;
         const pos = SEAT_POS[p.seat];
         if (!pos) return null;
@@ -262,8 +269,9 @@ export function PokerTable({
         );
       })}
 
-      {/* Dealer recolhendo: fichas deslizando pro pote. */}
-      {sweeps.map((s) => (
+      {/* Dealer recolhendo: fichas deslizando pro pote. Na mão encerrada o
+          dinheiro já está centralizado no pote — sem fichas voando por cima. */}
+      {table.handOver ? null : sweeps.map((s) => (
         <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />
       ))}
 
