@@ -191,7 +191,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
         g.botStep();
         persist(g);
         force();
-      }, 2500);
+      }, 1200);
       return () => clearTimeout(id);
     }
   });

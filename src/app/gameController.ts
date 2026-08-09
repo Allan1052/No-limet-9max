@@ -100,12 +100,25 @@ export interface TournamentConfig {
   variant?: "holdem" | "omaha";
   /** Modo curto (10 mãos) para "Omaha no Ônibus". */
   shortMode?: boolean;
+  /**
+   * Modo de jogo. "livre" (padrão) é o Treino Livre: tudo liberado, não pontua.
+   * "circuito" é uma etapa oficial do circuito e vale ranking.
+   */
+  mode?: "livre" | "circuito";
+  /** Etapa do circuito (1 a 10), quando mode === "circuito". */
+  circuitStage?: number;
 }
 
 export interface TournamentState {
   buyIn: number;
   entrants: number;
   stage: Stage;
+  /**
+   * Estágio em que o torneio COMEÇOU. Diferente de `stage`, que avança sozinho
+   * conforme o campo encolhe. Somente torneios iniciados em "inicio" contam para
+   * o ranking — regra igual à WSOP: não existe entrar direto na mesa final.
+   */
+  initialStage?: Stage;
   levelIndex: number;
   prizePool: number;
   ladder: number[];
@@ -115,6 +128,10 @@ export interface TournamentState {
   fieldRemaining: number;
   /** A bolha já estourou (o herói já entrou no dinheiro)? */
   bubbleBurst: boolean;
+  /** Modo do torneio: Treino Livre ou etapa do Circuito. */
+  mode?: "livre" | "circuito";
+  /** Etapa do circuito (1 a 10), se for torneio de circuito. */
+  circuitStage?: number;
 }
 
 /** Análise de fim de torneio: resultado + estatísticas + notas + erros. */
@@ -123,6 +140,14 @@ export interface TournamentSummary {
   /** Posição final no torneio (1 = campeão). */
   finishPlace: number;
   entrants: number;
+  /** Buy-in do torneio ($) — usado no cálculo de pontos do ranking. */
+  buyIn: number;
+  /** Estágio em que o torneio começou — só "inicio" pontua no ranking. */
+  initialStage: Stage;
+  /** Modo do torneio: só "circuito" grava pontos no ranking. */
+  mode: "livre" | "circuito";
+  /** Etapa do circuito disputada (1 a 10), quando for circuito. */
+  circuitStage?: number;
   /** Prêmio recebido ($) — 0 se terminou fora do dinheiro. */
   cash: number;
   inMoney: boolean;
@@ -284,6 +309,7 @@ export class GameController {
       buyIn: cfg.buyIn,
       entrants: cfg.entrants,
       stage: cfg.stage,
+      initialStage: cfg.stage,
       levelIndex,
       prizePool: pool,
       ladder,
@@ -291,6 +317,8 @@ export class GameController {
       handsThisLevel: 0,
       fieldRemaining,
       bubbleBurst: Math.round(fieldRemaining) <= ladder.length,
+      mode: cfg.mode ?? "livre",
+      circuitStage: cfg.circuitStage,
     };
     this.phase = "handOver";
     this.lastHand = null;
@@ -557,13 +585,26 @@ export class GameController {
     const action =
       this.table.street === "preflop"
         ? botPreflopAction(this.table, seat, { payouts: this.payouts, buyIn })
-        : botPostflopAction(this.table, seat, this.rng, 1500, this.payouts, buyIn);
+        : botPostflopAction(this.table, seat, this.rng, 800, this.payouts, buyIn);
     this.applyLabeled(action);
   }
 
   /** Aplica a ação do herói, avaliando-a antes contra a linha de base. */
+  private heroActing = false;
   heroAct(action: Action): void {
     if (!this.isHeroTurn()) return;
+    // Travamento anti-empilhamento: se a ação anterior ainda está sendo
+    // processada (clique rápido / tap duplo no celular), descarta o segundo.
+    if (this.heroActing) return;
+    this.heroActing = true;
+    try {
+    this.applyHeroAction(action);
+    } finally {
+    this.heroActing = false;
+    }
+  }
+
+  private applyHeroAction(action: Action): void {
     const advice = this.adviceForSeat(this.heroSeat);
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
@@ -720,6 +761,10 @@ export class GameController {
       result: this.tournamentResult ?? "eliminado",
       finishPlace,
       entrants: this.tournament.entrants,
+      buyIn: this.tournament.buyIn,
+      initialStage: this.tournament.initialStage ?? this.tournament.stage,
+      mode: this.tournament.mode ?? "livre",
+      circuitStage: this.tournament.circuitStage,
       cash,
       inMoney: cash > 0,
       handsPlayed: row.hands,

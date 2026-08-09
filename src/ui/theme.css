@@ -3829,3 +3829,295 @@ body {
 .pix-key { font-size: 12.5px; color: #e8e6d8; word-break: break-all; flex: 1 1 auto; min-width: 120px; }
 .pix-copy-code { width: 100%; font-weight: 800; }
 .pix-free { font-size: 11.5px; color: var(--dim, #8f8d7a); margin-top: 12px; line-height: 1.45; }
+
+/* =====================================================================
+   CIRCUITO + RANKING — modo de jogo, etapas, apelido e placar
+   ===================================================================== */
+
+/* ---- Alternador de modo: Treino Livre / Circuito ---- */
+/* .tourney é um flex de duas colunas (form + prévia). O alternador e a coluna
+   do circuito precisam ocupar a largura inteira, então quebramos a linha. */
+.tourney { flex-wrap: wrap; }
+
+.mode-switch {
+  flex: 1 0 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.circuit-col {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 620px;
+}
+/* Dentro da coluna do circuito os painéis são empilhados, não lado a lado. */
+.circuit-col .panel { flex: none; }
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1px solid var(--rail);
+  border-radius: 12px;
+  background: var(--bg2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.mode-btn:hover { border-color: var(--gold-dim); }
+.mode-btn.on {
+  background: linear-gradient(160deg, rgba(230, 196, 84, 0.14), rgba(230, 196, 84, 0.04));
+  border-color: var(--gold);
+  color: var(--text);
+  box-shadow: 0 0 14px rgba(230, 196, 84, 0.16);
+}
+.mode-icon { font-size: 20px; line-height: 1; }
+.mode-name { font-size: 14px; font-weight: 800; letter-spacing: 0.02em; }
+.mode-btn.on .mode-name { color: var(--gold); }
+.mode-desc { font-size: 11px; color: var(--text-dim); }
+
+/* ---- Cabeçalho e progresso do circuito ---- */
+.circuit-head h3 { margin: 6px 0 4px; color: var(--gold); }
+.circuit-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  margin-top: 10px;
+}
+.circuit-bar-fill {
+  height: 100%;
+  background: var(--gold-grad);
+  transition: width 0.4s ease;
+}
+.circuit-bar-lbl { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+.circuit-nick { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+.circuit-nick b { color: var(--gold); }
+.circuit-nick.warn { color: var(--warn); }
+
+/* ---- Cartão de etapa ---- */
+.circuit-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--rail);
+  border-radius: 12px;
+  background: var(--bg2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.circuit-stage:hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.circuit-stage.main {
+  border-color: var(--gold-dim);
+  background: linear-gradient(160deg, rgba(230, 196, 84, 0.1), rgba(230, 196, 84, 0.02));
+}
+.cs-name { font-size: 15px; font-weight: 800; color: var(--text); }
+.circuit-stage.main .cs-name { color: var(--gold); }
+.cs-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.cs-right { text-align: right; flex-shrink: 0; }
+.cs-pts { font-size: 20px; font-weight: 800; color: var(--gold); line-height: 1; }
+.cs-pts-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+
+/* ---- Regras do circuito ---- */
+.circuit-rules {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.circuit-rules b { color: var(--gold-soft); }
+.circuit-rules ul { margin: 6px 0 0; padding-left: 18px; }
+.circuit-rules li { margin-bottom: 3px; line-height: 1.45; }
+.circuit-freehint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---- Circuito completo ---- */
+.circuit-done { text-align: center; }
+.circuit-done-crest { font-size: 46px; line-height: 1; }
+.circuit-done h3 { color: var(--gold); margin: 8px 0 6px; }
+.circuit-done-pts { font-size: 24px; font-weight: 800; color: var(--gold); margin: 10px 0; }
+
+/* ---- Nota do Treino Livre ---- */
+.free-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid var(--gold-dim);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.free-note b { color: var(--gold-soft); }
+
+/* ---- Modal do apelido ---- */
+.nick-modal { width: min(400px, 94vw); text-align: center; }
+.nick-crest { font-size: 40px; line-height: 1; color: var(--gold); }
+.nick-modal h3 { color: var(--gold); margin: 8px 0 6px; }
+.nick-sub { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.nick-sub b { color: var(--warn); }
+.nick-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--rail);
+  border-radius: 10px;
+}
+.nick-input:focus { outline: none; border-color: var(--gold); }
+.nick-status { min-height: 20px; margin: 8px 0; font-size: 12px; }
+.nick-good { color: var(--good); font-weight: 700; }
+.nick-bad { color: var(--bad); font-weight: 700; }
+.nick-wait { color: var(--text-dim); }
+.nick-hint { color: var(--text-dim); }
+.nick-error { font-size: 12px; color: var(--bad); margin: 4px 0; }
+.nick-preview {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--gold);
+  padding: 12px;
+  margin: 8px 0 12px;
+  border-radius: 10px;
+  background: rgba(230, 196, 84, 0.08);
+  border: 1px solid var(--gold-dim);
+  word-break: break-word;
+}
+.nick-warn { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 14px; }
+.nick-warn b { color: var(--warn); }
+.nick-actions { display: flex; gap: 8px; justify-content: center; }
+.nick-actions .btn { flex: 1; }
+.nick-foot { font-size: 11px; color: var(--text-dim); margin-top: 12px; }
+
+/* ---- Painel de pontos no fim do torneio ---- */
+.rank-box {
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 12px;
+  text-align: center;
+  background: linear-gradient(160deg, rgba(230, 196, 84, 0.12), rgba(230, 196, 84, 0.03));
+  border: 1px solid var(--gold-dim);
+}
+.rank-box.free { background: rgba(0, 0, 0, 0.25); border-color: var(--rail); }
+.rank-pts { font-size: 38px; font-weight: 800; color: var(--gold); line-height: 1; }
+.rank-pts-lbl {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+.rank-badge {
+  margin-top: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--good);
+  background: rgba(92, 190, 141, 0.12);
+}
+.rank-badge.soft { color: var(--text-dim); background: rgba(255, 255, 255, 0.05); font-weight: 600; }
+.rank-badge.gold {
+  color: #0d0f0d;
+  background: var(--gold-grad);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.rank-wait { font-size: 13px; color: var(--text-dim); }
+.rank-none { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.rank-none-sub { font-size: 12px; color: var(--gold-soft); margin-top: 6px; }
+.rank-free-lbl {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.rank-free-pts { font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.5; }
+.rank-free-pts b { color: var(--gold); }
+
+/* ---- Placar: mensal / anual ---- */
+.lb-period { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.lb-per {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px;
+  border: 1px solid var(--rail);
+  border-radius: 10px;
+  background: var(--bg2);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.lb-per.on { border-color: var(--gold); color: var(--gold); background: rgba(230, 196, 84, 0.1); }
+.lb-per-sub { font-size: 10px; font-weight: 500; color: var(--text-dim); }
+.lb-events { display: block; font-size: 10px; color: var(--text-dim); }
+
+.lb-seal-row { display: flex; justify-content: center; margin: 6px 0; }
+.lb-titles { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; justify-content: center; }
+.lb-title-seal {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0d0f0d;
+  background: var(--gold-grad);
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+.lb-error { font-size: 12px; color: var(--bad); text-align: center; }
+
+/* ---- Placar: regras ---- */
+.lb-rules { margin-top: 14px; }
+.lb-rules-toggle {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--rail);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.lb-rules-body {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+.lb-rules-body b { color: var(--gold-soft); }
+.lb-rules-body ul { margin: 8px 0; padding-left: 18px; }
+.lb-rules-body li { margin-bottom: 5px; }
+.lb-rules-foot { color: var(--good); font-size: 11px; margin: 8px 0 0; }

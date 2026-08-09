@@ -1,5 +1,11 @@
 // Configuração de torneio + HUD de nível/estágio (com filtro clicável).
-import { useState } from "react";
+//
+// DOIS MODOS, NADA TRAVADO:
+//   - Treino Livre: exatamente como sempre foi. Qualquer nº de inscritos,
+//     qualquer estágio, quantas vezes quiser. Não pontua no ranking.
+//   - Circuito: 10 etapas fixas, só a partir do início, valendo ranking.
+// Os dois convivem: dá pra estar no meio do circuito e treinar do mesmo jeito.
+import { useState, useEffect } from "react";
 import {
   BUY_INS,
   BLIND_LEVELS,
@@ -13,6 +19,12 @@ import {
 import type { TournamentConfig, TournamentState } from "../app/gameController";
 import type { FieldStatus } from "../tournament/field";
 import type { SlotMeta } from "../app/tournamentSlots";
+import { CircuitPicker } from "./CircuitPicker";
+import { NicknamePrompt } from "./NicknamePrompt";
+import { getNickname, restoreNickname } from "../lib/nickname";
+import { computePoyPoints } from "../tournament/poyPoints";
+
+export type PlayMode = "livre" | "circuito";
 
 function usd(n: number): string {
   return "$" + Math.round(n).toLocaleString("en-US");
@@ -44,6 +56,49 @@ export function TournamentSetup({
     return localStorage.getItem("omaha_dev_unlock") === "true";
   });
 
+  // Modo de jogo: Treino Livre (padrão, tudo liberado) ou Circuito (vale ranking).
+  const [playMode, setPlayMode] = useState<PlayMode>("livre");
+  const [nickname, setNickname] = useState<string | null>(() => getNickname());
+  const [askNickname, setAskNickname] = useState(false);
+  /** Etapa escolhida no circuito, guardada enquanto o apelido é definido. */
+  const [pendingStage, setPendingStage] = useState<{ index: number; entrants: number } | null>(null);
+
+  // Se o jogador limpou o navegador mas a chave dele existe, recupera o apelido.
+  useEffect(() => {
+    let alive = true;
+    if (!nickname) {
+      restoreNickname().then((n) => {
+        if (alive && n) setNickname(n);
+      });
+    }
+    return () => {
+      alive = false;
+    };
+  }, [nickname]);
+
+  /** Inicia uma etapa do circuito: sempre do início, inscritos fixos. */
+  function startCircuitStage(stageIndex: number, stageEntrants: number) {
+    onStart({
+      buyIn,
+      entrants: stageEntrants,
+      stage: "inicio",
+      handsPerLevel: SPEED_HANDS[speed],
+      variant: "holdem",
+      mode: "circuito",
+      circuitStage: stageIndex,
+    });
+  }
+
+  /** Clique numa etapa: pede o apelido primeiro, se ainda não existir. */
+  function handlePickStage(stageIndex: number, stageEntrants: number) {
+    if (!nickname) {
+      setPendingStage({ index: stageIndex, entrants: stageEntrants });
+      setAskNickname(true);
+      return;
+    }
+    startCircuitStage(stageIndex, stageEntrants);
+  }
+
   const pool = prizePool(buyIn, Math.max(1, entrants));
   const ladder = payoutLadder(Math.max(1, entrants), pool);
   const stageInfo = STAGES[stage];
@@ -57,6 +112,75 @@ export function TournamentSetup({
 
   return (
     <div className="tourney">
+      {/* Modo: Treino Livre (tudo liberado) ou Circuito (vale ranking). */}
+      <div className="mode-switch">
+        <button
+          className={`mode-btn ${playMode === "livre" ? "on" : ""}`}
+          onClick={() => setPlayMode("livre")}
+        >
+          <span className="mode-icon">🎯</span>
+          <span className="mode-name">Treino Livre</span>
+          <span className="mode-desc">Jogue como quiser</span>
+        </button>
+        <button
+          className={`mode-btn ${playMode === "circuito" ? "on" : ""}`}
+          onClick={() => setPlayMode("circuito")}
+        >
+          <span className="mode-icon">🏆</span>
+          <span className="mode-name">Circuito</span>
+          <span className="mode-desc">Vale ranking</span>
+        </button>
+      </div>
+
+      {playMode === "circuito" ? (
+        <div className="circuit-col">
+          <div className="t-field circuit-buyin panel">
+            <label>Faixa de buy-in</label>
+            <div className="t-btns">
+              {BUY_INS.map((b) => (
+                <button
+                  key={b.value}
+                  className={`tab ${buyIn === b.value ? "active" : ""}`}
+                  onClick={() => setBuyIn(b.value)}
+                >
+                  {b.label}
+                </button>
+              ))}
+            </div>
+            <span className="t-suffix">
+              Cada faixa tem o próprio circuito e o próprio ranking.
+            </span>
+          </div>
+
+          <CircuitPicker buyIn={buyIn} nickname={nickname} onPick={handlePickStage} />
+
+          <div className="panel circuit-freehint">
+            Quer treinar antes de encarar uma etapa? O{" "}
+            <button className="link-btn" onClick={() => setPlayMode("livre")}>
+              Treino Livre
+            </button>{" "}
+            continua liberado, com qualquer nº de inscritos e qualquer estágio.
+            Estar no circuito não trava nada.
+          </div>
+
+          {askNickname ? (
+            <NicknamePrompt
+              onDone={(nick) => {
+                setNickname(nick);
+                setAskNickname(false);
+                const pend = pendingStage;
+                setPendingStage(null);
+                if (pend) startCircuitStage(pend.index, pend.entrants);
+              }}
+              onCancel={() => {
+                setAskNickname(false);
+                setPendingStage(null);
+              }}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <>
       {saved.length > 0 ? (
         <div className="panel saved-panel">
           <h3>Torneios salvos ({saved.length})</h3>
@@ -195,11 +319,34 @@ export function TournamentSetup({
               stage,
               handsPerLevel: SPEED_HANDS[speed],
               variant: gameType === "plo" ? "omaha" : "holdem",
+              mode: "livre",
             })
           }
         >
           Iniciar torneio
         </button>
+
+        <div className="free-note">
+          🎯 <b>Treino Livre</b> — sem ranking, sem limite. Jogue quantas vezes
+          quiser, em qualquer estágio.
+          {stage === "inicio" ? (
+            <>
+              {" "}Vencer este torneio valeria{" "}
+              <b>
+                {num(
+                  computePoyPoints({
+                    stage: "inicio",
+                    entrants: Math.max(2, entrants),
+                    buyIn,
+                    finishPosition: 1,
+                  }).points,
+                )}{" "}
+                pontos
+              </b>{" "}
+              no Circuito.
+            </>
+          ) : null}
+        </div>
       </div>
 
       {/* Prévia */}
@@ -224,6 +371,8 @@ export function TournamentSetup({
           Perto da bolha/mesa final, os bots apertam por ICM.
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,30 +1,44 @@
 // ---------------------------------------------------------------------------
-// Ranking — placar REAL com Supabase + anti-cheat (hash verification)
-// Sem nomes de exemplo: se ninguém pontuou ainda, mostra o convite
-// "seja o primeiro". Todo nome exibido aqui é jogador de verdade.
+// RANKING — placar REAL, no estilo Player of the Year da WSOP.
+//
+// Nada de nome de exemplo: todo apelido aqui é jogador de verdade. Se ninguém
+// pontuou ainda, o placar convida a ser o primeiro.
+//
+// Duas janelas:
+//   - MENSAL: só os resultados deste mês. Zera no dia 1º.
+//   - ANUAL: os 10 melhores do ANO inteiro (não a soma dos melhores de cada mês).
+//     É a leitura mais justa — premia desempenho, não presença.
+//
+// Cada faixa de buy-in tem o próprio ranking, para que quem joga micro dispute
+// com quem joga micro.
 // ---------------------------------------------------------------------------
 import { useState, useEffect } from "react";
 import { useT } from "../i18n";
 import {
   fetchTournamentLeaderboard,
   fetchMissionLeaderboard,
+  fetchPlayerTitles,
   getPlayerKey,
+  type RankingPeriod,
 } from "../lib/ranking";
+import { BEST_RESULTS_COUNT } from "../tournament/poyPoints";
+import { seasonLabel, currentSeason, currentSeasonYear } from "../tournament/circuit";
 
 type Tier = "micro" | "baixa" | "media" | "alta";
 
 interface LeaderboardEntry {
   nickname: string;
   points: number;
+  events?: number;
   isHero?: boolean;
   rank: number;
 }
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
-  { id: "micro", label: "Micro", buyin: "até R$5" },
-  { id: "baixa", label: "Baixa", buyin: "R$5–25" },
-  { id: "media", label: "Média", buyin: "R$25–100" },
-  { id: "alta", label: "Alta", buyin: "R$100+" },
+  { id: "micro", label: "Micro", buyin: "$5" },
+  { id: "baixa", label: "Baixa", buyin: "$11–22" },
+  { id: "media", label: "Média", buyin: "$55–100" },
+  { id: "alta", label: "Alta", buyin: "$109+" },
 ];
 
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];
@@ -34,9 +48,18 @@ export function Leaderboard() {
   const { t: tr } = useT();
   const [activeTab, setActiveTab] = useState<"tourney" | "mission">("tourney");
   const [activeTier, setActiveTier] = useState<Tier>("micro");
+  const [period, setPeriod] = useState<RankingPeriod>("mensal");
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [titles, setTitles] = useState<
+    Array<{ title_type: string; tier: string | null; season: string | null }>
+  >([]);
+
+  useEffect(() => {
+    fetchPlayerTitles().then(setTitles);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,10 +68,15 @@ export function Leaderboard() {
       setLoading(true);
       setError(null);
       try {
-        let raw: Array<{ nickname: string; points: number; player_key: string }>;
+        let raw: Array<{
+          nickname: string;
+          points: number;
+          player_key: string;
+          events?: number;
+        }>;
+
         if (activeTab === "tourney") {
-          const data = await fetchTournamentLeaderboard(activeTier, 50);
-          raw = data.map((d) => ({ ...d, points: d.points }));
+          raw = await fetchTournamentLeaderboard(activeTier, 50, period);
         } else {
           const data = await fetchMissionLeaderboard(50);
           raw = data.map((d) => ({ ...d, points: d.stages_cleared }));
@@ -62,8 +90,9 @@ export function Leaderboard() {
             rank: i + 1,
             nickname: d.nickname,
             points: d.points,
+            events: d.events,
             isHero: d.player_key === myKey,
-          }))
+          })),
         );
       } catch (err) {
         if (cancelled) return;
@@ -79,25 +108,41 @@ export function Leaderboard() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, activeTier]);
+  }, [activeTab, activeTier, period]);
 
   const isEmpty = !loading && entries.length === 0;
+  const periodLabel =
+    period === "mensal" ? seasonLabel(currentSeason()) : String(currentSeasonYear());
 
   return (
     <div className="train-view">
       <div className="panel lb-panel">
         <div className="ultra-badge">🏆 {tr("tab.ranking")}</div>
         <h3>
-          {activeTab === "tourney" ? tr("rank.tourneyTab") : tr("rank.missionTab")}
+          {activeTab === "tourney" ? "Ranking do Circuito" : tr("rank.missionTab")}
         </h3>
         <p className="ultra-sub">
-          {activeTab === "tourney" ? tr("rank.tourneySub") : tr("rank.missionSub")}
+          {activeTab === "tourney"
+            ? `Seus ${BEST_RESULTS_COUNT} melhores resultados · ${periodLabel}`
+            : tr("rank.missionSub")}
         </p>
 
         {/* Selo: o placar agora é sempre real */}
         <div className="lb-seal-row">
           <span className="lb-verified">🛡️ {tr("rank.verified")}</span>
         </div>
+
+        {/* Selos permanentes conquistados */}
+        {titles.length > 0 ? (
+          <div className="lb-titles">
+            {titles.map((t, i) => (
+              <span key={i} className="lb-title-seal">
+                🏅 Circuito {t.tier ? t.tier : ""}{" "}
+                {t.season ? seasonLabel(t.season) : ""}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         {error && <p className="lb-error">{error}</p>}
 
@@ -107,7 +152,7 @@ export function Leaderboard() {
             className={`lb-tab ${activeTab === "tourney" ? "on" : ""}`}
             onClick={() => setActiveTab("tourney")}
           >
-            🏆 {tr("rank.tourneyTab")}
+            🏆 Circuito
           </button>
           <button
             className={`lb-tab ${activeTab === "mission" ? "on" : ""}`}
@@ -117,20 +162,40 @@ export function Leaderboard() {
           </button>
         </div>
 
-        {/* Tiers (só para torneio) */}
         {activeTab === "tourney" ? (
-          <div className="lb-tiers">
-            {TIERS.map((t) => (
+          <>
+            {/* Mensal / Anual */}
+            <div className="lb-period">
               <button
-                key={t.id}
-                className={`lb-tier ${activeTier === t.id ? "on" : ""}`}
-                onClick={() => setActiveTier(t.id)}
+                className={`lb-per ${period === "mensal" ? "on" : ""}`}
+                onClick={() => setPeriod("mensal")}
               >
-                {t.label}
-                <span className="lb-tier-buyin">{t.buyin}</span>
+                Mensal
+                <span className="lb-per-sub">{seasonLabel(currentSeason())}</span>
               </button>
-            ))}
-          </div>
+              <button
+                className={`lb-per ${period === "anual" ? "on" : ""}`}
+                onClick={() => setPeriod("anual")}
+              >
+                Anual
+                <span className="lb-per-sub">{currentSeasonYear()}</span>
+              </button>
+            </div>
+
+            {/* Faixas de buy-in */}
+            <div className="lb-tiers">
+              {TIERS.map((t) => (
+                <button
+                  key={t.id}
+                  className={`lb-tier ${activeTier === t.id ? "on" : ""}`}
+                  onClick={() => setActiveTier(t.id)}
+                >
+                  {t.label}
+                  <span className="lb-tier-buyin">{t.buyin}</span>
+                </button>
+              ))}
+            </div>
+          </>
         ) : null}
 
         {loading ? (
@@ -138,7 +203,11 @@ export function Leaderboard() {
         ) : isEmpty ? (
           <div className="lb-empty">
             <div className="lb-empty-icon">♠</div>
-            <p className="lb-empty-title">{tr("rank.emptyTitle")}</p>
+            <p className="lb-empty-title">
+              {period === "anual" && activeTab === "tourney"
+                ? `Nenhum resultado em ${currentSeasonYear()} nesta faixa`
+                : tr("rank.emptyTitle")}
+            </p>
             <p className="lb-empty-body">{tr("rank.emptyBody")}</p>
             <div className="lb-empty-cta">{tr("rank.emptyCta")}</div>
           </div>
@@ -152,6 +221,11 @@ export function Leaderboard() {
                   <span className="lb-nick">
                     {e.nickname}
                     {e.isHero && <small> ← Você</small>}
+                    {e.events ? (
+                      <small className="lb-events">
+                        {e.events} {e.events === 1 ? "torneio" : "torneios"}
+                      </small>
+                    ) : null}
                   </span>
                 </span>
                 <span className="lb-pts">
@@ -164,6 +238,59 @@ export function Leaderboard() {
             ))}
           </ol>
         )}
+
+        {/* Como funciona — evita a sensação de placar arbitrário */}
+        {activeTab === "tourney" ? (
+          <div className="lb-rules">
+            <button className="lb-rules-toggle" onClick={() => setRulesOpen((v) => !v)}>
+              {rulesOpen ? "▾" : "▸"} Como a pontuação funciona
+            </button>
+            {rulesOpen ? (
+              <div className="lb-rules-body">
+                <p>
+                  A escala é a mesma do <b>Player of the Year da WSOP</b>: os pontos
+                  saem de três fatores — posição final, número de{" "}
+                  <b>inscritos</b> e buy-in.
+                </p>
+                <ul>
+                  <li>
+                    <b>Só o Circuito pontua.</b> Treino Livre é para treinar sem
+                    pressão — e continua liberado, com qualquer nº de inscritos e
+                    qualquer estágio.
+                  </li>
+                  <li>
+                    <b>Só torneio jogado desde o início.</b> Começar na mesa final é
+                    treino, não conquista.
+                  </li>
+                  <li>
+                    <b>Só pontua quem chega ao dinheiro</b> (os 15% melhores),
+                    exatamente como na WSOP.
+                  </li>
+                  <li>
+                    <b>Vencer vale 20× o mínimo pago</b> — a razão que a WSOP fixou
+                    a partir de 2018.
+                  </li>
+                  <li>
+                    <b>Contam seus {BEST_RESULTS_COUNT} melhores resultados</b>, para
+                    que ninguém vença só por jogar mais que os outros.
+                  </li>
+                  <li>
+                    <b>Mensal zera no dia 1º.</b> O Anual guarda os{" "}
+                    {BEST_RESULTS_COUNT} melhores do ano inteiro.
+                  </li>
+                  <li>
+                    <b>Cada faixa tem o próprio ranking</b>, para micro disputar com
+                    micro.
+                  </li>
+                </ul>
+                <p className="lb-rules-foot">
+                  Ninguém consegue apagar nem editar um resultado — nem nós. O
+                  placar só aceita inclusão.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Rodapé */}
         <div className="lb-foot">
