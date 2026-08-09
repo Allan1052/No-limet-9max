@@ -29,6 +29,11 @@ export interface AnatomyResult {
   ref: { fold: number; call: number; raise: number };
   /** Frase de leitura automática, na voz recreativa da marca. */
   note: string;
+  /** Linha explicativa curta que resolve a confusão do "82% raise": a anatomia
+   * conta só as decisões que o jogador tomou — as mãos em que ele não teve
+   * ação (mão chegou e ele foldou sem agir, ou o jogo nem chegou nele) não
+   * entram. Sem essa linha, o número assusta o recreativo. */
+  finePrint: string;
 }
 
 /**
@@ -78,6 +83,8 @@ export function anatomyFromDecisions(
     reRaisePctOfRaises: counts.raises > 0 ? Math.round((counts.reRaises / counts.raises) * 100) : 0,
     ref,
     note: readableNote(counts, ref),
+    finePrint:
+      "* Só contam as decisões que VOCÊ tomou — as mãos em que você nem jogou não entram. O fold geral continua sendo a maioria das mãos.",
   };
 }
 
@@ -93,10 +100,10 @@ function readableNote(c: AnatomyCounts, ref: { fold: number; call: number; raise
   const refCalls = Math.max(1, Math.round((ref.call / 100) * n));
   const ratio = Math.round(c.calls / refCalls);
   if (c.calls <= refCalls + 1) {
-    return `Sua anatomia está perto do padrão de torneio: você paga só o necessário e toma a iniciativa (${c.raises} raises). É assim que a stack cresce.`;
+    return `Sua anatomia está perto do padrão de torneio: quando entrou no pote, você tomou a iniciativa (${c.raises} raises) e pagou só o necessário. É assim que a stack cresce.`;
   }
   if (ratio >= 2) {
-    return `O buraco da sua stack é o call: você pagou ~${ratio}× mais do que o padrão. O recreativo paga demais — pagar é esperar o outro decidir por você. Raise ou fold.`;
+    return `O buraco da sua stack é o call: você pagou ~${ratio}× mais do que o padrão. O recreativo paga demais — pagar é esperar o outro decidir por você. Ou toma a iniciativa (raise), ou larga barato (fold).`;
   }
   return `Você pagou ${ratio}× mais do que o padrão neste torneio. Cada call a mais é fichas que saem sem decisão — o pro toma a iniciativa, o recreativo acompanha.`;
 }

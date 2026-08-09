@@ -4202,3 +4202,14 @@ body {
   border-top: 1px solid rgba(212, 175, 55, 0.15);
   padding-top: 6px;
 }
+.anatomy-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: -4px 0 10px;
+}
+.anatomy-fine {
+  font-size: 10px;
+  line-height: 1.45;
+  color: rgba(245, 233, 200, 0.6);
+  margin-top: 6px;
+}

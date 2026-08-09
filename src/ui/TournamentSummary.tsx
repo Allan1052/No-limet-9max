@@ -166,6 +166,7 @@ export function TournamentSummary({
         {/* Anatomia do torneio — o raio-X Fold/Call/Raise/Re-raise. */}
         <div className="anatomy-box">
           <div className="anatomy-title">Sua anatomia neste torneio</div>
+          <div className="anatomy-sub">Quando você decidiu, o que você fez:</div>
           <div className="anatomy-bars">
             <div className="an-row">
               <span className="an-lbl">Fold</span>
@@ -197,6 +198,7 @@ export function TournamentSummary({
             {anatomy.counts.reRaises > 0 && ` · Você fez ${anatomy.counts.reRaises} re-raise`}
           </div>
           <div className="anatomy-note">{anatomy.note}</div>
+          <div className="anatomy-fine">{anatomy.finePrint}</div>
         </div>
 
         <div className="summary-note">
