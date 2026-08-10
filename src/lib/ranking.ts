@@ -495,6 +495,7 @@ export async function fetchMissionLeaderboard(
 
     const bestByPlayer = new Map<string, { stages_cleared: number; player_key: string }>();
     for (const row of data || []) {
+      if (isTestPlayerKey(row.player_key)) continue;
       const existing = bestByPlayer.get(row.player_key);
       if (!existing || row.stages_cleared > existing.stages_cleared) {
         bestByPlayer.set(row.player_key, {
