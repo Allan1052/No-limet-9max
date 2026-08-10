@@ -192,7 +192,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     if (g.phase === "playing" && !g.table.handOver && !g.isHeroTurn()) {
       const last = g.table.lastAggressor >= 0 ? g.table.currentBet : 0;
       const quiet = last <= g.table.bigBlind; // ninguém aumentou ainda nesta rua
-      const delay = quiet ? 480 : 720;
+      const delay = quiet ? 720 : 1050;
       const id = setTimeout(() => {
         g.botStep();
         persist(g);

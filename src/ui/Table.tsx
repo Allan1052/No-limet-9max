@@ -9,7 +9,6 @@ import { ChipStack } from "./ChipStack";
 import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
-import type { FieldStatus } from "../tournament/field";
 
 // Posições (%) dos 9 assentos. O herói (assento 0) fica embaixo, no centro.
 const SEAT_POS: Array<{ top: string; left: string }> = [
@@ -56,14 +55,9 @@ function SweepChip({
   );
 }
 
-function usd(n: number): string {
-  return "$" + Math.round(n).toLocaleString("en-US");
-}
-
 export function PokerTable({
   table,
   lastActionLabel = {},
-  field,
   hint,
   onSelectSeat,
   onShowTips,
@@ -75,7 +69,6 @@ export function PokerTable({
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
-  field?: FieldStatus | null;
   hint?: string;
   onSelectSeat?: (seat: number) => void;
   onShowTips?: () => void;
@@ -98,7 +91,6 @@ export function PokerTable({
     return match ? match[1] : '/';
   }
   const reveal = table.handOver;
-  const ante = table.ante ?? 0;
 
   // Varrida do dealer: quando uma aposta da frente é RECOLHIDA (committed vai a
   // 0 ao fechar a rua), dispara uma ficha voando daquele assento pro pote.
@@ -180,31 +172,11 @@ export function PokerTable({
         </div>
       </div>
 
-      {/* Coluna central única (dica + classificação + blinds + pote + board),
-          empilhada e centralizada — assim nada se sobrepõe, independente do
-          tamanho da dica. */}
+      {/* Coluna central única (dica + pote + board). As infos do torneio
+          (classificação, blinds, inscritos) foram para a barra do topo, ao
+          estilo GGPoker — assim o feltro fica limpo. */}
       <div className="tbl-center-col">
         {hint ? <div className="tbl-hint">💡 {hint}</div> : null}
-        {field ? (
-          <div className="tbl-rankline">
-            <span className="tbl-rank">
-              {field.heroRank}º
-              <span className="tbl-of">
-                {" "}de {field.remaining.toLocaleString("en-US")} {t("hud.alive")}
-              </span>
-            </span>
-            <span className={`tbl-money ${field.inMoney ? "itm" : ""}`}>
-              {field.inMoney
-                ? `ITM ${usd(field.currentCash)} 💰`
-                : `${t("hud.paid")}: ${field.paidPlaces.toLocaleString("en-US")}`}
-            </span>
-          </div>
-        ) : null}
-        <div className="tbl-blinds">
-          {t("hud.blinds")} {table.smallBlind}/{table.bigBlind}
-          {ante > 0 ? ` (ante ${ante})` : ""}
-          {field ? ` · ${t("hud.field")} ${field.entrants.toLocaleString("en-US")}` : ""}
-        </div>
         <Board
           board={table.board}
           pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}

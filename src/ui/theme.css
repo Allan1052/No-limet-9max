@@ -3464,6 +3464,7 @@ body {
 /* Sub-nav: os "irmãos" do destino atual, em chips que rolam se precisar. */
 .hub-subnav {
   display: flex;
+  align-items: center;
   gap: 7px;
   overflow-x: auto;
   padding: 2px 0 10px;
@@ -3472,12 +3473,32 @@ body {
   scrollbar-width: none;
 }
 .hub-subnav::-webkit-scrollbar { display: none; }
+.hub-chips { display: flex; gap: 7px; flex: 0 0 auto; }
+/* HUD do torneio à direita da linha das abas — estilo GGPoker. */
+.hub-info { margin-left: auto; flex: 0 1 auto; min-width: 0; }
+.tstatus { display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
+.ts-seg {
+  font-size: 10px;
+  font-weight: 700;
+  color: #cfc9b4;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: #12140d;
+  border: 1px solid #2a2f1c;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.ts-rank { color: #e3c877; }
+.ts-rank i { color: #8a8f76; font-style: normal; font-weight: 600; }
+.ts-seg.itm { color: #37d07a; border-color: #2b6b47; background: #10180f; }
+.ts-blinds { color: #b9b39c; }
 .hub-chip {
   flex: 0 0 auto;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  padding: 7px 15px;
+  padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid #2f331f;
   background: #12140d;

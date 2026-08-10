@@ -98,6 +98,30 @@ export function App() {
   // Ela volta entre as mãos e nas outras telas.
   const navHidden = view === "play" && !handOver;
 
+  // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
+  const fs = controller.fieldStatus();
+  const playInfo =
+    view === "play" ? (
+      <div className="tstatus">
+        {fs ? (
+          <>
+            <span className="ts-seg ts-rank">
+              {fs.heroRank}º<i>/{fs.remaining.toLocaleString("en-US")}</i>
+            </span>
+            <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
+              {fs.inMoney
+                ? `ITM $${Math.round(fs.currentCash).toLocaleString("en-US")}`
+                : `${tr("hud.paid")} ${fs.paidPlaces.toLocaleString("en-US")}`}
+            </span>
+          </>
+        ) : null}
+        <span className="ts-seg ts-blinds">
+          {t.smallBlind}/{t.bigBlind}
+          {t.ante ? ` · a${t.ante}` : ""}
+        </span>
+      </div>
+    ) : null;
+
   // Sinal global para o SW saber quando é seguro recarregar
   useEffect(() => {
     window.__HAND_OVER = handOver;
@@ -155,7 +179,7 @@ export function App() {
         </div>
       </div>
 
-      <HubSubNav view={view} setView={setView} />
+      <HubSubNav view={view} setView={setView} info={playInfo} />
 
       {view === "icm" ? (
         <IcmCalculator />
@@ -210,7 +234,6 @@ export function App() {
           <PokerTable
             table={t}
             lastActionLabel={controller.lastActionLabel}
-            field={controller.fieldStatus()}
             hint={heroTurn ? hint : undefined}
             onSelectSeat={setSelectedSeat}
             onShowTips={() => setTipsOpen(true)}

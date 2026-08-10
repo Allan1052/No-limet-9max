@@ -34,6 +34,7 @@ function fakeSnap(buyIn: number, savedAt: string, heroStack = 5000): GameSnapsho
       entrants: 500,
       stage: "meio",
       levelIndex: 2,
+      paceLevel: 2,
       prizePool: 5000,
       ladder: [1000],
       handsPerLevel: 12,

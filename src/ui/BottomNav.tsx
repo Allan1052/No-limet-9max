@@ -4,6 +4,7 @@
 // que rolava no topo. A barra some sozinha na vez do herói (auto-hide) pra os
 // botões de ação ficarem com espaço total.
 // ---------------------------------------------------------------------------
+import type { ReactNode } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 
@@ -85,24 +86,30 @@ export function BottomNav({
 export function HubSubNav({
   view,
   setView,
+  info,
 }: {
   view: AppView;
   setView: (v: AppView) => void;
+  /** Faixa de status à direita (ex.: HUD do torneio no play), estilo GGPoker. */
+  info?: ReactNode;
 }) {
   const { t } = useT();
   const hub = hubForView(view);
   if (hub.views.length < 2) return null; // destino sem irmãos: sem sub-nav
   return (
     <div className="hub-subnav">
-      {hub.views.map((v) => (
-        <button
-          key={v}
-          className={`hub-chip${view === v ? " on" : ""}`}
-          onClick={() => setView(v)}
-        >
-          {t(SUB_LABEL[v])}
-        </button>
-      ))}
+      <div className="hub-chips">
+        {hub.views.map((v) => (
+          <button
+            key={v}
+            className={`hub-chip${view === v ? " on" : ""}`}
+            onClick={() => setView(v)}
+          >
+            {t(SUB_LABEL[v])}
+          </button>
+        ))}
+      </div>
+      {info ? <div className="hub-info">{info}</div> : null}
     </div>
   );
 }
