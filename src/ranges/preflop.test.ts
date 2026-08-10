@@ -211,3 +211,32 @@ describe("pré-flop — nível de aposta (3-bet vs 4-bet vs 5-bet)", () => {
     expect(vs3bet.action).toBe("fold");
   });
 });
+
+describe("pré-flop — premium nunca flata e par pequeno defende (bugs dos prints)", () => {
+  // AKs curto (16.7bb) vs abertura de UTG: 3-bet/jam, JAMAIS flat.
+  it("AKs curto vs abertura re-agride (não paga passivo)", () => {
+    const d = decide("KsAs", "CO", { effectiveBB: 16.7, raiserPosition: "UTG", openSizeBB: 2.3, betLevelFaced: 1 });
+    expect(["3bet", "jam"]).toContain(d.action);
+  });
+
+  it("premiums (AA/KK/QQ/JJ/AKo/AQs) sempre re-agridem vs abertura", () => {
+    for (const h of ["AsAd", "KsKd", "QsQd", "JsJd", "AsKd", "AsQs"]) {
+      const d = decide(h, "CO", { effectiveBB: 40, raiserPosition: "UTG", openSizeBB: 2.3, betLevelFaced: 1 });
+      expect(["3bet", "jam"]).toContain(d.action);
+    }
+  });
+
+  // Par pequeno no BB fechando com preço bom: paga para buscar o set.
+  it("44/33/22 pagam no BB vs abertura (set-mine), não foldam", () => {
+    for (const h of ["4s4d", "3s3d", "2s2d"]) {
+      const d = decide(h, "BB", { effectiveBB: 34, raiserPosition: "MP", openSizeBB: 2.3, betLevelFaced: 1 });
+      expect(d.action).toBe("call");
+    }
+  });
+
+  // Par pequeno OOP fora do BB (SB) segue foldando — pior posição, sem preço.
+  it("22 no SB (fora de posição) ainda folda vs abertura", () => {
+    const d = decide("2s2d", "SB", { effectiveBB: 34, raiserPosition: "MP", openSizeBB: 2.3, betLevelFaced: 1 });
+    expect(d.action).toBe("fold");
+  });
+});

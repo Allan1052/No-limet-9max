@@ -416,6 +416,23 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       };
     }
 
+    // Premium universal: AA-JJ e ases-fortes NUNCA flatam uma abertura — 3-bet
+    // (ou all-in em stack raso), em QUALQUER posição. Evita, por ex., AKs pagar
+    // passivo por causa de ICM ou de um estreitamento da range de valor.
+    const ALWAYS_3BET = ["AA", "KK", "QQ", "JJ", "AKs", "AKo", "AQs"];
+    if (ALWAYS_3BET.includes(handType)) {
+      const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
+      return {
+        action,
+        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
+        reason: sd.pushFold
+          ? `${handType}: mão premium — all-in vs abertura de ${ctx.raiserPosition}.`
+          : `${handType}: mão premium — 3-bet por valor vs abertura de ${ctx.raiserPosition} (nunca flat).`,
+        handType,
+        mix: bandMix(action, Math.max(value3betPct, 0.5), handType, "call"),
+      };
+    }
+
     if (freqIn(value3betRange, handType) > 0) {
       const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
       return {
@@ -452,6 +469,24 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         sizeBB: threeBetSize,
         reason: `${handType}: 3-bet de blefe (mão suited com bloqueios, perfil ${ctx.profile.archetype}).`,
         handType,
+      };
+    }
+
+    // Pares pequenos: com preço bom (fechando o BB ou em posição) e stack para o
+    // set (fora do push/fold), pagam a abertura para buscar o set — não foldam.
+    // A range linear "top X%" subestima pares pequenos, que valem pelo set.
+    const isPocketPair = handType.length === 2 && handType[0] === handType[1];
+    if (
+      isPocketPair &&
+      !sd.pushFold &&
+      (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition)
+    ) {
+      return {
+        action: "call",
+        sizeBB: openSize,
+        reason: `${handType}: par pequeno paga a abertura de ${ctx.raiserPosition} para buscar o set (preço bom).`,
+        handType,
+        mix: bandMix("call", Math.max(defendPct, 0.15), handType),
       };
     }
 
