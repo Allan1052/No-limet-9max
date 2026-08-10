@@ -36,9 +36,9 @@ interface LeaderboardEntry {
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
   { id: "micro", label: "Micro", buyin: "$5" },
-  { id: "baixa", label: "Baixa", buyin: "$11–22" },
-  { id: "media", label: "Média", buyin: "$55–100" },
-  { id: "alta", label: "Alta", buyin: "$109+" },
+  { id: "baixa", label: "Baixa", buyin: "$11" },
+  { id: "media", label: "Média", buyin: "$22 e $55" },
+  { id: "alta", label: "Alta", buyin: "$109" },
 ];
 
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];

@@ -67,8 +67,10 @@ describe("integração — mesa 9-max com os 8 perfis", () => {
     for (let h = 0; h < 400; h++) {
       const t = makeNineMax();
       startHand(t, freshShuffledDeck(seededRng(9000 + h)));
-      // Só o pré-flop: conta quem colocou fichas voluntariamente.
-      const committedBefore = t.players.map((p) => p.committed);
+      // Só o pré-flop: conta quem colocou fichas voluntariamente. Usa
+      // `totalCommitted` (acumulado da mão), pois `committed` ZERA na virada de
+      // rua — quem viu o flop apareceria com 0 se medíssemos `committed`.
+      const beforeTotal = t.players.map((p) => p.totalCommitted);
       let guard = 0;
       while (!t.handOver && t.street === "preflop") {
         if (guard++ > 200) break;
@@ -79,9 +81,8 @@ describe("integração — mesa 9-max com os 8 perfis", () => {
         const p = t.players[s];
         const id = p.profileId!;
         dealt[id]++;
-        // VPIP: colocou fichas voluntariamente (além do blind forçado). As
-        // fichas apostadas permanecem em `committed` mesmo se depois foldar.
-        if (p.committed > committedBefore[s]) entered[id]++;
+        // VPIP: pôs fichas voluntariamente (além do blind forçado).
+        if (p.totalCommitted > beforeTotal[s]) entered[id]++;
       }
     }
 

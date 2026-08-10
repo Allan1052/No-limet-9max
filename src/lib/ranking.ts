@@ -25,6 +25,13 @@ import {
 // O salt SECRETO fica só na Edge Function do Supabase
 export const PUBLIC_SALT = "c0f_public_2026";
 
+// Chaves de teste (QA/diagnóstico) que não devem aparecer em nenhum placar.
+// Nunca apagamos do banco (DELETE é bloqueado de propósito) — só filtramos.
+const TEST_KEY_PREFIXES = ["e2e_", "diag_", "qa_", "test_"];
+export function isTestPlayerKey(key: string): boolean {
+  return TEST_KEY_PREFIXES.some((p) => key.startsWith(p));
+}
+
 // Gerar player_key único baseado no localStorage (anonimo)
 export function getPlayerKey(): string {
   let key = localStorage.getItem("cof_player_key");
@@ -435,9 +442,10 @@ export async function fetchTournamentLeaderboard(
 
     if (error) throw error;
 
-    // Agrupar todos os resultados de cada jogador.
+    // Agrupar todos os resultados de cada jogador (ignorando chaves de teste).
     const resultsByPlayer = new Map<string, number[]>();
     for (const row of data || []) {
+      if (isTestPlayerKey(row.player_key)) continue;
       const list = resultsByPlayer.get(row.player_key) || [];
       list.push(row.points);
       resultsByPlayer.set(row.player_key, list);

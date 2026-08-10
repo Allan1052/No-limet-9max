@@ -141,10 +141,13 @@ export function sumBestResults(
     .reduce((total, p) => total + p, 0);
 }
 
-/** Faixa de buy-in usada nas abas do ranking. */
+/**
+ * Faixa de buy-in usada nas abas do ranking (decisão aprovada do projeto):
+ * micro ($5) · baixa ($11) · média ($22 e $55) · alta ($109).
+ */
 export function tierForBuyIn(buyIn: number): "micro" | "baixa" | "media" | "alta" {
   if (buyIn <= 5) return "micro";
-  if (buyIn <= 25) return "baixa";
-  if (buyIn <= 100) return "media";
+  if (buyIn <= 11) return "baixa";
+  if (buyIn <= 55) return "media";
   return "alta";
 }
