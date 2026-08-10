@@ -56,8 +56,12 @@ export function TournamentSetup({
     return localStorage.getItem("omaha_dev_unlock") === "true";
   });
 
-  // Modo de jogo: Treino Livre (padrão, tudo liberado) ou Circuito (vale ranking).
-  const [playMode, setPlayMode] = useState<PlayMode>("livre");
+  // Modo de jogo: Treino Livre (padrão) ou Circuito. Se há um torneio do
+  // Circuito salvo, abre já no Circuito — assim quem saiu no meio volta direto
+  // para o "Continuar".
+  const [playMode, setPlayMode] = useState<PlayMode>(() =>
+    saved.some((s) => s.mode === "circuito") ? "circuito" : "livre",
+  );
   const [nickname, setNickname] = useState<string | null>(() => getNickname());
   const [askNickname, setAskNickname] = useState(false);
   /** Etapa escolhida no circuito, guardada enquanto o apelido é definido. */
@@ -91,6 +95,16 @@ export function TournamentSetup({
 
   /** Clique numa etapa: pede o apelido primeiro, se ainda não existir. */
   function handlePickStage(stageIndex: number, stageEntrants: number) {
+    // Já tem um torneio do Circuito em andamento nesta faixa? Avisa antes de
+    // substituí-lo — o save é um por faixa. Assim ninguém perde progresso sem querer.
+    if (
+      circuitResume &&
+      !window.confirm(
+        "Você já tem um torneio do Circuito em andamento nesta faixa. Começar uma nova etapa vai substituí-lo. Continuar mesmo assim?",
+      )
+    ) {
+      return;
+    }
     if (!nickname) {
       setPendingStage({ index: stageIndex, entrants: stageEntrants });
       setAskNickname(true);
@@ -105,6 +119,9 @@ export function TournamentSetup({
   const level = BLIND_LEVELS[stageInfo.levelIndex];
   const avgBB = stageInfo.avgBB;
   const savedBuyIns = new Set(saved.map((s) => s.buyIn));
+  // Torneio do Circuito em andamento nesta faixa (para "Continuar" e para avisar
+  // antes de sobrescrever ao começar uma etapa nova).
+  const circuitResume = saved.find((s) => s.buyIn === buyIn && s.mode === "circuito");
   const icmLabel =
     stageInfo.icm === "final" ? "Mesa final (ICM cheio)"
       : stageInfo.icm === "bubble" ? "Bolha (pressão de ICM)"
@@ -134,6 +151,24 @@ export function TournamentSetup({
 
       {playMode === "circuito" ? (
         <div className="circuit-col">
+          {circuitResume ? (
+            <div className="panel circuit-resume">
+              <div className="cr-info">
+                <b>🔄 Torneio salvo — continue de onde parou</b>
+                <small>
+                  {circuitResume.circuitStage ? `Etapa ${circuitResume.circuitStage} · ` : ""}
+                  ${circuitResume.buyIn} · {STAGES[circuitResume.stage].label} ·{" "}
+                  {Math.round(circuitResume.heroStack / circuitResume.bb)}bb ·{" "}
+                  {circuitResume.fieldRemaining.toLocaleString("en-US")}/
+                  {circuitResume.entrants.toLocaleString("en-US")} vivos
+                </small>
+              </div>
+              <button className="btn primary" onClick={() => onResume?.(circuitResume.buyIn)}>
+                Continuar
+              </button>
+            </div>
+          ) : null}
+
           <div className="t-field circuit-buyin panel">
             <label>Faixa de buy-in</label>
             <div className="t-btns">

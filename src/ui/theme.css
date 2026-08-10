@@ -3968,6 +3968,19 @@ body {
   transition: transform 0.18s ease;
 }
 .circuit-stage:hover .cs-go { transform: scale(1.1); }
+/* Barra "continuar torneio salvo" no topo do Circuito. */
+.circuit-resume {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(160deg, rgba(230, 196, 84, 0.12), rgba(230, 196, 84, 0.03));
+}
+.cr-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cr-info b { color: var(--gold); font-size: 14px; }
+.cr-info small { color: var(--text-dim); font-size: 12px; }
+.circuit-resume .btn.primary { flex-shrink: 0; }
 
 /* ---- Regras do circuito ---- */
 .circuit-rules {

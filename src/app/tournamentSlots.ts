@@ -20,6 +20,10 @@ export interface SlotMeta {
   fieldRemaining: number;
   heroStack: number;
   bb: number;
+  /** Modo do torneio salvo: Treino Livre ou etapa do Circuito. */
+  mode?: "livre" | "circuito";
+  /** Etapa do circuito (1 a 10), quando for um save do Circuito. */
+  circuitStage?: number;
 }
 
 export function slotKey(buyIn: number): string {
@@ -71,6 +75,8 @@ export function listSlots(): SlotMeta[] {
         fieldRemaining: Math.round(snap.tournament.fieldRemaining),
         heroStack: hero?.stack ?? 0,
         bb: snap.blinds.bb,
+        mode: snap.tournament.mode,
+        circuitStage: snap.tournament.circuitStage,
       });
     }
   } catch {

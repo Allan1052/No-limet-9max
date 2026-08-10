@@ -39,6 +39,7 @@ import {
 import type { HandHistory, ReplayEvent } from "./replay";
 import { TRANSLATIONS, type TransKey } from "../i18n/translations";
 import { toBB } from "./format";
+import { getNickname } from "../lib/nickname";
 import {
   BLIND_LEVELS,
   STAGES,
@@ -264,7 +265,7 @@ export class GameController {
     this.onBotFolded = opts.onBotFolded;
     this.onHeroVpip = opts.onHeroVpip;
     this.seatDefs = [
-      { name: "Você", isHero: true },
+      { name: this.heroName(), isHero: true },
       ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
     ];
     const seats = this.seatDefs.map((s) => ({ ...s, stack }));
@@ -281,6 +282,11 @@ export class GameController {
    * Configura (ou reconfigura) um torneio: define blinds do nível, stacks
    * DESIGUAIS pela média do estágio, prêmios e ICM. Reinicia a sessão.
    */
+  /** Nome do herói na mesa: o apelido registrado, ou "Você" como padrão. */
+  private heroName(): string {
+    return getNickname() || "Você";
+  }
+
   configureTournament(cfg: TournamentConfig): void {
     const stageInfo = STAGES[cfg.stage];
     const levelIndex = stageInfo.levelIndex;
@@ -291,7 +297,7 @@ export class GameController {
 
     // Monta o CAMPO conforme o buy-in: micro = mais peixe, alto = mais regular.
     this.seatDefs = [
-      { name: "Você", isHero: true },
+      { name: this.heroName(), isHero: true },
       ...buildFieldSeats(cfg.buyIn, PROFILES.length, this.rng),
     ];
 
@@ -851,7 +857,7 @@ export class GameController {
     // Preserva o apelido do assento (agora há duplicatas por arquétipo, então o
     // nome é POR ASSENTO, não por perfil). Fallback: nome canônico do perfil.
     const nameFor = (s: { name: string; profileId?: string; isHero?: boolean }) =>
-      s.isHero ? "Você" : s.name || (s.profileId ? profileById(s.profileId).name : "Bot");
+      s.isHero ? this.heroName() : s.name || (s.profileId ? profileById(s.profileId).name : "Bot");
     const seats = snap.seats.map((s) => ({
       name: nameFor(s),
       profileId: s.profileId,
