@@ -580,7 +580,14 @@ export class GameController {
     if (action.type === "fold" && !p.isHero && !this.isHeroTurn()) {
       this.onBotFolded?.();
     }
+    const streetBefore = this.table.street;
     applyAction(this.table, action);
+    // Virou a rua: as fichas da rua anterior foram recolhidas ao pote, então os
+    // rótulos de ação ("Raise 3.3bb" etc.) somem JUNTO com elas — senão ficariam
+    // grudados na caixinha do jogador, sobrepondo as apostas da rua seguinte.
+    if (!this.table.handOver && this.table.street !== streetBefore) {
+      this.lastActionLabel = {};
+    }
     if (this.table.handOver) this.finishHand();
   }
 
