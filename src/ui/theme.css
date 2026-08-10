@@ -3951,6 +3951,23 @@ body {
 .cs-right { text-align: right; flex-shrink: 0; }
 .cs-pts { font-size: 20px; font-weight: 800; color: var(--gold); line-height: 1; }
 .cs-pts-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+/* Botão de "jogar" da etapa — deixa claro que o card inteiro inicia o torneio. */
+.cs-go {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #12140d;
+  font-size: 14px;
+  font-weight: 900;
+  padding-left: 2px;
+  transition: transform 0.18s ease;
+}
+.circuit-stage:hover .cs-go { transform: scale(1.1); }
 
 /* ---- Regras do circuito ---- */
 .circuit-rules {

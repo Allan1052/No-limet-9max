@@ -84,8 +84,8 @@ export function CircuitPicker({
         <div className="panel">
           <h3>Suas próximas etapas</h3>
           <div className="legend" style={{ marginBottom: 10 }}>
-            Perdeu? Pode repetir quantas vezes quiser. Cravou? A etapa sai e a
-            próxima aparece.
+            👆 <b>Toque numa etapa para jogar.</b> Perdeu? Pode repetir quantas
+            vezes quiser. Cravou? A etapa sai e a próxima aparece.
           </div>
 
           {available.map((stage) => (
@@ -107,6 +107,7 @@ export function CircuitPicker({
                 <div className="cs-pts">{num(stageWinValue(stage.index, buyIn))}</div>
                 <div className="cs-pts-lbl">pts se cravar</div>
               </div>
+              <div className="cs-go" aria-hidden="true">▶</div>
             </button>
           ))}
 
