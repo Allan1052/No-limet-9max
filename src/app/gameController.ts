@@ -119,14 +119,7 @@ export interface TournamentState {
    * o ranking — regra igual à WSOP: não existe entrar direto na mesa final.
    */
   initialStage?: Stage;
-  /** Nível das blinds da mesa. As blinds NÃO sobem — fica travado no inicial. */
   levelIndex: number;
-  /**
-   * Nível de RITMO: sobe a cada `handsPerLevel` mãos e só acelera o atrito do
-   * campo (gente bustando nas outras mesas), sem mexer nas blinds da mesa.
-   * Desacoplar isto de `levelIndex` deixa as blinds fixas sem o torneio arrastar.
-   */
-  paceLevel: number;
   prizePool: number;
   ladder: number[];
   handsPerLevel: number;
@@ -322,7 +315,6 @@ export class GameController {
       stage: cfg.stage,
       initialStage: cfg.stage,
       levelIndex,
-      paceLevel: levelIndex,
       prizePool: pool,
       ladder,
       handsPerLevel: cfg.handsPerLevel ?? 10,
@@ -445,10 +437,7 @@ export class GameController {
     // sobe o nível de blind e detecta o estouro da bolha.
     let bubbleMsg = false;
     if (this.tournament && Math.round(this.tournament.fieldRemaining) > 9) {
-      const busts = attritionPerHand(
-        this.tournament.fieldRemaining,
-        this.tournament.paceLevel ?? this.tournament.levelIndex,
-      );
+      const busts = attritionPerHand(this.tournament.fieldRemaining, this.tournament.levelIndex);
       let after = this.tournament.fieldRemaining - busts;
       // Não deixa o campo global passar da mesa final por atrito abstrato.
       after = Math.max(9, after);
@@ -476,18 +465,17 @@ export class GameController {
         this.payouts = tablePayouts(STAGES[newStage].icm, this.tournament.ladder);
       }
     }
-    // As blinds da mesa ficam FIXAS (não sobem). O que avança é o "ritmo": a
-    // cada `handsPerLevel` mãos o campo passa a bustar mais rápido, então o
-    // torneio não arrasta mesmo com blinds paradas.
+    // As blinds sobem a cada `handsPerLevel` mãos, como num MTT online: o campo
+    // acelera e os stacks encurtam conforme o torneio avança.
+    let levelUp = false;
     if (this.tournament && this.tournament.handsPerLevel > 0) {
       this.tournament.handsThisLevel++;
-      const pace = this.tournament.paceLevel ?? this.tournament.levelIndex;
       if (
         this.tournament.handsThisLevel > this.tournament.handsPerLevel &&
-        pace < BLIND_LEVELS.length - 1
+        this.tournament.levelIndex < BLIND_LEVELS.length - 1
       ) {
-        this.tournament.paceLevel = pace + 1;
-        this.tournament.handsThisLevel = 0;
+        this.setBlindLevel(this.tournament.levelIndex + 1);
+        levelUp = true;
       }
     }
     this.feedback = [];
@@ -502,9 +490,12 @@ export class GameController {
     for (const p of this.table.players) {
       if (p.status !== "out") this.handStartStacks[p.seat] = p.stack + p.totalCommitted;
     }
-    // Mensagem do topo: bolha > reposição (a mais relevante).
+    // Mensagem do topo: bolha > subida de nível > reposição (a mais relevante).
     if (bubbleMsg) {
       this.setMessage("msg.bubbleBurst");
+    } else if (levelUp) {
+      const lv = BLIND_LEVELS[this.tournament!.levelIndex];
+      this.setMessage("msg.levelUp", { sb: lv.sb, bb: lv.bb });
     } else if (refilled > 0) {
       this.setMessage(refilled === 1 ? "msg.refillOne" : "msg.refillMany", { n: refilled });
     } else {

@@ -287,20 +287,20 @@ export function TournamentSetup({
         </div>
 
         <div className="t-field">
-          <label>Ritmo</label>
+          <label>Velocidade</label>
           <div className="t-btns">
             {(Object.keys(SPEED_HANDS) as Speed[]).map((s) => (
               <button
                 key={s}
                 className={`tab ${speed === s ? "active" : ""}`}
                 onClick={() => setSpeed(s)}
-                title={`O campo encolhe mais rápido a cada ${SPEED_HANDS[s]} mãos — as blinds ficam fixas`}
+                title={`Blinds sobem a cada ${SPEED_HANDS[s]} mãos`}
               >
                 {SPEED_LABEL[s]}
               </button>
             ))}
           </div>
-          <span className="t-suffix">blinds fixas · campo acelera a cada {SPEED_HANDS[speed]} mãos</span>
+          <span className="t-suffix">blinds a cada {SPEED_HANDS[speed]} mãos</span>
         </div>
 
         {savedBuyIns.has(buyIn) ? (
