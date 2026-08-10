@@ -47,11 +47,12 @@ export type NicknameProblem =
   | "caracteres"
   | "reservado";
 
+// Nomes de papel/staff ficam reservados para ninguém se passar por eles no
+// placar. O nome da marca ("Call ou Fold") NÃO fica aqui: é o apelido do dono,
+// e assim que ele registra, o índice UNIQUE do banco tranca para os demais.
 const RESERVED = new Set([
   "admin",
   "administrador",
-  "calloufold",
-  "call ou fold",
   "moderador",
   "suporte",
   "sistema",
