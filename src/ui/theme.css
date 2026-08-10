@@ -4081,6 +4081,7 @@ body {
 .lb-per.on { border-color: var(--gold); color: var(--gold); background: rgba(230, 196, 84, 0.1); }
 .lb-per-sub { font-size: 10px; font-weight: 500; color: var(--text-dim); }
 .lb-events { display: block; font-size: 10px; color: var(--text-dim); }
+.lb-unqualified { color: var(--gold, #c8a24a); opacity: 0.9; }
 
 .lb-seal-row { display: flex; justify-content: center; margin: 6px 0; }
 .lb-titles { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; justify-content: center; }

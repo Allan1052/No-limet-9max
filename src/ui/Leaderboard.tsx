@@ -21,7 +21,7 @@ import {
   getPlayerKey,
   type RankingPeriod,
 } from "../lib/ranking";
-import { BEST_RESULTS_COUNT } from "../tournament/poyPoints";
+import { BEST_RESULTS_COUNT, MIN_RESULTS_TO_QUALIFY } from "../tournament/poyPoints";
 import { seasonLabel, currentSeason, currentSeasonYear } from "../tournament/circuit";
 
 type Tier = "micro" | "baixa" | "media" | "alta";
@@ -30,6 +30,7 @@ interface LeaderboardEntry {
   nickname: string;
   points: number;
   events?: number;
+  qualified?: boolean;
   isHero?: boolean;
   rank: number;
 }
@@ -73,6 +74,7 @@ export function Leaderboard() {
           points: number;
           player_key: string;
           events?: number;
+          qualified?: boolean;
         }>;
 
         if (activeTab === "tourney") {
@@ -91,6 +93,7 @@ export function Leaderboard() {
             nickname: d.nickname,
             points: d.points,
             events: d.events,
+            qualified: d.qualified,
             isHero: d.player_key === myKey,
           })),
         );
@@ -224,6 +227,11 @@ export function Leaderboard() {
                     {e.events ? (
                       <small className="lb-events">
                         {e.events} {e.events === 1 ? "torneio" : "torneios"}
+                        {activeTab === "tourney" && e.qualified === false ? (
+                          <span className="lb-unqualified">
+                            {" "}· faltam {MIN_RESULTS_TO_QUALIFY - e.events} p/ valer o título
+                          </span>
+                        ) : null}
                       </small>
                     ) : null}
                   </span>
@@ -273,6 +281,16 @@ export function Leaderboard() {
                   <li>
                     <b>Contam seus {BEST_RESULTS_COUNT} melhores resultados</b>, para
                     que ninguém vença só por jogar mais que os outros.
+                  </li>
+                  <li>
+                    <b>Precisa de {MIN_RESULTS_TO_QUALIFY} resultados para valer o
+                    título</b> — a mesma exigência da WSOP. Você joga e pontua desde
+                    já; o selo de qualificado chega no {MIN_RESULTS_TO_QUALIFY}º.
+                  </li>
+                  <li>
+                    <b>Buy-in conta, mas não domina.</b> Como na WSOP, o peso do
+                    buy-in é amortecido: um torneio caro vale mais, mas longe de
+                    valer "vezes o preço".
                   </li>
                   <li>
                     <b>Mensal zera no dia 1º.</b> O Anual guarda os{" "}

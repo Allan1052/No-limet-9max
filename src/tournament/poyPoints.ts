@@ -24,6 +24,9 @@
 //   - o total é CUMULATIVO (cada torneio soma)
 //   - contam apenas os N MELHORES resultados (a WSOP usa 10) — evita que quem
 //     tem mais tempo livre vença por volume em vez de desempenho
+//   - é preciso um MÍNIMO de resultados para valer o título (a WSOP exige 5)
+//   - o buy-in é AMORTECIDO na raiz 4,5 (não na raiz quadrada): um evento 10x
+//     mais caro rende ~1,7x os pontos-base, não 10x — como a WSOP faz
 // ---------------------------------------------------------------------------
 import type { Stage } from "./structure";
 import { paidPlaces } from "./structure";
@@ -33,6 +36,9 @@ export const RANKED_STAGE: Stage = "inicio";
 
 /** Quantos resultados entram no total de cada jogador (a WSOP usa 10). */
 export const BEST_RESULTS_COUNT = 10;
+
+/** Mínimo de resultados no dinheiro para valer o título, como a WSOP (5). */
+export const MIN_RESULTS_TO_QUALIFY = 5;
 
 /** Pontos do campeão num evento neutro (100 entradas, buy-in $5). */
 const CHAMPION_BASE = 1000;
@@ -45,6 +51,13 @@ const FIELD_BASELINE = 100;
 
 /** Buy-in de referência: $5 (o menor da grade do app) => multiplicador 1,0. */
 const BUYIN_BASELINE = 5;
+
+/**
+ * Raiz que amortece o buy-in. A WSOP usa a raiz 4,5 (não a raiz quadrada): um
+ * evento 10x mais caro rende ~1,7x os pontos-base, não 10x. Assim a faixa alta
+ * não domina o placar só pelo preço.
+ */
+const BUYIN_ROOT = 4.5;
 
 export interface PoyResult {
   /** Torneio elegível ao ranking? */
@@ -83,9 +96,9 @@ function fieldMultiplier(entrants: number): number {
   return Math.sqrt(Math.max(1, entrants) / FIELD_BASELINE);
 }
 
-/** Multiplicador de buy-in: peso de dificuldade/stakes, também em raiz. */
+/** Multiplicador de buy-in: peso de stakes amortecido na raiz 4,5, como a WSOP. */
 function buyInMultiplier(buyIn: number): number {
-  return Math.sqrt(Math.max(1, buyIn) / BUYIN_BASELINE);
+  return Math.pow(Math.max(1, buyIn) / BUYIN_BASELINE, 1 / BUYIN_ROOT);
 }
 
 /**

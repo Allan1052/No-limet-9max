@@ -11,6 +11,7 @@ import {
   sumBestResults,
   tierForBuyIn,
   BEST_RESULTS_COUNT,
+  MIN_RESULTS_TO_QUALIFY,
 } from "../tournament/poyPoints";
 import { trackEvent } from "../app/analytics";
 import {
@@ -421,6 +422,8 @@ export async function fetchTournamentLeaderboard(
     points: number;
     player_key: string;
     events: number;
+    /** Já tem os 5 resultados que a WSOP exige para valer o título? */
+    qualified: boolean;
   }>
 > {
   try {
@@ -470,6 +473,7 @@ export async function fetchTournamentLeaderboard(
         nickname: nicknameMap.get(player_key) || "Anonimo",
         points: sumBestResults(allPoints, BEST_RESULTS_COUNT),
         events: allPoints.length,
+        qualified: allPoints.length >= MIN_RESULTS_TO_QUALIFY,
         player_key,
       }))
       .sort((a, b) => b.points - a.points)

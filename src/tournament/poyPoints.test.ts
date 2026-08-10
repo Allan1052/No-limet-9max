@@ -33,18 +33,28 @@ describe("POY — fórmula bate com a tabela de referência", () => {
     expect(Math.abs(total - 22397)).toBeLessThanOrEqual(3);
   });
 
-  it("faixa $11: confere os pontos cruzados do documento", () => {
+  it("faixa $11: buy-in amortecido na raiz 4,5 (como a WSOP)", () => {
     const cases = [
-      { entrants: 30, pts: 812 },
-      { entrants: 60, pts: 1149 },
-      { entrants: 100, pts: 1483 },
-      { entrants: 300, pts: 2569 },
-      { entrants: 2000, pts: 6633 },
+      { entrants: 30, pts: 653 },
+      { entrants: 60, pts: 923 },
+      { entrants: 100, pts: 1191 },
+      { entrants: 300, pts: 2064 },
+      { entrants: 2000, pts: 5329 },
     ];
     for (const c of cases) {
       const p = computePoyPoints({ stage: "inicio", entrants: c.entrants, buyIn: 11, finishPosition: 1 });
       expect(Math.abs(p.points - c.pts)).toBeLessThanOrEqual(1);
     }
+  });
+
+  it("o buy-in NÃO domina o placar: $109 vale ~2x um $5, não 21x", () => {
+    // Campo neutro (100 inscritos), cravando. A razão dos pontos deve refletir
+    // a raiz 4,5 do buy-in — perto de 2x, longe do 21,8x do preço bruto.
+    const p5 = computePoyPoints({ stage: "inicio", entrants: 100, buyIn: 5, finishPosition: 1 }).points;
+    const p109 = computePoyPoints({ stage: "inicio", entrants: 100, buyIn: 109, finishPosition: 1 }).points;
+    const ratio = p109 / p5;
+    expect(ratio).toBeGreaterThan(1.8);
+    expect(ratio).toBeLessThan(2.2);
   });
 
   it("só o Início pontua; Meio/Bolha/Mesa Final não valem ranking", () => {
