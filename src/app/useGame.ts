@@ -185,13 +185,19 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const [, force] = useReducer((x) => x + 1, 0);
 
   // Enquanto for a vez de um bot, agenda UM passo com atraso (para assistir).
+  // Ritmo de mesa ao vivo: rápido o bastante para não cansar, lento o bastante
+  // para ver a ficha andar. Ações "quietas" (fold/check da jogada anterior)
+  // correm mais; aposta/raise dá um respiro pro drama.
   useEffect(() => {
     if (g.phase === "playing" && !g.table.handOver && !g.isHeroTurn()) {
+      const last = g.table.lastAggressor >= 0 ? g.table.currentBet : 0;
+      const quiet = last <= g.table.bigBlind; // ninguém aumentou ainda nesta rua
+      const delay = quiet ? 480 : 720;
       const id = setTimeout(() => {
         g.botStep();
         persist(g);
         force();
-      }, 1200);
+      }, delay);
       return () => clearTimeout(id);
     }
   });
