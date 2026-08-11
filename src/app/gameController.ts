@@ -134,6 +134,10 @@ export interface TournamentState {
    * daí a mesa só ENCOLHE — não repõe cadeira vazia nem move ninguém.
    */
   finalTableFormed?: boolean;
+  /** Nº de mesas do torneio (ceil(vivos/9)) — cai conforme mesas quebram. */
+  tables?: number;
+  /** Nº da mesa atual do herói (cosmético) — muda quando ele é realocado. */
+  tableId?: number;
   /** Modo do torneio: Treino Livre ou etapa do Circuito. */
   mode?: "livre" | "circuito";
   /** Etapa do circuito (1 a 10), se for torneio de circuito. */
@@ -333,6 +337,8 @@ export class GameController {
       fieldRemaining,
       bubbleBurst: Math.round(fieldRemaining) <= ladder.length,
       finalTableFormed: Math.round(fieldRemaining) <= 9,
+      tables: Math.max(1, Math.ceil(fieldRemaining / 9)),
+      tableId: 1 + Math.floor(this.rng() * Math.max(1, Math.ceil(fieldRemaining / 9))),
       mode: cfg.mode ?? "livre",
       circuitStage: cfg.circuitStage,
     };
@@ -370,16 +376,29 @@ export class GameController {
    * nome ativo). Na MESA FINAL não há reposição — a mesa encolhe até o heads-up.
    * Devolve quantas cadeiras foram repostas.
    */
+  /** Nº da nova mesa quando o herói foi realocado NESTA mão (0 = não moveu). */
+  private heroMovedTo = 0;
+
+  /** Stack de um recém-chegado: variado em torno da média (lognormal simples). */
+  private variedStack(avg: number): number {
+    const bb = this.table.bigBlind || 1;
+    const g = this.rng() + this.rng() + this.rng() - 1.5; // ~Normal(0, ~0.29)
+    const chips = avg * Math.exp(0.6 * g);
+    return Math.max(bb * 3, Math.round(chips / bb) * bb);
+  }
+
   /**
    * Preenche cadeiras vazias (não-herói) até a mesa ter `target` jogadores
-   * ativos. Novos entram com stack ≈ média da mesa. Devolve quantos entraram.
+   * ativos. Cada novo entra com stack VARIADO em torno de `avgOverride` (ou da
+   * média da mesa), como quem vem de outra mesa. Devolve quantos entraram.
    */
-  private fillEmptySeats(target: number): number {
+  private fillEmptySeats(target: number, avgOverride?: number): number {
     const players = this.table.players;
     const withChips = players.filter((p) => p.stack > 0);
-    if (withChips.length === 0) return 0;
+    if (withChips.length === 0 && avgOverride === undefined) return 0;
     const bb = this.table.bigBlind;
-    const avgRaw = withChips.reduce((s, p) => s + p.stack, 0) / withChips.length;
+    const avgRaw =
+      avgOverride ?? withChips.reduce((s, p) => s + p.stack, 0) / Math.max(1, withChips.length);
     const avg = Math.max(bb * 5, Math.round(avgRaw / bb) * bb);
     const usedNames = new Set(players.filter((x) => x.stack > 0 || x.isHero).map((x) => x.name));
     let active = withChips.length;
@@ -391,7 +410,7 @@ export class GameController {
       usedNames.add(rep.name);
       p.profileId = rep.profileId;
       p.name = rep.name;
-      p.stack = avg;
+      p.stack = this.variedStack(avg);
       p.status = "active";
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
       active++;
@@ -400,13 +419,57 @@ export class GameController {
     return count;
   }
 
+  /** Equilibra a mesa ao tamanho-alvo: move o excedente e traz quem falta. */
+  private balanceToTarget(target: number): number {
+    const players = this.table.players;
+    let active = players.filter((p) => p.stack > 0).length;
+    // Acima do alvo: move o excedente (nunca o herói). Ordem embaralhada.
+    if (active > target) {
+      const movable = players.filter((p) => !p.isHero && p.stack > 0);
+      for (let i = movable.length - 1; i > 0; i--) {
+        const j = Math.floor(this.rng() * (i + 1));
+        [movable[i], movable[j]] = [movable[j], movable[i]];
+      }
+      for (const p of movable) {
+        if (active <= target) break;
+        p.stack = 0;
+        p.status = "out"; // "moveu de mesa" — o campo global já o conta como vivo
+        active--;
+      }
+    }
+    return active < target ? this.fillEmptySeats(target) : 0;
+  }
+
   /**
-   * Equilibra a MESA do herói como um diretor de torneio faz (table balancing).
-   * Com N vivos no torneio são ceil(N/9) mesas de 9-max, e cada uma fica com
-   * ~ceil(N/mesas) jogadores. Se a mesa do herói tem MAIS que isso (o campo
-   * encolheu nas outras mesas), o excedente é "movido" (some daqui, mas segue
-   * vivo no campo global — não é eliminação). Se tem MENOS (ex.: redraw da mesa
-   * final), traz gente. O herói nunca é movido. Devolve quantos ENTRARAM.
+   * Realoca o HERÓI para uma mesa NOVA (adversários novos), como no online
+   * quando a sua mesa quebra. Mantém o stack do herói; os oponentes vêm com
+   * stacks variados em torno da média atual. Guarda o nº da mesa para o aviso.
+   */
+  private reseatHero(target: number, tables: number): number {
+    const withChips = this.table.players.filter((p) => p.stack > 0);
+    const avg = withChips.reduce((s, p) => s + p.stack, 0) / Math.max(1, withChips.length);
+    for (const p of this.table.players) {
+      if (p.isHero) continue;
+      p.stack = 0;
+      p.status = "out";
+    }
+    const added = this.fillEmptySeats(target, avg);
+    // Novo número de mesa, diferente do atual.
+    let n = 1 + Math.floor(this.rng() * tables);
+    const cur = this.tournament?.tableId ?? 0;
+    if (n === cur && tables > 1) n = (n % tables) + 1;
+    if (this.tournament) this.tournament.tableId = n;
+    this.heroMovedTo = n;
+    return added;
+  }
+
+  /**
+   * Table balancing como no online (GGPoker/PokerStars). Com N vivos há
+   * ceil(N/9) mesas de 9-max; cada uma fica com ~ceil(N/mesas) jogadores.
+   * Quando o campo encolhe a ponto de caber em MENOS mesas, uma mesa "quebra"
+   * e há movimentação: com chance 1/mesas a mesa do herói é a que quebra e ele
+   * é REALOCADO (adversários novos); senão, a mesa dele recebe/solta gente para
+   * bater o tamanho-alvo. Na mesa final (≤9) faz o redraw e depois só encolhe.
    */
   private refillSeats(): number {
     if (!this.tournament) {
@@ -419,31 +482,20 @@ export class GameController {
     const remaining = Math.max(1, Math.round(this.tournament.fieldRemaining));
     const tables = Math.max(1, Math.ceil(remaining / 9));
     const target = Math.min(9, Math.ceil(remaining / tables));
-    const players = this.table.players;
-    let active = players.filter((p) => p.stack > 0).length;
+    const prevTables = this.tournament.tables ?? tables;
 
-    // Mesa acima do alvo: move o excedente (equilíbrio). Nunca o herói.
-    if (active > target) {
-      const movable = players.filter((p) => !p.isHero && p.stack > 0);
-      // Ordem neutra (embaralhada) para não esvaziar sempre os mesmos assentos.
-      for (let i = movable.length - 1; i > 0; i--) {
-        const j = Math.floor(this.rng() * (i + 1));
-        [movable[i], movable[j]] = [movable[j], movable[i]];
-      }
-      for (const p of movable) {
-        if (active <= target) break;
-        p.stack = 0;
-        p.status = "out"; // "moveu de mesa" — o campo global já o conta como vivo
-        active--;
-      }
+    // Uma mesa quebrou (o campo agora cabe em menos mesas)? Isso gera
+    // movimentação, como no online. Chance de a mesa do herói ser a que quebra
+    // = 1/prevTables → ele é realocado. Só com 2+ mesas (fora da mesa final).
+    let added: number;
+    if (tables < prevTables && tables >= 2 && this.rng() < 1 / prevTables) {
+      added = this.reseatHero(target, tables);
+    } else {
+      added = this.balanceToTarget(target);
     }
+    this.tournament.tables = tables;
 
-    // Mesa abaixo do alvo: traz jogadores (reposição / redraw da mesa final).
-    const added = active < target ? this.fillEmptySeats(target) : 0;
-    active += added;
-
-    // Chegou à mesa final (campo ≤ 9) e a mesa já reúne todos os vivos: a partir
-    // daqui a mesa final está formada e passa a só encolher.
+    const active = this.table.players.filter((p) => p.stack > 0).length;
     if (remaining <= 9 && active >= remaining) {
       this.tournament.finalTableFormed = true;
     }
@@ -462,7 +514,9 @@ export class GameController {
 
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
   newHand(): void {
-    // Reposição de jogadores (bust → entra outro), exceto na mesa final.
+    // Reposição/equilíbrio de mesas (como no online). heroMovedTo é setado
+    // dentro de refillSeats quando o herói é realocado para uma mesa nova.
+    this.heroMovedTo = 0;
     const refilled = this.refillSeats();
     const hero = this.table.players[this.heroSeat];
     if (hero.stack <= 0) {
@@ -553,9 +607,11 @@ export class GameController {
     for (const p of this.table.players) {
       if (p.status !== "out") this.handStartStacks[p.seat] = p.stack + p.totalCommitted;
     }
-    // Mensagem do topo: bolha > subida de nível > reposição (a mais relevante).
+    // Mensagem do topo: bolha > realocação de mesa > subida de nível > reposição.
     if (bubbleMsg) {
       this.setMessage("msg.bubbleBurst");
+    } else if (this.heroMovedTo > 0) {
+      this.setMessage("msg.tableMoved", { n: this.heroMovedTo });
     } else if (levelUp) {
       const lv = BLIND_LEVELS[this.tournament!.levelIndex];
       this.setMessage("msg.levelUp", { sb: lv.sb, bb: lv.bb });
