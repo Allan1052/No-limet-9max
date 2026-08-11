@@ -90,6 +90,18 @@ export function App() {
     champion,
     dismissChampion,
   } = useGame(userSubscriptionLevel, { variant: gameVariant });
+  // Esconde a landing page overlay quando o app está pronto
+  useEffect(() => {
+    const lh = document.getElementById("landing-hero");
+    if (lh) {
+      setTimeout(() => {
+        lh.style.transition = "opacity 0.4s ease";
+        lh.style.opacity = "0";
+        setTimeout(() => { lh.style.display = "none"; }, 400);
+      }, 1200);
+    }
+  }, []);
+
   const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);

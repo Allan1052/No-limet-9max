@@ -25,6 +25,9 @@ export type AppView =
 
 type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
 
+// Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
+const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar"];
+
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
 export const HUBS: Hub[] = [
   { id: "jogar", icon: "🃏", labelKey: "nav.play", views: ["play", "torneio"] },
@@ -95,11 +98,16 @@ export function HubSubNav({
 }) {
   const { t } = useT();
   const hub = hubForView(view);
+
+  // Separa views principais (visíveis) das avançadas (escondidas atrás de "Mais")
+  const primaryViews = hub.views.filter((v) => !ADVANCED_VIEWS.includes(v));
+  const advancedViews = hub.views.filter((v) => ADVANCED_VIEWS.includes(v));
+
   if (hub.views.length < 2) return null; // destino sem irmãos: sem sub-nav
   return (
     <div className="hub-subnav">
       <div className="hub-chips">
-        {hub.views.map((v) => (
+        {primaryViews.map((v) => (
           <button
             key={v}
             className={`hub-chip${view === v ? " on" : ""}`}
@@ -108,6 +116,20 @@ export function HubSubNav({
             {t(SUB_LABEL[v])}
           </button>
         ))}
+        {advancedViews.length > 0 && (
+          <button
+            className={`hub-chip${advancedViews.includes(view) ? " on" : ""}`}
+            onClick={() => {
+              if (advancedViews.includes(view)) {
+                setView(primaryViews[0]);
+              } else {
+                setView(advancedViews[0]);
+              }
+            }}
+          >
+            ⋯
+          </button>
+        )}
       </div>
       {info ? <div className="hub-info">{info}</div> : null}
     </div>

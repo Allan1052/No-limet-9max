@@ -114,7 +114,7 @@ export function TrainView() {
       <div className="train-view">
         <StreakBanner />
         <DailyHand />
-        <div className="panel challenge-cta-panel" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(/banner.png)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--gold-dim)' }}>
+        <div className="panel challenge-cta-panel" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(/banner.webp)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--gold-dim)' }}>
           <div className="chal-cta-text">
             <b>🎯 {t("challenge.button")}</b>
             <span>{t("challenge.subtitle")}</span>
