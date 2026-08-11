@@ -274,8 +274,14 @@
     border: 1px solid #262a1c; border-radius: 16px; padding: 22px;
   }
   .feature .ic { font-size: 26px; }
-  .feature h3 { font-size: 18px; margin: 12px 0 6px; color: var(--gold-soft); }
+  .feature h3 { font-size: 18px; margin: 12px 0 6px; color: var(--gold-soft); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .feature p { color: var(--dim); font-size: 14.5px; margin: 0; }
+  .feature.hot { border-color: var(--gold-dim); background: linear-gradient(180deg, #1c1e10, #12140c); }
+  .novo {
+    font-family: system-ui, sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: #0d0f0d; background: var(--gold-grad);
+    padding: 2px 7px; border-radius: 999px; line-height: 1.4;
+  }
 
   /* ---- Planos (novos) ---- */
   .planos { margin: 74px 0; }
@@ -657,16 +663,20 @@
   <div class="section-h">
     <div class="k">Como você aprende</div>
     <h2>Um jogo que te treina a decidir</h2>
-    <p>Cada mão vira uma decisão avaliada. O app compara a sua jogada com o padrão e te explica o porquê — em linguagem simples ou técnica, você escolhe.</p>
+    <p>Cada mão vira uma decisão avaliada. O app compara a sua jogada com o padrão e te explica o porquê — em linguagem simples ou técnica, você escolhe. E ele não para de crescer.</p>
   </div>
   <div class="grid">
+    <div class="feature hot"><div class="ic">🎙️</div><h3>Jogue por voz <span class="novo">novo</span></h3><p>Fala "fold", "raise 40", "all-in" — e a ação acontece. Microfone sempre ligado: dá pra jogar um torneio inteiro sem tocar na tela.</p></div>
+    <div class="feature hot"><div class="ic">🔈</div><h3>Um coach que fala com você <span class="novo">novo</span></h3><p>Errou? Ele te avisa na hora: "Impreciso — o melhor era foldar." Feedback no seu ouvido, enquanto a mão acontece.</p></div>
+    <div class="feature hot"><div class="ic">🏅</div><h3>Circuito estilo WSOP <span class="novo">novo</span></h3><p>Etapas, pontos e ranking anual (Jogador do Ano). Um circuito de verdade, do micro ao alto — grátis e sem dinheiro real.</p></div>
     <div class="feature"><div class="ic">🧠</div><h3>Feedback em toda decisão</h3><p>"Essa jogada é boa ~70% das vezes." Nada de certo/errado seco — você entende o porquê e melhora.</p></div>
+    <div class="feature"><div class="ic">🏆</div><h3>Torneios que parecem online</h3><p>Campo encolhendo, blinds subindo, bolha, ITM e mesa final com ICM. Troca de mesa e você salva pra continuar depois.</p></div>
+    <div class="feature"><div class="ic">🔁</div><h3>Reveja a mão, veja seu raio-X</h3><p>Volte cada decisão passo a passo e veja a jogada ótima. E a anatomia do seu jogo: VPIP, PFR, onde você vaza fichas.</p></div>
     <div class="feature"><div class="ic">🎓</div><h3>Treino até virar hábito</h3><p>Defesa do Big Blind, roubo do botão, push/fold, mesa final. Repita o spot até a decisão certa ficar automática.</p></div>
+    <div class="feature"><div class="ic">🃏</div><h3>Adversários de verdade</h3><p>Do recreativo que paga tudo ao regular agressivo — 8 tipos de gente que você encontra na mesa. E o campo aperta conforme o buy-in sobe.</p></div>
     <div class="feature"><div class="ic">📥</div><h3>Analisa seu jogo real</h3><p>Importe as mãos que você jogou no PokerStars ou GGPoker e veja onde vazou fichas — sua sessão, seus erros.</p></div>
-    <div class="feature"><div class="ic">🏆</div><h3>Torneios de verdade</h3><p>Campo encolhendo, bolha, ITM e mesa final com ICM. As situações que realmente decidem quem chega longe.</p></div>
-    <div class="feature"><div class="ic">🃏</div><h3>Adversários reais</h3><p>Do recreativo que paga tudo ao regular agressivo — cada bot joga como um tipo de gente que você encontra na mesa.</p></div>
-    <div class="feature"><div class="ic">📲</div><h3>No seu bolso, no seu tempo</h3><p>Instala no celular, funciona offline, em português. Cinco minutos entre uma tarefa e outra já valem.</p></div>
   </div>
+  <p style="text-align:center; color:var(--dim); font-size:13.5px; margin-top:18px;">…e ainda: ICM Calculator, ranges por posição, Omaha (PLO), missões 1×1 e títulos. Instala no celular, funciona offline, em português.</p>
 </section>
 
 <!-- ==================== SEÇÃO DE PLANOS ==================== -->
@@ -701,6 +711,8 @@
     <div class="planos-features">
       <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Simulador de Mãos<small>Jogue mãos completas — ilimitado</small></span></div>
       <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Feedback Básico<small>"Fold certo", "Deixou fichas na mesa" — sem termo difícil</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Comando de voz + coach falado<small>Jogue e ouça o feedback sem tocar na tela</small></span><span class="pf-badge">Novo</span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Circuito estilo WSOP<small>Etapas, pontos e ranking anual do Jogador do Ano</small></span><span class="pf-badge">Novo</span></div>
       <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Missão 1×1<small>Desafie um amigo — grátis para todos</small></span></div>
       <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Torneios Micro e Baixa<small>$1 e $5 — 1 torneio por dia</small></span></div>
       <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Feedback Detalhado (EV, textura, bloqueadores)<small>liberado no lançamento</small></span></div>
