@@ -8,7 +8,7 @@
 // força. Perfil, profundidade de stack e ICM depois esticam ou apertam o alvo.
 // ---------------------------------------------------------------------------
 
-import { buildTopRange } from "../build";
+import { buildTopRange, buildTopRangeWithBonus } from "../build";
 import type { Position, Range } from "../types";
 
 // Percentual-base de abertura por posição (fração de 1326 combos).
@@ -32,6 +32,8 @@ export interface RfiAdjust {
   stackFactor?: number;
   /** Fator de aperto por ICM (0..1; 1 = sem aperto, <1 aperta). */
   icmFactor?: number;
+  /** Bônus de shove para pares/suited connectors (push/fold mode). */
+  shoveBonus?: number;
 }
 
 /** Alvo de % de abertura já ajustado, com limites de segurança. */
@@ -48,5 +50,9 @@ export function rfiTargetPercent(position: Position, adj: RfiAdjust = {}): numbe
 /** Range de abertura concreta para a posição, já ajustada. */
 export function rfiRange(position: Position, adj: RfiAdjust = {}): Range {
   if (position === "BB") return {};
-  return buildTopRange(rfiTargetPercent(position, adj));
+  const pct = rfiTargetPercent(position, adj);
+  if (adj.shoveBonus && adj.shoveBonus > 0) {
+    return buildTopRangeWithBonus(pct, adj.shoveBonus);
+  }
+  return buildTopRange(pct);
 }

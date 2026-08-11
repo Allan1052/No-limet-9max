@@ -1,0 +1,195 @@
+<!-- 
+  SEÇÃO DE PLANOS — Inserir entre a seção "features" e a seção "Por que é diferente"
+  (depois do </section> das features, antes do <section class="wrap"> "Por que é diferente")
+-->
+
+<!-- CSS para a seção de planos (adicionar dentro do <style>) -->
+<style>
+  .planos { margin: 74px 0; }
+  .planos .section-h { margin-top: 0; }
+  .planos .intro {
+    max-width: 62ch; margin: 0 auto 30px; color: #cfccbe; font-size: clamp(15px, 2vw, 17px); line-height: 1.6;
+  }
+  .planos .intro b { color: var(--cream); }
+  .planos .intro .gold { color: var(--gold-soft); }
+  .planos-tabs { display: flex; gap: 10px; justify-content: center; margin: 30px 0 0; flex-wrap: wrap; }
+  .planos-tabs .ptab {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 140px; padding: 16px 20px; border-radius: 14px;
+    border: 1px solid #2a2e1c; background: #0f120c; cursor: pointer;
+    transition: all .15s ease; text-decoration: none;
+  }
+  .planos-tabs .ptab:hover { transform: translateY(-2px); border-color: var(--gold-dim); }
+  .planos-tabs .ptab.on {
+    background: linear-gradient(180deg, #1a1c0f, #12140d);
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(212,175,55,.15);
+  }
+  .planos-tabs .ptab .ptab-emoji { font-size: 28px; }
+  .planos-tabs .ptab .ptab-name { font-weight: 800; font-size: 15px; color: var(--cream); letter-spacing: .3px; }
+  .planos-tabs .ptab .ptab-price { font-size: 12px; color: var(--gold-soft); font-weight: 700; }
+  .planos-panel { display: none; }
+  .planos-panel.on { display: block; animation: fadeUp .3s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .planos-panel .phead {
+    text-align: center; padding: 30px 0 20px;
+    background: radial-gradient(120% 140% at 50% 0%, rgba(216,178,74,.07), transparent 70%);
+    border-radius: 18px; margin-bottom: 20px;
+  }
+  .planos-panel .phead .pe { font-size: 36px; }
+  .planos-panel .phead h3 { font-size: clamp(22px, 3.5vw, 30px); margin: 10px 0 4px; }
+  .planos-panel .phead .pprice { font-size: 26px; font-weight: 800; color: var(--gold); }
+  .planos-panel .phead .pprice small { font-size: 14px; color: var(--dim); font-weight: 500; }
+  .planos-panel .pdesc {
+    max-width: 62ch; margin: 0 auto 22px; color: var(--dim); font-size: 15px; line-height: 1.6;
+    text-align: center;
+  }
+  .planos-panel .pdesc b { color: var(--cream); }
+  .planos-features { display: grid; gap: 10px; margin: 0 0 24px; }
+  .planos-features .pf {
+    display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 11px;
+    background: #10130c; border: 1px solid #22261899;
+  }
+  .planos-features .pf.locked { opacity: .4; }
+  .planos-features .pf .pf-ic { font-size: 16px; text-align: center; }
+  .planos-features .pf .pf-ic.check { color: var(--good); }
+  .planos-features .pf .pf-ic.cross { color: var(--bad); }
+  .planos-features .pf .pf-ic.lock { color: var(--gold-dim); }
+  .planos-features .pf .pf-name { font-weight: 700; font-size: 14.5px; color: var(--cream); }
+  .planos-features .pf .pf-name small { display: block; color: var(--dim); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+  .planos-features .pf .pf-badge {
+    font-size: 11px; font-weight: 800; letter-spacing: .3px; padding: 4px 10px; border-radius: 7px;
+    background: rgba(216,178,74,.12); color: var(--gold-soft); border: 1px solid var(--gold-dim);
+  }
+  .planos-cta { text-align: center; margin: 20px 0 0; }
+  .planos-cta .btn { margin: 0 auto; }
+  .planos .ladder-note {
+    margin: 30px auto 0; max-width: 54ch; text-align: center; color: var(--dim); font-size: 13px;
+    background: rgba(0,0,0,.2); border: 1px dashed rgba(216,178,74,.2); border-radius: 12px; padding: 14px 18px;
+  }
+  .planos .ladder-note b { color: var(--gold-soft); }
+</style>
+
+<section class="planos wrap" id="planos">
+  <div class="section-h">
+    <div class="k">Escolha o seu degrau</div>
+    <h2>O app evolui com você</h2>
+  </div>
+
+  <p class="intro">
+    Cada jogador está num momento diferente. Alguns só querem <b>resolver a dúvida rápida</b> antes de sentar na mesa. Outros já sentem que estão <span class="gold">sangrando fichas</span> e querem parar. E tem quem decidiu estudar sério — pra chegar na <b>mesa final</b> de verdade. O Call ou Fold acompanha cada um. Sem pular etapa. Sem te deixar pra trás.
+  </p>
+
+  <div class="planos-tabs" id="planosTabs">
+    <div class="ptab on" data-plan="gratis">
+      <span class="ptab-emoji">🚌</span>
+      <span class="ptab-name">Grátis</span>
+      <span class="ptab-price">R$ 0</span>
+    </div>
+    <div class="ptab" data-plan="simples">
+      <span class="ptab-emoji">🪪</span>
+      <span class="ptab-name">Simples</span>
+      <span class="ptab-price">R$ 9,90/mês</span>
+    </div>
+    <div class="ptab" data-plan="tecnico">
+      <span class="ptab-emoji">📿</span>
+      <span class="ptab-name">Técnico</span>
+      <span class="ptab-price">R$ 29,90/mês</span>
+    </div>
+  </div>
+
+  <!-- PAINEL GRÁTIS -->
+  <div class="planos-panel on" id="panel-gratis">
+    <div class="phead">
+      <div class="pe">🚌</div>
+      <h3>Grátis — O Ônibus</h3>
+      <div class="pprice">R$ 0 <small>/ para sempre</small></div>
+    </div>
+    <p class="pdesc">
+      Para quem acabou de descobrir o app e quer começar. Abra uma dúvida, resolva, volte. <b>Sem compromisso, sem cadastro</b> — só entrar e jogar. O recreativo que pega o ônibus às 20:30 e tem 30 minutos no celular. Esse plano é seu.
+    </p>
+    <div class="planos-features">
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Simulador de Mãos<small>Jogue mãos completas — ilimitado</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Feedback Básico<small>"Fold certo", "Deixou fichas na mesa" — sem termo difícil</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Missão 1×1<small>Desafie um amigo — grátis para todos</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Torneios Micro e Baixa<small>$1 e $5 — 1 torneio por dia</small></span></div>
+      <div class="pf locked"><span class="pf-ic lock">🔒</span><span class="pf-name">Feedback Detalhado (EV, textura, bloqueadores)<small>Plano Simples</small></span></div>
+      <div class="pf locked"><span class="pf-ic lock">🔒</span><span class="pf-name">Ranges de Mãos<small>Plano Técnico</small></span></div>
+    </div>
+    <div class="planos-cta">
+      <a class="btn primary" href="https://calloufold.com.br/">♠ Começar agora — grátis</a>
+    </div>
+  </div>
+
+  <!-- PAINEL SIMPLES -->
+  <div class="planos-panel" id="panel-simples">
+    <div class="phead">
+      <div class="pe">🪪</div>
+      <h3>Simples — O Crachá</h3>
+      <div class="pprice">R$ 9,90 <small>/ mês</small></div>
+    </div>
+    <p class="pdesc">
+      Para quem já joga há um tempo e <b>cansou de perder fichas pra erro bobo</b>. Você sabe que errou, mas não sabe por quê. O Plano Simples te mostra o EV da sua decisão, lê a textura do board pra você, e te ensina bloqueadores sem enrolação. <b>Menos sangue, mais ficha guardada.</b>
+    </p>
+    <div class="planos-features">
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Tudo do Grátis, mais:<small>Simulador, feedback básico, Missão 1×1</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Feedback Detalhado<small>EV em fichas — "Pagar valia +1.5bb"</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Leitura de Board<small>"Board seco" ou "Board molhado" — explicado simples</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Bloqueadores Básicos<small>"Você tem um Ás — diminui a chance dele ter AA"</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Torneio Média ($25)<small>+1x/dia (total 2 torneios/dia)</small></span></div>
+      <div class="pf locked"><span class="pf-ic lock">🔒</span><span class="pf-name">Ranges de Mãos e ICM<small>Plano Técnico</small></span></div>
+    </div>
+    <div class="planos-cta">
+      <a class="btn primary" href="https://calloufold.com.br/">♠ Assinar o Simples</a>
+    </div>
+  </div>
+
+  <!-- PAINEL TÉCNICO -->
+  <div class="planos-panel" id="panel-tecnico">
+    <div class="phead">
+      <div class="pe">📿</div>
+      <h3>Técnico — O Bracelete</h3>
+      <div class="pprice">R$ 29,90 <small>/ mês</small></div>
+    </div>
+    <p class="pdesc">
+      Para quem decidiu <b>jogar sério</b>. Não quer mais só parar de perder — quer evoluir, entender ranges, jogar GTO, e disputar a mesa final do Sunday Million. Aqui o app vira <b>ferramenta de estudo real</b>: grades de range, ICM, importação de mãos e feedback técnico completo.
+    </p>
+    <div class="planos-features">
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Tudo do Simples, mais:<small>Tudo que o recreativo precisa pra evoluir</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Ranges de Mãos (Spot Ranges)<small>Clique na mesa e veja a grade completa de cada posição</small></span><span class="pf-badge">Exclusivo</span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">ICM Calculator<small>Decisões de mesa final com precisão matemática</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Importar Mãos<small>Analise mãos jogadas no PokerStars, GGPoker, etc.</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Ultra Trainer<small>Treino avançado: spots de torneio, pressão, bolha</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Feedback GTO<small>EV em bb, frequência, exploração — linguagem técnica</small></span></div>
+      <div class="pf"><span class="pf-ic check">✓</span><span class="pf-name">Torneios Ultra ($50+)<small>3 torneios por dia — todos os níveis liberados</small></span></div>
+    </div>
+    <div class="planos-cta">
+      <a class="btn primary" href="https://calloufold.com.br/">♠ Assinar o Técnico</a>
+    </div>
+  </div>
+
+  <p class="ladder-note">
+    Cada degrau foi pensado pra você não pular etapa. Comece no Grátis, sinta o app, e quando quiser mais — o próximo passo já tá ali. <b>Aqui é possível.</b>
+  </p>
+</section>
+
+<script>
+(function() {
+  var tabs = document.querySelectorAll("#planosTabs .ptab");
+  var panels = {
+    gratis: document.getElementById("panel-gratis"),
+    simples: document.getElementById("panel-simples"),
+    tecnico: document.getElementById("panel-tecnico")
+  };
+  tabs.forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      tabs.forEach(function(t) { t.classList.remove("on"); });
+      tab.classList.add("on");
+      var plan = tab.dataset.plan;
+      Object.values(panels).forEach(function(p) { if (p) p.classList.remove("on"); });
+      if (panels[plan]) panels[plan].classList.add("on");
+    });
+  });
+})();
+</script>

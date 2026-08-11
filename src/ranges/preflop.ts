@@ -279,17 +279,27 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       ? (1 + (ctx.profile.rfiWidth - 1) * 0.25) * posMult
       : ctx.profile.rfiWidth * posMult;
     {
+      // No push/fold, alarga o range conforme o stack encurta:
+      // 15bb → +0%, 8bb → +9%, 4bb → +15% (aproxima do Nash).
+      // Além disso, o ranking de força ganha bônus para pares e suited
+      // connectors (que valem mais no shove pela fold equity).
+      const pushFoldWidth = sd.pushFold
+        ? Math.min(1.15, 1 + Math.max(0, 15 - ctx.effectiveBB) * 0.015)
+        : 1;
+      const shoveBonus = sd.pushFold && ctx.effectiveBB <= 10 ? 0.04 : 0;
       const range = rfiRange(ctx.heroPosition, {
         widthFactor,
-        stackFactor: sd.factor,
+        stackFactor: sd.factor * pushFoldWidth,
         icmFactor,
+        shoveBonus,
       });
       const openPct = rangePercent(range);
       
-      // Threshold mínimo: a mão precisa ter freq >= 0.15 (15%) para abrir.
+      // Threshold mínimo: no push/fold aceita freq 0.05 (mãos marginais shoveiam).
+      // No jogo profundo mantém 0.15 para evitar borderline absurdas.
       // Isso elimina "borderline" absurdas (ex: KQo em UTG com freq 0.01, QJo com freq 0.02).
       // Mas não elimina mãos marginais válidas como 65s no BTN (freq ~0.30).
-      const RFI_MIN_FREQ = 0.15;
+      const RFI_MIN_FREQ = sd.pushFold ? 0.05 : 0.15;
       
       if (freqIn(range, handType) >= RFI_MIN_FREQ) {
         // Dentro do range → abre (raise ou jam)
@@ -360,9 +370,10 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // em QUALQUER profundidade, não só no push/fold: era o bug de o bot "não
     // enxergar o all-in" com 30-40bb e tratar o shove como uma abertura normal
     // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
+    const ultraShort = ctx.effectiveBB <= 5;
     const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
-    if (callIsAllIn) {
-      const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
+    if ((sd.pushFold || ultraShort) && callIsAllIn) {
+      const depthWidth = Math.max(0.20, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.028));
       const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
       const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
       const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);

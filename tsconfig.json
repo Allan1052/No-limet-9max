@@ -18,5 +18,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src"],
-  "exclude": ["src/sim/**"]
+  "exclude": ["src/sim/**", "src/ranges/_audit/**"]
 }

@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 
 import { handStrengthTable } from "./handStrength";
-import { comboCount, type Range } from "./types";
+import { comboCount, handTypeCombos, isPair, isSuited, gap, type Range } from "./types";
 
 /**
  * Monta a range com as `targetPercent` (0..1) mãos mais fortes por combos.
@@ -33,6 +33,50 @@ export function buildTopRange(targetPercent: number): Range {
       acc += combos;
     } else {
       // fronteira: entra parcialmente
+      const remaining = target - acc;
+      range[row.handType] = Math.round((remaining / combos) * 100) / 100;
+      acc = target;
+    }
+  }
+  return range;
+}
+
+
+/**
+ * Como buildTopRange, mas re-rankeia as mãos com um bônus para pares e
+ * suited connectors — relevante no push/fold, onde a fold equity compensa
+ * a equity crua e essas mãos shoveam mais largo que o ranking "puro" sugere.
+ */
+export function buildTopRangeWithBonus(
+  targetPercent: number,
+  bonus: number,
+): Range {
+  const target = Math.max(0, Math.min(1, targetPercent)) * 1326;
+  const table = handStrengthTable();
+  const ranked = table.map((row) => {
+    let adj = row.score;
+    const [c1] = handTypeCombos(row.handType);
+    if (c1) {
+      if (isPair(row.handType)) adj += bonus * 1.5;
+      else if (isSuited(row.handType)) {
+        const g = gap(row.handType);
+        if (g === 0) adj += bonus;
+        else if (g === 1) adj += bonus * 0.5;
+      }
+    }
+    return { ...row, adjScore: adj };
+  });
+  ranked.sort((a, b) => b.adjScore - a.adjScore);
+
+  const range: Range = {};
+  let acc = 0;
+  for (const row of ranked) {
+    if (acc >= target) break;
+    const combos = comboCount(row.handType);
+    if (acc + combos <= target) {
+      range[row.handType] = 1;
+      acc += combos;
+    } else {
       const remaining = target - acc;
       range[row.handType] = Math.round((remaining / combos) * 100) / 100;
       acc = target;

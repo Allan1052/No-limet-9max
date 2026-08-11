@@ -4,7 +4,7 @@
 // A profundidade muda drasticamente o pré-flop:
 //   - ~100bb+ : jogo "normal", ranges de abertura padrão.
 //   - 25-40bb : levemente mais apertado no early, ainda com raise padrão.
-//   - 13-25bb : território de raise/fold; poucas mãos especulativas.
+//   - 15-25bb : território de raise/fold; poucas mãos especulativas.
 //   - < ~12bb : push/fold — abrir = dar all-in (jam), não dá para dar raise
 //               "pequeno" e foldar depois.
 //
