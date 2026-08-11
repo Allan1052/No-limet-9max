@@ -105,15 +105,10 @@ export function App() {
   const playInfo =
     view === "play" ? (
       <div className="tstatus">
-        {isCircuit ? (
-          <span className="ts-seg ts-circuit">
-            🏆 Circuito{circuitStage ? ` E${circuitStage}` : ""}
-          </span>
-        ) : null}
         {fs ? (
           <>
             <span className="ts-seg ts-rank">
-              {fs.heroRank}º{isCircuit ? null : <i>/{fs.remaining.toLocaleString("en-US")}</i>}
+              {fs.heroRank}º<i>/{fs.remaining.toLocaleString("en-US")}</i>
             </span>
             <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
               {fs.inMoney
@@ -184,6 +179,11 @@ export function App() {
             <small>aqui é possível</small>
           </div>
         </div>
+        {isCircuit && view === "play" ? (
+          <div className="topbar-circuit">
+            🏆 Circuito{circuitStage ? ` E${circuitStage}` : ""}
+          </div>
+        ) : null}
       </div>
 
       <HubSubNav view={view} setView={setView} info={playInfo} />
