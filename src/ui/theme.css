@@ -4622,3 +4622,36 @@ body {
   .milestone, .ms-card, .ms-vs { animation: none !important; }
   .ms-spark { display: none; }
 }
+
+/* Campeão — a maior comemoração. */
+.ms-champ .ms-card {
+  background: linear-gradient(160deg, #2a2410 0%, #171207 100%);
+  border: 2px solid var(--gold, #c8a24a);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.66), 0 0 95px rgba(200, 162, 74, 0.45);
+}
+.ms-crown {
+  font-size: 50px;
+  line-height: 1;
+  margin-bottom: 6px;
+  animation: ms-crown-pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1);
+  filter: drop-shadow(0 6px 18px rgba(200, 162, 74, 0.55));
+}
+.ms-title-champ {
+  font-size: 46px;
+  background: linear-gradient(180deg, #fff2c4 0%, #ffcf5a 45%, #d99a2e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ms-glow 1.5s ease-in-out infinite;
+}
+@keyframes ms-crown-pop {
+  0% { transform: scale(0) rotate(-35deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes ms-glow {
+  0%, 100% { filter: drop-shadow(0 2px 10px rgba(255, 207, 90, 0.35)); }
+  50% { filter: drop-shadow(0 2px 24px rgba(255, 207, 90, 0.72)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-crown, .ms-title-champ { animation: none !important; }
+}

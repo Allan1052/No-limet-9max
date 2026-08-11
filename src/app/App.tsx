@@ -87,6 +87,8 @@ export function App() {
     dismissFinalTable,
     headsUp,
     dismissHeadsUp,
+    champion,
+    dismissChampion,
   } = useGame(userSubscriptionLevel, { variant: gameVariant });
   const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
@@ -371,6 +373,15 @@ export function App() {
           heroBB={headsUp.heroStackBB}
           villain={{ name: headsUp.villainName, stackBB: headsUp.villainStackBB }}
           onDone={dismissHeadsUp}
+        />
+      ) : null}
+
+      {champion ? (
+        <TourneyMilestone
+          kind="champion"
+          players={champion.entrants}
+          cash={champion.cash}
+          onDone={dismissChampion}
         />
       ) : null}
 

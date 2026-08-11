@@ -61,6 +61,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const [headsUp, setHeadsUp] = useState<
     { heroStackBB: number; villainName: string; villainStackBB: number } | null
   >(null);
+  const [champion, setChampion] = useState<{ entrants: number; cash: number } | null>(null);
   const ref = useRef<GameController | null>(null);
   // Rastreia a variante que o controller atual foi criado com.
   const variantRef = useRef<string>(opts?.variant ?? "holdem");
@@ -119,6 +120,10 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     [],
   );
 
+  const onChampion = useCallback((d: { entrants: number; cash: number }) => {
+    setChampion(d);
+  }, []);
+
   // ---- Disciplina callbacks ----
   const onPreflopFold = useCallback((chipsSaved: number) => {
     recordPreflopFold(progressRef.current, chipsSaved);
@@ -156,6 +161,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       onBubble,
       onFinalTable,
       onHeadsUp,
+      onChampion,
       onPreflopFold,
       onBadCall,
       onCbet,
@@ -175,7 +181,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       }
     }
     return g;
-  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble, onFinalTable, onHeadsUp, onPreflopFold, onBadCall, onCbet, onBotFolded, onHeroVpip]);
+  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble, onFinalTable, onHeadsUp, onChampion, onPreflopFold, onBadCall, onCbet, onBotFolded, onHeroVpip]);
 
   // Cria o controller na primeira renderização.
   if (!ref.current) {
@@ -298,5 +304,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     dismissFinalTable: () => setFinalTable(null),
     headsUp,
     dismissHeadsUp: () => setHeadsUp(null),
+    champion,
+    dismissChampion: () => setChampion(null),
   };
 }

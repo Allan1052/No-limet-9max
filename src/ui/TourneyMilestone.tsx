@@ -5,40 +5,82 @@ import { useEffect, useMemo } from "react";
 
 type Villain = { name: string; stackBB: number };
 
+const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+
 export function TourneyMilestone({
   kind,
   players = 9,
   heroBB = 0,
   villain,
+  cash = 0,
   onDone,
 }: {
-  kind: "finalTable" | "headsUp";
+  kind: "finalTable" | "headsUp" | "champion";
   players?: number;
   heroBB?: number;
   villain?: Villain;
+  cash?: number;
   onDone: () => void;
 }) {
   useEffect(() => {
     try {
-      navigator.vibrate?.(kind === "headsUp" ? [220, 90, 220, 90, 320] : [120, 60, 120, 60, 260]);
+      const pattern =
+        kind === "champion"
+          ? [250, 80, 120, 60, 250, 80, 400]
+          : kind === "headsUp"
+            ? [220, 90, 220, 90, 320]
+            : [120, 60, 120, 60, 260];
+      navigator.vibrate?.(pattern);
     } catch {
       /* sem vibração — segue só o visual */
     }
-    const id = setTimeout(onDone, kind === "headsUp" ? 4200 : 4600);
+    const id = setTimeout(onDone, kind === "champion" ? 6000 : kind === "headsUp" ? 4200 : 4600);
     return () => clearTimeout(id);
   }, [kind, onDone]);
 
-  // Faíscas caindo (só na mesa final — heads-up é mais "duelo", sem confete).
+  // Faíscas caindo (mais e maiores no campeão; heads-up é duelo, sem confete).
+  const count = kind === "champion" ? 40 : 20;
   const sparks = useMemo(
     () =>
-      Array.from({ length: 20 }, (_, i) => ({
+      Array.from({ length: count }, (_, i) => ({
         left: Math.round(Math.random() * 100),
-        delay: Math.round(Math.random() * 1000),
+        delay: Math.round(Math.random() * (kind === "champion" ? 1600 : 1000)),
         dur: 1600 + Math.round(Math.random() * 1500),
-        icon: i % 3 === 0 ? "⭐" : i % 3 === 1 ? "✨" : "🏆",
+        icon:
+          kind === "champion"
+            ? ["💰", "🏆", "⭐", "🎉", "✨"][i % 5]
+            : i % 3 === 0
+              ? "⭐"
+              : i % 3 === 1
+                ? "✨"
+                : "🏆",
       })),
-    [],
+    [count, kind],
   );
+
+  if (kind === "champion") {
+    return (
+      <div className="milestone ms-champ" onClick={onDone}>
+        {sparks.map((s, i) => (
+          <span
+            key={i}
+            className="ms-spark"
+            style={{ left: `${s.left}%`, animationDelay: `${s.delay}ms`, animationDuration: `${s.dur}ms` }}
+          >
+            {s.icon}
+          </span>
+        ))}
+        <div className="ms-card">
+          <div className="ms-crown">🏆</div>
+          <div className="ms-eyebrow">1º de {players} inscritos</div>
+          <div className="ms-title ms-title-champ">CAMPEÃO!</div>
+          <div className="ms-sub">
+            {cash > 0 ? `Você cravou. ${usd(cash)} de estudo. 🎉` : "Você cravou o torneio! 🎉"}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (kind === "finalTable") {
     return (

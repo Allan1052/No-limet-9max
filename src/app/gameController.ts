@@ -79,6 +79,8 @@ export interface GameOptions {
   onFinalTable?: (d: { players: number }) => void;
   /** Chamado quando começa o HEADS-UP (2 jogadores) — aviso chamativo. */
   onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
+  /** Chamado quando o herói VENCE o torneio — comemoração de campeão. */
+  onChampion?: (d: { entrants: number; cash: number }) => void;
   /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
   variant?: "holdem" | "omaha";
 
@@ -259,6 +261,7 @@ export class GameController {
   private onBubble?: () => void;
   private onFinalTable?: (d: { players: number }) => void;
   private onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
+  private onChampion?: (d: { entrants: number; cash: number }) => void;
   /** Já anunciou a mesa final / o heads-up? (para disparar só uma vez). */
   private finalTableAnnounced = false;
   private headsUpAnnounced = false;
@@ -279,6 +282,7 @@ export class GameController {
     this.onBubble = opts.onBubble;
     this.onFinalTable = opts.onFinalTable;
     this.onHeadsUp = opts.onHeadsUp;
+    this.onChampion = opts.onChampion;
     this.onPreflopFold = opts.onPreflopFold;
     this.onBadCall = opts.onBadCall;
     this.onCbet = opts.onCbet;
@@ -564,6 +568,10 @@ export class GameController {
         this.tournamentResult = "campeao";
         this.tournamentOver = true;
         this.onTournamentEnd?.({ result: "campeao", inMoney: true });
+        this.onChampion?.({
+          entrants: this.tournament.entrants,
+          cash: cashForPlace(1, this.tournament.ladder),
+        });
       }
       this.setMessage(this.tournament ? "msg.tourneyWon" : "msg.sessionEnd");
       return;
