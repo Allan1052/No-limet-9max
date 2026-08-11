@@ -4695,3 +4695,10 @@ body {
 }
 .voice-bar .voice-btn { flex: 0 0 auto; }
 .voice-bar .voice-hint { margin-top: 0; text-align: left; flex: 1; min-width: 0; }
+
+/* Voz do coach ativa (🔊) — cor distinta do microfone (sem pulsar). */
+.voice-btn.on2 {
+  background: linear-gradient(180deg, #1f7a4d 0%, #145536 100%);
+  border-color: #37d07a;
+  color: #fff;
+}
