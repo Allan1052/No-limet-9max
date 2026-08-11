@@ -33,6 +33,15 @@ export function isTestPlayerKey(key: string): boolean {
   return TEST_KEY_PREFIXES.some((p) => key.startsWith(p));
 }
 
+// Contas de teste criadas pelo fluxo normal têm player_key comum (hash), então
+// escapam do filtro por prefixo. Barra também pelo APELIDO com cara de teste
+// (ex.: "CircuitoQA01", "teste", "e2e_run"). "qa" só conta quando seguido de
+// dígito, para não pegar nomes reais por acaso.
+const TEST_NICK_RE = /qa\d|e2e|\b(test|teste|diag|debug|staging)\b/i;
+export function isTestNickname(nick: string): boolean {
+  return TEST_NICK_RE.test(nick);
+}
+
 // Gerar player_key único baseado no localStorage (anonimo)
 export function getPlayerKey(): string {
   let key = localStorage.getItem("cof_player_key");
@@ -476,6 +485,9 @@ export async function fetchTournamentLeaderboard(
         qualified: allPoints.length >= MIN_RESULTS_TO_QUALIFY,
         player_key,
       }))
+      // Barra também apelidos de teste (ex.: "CircuitoQA01") cuja chave é um
+      // hash comum e por isso passou pelo filtro por prefixo.
+      .filter((e) => !isTestNickname(e.nickname))
       .sort((a, b) => b.points - a.points)
       .slice(0, limit);
   } catch {
@@ -526,6 +538,7 @@ export async function fetchMissionLeaderboard(
         stages_cleared,
         player_key,
       }))
+      .filter((e) => !isTestNickname(e.nickname))
       .sort((a, b) => b.stages_cleared - a.stages_cleared)
       .slice(0, limit);
   } catch {
