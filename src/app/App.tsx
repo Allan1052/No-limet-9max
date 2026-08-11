@@ -100,13 +100,20 @@ export function App() {
 
   // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
   const fs = controller.fieldStatus();
+  const isCircuit = controller.tournament?.mode === "circuito";
+  const circuitStage = controller.tournament?.circuitStage;
   const playInfo =
     view === "play" ? (
       <div className="tstatus">
+        {isCircuit ? (
+          <span className="ts-seg ts-circuit">
+            🏆 Circuito{circuitStage ? ` E${circuitStage}` : ""}
+          </span>
+        ) : null}
         {fs ? (
           <>
             <span className="ts-seg ts-rank">
-              {fs.heroRank}º<i>/{fs.remaining.toLocaleString("en-US")}</i>
+              {fs.heroRank}º{isCircuit ? null : <i>/{fs.remaining.toLocaleString("en-US")}</i>}
             </span>
             <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
               {fs.inMoney

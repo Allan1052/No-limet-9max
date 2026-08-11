@@ -129,6 +129,11 @@ export interface TournamentState {
   fieldRemaining: number;
   /** A bolha já estourou (o herói já entrou no dinheiro)? */
   bubbleBurst: boolean;
+  /**
+   * A mesa final já se formou (o redraw juntou todos numa mesa só)? A partir
+   * daí a mesa só ENCOLHE — não repõe cadeira vazia nem move ninguém.
+   */
+  finalTableFormed?: boolean;
   /** Modo do torneio: Treino Livre ou etapa do Circuito. */
   mode?: "livre" | "circuito";
   /** Etapa do circuito (1 a 10), se for torneio de circuito. */
@@ -327,6 +332,7 @@ export class GameController {
       handsThisLevel: 0,
       fieldRemaining,
       bubbleBurst: Math.round(fieldRemaining) <= ladder.length,
+      finalTableFormed: Math.round(fieldRemaining) <= 9,
       mode: cfg.mode ?? "livre",
       circuitStage: cfg.circuitStage,
     };
@@ -364,23 +370,23 @@ export class GameController {
    * nome ativo). Na MESA FINAL não há reposição — a mesa encolhe até o heads-up.
    * Devolve quantas cadeiras foram repostas.
    */
-  private refillSeats(): number {
-    // Sem reposição na mesa final (campo global ≤ 9): a mesa encolhe até o
-    // heads-up. Antes disso, cadeiras vazias são repostas (table balancing).
-    if (this.tournament && Math.round(this.tournament.fieldRemaining) <= 9) return 0;
+  /**
+   * Preenche cadeiras vazias (não-herói) até a mesa ter `target` jogadores
+   * ativos. Novos entram com stack ≈ média da mesa. Devolve quantos entraram.
+   */
+  private fillEmptySeats(target: number): number {
     const players = this.table.players;
     const withChips = players.filter((p) => p.stack > 0);
     if (withChips.length === 0) return 0;
     const bb = this.table.bigBlind;
     const avgRaw = withChips.reduce((s, p) => s + p.stack, 0) / withChips.length;
     const avg = Math.max(bb * 5, Math.round(avgRaw / bb) * bb);
-
-    // Nomes já em uso na mesa (para o substituto não repetir apelido).
     const usedNames = new Set(players.filter((x) => x.stack > 0 || x.isHero).map((x) => x.name));
+    let active = withChips.length;
     let count = 0;
     for (const p of players) {
+      if (active >= target) break;
       if (p.isHero || p.stack > 0) continue;
-      // Novo jogador entra pesado pelo buy-in (campo do micro ≠ campo do alto).
       const rep = pickReplacement(this.tournament?.buyIn, usedNames, this.rng);
       usedNames.add(rep.name);
       p.profileId = rep.profileId;
@@ -388,9 +394,60 @@ export class GameController {
       p.stack = avg;
       p.status = "active";
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
+      active++;
       count++;
     }
     return count;
+  }
+
+  /**
+   * Equilibra a MESA do herói como um diretor de torneio faz (table balancing).
+   * Com N vivos no torneio são ceil(N/9) mesas de 9-max, e cada uma fica com
+   * ~ceil(N/mesas) jogadores. Se a mesa do herói tem MAIS que isso (o campo
+   * encolheu nas outras mesas), o excedente é "movido" (some daqui, mas segue
+   * vivo no campo global — não é eliminação). Se tem MENOS (ex.: redraw da mesa
+   * final), traz gente. O herói nunca é movido. Devolve quantos ENTRARAM.
+   */
+  private refillSeats(): number {
+    if (!this.tournament) {
+      // Sessão livre (sem torneio): mantém a mesa cheia, como sempre foi.
+      return this.fillEmptySeats(9);
+    }
+    // Mesa final já formada: só ENCOLHE — não repõe cadeira vazia nem move ninguém.
+    if (this.tournament.finalTableFormed) return 0;
+
+    const remaining = Math.max(1, Math.round(this.tournament.fieldRemaining));
+    const tables = Math.max(1, Math.ceil(remaining / 9));
+    const target = Math.min(9, Math.ceil(remaining / tables));
+    const players = this.table.players;
+    let active = players.filter((p) => p.stack > 0).length;
+
+    // Mesa acima do alvo: move o excedente (equilíbrio). Nunca o herói.
+    if (active > target) {
+      const movable = players.filter((p) => !p.isHero && p.stack > 0);
+      // Ordem neutra (embaralhada) para não esvaziar sempre os mesmos assentos.
+      for (let i = movable.length - 1; i > 0; i--) {
+        const j = Math.floor(this.rng() * (i + 1));
+        [movable[i], movable[j]] = [movable[j], movable[i]];
+      }
+      for (const p of movable) {
+        if (active <= target) break;
+        p.stack = 0;
+        p.status = "out"; // "moveu de mesa" — o campo global já o conta como vivo
+        active--;
+      }
+    }
+
+    // Mesa abaixo do alvo: traz jogadores (reposição / redraw da mesa final).
+    const added = active < target ? this.fillEmptySeats(target) : 0;
+    active += added;
+
+    // Chegou à mesa final (campo ≤ 9) e a mesa já reúne todos os vivos: a partir
+    // daqui a mesa final está formada e passa a só encolher.
+    if (remaining <= 9 && active >= remaining) {
+      this.tournament.finalTableFormed = true;
+    }
+    return added;
   }
 
   /**
@@ -811,12 +868,19 @@ export class GameController {
     if (!this.tournament) return null;
     const alive = this.table.players.filter((p) => p.stack > 0);
     const avgStack = alive.length ? alive.reduce((s, p) => s + p.stack, 0) / alive.length : 0;
+    const heroStack = this.table.players[this.heroSeat].stack;
+    const remaining = Math.round(this.tournament.fieldRemaining);
+    // Se TODOS os vivos estão nesta mesa (mesa final), a classificação é exata:
+    // conta quantos têm mais fichas que o herói. Fora disso, usa a estimativa.
+    const exactRank =
+      alive.length >= remaining ? 1 + alive.filter((p) => p.stack > heroStack).length : undefined;
     return fieldStatus({
       entrants: this.tournament.entrants,
       remaining: this.tournament.fieldRemaining,
-      heroStack: this.table.players[this.heroSeat].stack,
+      heroStack,
       avgStack,
       ladder: this.tournament.ladder,
+      exactRank,
     });
   }
 

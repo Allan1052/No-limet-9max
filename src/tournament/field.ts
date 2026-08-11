@@ -66,11 +66,19 @@ export function fieldStatus(args: {
   heroStack: number;
   avgStack: number;
   ladder: number[];
+  /**
+   * Classificação EXATA, quando todos os vivos estão na mesa do herói (mesa
+   * final): conta quantos têm mais fichas. Tem prioridade sobre a estimativa.
+   */
+  exactRank?: number;
 }): FieldStatus {
   const remaining = Math.max(1, Math.round(args.remaining));
   const paid = args.ladder.length; // lugares realmente pagos pela escada
   const inMoney = remaining <= paid;
-  const heroRank = estimateHeroRank(remaining, args.heroStack, args.avgStack);
+  const heroRank =
+    args.exactRank && args.exactRank >= 1
+      ? Math.min(remaining, args.exactRank)
+      : estimateHeroRank(remaining, args.heroStack, args.avgStack);
   let currentCash = 0;
   if (inMoney) {
     const idx = Math.min(args.ladder.length - 1, remaining - 1);

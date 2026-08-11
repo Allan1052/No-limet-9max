@@ -3493,6 +3493,7 @@ body {
 .ts-rank i { color: #8a8f76; font-style: normal; font-weight: 600; }
 .ts-seg.itm { color: #37d07a; border-color: #2b6b47; background: #10180f; }
 .ts-blinds { color: #b9b39c; }
+.ts-circuit { color: #12140d; background: var(--gold, #c8a24a); border-color: var(--gold, #c8a24a); font-weight: 800; }
 .hub-chip {
   flex: 0 0 auto;
   font-family: inherit;
