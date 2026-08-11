@@ -45,6 +45,7 @@ import { handSpots } from "./handSpots";
 import { getParticipantSeats } from "./handParticipants";
 import { HandTipsModal } from "../ui/HandTipsModal";
 import { MoneyRain } from "../ui/MoneyRain";
+import { TourneyMilestone } from "../ui/TourneyMilestone";
 import { ChallengeReceived } from "../ui/ChallengeReceived";
 import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
@@ -82,6 +83,10 @@ export function App() {
     dismissMissionToasts,
     celebrateItm,
     dismissItmCelebration,
+    finalTable,
+    dismissFinalTable,
+    headsUp,
+    dismissHeadsUp,
   } = useGame(userSubscriptionLevel, { variant: gameVariant });
   const [challenge, setChallenge] = useState(() => readChallengeFromUrl());
   const [replayOpen, setReplayOpen] = useState(false);
@@ -355,6 +360,19 @@ export function App() {
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
 
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
+
+      {finalTable ? (
+        <TourneyMilestone kind="finalTable" players={finalTable.players} onDone={dismissFinalTable} />
+      ) : null}
+
+      {headsUp ? (
+        <TourneyMilestone
+          kind="headsUp"
+          heroBB={headsUp.heroStackBB}
+          villain={{ name: headsUp.villainName, stackBB: headsUp.villainStackBB }}
+          onDone={dismissHeadsUp}
+        />
+      ) : null}
 
       <div className={`app-seal${view === "play" ? " on-play" : ""}`}>
         <img src={`${getBasePath()}brand-icon-192.png`} alt="Call ou Fold" className="app-seal-icon" />

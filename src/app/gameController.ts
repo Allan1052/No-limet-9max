@@ -75,6 +75,10 @@ export interface GameOptions {
   onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   /** Chamado quando a bolha estoura (herói entra no dinheiro) — comemoração. */
   onBubble?: () => void;
+  /** Chamado quando a MESA FINAL se forma (redraw junta todos) — aviso chamativo. */
+  onFinalTable?: (d: { players: number }) => void;
+  /** Chamado quando começa o HEADS-UP (2 jogadores) — aviso chamativo. */
+  onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
   /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
   variant?: "holdem" | "omaha";
 
@@ -253,6 +257,11 @@ export class GameController {
   private onHeroHand?: () => void;
   private onTournamentEnd?: (d: { result: "campeao" | "eliminado"; inMoney: boolean }) => void;
   private onBubble?: () => void;
+  private onFinalTable?: (d: { players: number }) => void;
+  private onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
+  /** Já anunciou a mesa final / o heads-up? (para disparar só uma vez). */
+  private finalTableAnnounced = false;
+  private headsUpAnnounced = false;
   private onPreflopFold?: (chipsSaved: number) => void;
   private onBadCall?: (chipsLost: number) => void;
   private onCbet?: () => void;
@@ -268,6 +277,8 @@ export class GameController {
     this.onHeroHand = opts.onHeroHand;
     this.onTournamentEnd = opts.onTournamentEnd;
     this.onBubble = opts.onBubble;
+    this.onFinalTable = opts.onFinalTable;
+    this.onHeadsUp = opts.onHeadsUp;
     this.onPreflopFold = opts.onPreflopFold;
     this.onBadCall = opts.onBadCall;
     this.onCbet = opts.onCbet;
@@ -342,6 +353,10 @@ export class GameController {
       mode: cfg.mode ?? "livre",
       circuitStage: cfg.circuitStage,
     };
+    // Avisos chamativos: se já começa na mesa final (Treino Livre), não anuncia
+    // a formação dela — só o heads-up quando chegar a 2.
+    this.finalTableAnnounced = Math.round(fieldRemaining) <= 9;
+    this.headsUpAnnounced = false;
     this.phase = "handOver";
     this.lastHand = null;
     this.handLog = [];
@@ -498,6 +513,10 @@ export class GameController {
     const active = this.table.players.filter((p) => p.stack > 0).length;
     if (remaining <= 9 && active >= remaining) {
       this.tournament.finalTableFormed = true;
+      if (!this.finalTableAnnounced) {
+        this.finalTableAnnounced = true;
+        this.onFinalTable?.({ players: active });
+      }
     }
     return added;
   }
@@ -580,6 +599,18 @@ export class GameController {
       if (newStage !== this.tournament.stage) {
         this.tournament.stage = newStage;
         this.payouts = tablePayouts(STAGES[newStage].icm, this.tournament.ladder);
+      }
+      // HEADS-UP: chegou a 2 jogadores — aviso chamativo (só uma vez).
+      if (!this.headsUpAnnounced && Math.round(this.tournament.fieldRemaining) === 2) {
+        this.headsUpAnnounced = true;
+        const hero = this.table.players[this.heroSeat];
+        const villain = this.table.players.find((p) => !p.isHero && p.stack > 0);
+        const bb = this.table.bigBlind || 1;
+        this.onHeadsUp?.({
+          heroStackBB: +(hero.stack / bb).toFixed(1),
+          villainName: villain?.name ?? "Oponente",
+          villainStackBB: +((villain?.stack ?? 0) / bb).toFixed(1),
+        });
       }
     }
     // As blinds sobem a cada `handsPerLevel` mãos, como num MTT online: o campo

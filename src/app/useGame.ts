@@ -57,6 +57,10 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const missionRef = useRef<MissionState>(loadMissions());
   const [toasts, setToasts] = useState<Mission[]>([]);
   const [celebrateItm, setCelebrateItm] = useState(false);
+  const [finalTable, setFinalTable] = useState<{ players: number } | null>(null);
+  const [headsUp, setHeadsUp] = useState<
+    { heroStackBB: number; villainName: string; villainStackBB: number } | null
+  >(null);
   const ref = useRef<GameController | null>(null);
   // Rastreia a variante que o controller atual foi criado com.
   const variantRef = useRef<string>(opts?.variant ?? "holdem");
@@ -104,6 +108,17 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     setCelebrateItm(true);
   }, []);
 
+  const onFinalTable = useCallback((d: { players: number }) => {
+    setFinalTable(d);
+  }, []);
+
+  const onHeadsUp = useCallback(
+    (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => {
+      setHeadsUp(d);
+    },
+    [],
+  );
+
   // ---- Disciplina callbacks ----
   const onPreflopFold = useCallback((chipsSaved: number) => {
     recordPreflopFold(progressRef.current, chipsSaved);
@@ -139,6 +154,8 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       onHeroHand,
       onTournamentEnd,
       onBubble,
+      onFinalTable,
+      onHeadsUp,
       onPreflopFold,
       onBadCall,
       onCbet,
@@ -158,7 +175,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       }
     }
     return g;
-  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble, onPreflopFold, onBadCall, onCbet, onBotFolded, onHeroVpip]);
+  }, [opts, userSubscriptionLevel, onDecision, onHeroHand, onTournamentEnd, onBubble, onFinalTable, onHeadsUp, onPreflopFold, onBadCall, onCbet, onBotFolded, onHeroVpip]);
 
   // Cria o controller na primeira renderização.
   if (!ref.current) {
@@ -277,5 +294,9 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     dismissMissionToasts: () => setToasts([]),
     celebrateItm,
     dismissItmCelebration: () => setCelebrateItm(false),
+    finalTable,
+    dismissFinalTable: () => setFinalTable(null),
+    headsUp,
+    dismissHeadsUp: () => setHeadsUp(null),
   };
 }
