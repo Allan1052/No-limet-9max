@@ -1,10 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
-import { useVoiceCommands, type VoiceParse } from "../ui/useVoiceCommands";
-import { useSpeech } from "../ui/useSpeech";
 import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
@@ -57,45 +55,9 @@ import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
 import "../ui/theme.css";
 
-// Fala do coach: como pronunciar cada ação e cada nota.
-const SAY_ACT: Record<string, string> = {
-  fold: "foldar",
-  check: "passar",
-  call: "pagar",
-  raise: "aumentar",
-  bet: "apostar",
-  "3bet": "aumentar, 3-bet",
-  jam: "all-in",
-  allin: "all-in",
-};
-const SAY_LABEL: Record<string, string> = {
-  Fold: "foldar",
-  Check: "passar",
-  Call: "pagar",
-  Raise: "aumentar",
-  Aposta: "apostar",
-  "3-bet": "aumentar, 3-bet",
-  "All-in": "all-in",
-};
-function gradeSpeech(rating: string, adviceLabel: string): string {
-  const best = SAY_LABEL[adviceLabel] ?? adviceLabel;
-  switch (rating) {
-    case "boa":
-      return "Boa!";
-    case "ok":
-      return "Ok.";
-    case "imprecisa":
-      return `Impreciso. O melhor era ${best}.`;
-    case "ruim":
-      return `Erro. O melhor era ${best}.`;
-    default:
-      return "";
-  }
-}
-
 export function App() {
   const { t: tr } = useT();
-  const { onboarded, setOnboarded, mode, unit } = useSettings();
+  const { onboarded, setOnboarded, mode } = useSettings();
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
@@ -142,95 +104,6 @@ export function App() {
   // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
   // Ela volta entre as mãos e nas outras telas.
   const navHidden = view === "play" && !handOver;
-
-  const speech = useSpeech();
-
-  // ---- Comando de voz (sempre ligado durante o jogo) ----------------------
-  // Vive aqui no App (não nos Controls) para NÃO desmontar entre as mãos: assim
-  // continua ouvindo no fim da mão e pega "nova mão" por voz.
-  const runVoice = (p: VoiceParse) => {
-    if (view !== "play") return;
-    // Não obedece enquanto o coach está falando (evita ouvir a própria voz).
-    if (speech.isSpeaking()) return;
-    const { cmd, amount, percent } = p;
-    // Fim da mão: só "nova mão / próxima / continuar" tem efeito.
-    if (controller.phase === "handOver") {
-      if (cmd === "next") newHand();
-      return;
-    }
-    if (!controller.isHeroTurn()) return;
-    // "dica": fala a recomendação da linha de base (sob demanda).
-    if (cmd === "tip") {
-      const adv = controller.computeHeroAdvice();
-      if (adv) speech.speak(`Recomendo ${SAY_ACT[adv.action] ?? adv.action}.`);
-      return;
-    }
-    const lg = controller.legal();
-    const bb = controller.table.bigBlind || 1;
-    const clamp = (v: number) => Math.max(lg.minRaiseTo, Math.min(lg.maxRaiseTo, Math.round(v)));
-    const doRaise = (toChips: number, forceAllin = false) => {
-      if (forceAllin || toChips >= lg.maxRaiseTo) heroAct({ type: "allin" });
-      else if (lg.canRaise) heroAct({ type: "raise", to: clamp(toChips) });
-    };
-    if (percent !== undefined && lg.canRaise) {
-      doRaise(Math.round((lg.callAmount + controller.pot) * (percent / 100)) + lg.callAmount, cmd === "allin");
-    } else if (amount !== undefined && (cmd === "raise" || cmd === "allin")) {
-      doRaise(unit === "bb" ? amount * bb : amount, cmd === "allin");
-    } else if (cmd === "fold" && lg.canFold) heroAct({ type: "fold" });
-    else if (cmd === "check" && lg.canCheck) heroAct({ type: "check" });
-    else if (cmd === "call") {
-      if (lg.canCall) heroAct({ type: "call" });
-      else if (lg.canCheck) heroAct({ type: "check" });
-    } else if (cmd === "raise" && lg.canRaise) doRaise(controller.suggestedRaiseTo() ?? lg.minRaiseTo);
-    else if (cmd === "allin" && lg.canRaise) heroAct({ type: "allin" });
-  };
-  const voice = useVoiceCommands(runVoice);
-  const [voiceOn, setVoiceOn] = useState(() => {
-    try {
-      return localStorage.getItem("cof-voice") === "1";
-    } catch {
-      return false;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem("cof-voice", voiceOn ? "1" : "0");
-    } catch {
-      /* sem storage */
-    }
-  }, [voiceOn]);
-  useEffect(() => {
-    if (!voice.supported) return;
-    if (voiceOn && view === "play") voice.start();
-    else voice.stop();
-  }, [voiceOn, view, voice.supported, voice.start, voice.stop]);
-
-  // ---- Voz do coach: fala a NOTA da jogada logo após você agir -------------
-  const [coachVoiceOn, setCoachVoiceOn] = useState(() => {
-    try {
-      return localStorage.getItem("cof-coach-voice") === "1";
-    } catch {
-      return false;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem("cof-coach-voice", coachVoiceOn ? "1" : "0");
-    } catch {
-      /* sem storage */
-    }
-  }, [coachVoiceOn]);
-  const lastFbLen = useRef(0);
-  useEffect(() => {
-    const fb = controller.feedback;
-    if (coachVoiceOn && speech.supported && view === "play" && fb.length > lastFbLen.current) {
-      const it = fb[fb.length - 1];
-      const phrase = gradeSpeech(it.rating, it.advice);
-      if (phrase) speech.speak(phrase);
-    }
-    lastFbLen.current = fb.length;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controller.feedback.length, coachVoiceOn, view]);
 
   // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
   const fs = controller.fieldStatus();
@@ -384,38 +257,6 @@ export function App() {
             onUpdate={applyUpdate}
             rangeSeats={participantSeats}
           />
-
-          {voice.supported ? (
-            <div className="voice-bar">
-              <button
-                type="button"
-                className={`btn voice-btn${voice.listening ? " on" : ""}`}
-                onClick={() => setVoiceOn((v) => !v)}
-                aria-pressed={voice.listening}
-                title="Comando de voz"
-              >
-                {voice.listening ? "🎙️" : "🎤"}
-              </button>
-              {speech.supported ? (
-                <button
-                  type="button"
-                  className={`btn voice-btn${coachVoiceOn ? " on2" : ""}`}
-                  onClick={() => setCoachVoiceOn((v) => !v)}
-                  aria-pressed={coachVoiceOn}
-                  title="Voz do coach (fala a nota da jogada)"
-                >
-                  {coachVoiceOn ? "🔊" : "🔈"}
-                </button>
-              ) : null}
-              <span className={`voice-hint${voice.error ? " err" : ""}`}>
-                {voice.error
-                  ? voice.error
-                  : voice.listening
-                    ? 'ouvindo — fold · call · "raise 20" · nova mão · dica'
-                    : "toque para jogar por voz"}
-              </span>
-            </div>
-          ) : null}
 
           {handOver ? (
             <div className="controls action-row">
