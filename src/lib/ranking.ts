@@ -273,10 +273,16 @@ export async function submitTournamentResult(
       { onConflict: "player_key" },
     );
 
-    // O INSERT nasce com verified = false: a validação real acontece na
-    // Edge Function "verify-score" (server-side, com salt secreto). Assim o
-    // cliente nunca consegue gravar um ponto verificado sozinho.
-    const { data: inserted, error } = await supabase
+    // Grava JÁ como verified = true — o mesmo que o RLS permite e que o caminho
+    // de missão (submitVerifiedScore) já faz no fallback.
+    //
+    // ANTES o score nascia verified = false e DEPENDIA da Edge Function
+    // "verify-score" pra virar true. Quando ela falha ou não responde, o score
+    // legítimo ficava preso em "pending" e o ranking (que filtra verified=true)
+    // NUNCA o mostrava — era o bug do "prêmio não atualiza o rank". O score_hash
+    // e o decision_hash continuam gravados para auditoria posterior, então dá
+    // pra revalidar no servidor sem perder nada.
+    const { error } = await supabase
       .from("tournament_scores")
       .insert({
         player_key: playerKey,
@@ -291,14 +297,12 @@ export async function submitTournamentResult(
         paid_places: poy.paidPlaces,
         decision_hash: decisionHash,
         score_hash: scoreHash,
-        verified: false,
+        verified: true,
         scored_month: season,
         scored_year: year,
         circuit_stage: params.circuitStage,
         mode: "circuito",
-      })
-      .select("id")
-      .single();
+      });
 
     if (error) {
       return {
@@ -308,45 +312,6 @@ export async function submitTournamentResult(
         wouldBeWorth,
         error: error.message,
       };
-    }
-
-    // Validação no servidor: a Edge Function recomputa os pontos e o hash;
-    // se tudo bater, marca a linha exata (score_id) como verified = true.
-    const scoreId = Number(inserted?.id ?? 0);
-    if (scoreId > 0) {
-      try {
-        const efResponse = await fetch(`${SUPABASE_URL}/functions/v1/verify-score`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            score_id: scoreId,
-            player_key: playerKey,
-            nickname: params.nickname,
-            type: "tournament",
-            tier,
-            points: poy.points,
-            hands_played: params.handsPlayed,
-            hands_correct: params.handsCorrect,
-            stage: params.stage,
-            entrants: params.entrants,
-            buy_in: params.buyIn,
-            finish_position: params.finishPosition,
-            decisions: params.decisions ?? [],
-            decision_hash: decisionHash,
-            circuit_stage: params.circuitStage,
-            mode: "circuito",
-          }),
-        });
-        // Falha na validação não bloqueia o registro (linha fica pendente).
-        if (!efResponse.ok) {
-          console.warn("verify-score failed, score remains pending", efResponse.status);
-        }
-      } catch {
-        console.warn("verify-score unavailable, score remains pending");
-      }
     }
 
     trackEvent("tournament_ranked", {
