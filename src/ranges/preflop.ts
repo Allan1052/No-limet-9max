@@ -140,6 +140,37 @@ function bandMix(action: string, pct: number, handType: string, alt = "fold"): P
   return [{ action: alt, freq: 1 }];
 }
 
+// Hash determinístico 0..1 a partir das duas cartas do herói. Varia por naipe e
+// por mão — é o que permite REALIZAR jogadas mistas (blefes) sem cair sempre no
+// mesmo lado. Determinístico: a mesma mão realiza igual (jogo reproduzível).
+function handSeed(cards: Card[]): number {
+  const a = ((cards[0] ?? 0) + 1) >>> 0;
+  const b = ((cards[1] ?? 0) + 1) >>> 0;
+  let x = (Math.imul(a, 2654435761) + Math.imul(b, 40503) + 0x9e3779b9) >>> 0;
+  x ^= x >>> 15;
+  x = Math.imul(x, 2246822519) >>> 0;
+  x ^= x >>> 13;
+  return (x >>> 0) / 4294967296;
+}
+
+// Realiza um blefe MISTO. A linha-base do coach é determinística (usa a ação
+// dominante) para ensinar de forma consistente; os bots variam pela mão, então a
+// MESMA mão de blefe (A5s/A4s etc.) NÃO é sempre jogada do mesmo jeito agressivo
+// — era exatamente o que fazia os naipados de ás parecerem "sempre ultra-agressivos".
+function fireBluff(ctx: PreflopContext, freq: number): boolean {
+  if (freq <= 0) return false;
+  if (freq >= 1) return true;
+  if (ctx.profile.id === "baseline") return freq >= 0.5; // coach: determinístico
+  return handSeed(ctx.hand) < freq;
+}
+
+// Frequência de um blefe de BLOQUEADOR (3-bet/4-bet fino), escalada pelo perfil
+// (um LAG blefa mais que um nit) e amortecida por ICM (perto do dinheiro, blefa-se
+// menos). Tem TETO: nunca chega a 100% — nem o maníaco 4-beta blefe toda vez.
+function blockerBluffFreq(profile: BotProfile, icmFactor: number, base: number): number {
+  return Math.max(0, Math.min(0.62, base * profile.bluffFactor * icmFactor));
+}
+
 // Parâmetros de defesa (call/3bet) ao enfrentar UMA abertura, antes de perfil e
 // ICM. defendPct = fração total que continua; value3betPct = fatia do topo que
 // 3-beta por valor; bluffExtraPct = largura extra (fora do defend) de onde saem
@@ -323,19 +354,25 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition!);
 
   {
-    // Lógica Hold'em: enfrentando um raise
+    // Lógica Hold'em: enfrentando um raise.
+    // PAGAR JÁ É IR ALL-IN? Quando a aposta do vilão cobre ~todo o meu stack, a
+    // decisão é pot-odds pura (pagar/foldar) — NUNCA re-raise nem blefe. Isto vale
+    // em QUALQUER profundidade, não só no push/fold: era o bug de o bot "não
+    // enxergar o all-in" com 30-40bb e tratar o shove como uma abertura normal
+    // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
     const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
-    if (sd.pushFold && callIsAllIn) {
+    if (callIsAllIn) {
       const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
       const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
       const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
       const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
       const callRange = buildTopRange(mw.width);
+      const depthTag = sd.pushFold ? "Stack ultracurto" : "Enfrentando all-in";
       if (freqIn(callRange, handType) > 0) {
         return {
           action: "call",
           sizeBB: ctx.effectiveBB,
-          reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
+          reason: `${depthTag} (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
           handType,
         };
       }
@@ -344,7 +381,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         sizeBB: 0,
         reason: mw.note
           ? `${handType} folda${mw.note}: contra vários shoves, só as mãos de topo pagam.`
-          : `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+          : `${depthTag} (${Math.round(ctx.effectiveBB)}bb): ${handType} não bate a range que dá all-in — foldar.`,
         handType,
       };
     }
@@ -392,9 +429,9 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       };
     }
 
-    // BB premium: AA, KK, QQ, AKo, AKs, AQs, AQo, KQs, JJ, TT, 99, A5s, A4s
-    const BB_PREMIUM_3BET = [...EXTENDED_3BET, "99", "88", "A5s", "A4s", "A3s", "K9s"];
-    if (ctx.heroPosition === "BB" && BB_PREMIUM_3BET.includes(handType)) {
+    // BB VALOR: mãos que 3-betam SEMPRE por valor (premium de verdade).
+    const BB_VALUE_3BET = [...EXTENDED_3BET, "99", "88"];
+    if (ctx.heroPosition === "BB" && BB_VALUE_3BET.includes(handType)) {
       return {
         action: sd.pushFold ? "jam" : "3bet",
         sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
@@ -402,6 +439,25 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         handType,
         mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.08), handType, "call"),
       };
+    }
+
+    // BB BLEFE: bloqueadores de ás (A5s/A4s/A3s) e K9s NÃO são premium — são
+    // 3-bet MISTO (parte 3-bet, parte flat/fold). Antes 3-betavam 100% ("nunca
+    // foldar"), o que deixava os naipados de ás sempre ultra-agressivos. Agora
+    // só uma fração das vezes; quando não blefa, segue para a defesa normal.
+    const BB_BLUFF_3BET = ["A5s", "A4s", "A3s", "K9s"];
+    if (ctx.heroPosition === "BB" && BB_BLUFF_3BET.includes(handType) && !sd.pushFold) {
+      const bf = blockerBluffFreq(ctx.profile, icmFactor, 0.5);
+      if (fireBluff(ctx, bf)) {
+        return {
+          action: "3bet",
+          sizeBB: threeBetSize,
+          reason: `${handType}: 3-bet de blefe do BB (bloqueador de ás) — jogada mista (~${Math.round(bf * 100)}% 3-bet, resto flat/fold).`,
+          handType,
+          mix: [{ action: "3bet", freq: bf }, { action: "call", freq: 1 - bf }],
+        };
+      }
+      // Não blefou nesta mão → segue para a defesa normal (flat/fold) abaixo.
     }
 
     // CO 3-bet vs BTN: AA, KK, QQ, AKo, AKs, AQs, JJ, TT
@@ -464,11 +520,23 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     }
 
     if (isSuited(handType) && freqIn(bluffZone, handType) > 0 && !sd.pushFold) {
+      const bf = blockerBluffFreq(ctx.profile, icmFactor, 0.5);
+      const mix = [{ action: "3bet", freq: bf }, { action: "fold", freq: 1 - bf }];
+      if (fireBluff(ctx, bf)) {
+        return {
+          action: "3bet",
+          sizeBB: threeBetSize,
+          reason: `${handType}: 3-bet de blefe (suited com bloqueios) — jogada mista (~${Math.round(bf * 100)}%, perfil ${ctx.profile.archetype}).`,
+          handType,
+          mix,
+        };
+      }
       return {
-        action: "3bet",
-        sizeBB: threeBetSize,
-        reason: `${handType}: 3-bet de blefe (mão suited com bloqueios, perfil ${ctx.profile.archetype}).`,
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: mão de blefe — na maioria FOLDA (3-bet só ~${Math.round(bf * 100)}%).`,
         handType,
+        mix,
       };
     }
 
@@ -520,7 +588,12 @@ const VS3BET_BLUFF = new Set(["A5s", "A4s"]); // bloqueadores de ás — 4-bet d
 const VS3BET_IP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs", "ATs"]); // flat só EM POSIÇÃO
 
 /** Decisão Hold'em quando o herói abriu e levou 3-bet: 4-bet / pagar (IP) / foldar. */
-function holdemVsThreeBet(ctx: PreflopContext, handType: string, sd: { pushFold?: boolean }): PreflopDecision {
+function holdemVsThreeBet(
+  ctx: PreflopContext,
+  handType: string,
+  sd: { pushFold?: boolean },
+  icmFactor: number,
+): PreflopDecision {
   const eff = ctx.effectiveBB;
   const short = !!sd.pushFold || eff <= 25;
   const inPos = ctx.raiserPosition ? heroIpVsThreeBettor(ctx.heroPosition, ctx.raiserPosition) : false;
@@ -543,9 +616,28 @@ function holdemVsThreeBet(ctx: PreflopContext, handType: string, sd: { pushFold?
     return { action: "fold", sizeBB: 0, reason: `${handType}: folda vs 3-bet com stack curto — fora do jam.`, handType };
   }
 
-  // Blefe de 4-bet (só com stack jogável): bloqueadores de ás.
+  // Blefe de 4-bet (só com stack jogável): bloqueadores de ás — MISTO, nunca 100%.
+  // Era aqui que A5s/A4s davam 4-bet de blefe SEMPRE (o print do "O Doidão"); agora
+  // é frequência baixa, escalada pelo perfil e amortecida por ICM. Na maioria FOLDA.
   if (VS3BET_BLUFF.has(handType)) {
-    return { action: "3bet", sizeBB: fourBetSize, reason: `${handType}: 4-bet de blefe (bloqueador de ás) vs 3-bet.`, handType };
+    const bf = blockerBluffFreq(ctx.profile, icmFactor, 0.32);
+    const mix = [{ action: "3bet", freq: bf }, { action: "fold", freq: 1 - bf }];
+    if (fireBluff(ctx, bf)) {
+      return {
+        action: "3bet",
+        sizeBB: fourBetSize,
+        reason: `${handType}: 4-bet de blefe (bloqueador de ás) vs 3-bet — jogada mista (~${Math.round(bf * 100)}%).`,
+        handType,
+        mix,
+      };
+    }
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `${handType}: blefe fino — na maioria FOLDA vs 3-bet (4-bet só ~${Math.round(bf * 100)}%, bloqueador de ás).`,
+      handType,
+      mix,
+    };
   }
 
   // Pagar: só EM POSIÇÃO e com um leque estreito de broadways/pares.
@@ -563,18 +655,21 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
   // são ótimas e não há fold equity, então a range de call ALARGA conforme o
   // stack encolhe (ex.: ATo com 4bb paga o shove tranquilo). O ICM aperta perto
   // do dinheiro. Isso corrige o fold irreal com stack curtíssimo.
+  // Pagar o 3-bet já significa ir all-in? Então é pot-odds puro (pagar/foldar),
+  // nunca 4-bet. Vale em qualquer profundidade — não só no push/fold.
   const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
-  if (sd.pushFold && callIsAllIn) {
+  if (callIsAllIn) {
     const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
     const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor; // station paga mais largo
     const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
     const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
     const callRange = buildTopRange(mw.width);
+    const depthTag = sd.pushFold ? "Stack ultracurto" : "Enfrentando all-in";
     if (freqIn(callRange, handType) > 0) {
       return {
         action: "call",
         sizeBB: ctx.effectiveBB,
-        reason: `Stack ultracurto (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
+        reason: `${depthTag} (${Math.round(ctx.effectiveBB)}bb): com o preço do pote, ${handType} paga o all-in${mw.note}.`,
         handType,
       };
     }
@@ -583,13 +678,13 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
       sizeBB: 0,
       reason: mw.note
         ? `${handType} folda${mw.note}: contra vários shoves, só as mãos de topo pagam.`
-        : `Stack ultracurto: ${handType} não paga nem com odds curtas.`,
+        : `${depthTag} (${Math.round(ctx.effectiveBB)}bb): ${handType} não bate a range que dá all-in — foldar.`,
       handType,
     };
   }
 
   // Hold'em vs 3-bet: range apertado de verdade (4-bet valor + poucos calls só
   // em posição + o resto folda). Omaha nunca chega aqui — tem cérebro próprio.
-  return holdemVsThreeBet(ctx, handType, sd);
+  return holdemVsThreeBet(ctx, handType, sd, icmFactor);
 }
 
