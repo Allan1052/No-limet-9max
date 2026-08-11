@@ -7,6 +7,7 @@ import { useSettings } from "../app/settings";
 import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
+import { useVoiceCommands, type VoiceParse } from "./useVoiceCommands";
 
 interface ControlsProps {
   legal: LegalActions;
@@ -37,6 +38,45 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
     const target = Math.round((legal.callAmount + pot) * frac) + legal.callAmount;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, target)));
   };
+
+  // Comando de voz: ações + valor exato + % do pote, nos MESMOS handlers.
+  const clampTo = (v: number) =>
+    Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(v)));
+  const execRaise = (to: number, forceAllin = false) => {
+    if (forceAllin || to >= legal.maxRaiseTo) onAction({ type: "allin" });
+    else if (canRaise) onAction({ type: "raise", to });
+  };
+  const runVoice = (p: VoiceParse) => {
+    if (!active) return;
+    const { cmd, amount, percent } = p;
+
+    // "aposta 60 por cento" / "75%": calcula sobre o pote e ajusta o slider.
+    if (percent !== undefined && canRaise) {
+      const target = clampTo(Math.round((legal.callAmount + pot) * (percent / 100)) + legal.callAmount);
+      setRaiseTo(target);
+      if (cmd === "raise" || cmd === "allin") execRaise(target, cmd === "allin");
+      return;
+    }
+
+    // "raise 20" / "aumenta pra 15" / só "vinte": valor absoluto (na unidade da
+    // tela). Com comando de raise/all-in, já aposta; só o número, ajusta o slider.
+    if (amount !== undefined) {
+      const chips = clampTo(unit === "bb" ? amount * bigBlind : amount);
+      setRaiseTo(chips);
+      if (cmd === "raise" || cmd === "allin") execRaise(chips, cmd === "allin");
+      return;
+    }
+
+    // Comandos simples.
+    if (cmd === "fold" && legal.canFold) onAction({ type: "fold" });
+    else if (cmd === "check" && legal.canCheck) onAction({ type: "check" });
+    else if (cmd === "call") {
+      if (legal.canCall) onAction({ type: "call" });
+      else if (legal.canCheck) onAction({ type: "check" });
+    } else if (cmd === "raise" && canRaise) execRaise(raiseTo);
+    else if (cmd === "allin" && legal.canRaise) onAction({ type: "allin" });
+  };
+  const voice = useVoiceCommands(runVoice);
 
   return (
     <div className="controls">
@@ -112,8 +152,19 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         </button>
       </div>
 
-      {/* Linha 3: Slider + valor */}
+      {/* Linha 3: Slider + valor (+ microfone de voz, quando suportado) */}
       <div className="slider-row">
+        {voice.supported ? (
+          <button
+            type="button"
+            className={`btn voice-btn${voice.listening ? " on" : ""}`}
+            onClick={voice.toggle}
+            title={voice.listening ? "Voz ligada — diga: fold, call, raise" : "Comando de voz"}
+            aria-pressed={voice.listening}
+          >
+            {voice.listening ? "🎙️" : "🎤"}
+          </button>
+        ) : null}
         <input
           type="range"
           min={legal.minRaiseTo}
@@ -124,6 +175,13 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         />
         <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
       </div>
+
+      {voice.listening ? (
+        <div className="voice-hint">
+          🎙️ ouvindo — <b>fold</b>, <b>call</b>, <b>raise</b>, <b>all-in</b> · ou o valor: <b>"raise 20"</b> / <b>"60%"</b>
+        </div>
+      ) : null}
+      {voice.error ? <div className="voice-hint err">{voice.error}</div> : null}
     </div>
   );
 }
