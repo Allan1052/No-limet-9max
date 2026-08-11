@@ -3,6 +3,7 @@ import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
+import { useVoiceCommands, type VoiceParse } from "../ui/useVoiceCommands";
 import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator } from "../ui/IcmCalculator";
@@ -57,7 +58,7 @@ import "../ui/theme.css";
 
 export function App() {
   const { t: tr } = useT();
-  const { onboarded, setOnboarded, mode } = useSettings();
+  const { onboarded, setOnboarded, mode, unit } = useSettings();
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
@@ -104,6 +105,58 @@ export function App() {
   // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
   // Ela volta entre as mãos e nas outras telas.
   const navHidden = view === "play" && !handOver;
+
+  // ---- Comando de voz (sempre ligado durante o jogo) ----------------------
+  // Vive aqui no App (não nos Controls) para NÃO desmontar entre as mãos: assim
+  // continua ouvindo no fim da mão e pega "nova mão" por voz.
+  const runVoice = (p: VoiceParse) => {
+    if (view !== "play") return;
+    const { cmd, amount, percent } = p;
+    // Fim da mão: só "nova mão / próxima / continuar" tem efeito.
+    if (controller.phase === "handOver") {
+      if (cmd === "next") newHand();
+      return;
+    }
+    if (!controller.isHeroTurn()) return;
+    const lg = controller.legal();
+    const bb = controller.table.bigBlind || 1;
+    const clamp = (v: number) => Math.max(lg.minRaiseTo, Math.min(lg.maxRaiseTo, Math.round(v)));
+    const doRaise = (toChips: number, forceAllin = false) => {
+      if (forceAllin || toChips >= lg.maxRaiseTo) heroAct({ type: "allin" });
+      else if (lg.canRaise) heroAct({ type: "raise", to: clamp(toChips) });
+    };
+    if (percent !== undefined && lg.canRaise) {
+      doRaise(Math.round((lg.callAmount + controller.pot) * (percent / 100)) + lg.callAmount, cmd === "allin");
+    } else if (amount !== undefined && (cmd === "raise" || cmd === "allin")) {
+      doRaise(unit === "bb" ? amount * bb : amount, cmd === "allin");
+    } else if (cmd === "fold" && lg.canFold) heroAct({ type: "fold" });
+    else if (cmd === "check" && lg.canCheck) heroAct({ type: "check" });
+    else if (cmd === "call") {
+      if (lg.canCall) heroAct({ type: "call" });
+      else if (lg.canCheck) heroAct({ type: "check" });
+    } else if (cmd === "raise" && lg.canRaise) doRaise(controller.suggestedRaiseTo() ?? lg.minRaiseTo);
+    else if (cmd === "allin" && lg.canRaise) heroAct({ type: "allin" });
+  };
+  const voice = useVoiceCommands(runVoice);
+  const [voiceOn, setVoiceOn] = useState(() => {
+    try {
+      return localStorage.getItem("cof-voice") === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("cof-voice", voiceOn ? "1" : "0");
+    } catch {
+      /* sem storage */
+    }
+  }, [voiceOn]);
+  useEffect(() => {
+    if (!voice.supported) return;
+    if (voiceOn && view === "play") voice.start();
+    else voice.stop();
+  }, [voiceOn, view, voice.supported, voice.start, voice.stop]);
 
   // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
   const fs = controller.fieldStatus();
@@ -257,6 +310,27 @@ export function App() {
             onUpdate={applyUpdate}
             rangeSeats={participantSeats}
           />
+
+          {voice.supported ? (
+            <div className="voice-bar">
+              <button
+                type="button"
+                className={`btn voice-btn${voice.listening ? " on" : ""}`}
+                onClick={() => setVoiceOn((v) => !v)}
+                aria-pressed={voice.listening}
+                title="Comando de voz"
+              >
+                {voice.listening ? "🎙️" : "🎤"}
+              </button>
+              <span className={`voice-hint${voice.error ? " err" : ""}`}>
+                {voice.error
+                  ? voice.error
+                  : voice.listening
+                    ? 'ouvindo — fold · call · raise · "raise 20" · 60% · nova mão'
+                    : "toque para jogar por voz"}
+              </span>
+            </div>
+          ) : null}
 
           {handOver ? (
             <div className="controls action-row">

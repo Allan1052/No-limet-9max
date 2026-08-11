@@ -4,7 +4,7 @@
 // simplesmente não mostra o microfone.
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type VoiceCmd = "fold" | "check" | "call" | "raise" | "allin";
+export type VoiceCmd = "fold" | "check" | "call" | "raise" | "allin" | "next";
 
 export interface VoiceParse {
   cmd: VoiceCmd | null;
@@ -14,8 +14,9 @@ export interface VoiceParse {
   percent?: number;
 }
 
-// Ordem importa: all-in antes de "raise"/"call" para não ser engolido.
+// Ordem importa: all-in e "próxima mão" antes de raise/call para não engolir.
 const PATTERNS: [RegExp, VoiceCmd][] = [
+  [/\bnova\b|\bpr[óo]xima\b|\bcontinu(a|ar|e)\b|\bsegu(e|ir)\b|\bnext\b|\bbora\b/i, "next"],
   [/\ball[\s-]?in\b|\btudo\b/i, "allin"],
   [/\bfold(ar|ei)?\b|\bdesist|\bcorr(e|er|i)\b/i, "fold"],
   [/\bchec?k?\b|\bmesa\b|\bpass(o|a|ar)\b/i, "check"],
@@ -155,5 +156,5 @@ export function useVoiceCommands(onCommand: (p: VoiceParse) => void) {
     (wantRef.current ? stop : start)();
   }, [start, stop]);
 
-  return { supported, listening, error, toggle };
+  return { supported, listening, error, toggle, start, stop };
 }
