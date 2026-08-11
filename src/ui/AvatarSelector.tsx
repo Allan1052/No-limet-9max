@@ -246,86 +246,66 @@ export function formatCooldown(remainingMs: number): string {
 
 // ---------------------------------------------------------------------------
 // Tela de ONBOARDING — primeira vez que abre o app
+// Visual de poker: verde feltro, cartas, fichas. Sem avatar (fica no Perfil).
+// Escolha rápida: "quem é você" — recreativo / estudar / evolução.
 // ---------------------------------------------------------------------------
+const PLAYER_PROFILES = [
+  { id: "recreativo", emoji: "🃏", label: "Sou recreativo", sublabel: "Jogo por diversão" },
+  { id: "estudar", emoji: "📚", label: "Quero estudar", sublabel: "Poker de verdade" },
+  { id: "evolucao", emoji: "🔥", label: "Em busca de evolução", sublabel: "Quero evoluir jogando" },
+];
+
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
-  const { t } = useT();
   const [selected, setSelected] = useState<string | null>(null);
-  const [showImmersion, setShowImmersion] = useState(false);
-  const [selectedAvatarData, setSelectedAvatarData] = useState<AvatarType | null>(null);
 
   const handleConfirm = useCallback(() => {
-    if (!selected) return;
-    const avatar = HERO_AVATARS.find((a) => a.id === selected);
-    if (!avatar) return;
-    setHeroAvatar(selected);
     markFirstOpen();
-    setLastSwapTimestamp();
-    setSelectedAvatarData(avatar);
-    setShowImmersion(true);
-  }, [selected]);
+    onDone();
+  }, [onDone]);
 
-  // Tela de imersão após escolher
-  if (showImmersion && selectedAvatarData) {
-    return (
-      <div className="onboarding-overlay" onClick={onDone}>
-        <div className="immersion-card" onClick={(e) => e.stopPropagation()}>
-          <div
-            className="immersion-avatar"
-            style={{
-              borderColor: selectedAvatarData.color,
-              boxShadow: `0 0 24px ${selectedAvatarData.color}55, 0 0 60px ${selectedAvatarData.color}22`,
-            }}
-          >
-            <img src={selectedAvatarData.image} alt="" className="immersion-avatar-img" />
-          </div>
-          <div className="immersion-name" style={{ color: selectedAvatarData.color }}>
-            {t(selectedAvatarData.nameKey as TransKey)}
-          </div>
-          <div className="immersion-quote">
-            "{t(selectedAvatarData.immersionKey as TransKey)}"
-          </div>
-          <button className="btn primary immersion-enter" onClick={() => {
-            onDone();
-          }}>
-            {t("onboarding.enter")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela de seleção de máscara
   return (
     <div className="onboarding-overlay">
       <div className="onboarding-content" onClick={(e) => e.stopPropagation()}>
+        {/* Header com visual de poker */}
         <div className="onboarding-brand">
           <div className="onboarding-spade">♠</div>
-          <h1 className="onboarding-title">{t("onboarding.title")}</h1>
+          <h1 className="onboarding-title">Call ou Fold</h1>
         </div>
-        <p className="onboarding-subtitle">{t("onboarding.subtitle")}</p>
-        <p className="onboarding-mask-phrase">"{t("avatar.maskPhrase")}"</p>
+        <p className="onboarding-subtitle">
+          Simulador de torneio NLHE 9-max<br />
+          Feito por um recreativo, para recreativos
+        </p>
+
+        {/* Cartas decorativas */}
+        <div className="onboarding-cards-deco">
+          <span className="deco-card">A♠</span>
+          <span className="deco-card">K♥</span>
+        </div>
+
+        {/* Quem é você */}
+        <p className="onboarding-who">Quem é você na mesa?</p>
 
         <div className="onboarding-grid">
-          {HERO_AVATARS.map((avatar) => {
-            const isSelected = selected === avatar.id;
+          {PLAYER_PROFILES.map((prof) => {
+            const isSelected = selected === prof.id;
             return (
               <button
-                key={avatar.id}
+                key={prof.id}
                 className={`onboarding-card ${isSelected ? "selected" : ""}`}
                 style={
                   isSelected
                     ? {
-                        borderColor: avatar.color,
-                        boxShadow: `0 0 16px ${avatar.color}55`,
+                        borderColor: "#d4af37",
+                        boxShadow: "0 0 16px #d4af3755",
+                        background: "#1a2e1e",
                       }
                     : {}
                 }
-                onClick={() => setSelected(avatar.id)}
+                onClick={() => setSelected(prof.id)}
               >
-                <img src={avatar.image} alt="" className="onboarding-card-img" loading="lazy" />
-                <div className="onboarding-card-label" style={{ color: isSelected ? avatar.color : undefined }}>
-                  {t(avatar.nameKey as TransKey)}
-                </div>
+                <span className="onboarding-card-emoji">{prof.emoji}</span>
+                <div className="onboarding-card-label">{prof.label}</div>
+                <div className="onboarding-card-sublabel">{prof.sublabel}</div>
               </button>
             );
           })}
@@ -333,10 +313,13 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         <button
           className="btn primary onboarding-confirm"
-          disabled={!selected}
           onClick={handleConfirm}
+          style={{
+            background: selected ? "#d4af37" : undefined,
+            color: selected ? "#0d0f0d" : undefined,
+          }}
         >
-          {selected ? t("onboarding.confirm") : t("onboarding.select")}
+          Começar meu sonho ♠
         </button>
       </div>
     </div>

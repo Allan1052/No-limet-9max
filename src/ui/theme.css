@@ -3203,6 +3203,52 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Onboarding — visual de poker (sem avatar) */
+.onboarding-cards-deco {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.deco-card {
+  display: inline-block;
+  width: 48px;
+  height: 68px;
+  line-height: 68px;
+  background: #fff;
+  border-radius: 6px;
+  color: #0d0f0d;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  animation: floatCard 3s ease-in-out infinite alternate;
+}
+.deco-card:last-child {
+  color: #c0392b;
+  animation-delay: 1.5s;
+}
+@keyframes floatCard {
+  from { transform: translateY(0) rotate(-3deg); }
+  to { transform: translateY(-6px) rotate(2deg); }
+}
+.onboarding-who {
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.onboarding-card-emoji {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 4px;
+}
+.onboarding-card-sublabel {
+  font-size: 8px;
+  color: #666;
+  text-align: center;
+  margin-top: 2px;
+}
+
 .onboarding-confirm {
   font-size: 16px !important;
   padding: 14px 40px !important;
