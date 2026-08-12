@@ -34,6 +34,13 @@ import {
   type Mission,
   type MissionEvent,
 } from "./missions";
+import {
+  isXpUnlocked,
+  loadXpState,
+  saveXpState,
+  processXpEvent,
+  type AchievementToast,
+} from "./achievements";
 
 /**
  * Salva o torneio ATUAL entre mãos, no slot da sua faixa de buy-in (para
@@ -56,6 +63,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const progressRef = useRef<ProgressState>(loadProgress());
   const missionRef = useRef<MissionState>(loadMissions());
   const [toasts, setToasts] = useState<Mission[]>([]);
+  const [xpToasts, setXpToasts] = useState<AchievementToast[]>([]);
   const [celebrateItm, setCelebrateItm] = useState(false);
   const [finalTable, setFinalTable] = useState<{ players: number } | null>(null);
   const [headsUp, setHeadsUp] = useState<
@@ -91,6 +99,15 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       fireMission({ type: "decision", rating, heroType });
       // Raio-X de torneio por buy-in — só decisões pré-flop do jogo de verdade.
       if (isPreflop && buyIn != null) recordTournamentDecision(buyIn, heroType);
+      // XP + Achievements
+      if (isXpUnlocked()) {
+        const xpState = loadXpState();
+        const result = processXpEvent(xpState, { type: "decision", rating, heroType, isPreflop });
+        saveXpState(result.state);
+        if (result.newAchievements.length > 0) {
+          setXpToasts((prev) => [...prev, ...result.newAchievements]);
+        }
+      }
     },
     [],
   );
@@ -99,10 +116,29 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     recordHand(progressRef.current);
     saveProgress(progressRef.current);
     fireMission({ type: "hand" });
+    // XP: nova mão
+    if (isXpUnlocked()) {
+      const xpState = loadXpState();
+      const result = processXpEvent(xpState, { type: "handOver" });
+      saveXpState(result.state);
+      if (result.newAchievements.length > 0) {
+        setXpToasts((prev) => [...prev, ...result.newAchievements]);
+      }
+    }
   }, []);
 
   const onTournamentEnd = useCallback(({ result, inMoney }: { result: "campeao" | "eliminado"; inMoney: boolean }) => {
     fireMission({ type: "tournamentEnd", result, inMoney });
+    // XP: torneio terminado
+    if (isXpUnlocked()) {
+      const xpState = loadXpState();
+      const finishPlace = result === "campeao" ? 1 : undefined;
+      const resultXp = processXpEvent(xpState, { type: "tournamentOver", finishPlace, inMoney });
+      saveXpState(resultXp.state);
+      if (resultXp.newAchievements.length > 0) {
+        setXpToasts((prev) => [...prev, ...resultXp.newAchievements]);
+      }
+    }
   }, []);
 
   const onBubble = useCallback(() => {
@@ -122,6 +158,15 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
 
   const onChampion = useCallback((d: { entrants: number; cash: number }) => {
     setChampion(d);
+    // XP: vitória adicional
+    if (isXpUnlocked()) {
+      const xpState = loadXpState();
+      const resultXp = processXpEvent(xpState, { type: "tournamentOver", finishPlace: 1, inMoney: true });
+      saveXpState(resultXp.state);
+      if (resultXp.newAchievements.length > 0) {
+        setXpToasts((prev) => [...prev, ...resultXp.newAchievements]);
+      }
+    }
   }, []);
 
   // ---- Disciplina callbacks ----
@@ -226,6 +271,8 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   });
 
   return {
+    xpToasts,
+    dismissXpToasts: () => setXpToasts([]),
     controller: g,
     heroAct: (a: Action) => {
       g.heroAct(a);

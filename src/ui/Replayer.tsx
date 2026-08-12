@@ -1,5 +1,6 @@
 // Replayer: percorre uma mão gravada passo a passo, com a decisão ótima.
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 import { CardView } from "./Card";
 import { actionLabel } from "../feedback/analyzer";
 import { toBB } from "../app/format";
@@ -27,6 +28,15 @@ export function Replayer({
   const total = hand.events.length;
   const [step, setStep] = useState(0);
   const atResult = step >= total;
+
+  // XP: achievement "Revisão" — dispara quando abre o replay pela primeira vez
+  useEffect(() => {
+    if (isXpUnlocked()) {
+      const xpState = loadXpState();
+      const xpResult = processXpEvent(xpState, { type: "replayOpen" });
+      saveXpState(xpResult.state);
+    }
+  }, []);
   const ev = atResult ? undefined : hand.events[step];
   const board = atResult ? hand.finalBoard : (ev?.board ?? []);
 

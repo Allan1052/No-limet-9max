@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { drawHandShareCard, type HandShareData } from "../app/handShareCard";
 import { shareSpot } from "../app/share";
+import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 
 const SHARE_TEXT = "Essa mão eu joguei no Call ou Fold — simulador grátis de poker. 🃏\nSem dinheiro real. Só estudo.";
 const SHARE_URL = "https://calloufold.com.br";
@@ -33,6 +34,12 @@ export function HandShareButton({
       if (result === "shared" || result === "copied") {
         setDone(true);
         setTimeout(() => setDone(false), 3000);
+        // XP: achievement "Compartilhador"
+        if (isXpUnlocked()) {
+          const xpState = loadXpState();
+          const xpResult = processXpEvent(xpState, { type: "shareHand" });
+          saveXpState(xpResult.state);
+        }
       }
     } finally {
       setGenerating(false);
