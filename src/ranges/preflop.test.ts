@@ -240,3 +240,30 @@ describe("pré-flop — premium nunca flata e par pequeno defende (bugs dos prin
     expect(d.action).toBe("fold");
   });
 });
+
+// GOLDEN TESTS — spots reais achados jogando. Cada bug vira um teste permanente
+// para o motor NUNCA regredir naquele spot. (Adicione novos aqui conforme surgem.)
+describe("pré-flop — guerra de re-raises (5-bet+ all-in) só o topo premium paga", () => {
+  // Print do Allan: 99 pagando all-in depois de open+3bet+4bet+5bet(KK)+6bet(AA)+AK
+  // com 2 all-ins na frente. É fold fácil — estava sendo gradeado como "ótimo".
+  const war = { effectiveBB: 50, raiserPosition: "UTG1" as const, openSizeBB: 50, allInsAhead: 2, betLevelFaced: 5 };
+
+  it("99 FOLDA a guerra de re-raises (bug do print)", () => {
+    expect(decide("9d9h", "CO", war).action).toBe("fold");
+  });
+  it("JJ e TT também foldam a guerra (dominados por AA/KK/QQ/AK)", () => {
+    expect(decide("JsJd", "CO", war).action).toBe("fold");
+    expect(decide("TsTd", "CO", war).action).toBe("fold");
+  });
+  it("AJs/KQs/AQ foldam a guerra (não são premium de stack-off)", () => {
+    for (const h of ["AsJs", "KsQs", "AsQd"]) expect(decide(h, "CO", war).action).toBe("fold");
+  });
+  it("AA/KK/QQ/AKs/AKo PAGAM a guerra (mãos premium)", () => {
+    for (const h of ["AsAd", "KsKd", "QsQd", "AsKs", "AsKd"]) {
+      expect(decide(h, "CO", war).action).toBe("call");
+    }
+  });
+  it("shove SIMPLES (bet level 1) NÃO é afetado — 99 ainda paga um shove curto", () => {
+    expect(decide("9d9h", "BB", { effectiveBB: 12, raiserPosition: "BTN", openSizeBB: 12, betLevelFaced: 1 }).action).toBe("call");
+  });
+});

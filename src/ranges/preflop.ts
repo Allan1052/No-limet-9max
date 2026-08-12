@@ -122,8 +122,31 @@ function multiwayAllInTighten(width: number, allInsAhead: number): { width: numb
   const n = Math.max(0, Math.floor(allInsAhead));
   if (n <= 1) return { width, note: "" };
   let w = width * Math.pow(0.5, n - 1); // cada all-in extra ~corta pela metade
-  w = Math.min(w, n >= 3 ? 0.1 : 0.16); // teto duro: só o topo paga confronto múltiplo
+  w = Math.min(w, n >= 3 ? 0.07 : 0.11); // teto duro: só o topo paga confronto múltiplo
   return { width: w, note: ` — ${n} all-ins na frente, confronto múltiplo aperta a range` };
+}
+
+// Guerra de re-raises: um all-in que vem DEPOIS de vários aumentos (4-bet,
+// 5-bet, 6-bet) representa um range PREMIUM (AA/KK/QQ/AK). Pagar exige uma range
+// muito mais apertada — senão o coach chama 99/AJ de "ótimo" contra AA+KK+AK,
+// que é fold fácil. betLevelFaced: 1=abertura, 2=3-bet, 3=4-bet, 4+=5-bet+.
+function reRaiseWarFactor(betLevelFaced?: number): number {
+  const bl = Math.max(0, Math.floor(betLevelFaced ?? 0));
+  if (bl >= 4) return 0.30; // 5-bet+ all-in: só o topo premium paga
+  if (bl === 3) return 0.50; // 4-bet all-in
+  if (bl === 2) return 0.78; // 3-bet all-in (aperto leve)
+  return 1; // abertura / shove simples: sem aperto extra
+}
+
+// Único range que PAGA uma guerra de re-raises (5-bet+ all-in): só o topo
+// premium. O ranking de força bruta ranqueia 99/JJ ACIMA de AKo, então um aperto
+// por porcentagem sozinho não consegue foldar o 99 sem foldar tudo — por isso
+// aqui é um portão EXPLÍCITO e BINÁRIO. (Era o bug do 99 pagando AA+KK+AK.)
+const WAR_PREMIUM_CALL = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
+
+/** Um all-in DEPOIS de guerra de re-raises (5-bet+)? Aí a decisão é binária. */
+function isReRaiseWar(betLevelFaced?: number): boolean {
+  return (betLevelFaced ?? 0) >= 4;
 }
 
 
@@ -372,9 +395,26 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
     const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
     if (callIsAllIn) {
+      if (isReRaiseWar(ctx.betLevelFaced)) {
+        // Guerra de re-raises: decisão BINÁRIA — só o topo premium paga.
+        if (WAR_PREMIUM_CALL.has(handType)) {
+          return {
+            action: "call",
+            sizeBB: ctx.effectiveBB,
+            reason: `${handType}: paga o all-in depois da guerra de re-raises — mão premium.`,
+            handType,
+          };
+        }
+        return {
+          action: "fold",
+          sizeBB: 0,
+          reason: `${handType}: folda — depois de uma guerra de re-raises, quem dá all-in tem range premium (AA/KK/QQ/AK). ${handType} está dominado.`,
+          handType,
+        };
+      }
       const depthWidth = Math.max(0.20, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.028));
       const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
-      const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+      const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor * reRaiseWarFactor(ctx.betLevelFaced));
       const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
       const callRange = buildTopRange(mw.width);
       const depthTag = sd.pushFold ? "Stack ultracurto" : "Enfrentando all-in";
@@ -669,9 +709,26 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
   // nunca 4-bet. Vale em qualquer profundidade — não só no push/fold.
   const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
   if (callIsAllIn) {
+    if (isReRaiseWar(ctx.betLevelFaced)) {
+      // Guerra de re-raises: decisão BINÁRIA — só o topo premium paga.
+      if (WAR_PREMIUM_CALL.has(handType)) {
+        return {
+          action: "call",
+          sizeBB: ctx.effectiveBB,
+          reason: `${handType}: paga o all-in depois da guerra de re-raises — mão premium.`,
+          handType,
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: folda — depois de uma guerra de re-raises, quem dá all-in tem range premium (AA/KK/QQ/AK). ${handType} está dominado.`,
+        handType,
+      };
+    }
     const depthWidth = Math.max(0.14, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.032));
     const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor; // station paga mais largo
-    const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
+    const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor * reRaiseWarFactor(ctx.betLevelFaced));
     const mw = multiwayAllInTighten(rawWidth, ctx.allInsAhead ?? 0);
     const callRange = buildTopRange(mw.width);
     const depthTag = sd.pushFold ? "Stack ultracurto" : "Enfrentando all-in";
