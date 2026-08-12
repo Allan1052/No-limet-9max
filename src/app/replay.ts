@@ -50,4 +50,8 @@ export interface HandHistory {
   result?: HandResult;
   /** FeedbackItems gerados durante esta mão (para filtros de histórico). */
   handFeedback?: FeedbackItem[];
+  /** POSIÇÃO do herói (ex.: "UTG", "BTN", "CO") — sempre visível no card. */
+  heroPosition?: string;
+  /** ESTÁGIO do torneio no momento da mão (ex.: "Início", "Bolha"). */
+  tournamentStage?: string;
 }

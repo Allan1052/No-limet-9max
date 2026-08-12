@@ -20,6 +20,7 @@ import {
 } from "../game/engine";
 import { legalActions, type LegalActions } from "../game/betting";
 import type { TableState } from "../game/state";
+import { seatPositions } from "../bots/seatPosition";
 import { botPreflopAction, preflopContextFor } from "../bots/preflopBot";
 import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
 import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
@@ -1107,6 +1108,21 @@ export class GameController {
       startingStacks: { ...this.handStartStacks },
       result: this.table.result,
       handFeedback: this.feedback.slice(),
+      // POSIÇÃO do herói (UTG, BTN, CO...) — sempre visível no card compartilhado.
+      heroPosition: (() => {
+        const posMap = seatPositions(this.table);
+        const p = posMap.get(this.heroSeat);
+        return p ?? "MP";
+      })(),
+      // ESTÁGIO do torneio no momento da mão (Início, Bolha...).
+      tournamentStage: (() => {
+        try {
+          const s = STAGES[this.tournament?.stage ?? "inicio"];
+          return s ? s.label : "";
+        } catch {
+          return "";
+        }
+      })(),
     };
     // Guarda no log da sessão (limita para não crescer sem fim).
     this.handLog.push(this.lastHand);

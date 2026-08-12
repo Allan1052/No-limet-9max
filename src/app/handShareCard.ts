@@ -2,6 +2,9 @@
 // Hand Share Card — gera um card PNG elegante (1080×1080) de uma mão jogada,
 // com a logo oficial, cartas, board, decisão e tip do coach.
 // Ideal para compartilhar no Instagram/WhatsApp.
+//
+// Modo "simples": recreativo — posição, stack, ação, nota, frase simples.
+// Modo "tecnico": com matemática — equity, potOdds, evBB (só se existirem).
 // ---------------------------------------------------------------------------
 import { rankOf, suitOf, RANKS, type Card } from "../engine/cards";
 import type { Rating } from "../feedback/analyzer";
@@ -22,6 +25,8 @@ const COLOR_RED_ERR = "#c0392b";
 const COLOR_CARD_WHITE = "#f4f1e6";
 const COLOR_RED_SUIT = "#c0392b";
 const COLOR_BLACK_SUIT = "#1a1a1a";
+
+export type ShareCardMode = "simples" | "tecnico";
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -72,8 +77,6 @@ function drawCardOnCanvas(
   // Naipe grande no centro
   ctx.font = `${h * 0.42}px Georgia, serif`;
   ctx.fillText(suit, x + w / 2, y + h * 0.68);
-
-  // Rank pequeno embaixo (sem rotação — mais limpo no card)
 }
 
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
@@ -81,12 +84,10 @@ function drawLogoImage(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      // Desenha a logo circular (quadrada com canto arredondado) centralizada
       const dim = size;
       const x = cx - dim / 2;
       const y = cy - dim / 2;
 
-      // Borda circular
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, dim / 2, 0, Math.PI * 2);
@@ -104,7 +105,6 @@ function drawLogoImage(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
       resolve();
     };
     img.onerror = () => {
-      // Fallback: desenha CF dourado
       ctx.fillStyle = COLOR_GOLD;
       ctx.font = `bold ${size * 0.4}px Georgia, serif`;
       ctx.textAlign = "center";
@@ -132,7 +132,7 @@ export interface HandShareData {
   coachAction: string;
   /** Nota da decisão: "boa", "ok", "imprecisa", "ruim". */
   rating: Rating;
-  /** Tip do coach (frase explicativa). */
+  /** Tip do coach (frase explicativa — texto cru do feedback, pode ter aspas quebradas). */
   coachTip: string;
   /** Rua da decisão: "Preflop", "Flop", "Turn", "River". */
   street: string;
@@ -142,12 +142,77 @@ export interface HandShareData {
   tournamentResult?: string;
   /** Contexto da ação (ex.: "Vilão aposta 1/3 pote · Stack: 25bb"). */
   context: string;
+  /** POSIÇÃO do herói — SEMPRE visível no card (ex.: "UTG", "BTN", "CO"). */
+  position: string;
+  /** Stack em big blinds (ex.: "96bb"). */
+  stackBB: string;
+  /** Estágio do torneio (ex.: "Início", "Bolha"). Só visível no modo técnico. */
+  stage?: string;
+  /** Equity percentual (ex.: 0.42 = 42%). Só visível no modo técnico. */
+  equity?: number;
+  /** Pot odds (ex.: 0.33 = 33%). Só visível no modo técnico. */
+  potOdds?: number;
+  /** EV em big blinds (ex.: -16.8). Só visível no modo técnico. */
+  evBB?: number;
+}
+
+/**
+ * Limpa o texto do coach: remove aspas internas quebradas e concatena frases.
+ * Ex.: '...para a posição. O" "padrão era foldar.' → '...para a posição. O padrão era foldar.'
+ */
+export function cleanCoachText(raw: string): string {
+  // Remove aspas soltas no meio (que vem de template literal quebrado)
+  let cleaned = raw.replace(/" " /g, " ").replace(/"" /g, "").replace(/ ""/g, "");
+  // Remove aspas de abertura/fechamento soltas no meio de frases
+  cleaned = cleaned.replace(/"([^"]*)"([^"])/g, "$1$2");
+  cleaned = cleaned.replace(/([^"])"$/g, "$1");
+  cleaned = cleaned.replace(/^"([^"])/, "$1");
+  return cleaned.trim();
+}
+
+/** Nota em palavra para o card simples. */
+function ratingWord(rating: Rating): string {
+  switch (rating) {
+    case "boa": return "Boa!";
+    case "ok": return "Ok";
+    case "imprecisa": return "Impreciso";
+    case "ruim": return "Erro";
+    default: return "—";
+  }
+}
+
+/** Veredito para o card técnico. */
+function ratingVerdict(rating: Rating): string {
+  return rating === "boa" || rating === "ok" ? "✓ CORRETO" : "✗ ERROU";
+}
+
+function isRatingCorrect(rating: Rating): boolean {
+  return rating === "boa" || rating === "ok";
+}
+
+/** Quebra um texto em linhas para caber no canvas. */
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+  for (const word of words) {
+    const testWidth = ctx.measureText(currentLine + (currentLine ? " " : "") + word).width;
+    if (testWidth <= maxWidth) {
+      currentLine += (currentLine ? " " : "") + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
 }
 
 /**
  * Gera o Hand Share Card como PNG (1080×1080) e devolve um Blob.
+ * @param mode "simples" = sem jargão técnico; "tecnico" = com equity/potOdds/evBB
  */
-export async function drawHandShareCard(data: HandShareData): Promise<Blob | null> {
+export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode = "simples"): Promise<Blob | null> {
   const S = 1080;
   const canvas = document.createElement("canvas");
   canvas.width = S;
@@ -172,53 +237,42 @@ export async function drawHandShareCard(data: HandShareData): Promise<Blob | nul
   }
   ctx.globalAlpha = 1;
 
-  // ── Moldura dourada fina ──
-  ctx.strokeStyle = "rgba(212,175,55,0.6)";
-  ctx.lineWidth = 3;
-  roundRect(ctx, 30, 30, S - 60, S - 60, 24);
-  ctx.stroke();
-
-  // ── Linha dourada interna ──
-  ctx.strokeStyle = "rgba(212,175,55,0.25)";
-  ctx.lineWidth = 1;
-  roundRect(ctx, 42, 42, S - 84, S - 84, 18);
+  // ── Linha dourada superior (sem moldura pesada) ──
+  ctx.strokeStyle = "rgba(212,175,55,0.5)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(S - 60, 20);
   ctx.stroke();
 
   // ── TOPO: Logo oficial + título + info do torneio ──
-  await drawLogoImage(ctx, S / 2, 95, 100);
+  await drawLogoImage(ctx, S / 2, 85, 88);
   ctx.fillStyle = COLOR_GOLD;
-  ctx.font = "bold 52px Georgia, serif";
+  ctx.font = "bold 48px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("CALL OU FOLD", S / 2, 195);
+  ctx.fillText("CALL OU FOLD", S / 2, 178);
 
   // Info do torneio
   ctx.fillStyle = COLOR_CREAM_DIM;
-  ctx.font = "600 30px Georgia, serif";
-  ctx.fillText(data.tournamentInfo, S / 2, 242);
-
-  // Resultado do torneio (se houver)
-  if (data.tournamentResult) {
-    ctx.fillStyle = COLOR_GOLD_BRIGHT;
-    ctx.font = "bold 28px Georgia, serif";
-    ctx.fillText(data.tournamentResult, S / 2, 280);
-  }
+  ctx.font = "600 26px Georgia, serif";
+  ctx.fillText(data.tournamentInfo, S / 2, 220);
 
   // ── Linha separadora dourada ──
   ctx.strokeStyle = "rgba(212,175,55,0.4)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(120, 310);
-  ctx.lineTo(S - 120, 310);
+  ctx.moveTo(120, 255);
+  ctx.lineTo(S - 120, 255);
   ctx.stroke();
 
-  // ── CARTAS DO HERÓI (2 grandes) ──
+  // ── CARTAS DO HERÓI ──
   const cardW = 180;
   const cardH = 250;
   const gap = 30;
   const cardsTotalW = cardW * 2 + gap;
   const cardsX = (S - cardsTotalW) / 2;
-  const cardsY = 340;
+  const cardsY = 290;
 
   if (data.heroCards.length >= 1) {
     drawCardOnCanvas(ctx, data.heroCards[0], cardsX, cardsY, cardW, cardH);
@@ -228,95 +282,113 @@ export async function drawHandShareCard(data: HandShareData): Promise<Blob | nul
   }
 
   // ── BOARD (se houver) ──
+  let bottomY = cardsY + cardH; // posição para o próximo bloco
   if (data.board.length > 0) {
-    const bCardW = 130;
-    const bCardH = 180;
-    const bGap = 12;
+    const bCardW = 110;
+    const bCardH = 152;
+    const bGap = 10;
     const bTotalW = data.board.length * bCardW + (data.board.length - 1) * bGap;
     const bX = (S - bTotalW) / 2;
-    const bY = cardsY + cardH + 30;
-
+    const bY = cardsY + cardH + 16;
     for (let i = 0; i < data.board.length; i++) {
       drawCardOnCanvas(ctx, data.board[i], bX + i * (bCardW + bGap), bY, bCardW, bCardH);
     }
+    bottomY = bY + bCardH + 12;
+  } else {
+    bottomY = cardsY + cardH + 12;
   }
 
-  // ── CONTEXTO DA AÇÃO ──
-  const ctxY = data.board.length > 0 ? 340 + 250 + 30 + 180 + 40 : 340 + 250 + 40;
-
-  ctx.fillStyle = COLOR_CREAM_DIM;
-  ctx.font = "600 28px Georgia, serif";
+  // ── POSIÇÃO + STACK (SEMPRE visível) ──
+  const posStackY = bottomY;
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 30px Georgia, serif";
   ctx.textAlign = "center";
+  ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
+
+  // ── CONTEXTO DA AÇÃO ──
+  const ctxY = posStackY + 38;
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 26px Georgia, serif";
   ctx.fillText(data.street + " — " + data.context, S / 2, ctxY);
 
   // ── DECISÃO ──
-  const decY = ctxY + 50;
-
-  // Ação do herói
+  const decY = ctxY + 46;
   ctx.fillStyle = COLOR_CREAM;
-  ctx.font = "bold 42px Georgia, serif";
+  ctx.font = "bold 38px Georgia, serif";
   ctx.fillText(`Você: ${data.heroAction}`, S / 2, decY);
 
-  // Avaliação do coach
-  const coachY = decY + 48;
-  const isCorrect = data.rating === "boa" || data.rating === "ok";
-  const badgeColor = isCorrect ? COLOR_GREEN_OK : COLOR_RED_ERR;
-  const badgeText = isCorrect ? "✓ CORRETO" : "✗ ERROU";
+  // ── VEREDITO / NOTA ──
+  const verY = decY + 44;
 
-  // Badge arredondado
-  const badgeW = 240;
-  const badgeH = 46;
-  const badgeX = S / 2 - badgeW / 2;
-  ctx.fillStyle = badgeColor;
-  roundRect(ctx, badgeX, coachY - badgeH / 2, badgeW, badgeH, 23);
-  ctx.fill();
+  if (mode === "simples") {
+    // Modo simples: nota em palavra colorida
+    const noteColor = isRatingCorrect(data.rating) ? COLOR_GREEN_OK : COLOR_RED_ERR;
+    const note = ratingWord(data.rating);
+    ctx.fillStyle = noteColor;
+    ctx.font = "bold 34px Georgia, serif";
+    ctx.fillText(note, S / 2, verY);
+  } else {
+    // Modo técnico: badge CORRETO/ERROU
+    const badgeColor = isRatingCorrect(data.rating) ? COLOR_GREEN_OK : COLOR_RED_ERR;
+    const badgeW = 220;
+    const badgeH = 42;
+    const badgeX = S / 2 - badgeW / 2;
+    ctx.fillStyle = badgeColor;
+    roundRect(ctx, badgeX, verY - badgeH / 2, badgeW, badgeH, 21);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 24px Georgia, serif";
+    ctx.textBaseline = "middle";
+    ctx.fillText(ratingVerdict(data.rating), S / 2, verY);
+  }
 
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold 26px Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(badgeText, S / 2, coachY);
-
-    // ── TIP DO COACH ──
-  const tipY = coachY + 55;
-  // Fundo escurecido para o tip
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-  roundRect(ctx, 70, tipY - 30, S - 140, 130, 12);
-  ctx.fill();
-  ctx.fillStyle = COLOR_CREAM;
-  ctx.font = "italic 24px Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  // Quebra o tip em até 3 linhas se necessário
-  const maxTipWidth = S - 220;
-  const tipWords = data.coachTip.split(" ");
-  const tipLines: string[] = [];
-  let currentLine = "";
-  for (const word of tipWords) {
-    const testWidth = ctx.measureText(currentLine + (currentLine ? " " : "") + word).width;
-    if (testWidth <= maxTipWidth) {
-      currentLine += (currentLine ? " " : "") + word;
-    } else {
-      if (currentLine) tipLines.push(currentLine);
-      currentLine = word;
+  // ── MATEMÁTICA (só no modo técnico) ──
+  let statsY = verY + 40;
+  if (mode === "tecnico") {
+    const statParts: string[] = [];
+    if (data.equity !== undefined) statParts.push(`Equity ${Math.round(data.equity * 100)}%`);
+    if (data.potOdds !== undefined) statParts.push(`Pot odds ${Math.round(data.potOdds * 100)}%`);
+    if (data.evBB !== undefined) statParts.push(`EV ${data.evBB.toFixed(1)}bb`);
+    if (statParts.length > 0) {
+      ctx.fillStyle = COLOR_GOLD_BRIGHT;
+      ctx.font = "600 24px Georgia, serif";
+      ctx.textAlign = "center";
+      ctx.fillText(statParts.join("  ·  "), S / 2, statsY);
+      statsY += 38;
     }
   }
-  if (currentLine) tipLines.push(currentLine);
-  // Limitar a 3 linhas
-  const maxLines = 3;
-  const displayLines = tipLines.length > maxLines
-    ? [...tipLines.slice(0, maxLines - 1), tipLines.slice(maxLines - 1).join(" ") + "…"]
-    : tipLines;
-  const lineHeight = 30;
-  const startTipY = tipY + 10;
-  for (let i = 0; i < displayLines.length; i++) {
-    ctx.fillText(`"${displayLines[i]}"`, S / 2, startTipY + i * lineHeight);
+
+  // ── TIP DO COACH (texto limpo, sem aspas quebradas) ──
+  const cleanTip = cleanCoachText(data.coachTip);
+  const tipY = statsY + 12;
+  // Fundo escurecido para o tip
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  const tipBoxH = mode === "tecnico" ? 140 : 120;
+  roundRect(ctx, 70, tipY - 16, S - 140, tipBoxH, 12);
+  ctx.fill();
+
+  ctx.fillStyle = COLOR_CREAM;
+  ctx.font = "italic 23px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const maxTipWidth = S - 220;
+  let tipLines = wrapText(ctx, cleanTip, maxTipWidth);
+  // Limitar linhas
+  const maxLines = mode === "tecnico" ? 4 : 3;
+  if (tipLines.length > maxLines) {
+    const lastLine = tipLines.slice(maxLines - 1).join(" ");
+    tipLines = [...tipLines.slice(0, maxLines - 1), lastLine + "…"];
+  }
+  const lineHeight = 28;
+  const startTipY = tipY + 8;
+  for (let i = 0; i < tipLines.length; i++) {
+    ctx.fillText(tipLines[i], S / 2, startTipY + i * lineHeight);
   }
 
   // ── RODAPÉ ──
-  const footerY = tipY + 130 + 30;
+  const footerY = S - 40;
   ctx.fillStyle = COLOR_GOLD;
-  ctx.font = "600 22px Georgia, serif";
+  ctx.font = "600 20px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);

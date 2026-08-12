@@ -1,15 +1,23 @@
 // ---------------------------------------------------------------------------
 // Botão "📤 Compartilhar" — gera o Hand Share Card e compartilha via
 // Web Share API (celular) ou download (desktop).
+//
+// Quando o dev-unlock "card_dev_unlock" está ativo no localStorage, mostra
+// dois botões: um para o card "Simples" e outro para o "Técnico".
+// Sem o unlock, só aparece o card Simples (padrão).
 // ---------------------------------------------------------------------------
 import { useState } from "react";
-import { drawHandShareCard, type HandShareData } from "../app/handShareCard";
+import { drawHandShareCard, type HandShareData, type ShareCardMode } from "../app/handShareCard";
 import { shareSpot } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 
 const SHARE_TEXT = "Essa mão eu joguei no Call ou Fold — simulador grátis de poker. 🃏\nSem dinheiro real. Só estudo.";
 const SHARE_URL = "https://calloufold.com.br";
 const DISCLAIMER = "App de estudo. Sem apostas nem dinheiro real.";
+
+function isCardDevUnlocked(): boolean {
+  return localStorage.getItem("card_dev_unlock") === "true";
+}
 
 export function HandShareButton({
   data,
@@ -22,12 +30,13 @@ export function HandShareButton({
 }) {
   const [generating, setGenerating] = useState(false);
   const [done, setDone] = useState(false);
+  const showToggle = isCardDevUnlocked();
 
-  const handleShare = async () => {
+  const handleShare = async (mode: ShareCardMode) => {
     if (generating) return;
     setGenerating(true);
     try {
-      const blob = await drawHandShareCard(data);
+      const blob = await drawHandShareCard(data, mode);
       if (!blob) return;
 
       const result = await shareSpot(blob, SHARE_URL, SHARE_TEXT, DISCLAIMER);
@@ -46,11 +55,34 @@ export function HandShareButton({
     }
   };
 
+  if (showToggle) {
+    return (
+      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        <button
+          className={className}
+          disabled={generating}
+          onClick={() => handleShare("simples")}
+          title="Card simples — sem jargão técnico"
+        >
+          {generating ? "Gerando…" : done ? "✓ Compartilhado!" : "📤 Simples"}
+        </button>
+        <button
+          className={className}
+          disabled={generating}
+          onClick={() => handleShare("tecnico")}
+          title="Card técnico — com equity, pot odds e EV"
+        >
+          {generating ? "Gerando…" : done ? "✓ Compartilhado!" : "📐 Técnico"}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <button
       className={className}
       disabled={generating}
-      onClick={handleShare}
+      onClick={() => handleShare("simples")}
       title="Gera um card com a mão para compartilhar no Instagram/WhatsApp"
     >
       {generating ? "Gerando…" : done ? "✓ Compartilhado!" : label}

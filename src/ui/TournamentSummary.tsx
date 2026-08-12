@@ -12,6 +12,7 @@ import { submitTournamentResult, type TournamentSubmitResult } from "../lib/rank
 import { getNickname } from "../lib/nickname";
 import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
+import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 
@@ -86,6 +87,10 @@ export function TournamentSummary({
     tournamentInfo: `${modeLabel} ${stageLabel} · Buy-in $${summary.buyIn} · ${num(summary.entrants)} inscritos`,
     tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`, 
     context: summary.inMoney ? `Prêmio: $${Math.round(summary.cash)}` : "Fora do dinheiro",
+    // NOVOS campos (para o card compartilhado):
+    position: "Mesa Final", // resultado do torneio — sem posição específica
+    stackBB: "—",
+    stage: STAGES[summary.initialStage]?.label ?? "Torneio",
   };
 
   // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.

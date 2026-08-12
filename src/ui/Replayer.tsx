@@ -81,6 +81,13 @@ export function Replayer({
       street: lastItem.street,
       tournamentInfo: "Call ou Fold · Simulador grátis",
       context: contextParts.length > 0 ? contextParts.join(" · ") : "",
+      // NOVOS campos — sempre visíveis no card:
+      position: hand.heroPosition ?? "MP",
+      stackBB: effectiveBB !== undefined ? `${effectiveBB}bb` : "100bb",
+      stage: hand.tournamentStage,
+      equity: lastItem.equity,
+      potOdds: lastItem.potOdds,
+      evBB: lastItem.evBB,
     };
   })();
 
