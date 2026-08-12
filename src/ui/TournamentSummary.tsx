@@ -13,6 +13,7 @@ import { getNickname } from "../lib/nickname";
 import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
 import { HandShareButton } from "./HandShareButton";
+import { CoachSpeechButton } from "./CoachSpeechButton";
 import type { HandShareData } from "../app/handShareCard";
 
 const RATING_LABEL: Record<string, string> = {
@@ -268,7 +269,8 @@ export function TournamentSummary({
                   </span>
                   <span className="tag">{RATING_LABEL[it.rating]}</span>
                 </div>
-                <div className="fb-text">{it.text}</div>
+                <div className="fb-text" style={{ flex: 1 }}>{it.text}</div>
+                <CoachSpeechButton text={it.text} size="small" />
               </div>
             ))}
           </>

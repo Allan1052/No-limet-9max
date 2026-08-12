@@ -8,6 +8,7 @@ import type { HandHistory } from "../app/replay";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 import type { FeedbackItem } from "../feedback/analyzer";
+import { CoachSpeechButton } from "./CoachSpeechButton";
 import { MODULES, buildScenario } from "../train/scenarios";
 import { encodeChallenge, challengeUrl } from "../app/challenge";
 import { shareSpot } from "../app/share";
@@ -151,15 +152,18 @@ export function Replayer({
               ) : null}
             </div>
             {ev.advice ? (
-              <div className="rs-advice">
-                <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
-                {ev.advice.equity !== undefined
+              <div className="rs-advice" style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
+                  {ev.advice.equity !== undefined
                   ? ` (equity ${Math.round(ev.advice.equity * 100)}%${
                       ev.advice.potOdds !== undefined
                         ? `, preço ${Math.round(ev.advice.potOdds * 100)}%`
                         : ""
                     })`
                   : ""}
+                </div>
+                <CoachSpeechButton text={ev.advice.reason} size="small" />
               </div>
             ) : null}
           </div>

@@ -8,6 +8,7 @@ import { findBlockers } from "../bots/blockers";
 import { classifyBoard } from "../bots/boardTexture";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
+import { CoachSpeechButton } from "./CoachSpeechButton";
 
 export function HandTipsModal({
   items,
@@ -83,7 +84,7 @@ export function HandTipsModal({
                 </span>
                 <span className="tag">{ratingLabel(it.rating)}</span>
               </div>
-              <div className="fb-text">
+              <div className="fb-text" style={{ flex: 1 }}>
                 {it.text}
                 {tecnico && it.equity !== undefined ? ` (equity ${Math.round(it.equity * 100)}%` : ""}
                 {tecnico && it.equity !== undefined && it.potOdds !== undefined
@@ -92,6 +93,7 @@ export function HandTipsModal({
                     ? ")"
                     : ""}
               </div>
+              <CoachSpeechButton text={it.text} size="small" />
               {tecnico && mixText(it.mix) ? (
                 <div className="fb-mix">
                   {t("panel.strategyLabel")}: {mixText(it.mix)}
