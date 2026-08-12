@@ -205,13 +205,30 @@ export function Leaderboard() {
           <div className="lb-loading">{tr("rank.loading")}</div>
         ) : isEmpty ? (
           <div className="lb-empty">
+            {/* Podio vazio estilizado — elegante em vez de lista crua */}
+            <div className="lb-podium">
+              <div className="lb-podium-step lb-podium-2">
+                <div className="lb-podium-slot">🥈</div>
+                <div className="lb-podium-name">...</div>
+              </div>
+              <div className="lb-podium-step lb-podium-1">
+                <div className="lb-podium-slot">🥇</div>
+                <div className="lb-podium-name">Seu nome</div>
+              </div>
+              <div className="lb-podium-step lb-podium-3">
+                <div className="lb-podium-slot">🥉</div>
+                <div className="lb-podium-name">...</div>
+              </div>
+            </div>
             <div className="lb-empty-icon">♠</div>
             <p className="lb-empty-title">
               {period === "anual" && activeTab === "tourney"
                 ? `Nenhum resultado em ${currentSeasonYear()} nesta faixa`
-                : tr("rank.emptyTitle")}
+                : "Seja um dos primeiros — o placar está começando"}
             </p>
-            <p className="lb-empty-body">{tr("rank.emptyBody")}</p>
+            <p className="lb-empty-body">
+              O Circuito é real: cada resultado seu entra aqui na hora. Dispute desde o início e veja seu nome subir.
+            </p>
             <div className="lb-empty-cta">{tr("rank.emptyCta")}</div>
           </div>
         ) : (

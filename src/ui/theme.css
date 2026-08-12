@@ -4702,3 +4702,39 @@ body {
   .ms-crown, .ms-title-champ { animation: none !important; }
 }
 
+
+/* ---- Podium vazio estilizado (ranking elegante) ---- */
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+.lb-podium-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.lb-podium-slot {
+  font-size: 28px;
+  animation: podium-pulse 2s ease-in-out infinite alternate;
+}
+.lb-podium-1 .lb-podium-slot { animation-delay: 0s; }
+.lb-podium-2 .lb-podium-slot { animation-delay: 0.5s; }
+.lb-podium-3 .lb-podium-slot { animation-delay: 1s; }
+.lb-podium-name {
+  font-size: 11px;
+  color: var(--dim, #9c9a86);
+  font-weight: 600;
+}
+.lb-podium-1 .lb-podium-name {
+  color: var(--gold-bright, #e6c454);
+  font-weight: 800;
+}
+@keyframes podium-pulse {
+  from { opacity: 0.6; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.05); }
+}

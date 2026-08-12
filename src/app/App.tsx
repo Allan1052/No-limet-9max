@@ -39,6 +39,7 @@ import { ProfileView } from "../ui/ProfileView";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { OnboardingScreen, isFirstOpen, markFirstOpen } from "../ui/AvatarSelector";
+import { GuidedHand, hasSeenGuidedHand, markGuidedHandDone } from "../ui/GuidedHand";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { SpotRangePopup } from "../ui/SpotRangePopup";
 import { handSpots } from "./handSpots";
@@ -355,6 +356,12 @@ export function App() {
         }} />
       ) : !onboarded ? (
         <Onboarding onClose={() => setOnboarded(true)} />
+      ) : null}
+      {/* Mão guiada: primeira vez que o usuário entra no jogo (após onboarding) */}
+      {onboarded && !hasSeenGuidedHand() ? (
+        <GuidedHand onDone={() => {
+          markGuidedHandDone();
+        }} />
       ) : null}
 
       {challenge ? (
