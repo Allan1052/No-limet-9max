@@ -178,7 +178,7 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     // all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
       const streetPenalty = [0.04, 0.12, 0.2][streetIdx];
-      const discipline = (0.5 - ctx.profile.stickiness) * 0.4; // nit +, station − (reduzido: 0.4 evita over-fold)
+      const discipline = (0.5 - ctx.profile.stickiness) * 0.7; // nit +, station − (0.7: meio-termo — sem over-fold, mas o nit volta a ter disciplina)
       const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1)); // alguém pode ter mão
       required = Math.min(0.80, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
     }
