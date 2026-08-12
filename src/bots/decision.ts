@@ -108,7 +108,18 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   // correta, que não pune os projetos (o flush que completa ganha de todos de
   // uma vez), ao contrário de elevar a equity heads-up à potência do nº de
   // oponentes.
-  const villainPct = ctx.villainRangePct ?? 0.45;
+  let villainPct = ctx.villainRangePct ?? 0.45;
+
+  // Ajuste de shove range: quando o vilão está all-in com stack curto (≤15bb),
+  // o range dele é MUITO mais wide que uma range "normal" — inclui blefes,
+  // mãos marginais e shoved por desespero. Usar a villainRangePct original
+  // (estimada de apostas normais) subestima a equity do herói.
+  // Um shove com ≤15bb deve ser tratado como um range ~40% mais largo.
+  const isAllInCallHero = ctx.toCall > 0 && ctx.toCall >= ctx.heroStack;
+  if (isAllInCallHero && ctx.heroStack > 0 && ctx.heroStack <= 1500) {
+    // All-in call com stack efetivo ≤15bb: vilão shoveia largo (inclui blefes)
+    villainPct = Math.min(0.6, villainPct * 1.4);
+  }
   const isOmaha = ctx.variant === "omaha";
 
   let equity: number;
@@ -136,7 +147,10 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   }
 
   // Em posição realiza-se mais equity (controla o tamanho do pote, vê mais showdowns).
-  const realization = ctx.inPosition ? 1.05 : 0.9;
+  // PORÉM: quando é all-in (todas as fichas no meio), não há mais ação futura —
+  // a equity crua é realizada 100% no showdown. Não aplicar realização reduzida.
+  const isAllInSpot = ctx.toCall >= ctx.heroStack || (ctx.potSize > 0 && ctx.toCall > 0 && ctx.heroStack <= ctx.toCall * 1.5);
+  const realization = isAllInSpot ? 1.0 : (ctx.inPosition ? 1.05 : 0.9);
   const effEquity = Math.min(1, equity * realization);
 
   const size = sizeForTexture(texture);
@@ -164,9 +178,9 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     // all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
       const streetPenalty = [0.04, 0.12, 0.2][streetIdx];
-      const discipline = (0.5 - ctx.profile.stickiness) * 1.3; // nit +, station −
+      const discipline = (0.5 - ctx.profile.stickiness) * 0.4; // nit +, station − (reduzido: 0.4 evita over-fold)
       const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1)); // alguém pode ter mão
-      required = Math.min(0.92, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
+      required = Math.min(0.80, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
     }
 
     // ----- Estratégia mista quando enfrentamos aposta -----
