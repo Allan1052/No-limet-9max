@@ -1,5 +1,5 @@
 // Replayer: percorre uma mão gravada passo a passo, com a decisão ótima.
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { CardView } from "./Card";
 import { actionLabel } from "../feedback/analyzer";
 import { toBB } from "../app/format";
@@ -7,6 +7,9 @@ import type { HandHistory } from "../app/replay";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 import type { FeedbackItem } from "../feedback/analyzer";
+import { MODULES, buildScenario } from "../train/scenarios";
+import { encodeChallenge, challengeUrl } from "../app/challenge";
+import { shareSpot } from "../app/share";
 
 function optimalMatches(actionType: string, adviceAction: string): boolean {
   const fam = (a: string) =>
@@ -70,6 +73,23 @@ export function Replayer({
       context: contextParts.length > 0 ? contextParts.join(" · ") : "",
     };
   })();
+
+  // Dados para o Desafiar amigo — gera um spot de pré-flop com a mesma mão.
+  const onChallenge = useCallback(async () => {
+    const heroCards = hand.holeCards[hand.heroSeat] ?? [];
+    if (heroCards.length < 2) return;
+
+    // Usa o módulo default (sem ICM) com o stack da mão.
+    const mod = MODULES.filter((m) => m.id !== "final_icm")[0] ?? MODULES[0];
+    const effectiveBB = hand.startingStacks?.[hand.heroSeat]
+      ? Math.round(hand.startingStacks[hand.heroSeat] / hand.bigBlind)
+      : 50;
+    const scenario = buildScenario(mod, Math.random);
+    const spec = { ...scenario.spec, effectiveBB, heroPosition: scenario.spec.heroPosition };
+    const code = encodeChallenge(spec, heroCards);
+    const url = challengeUrl(code);
+    await shareSpot(null, url, "Desafio Call ou Fold — jogue a mesma mão que eu!", "");
+  }, [hand]);
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -162,6 +182,11 @@ export function Replayer({
         {atResult && shareData ? (
           <div style={{ marginTop: 14, textAlign: "center" }}>
             <HandShareButton data={shareData} label="📤 Compartilhar mão" className="btn primary" />
+            <div style={{ marginTop: 8 }}>
+              <button className="btn" onClick={onChallenge}>
+                🤝 Desafiar amigo
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
