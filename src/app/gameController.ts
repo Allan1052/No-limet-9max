@@ -50,6 +50,12 @@ import {
   type Stage,
 } from "../tournament/structure";
 import {
+  SNG3_BLIND_LEVELS,
+  sng3PayoutLadder,
+  SNG3_STARTING_BB,
+  SNG3_HANDS_PER_LEVEL,
+} from "../variants/sng3/config";
+import {
   initialFieldRemaining,
   attritionPerHand,
   fieldStatus,
@@ -81,8 +87,8 @@ export interface GameOptions {
   onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
   /** Chamado quando o herói VENCE o torneio — comemoração de campeão. */
   onChampion?: (d: { entrants: number; cash: number }) => void;
-  /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
-  variant?: "holdem" | "omaha";
+  /** Variante do jogo: "holdem" (padrão), "omaha" (PLO) ou "sng3" (Sit & Go 3-max). */
+  variant?: "holdem" | "omaha" | "sng3";
 
   // ---- Disciplina / progressão ----
   /** Fold pré-flop correto (para VPIP e badges). */
@@ -103,8 +109,8 @@ export interface TournamentConfig {
   stage: Stage;
   /** Mãos por nível antes de as blinds subirem (0 = não sobem sozinhas). */
   handsPerLevel?: number;
-  /** Variante: "holdem" (padrão) ou "omaha" (PLO). */
-  variant?: "holdem" | "omaha";
+  /** Variante: "holdem" (padrão), "omaha" (PLO) ou "sng3" (Sit & Go 3-max). */
+  variant?: "holdem" | "omaha" | "sng3";
   /** Modo curto (10 mãos) para "Omaha no Ônibus". */
   shortMode?: boolean;
   /**
@@ -196,8 +202,8 @@ export interface GameSnapshot {
   tournamentFinishPlace: number | null;
   /** Histórico de mãos jogadas (para o export continuar após retomar). */
   handLog?: HandHistory[];
-  /** Variante do jogo salva ("holdem" ou "omaha"). */
-  variant?: "holdem" | "omaha";
+  /** Variante do jogo salva ("holdem", "omaha" ou "sng3"). */
+  variant?: "holdem" | "omaha" | "sng3";
   savedAt: string;
 }
 
@@ -290,7 +296,9 @@ export class GameController {
     this.onHeroVpip = opts.onHeroVpip;
     this.seatDefs = [
       { name: this.heroName(), isHero: true },
-      ...PROFILES.map((p) => ({ name: p.name, profileId: p.id })),
+      ...(opts.variant === "sng3"
+        ? PROFILES.slice(0, 2).map((p) => ({ name: p.name, profileId: p.id }))
+        : PROFILES.map((p) => ({ name: p.name, profileId: p.id }))),
     ];
     const seats = this.seatDefs.map((s) => ({ ...s, stack }));
     this.table = createTable(
@@ -312,6 +320,61 @@ export class GameController {
   }
 
   configureTournament(cfg: TournamentConfig): void {
+    // --- SNG 3-MAX: path curto e específico (sem atrito, sem redraw, stacks iguais) ---
+    if (cfg.variant === "sng3") {
+      const sng3Level = SNG3_BLIND_LEVELS[0];
+      const pool = prizePool(cfg.buyIn, 3);
+      const ladder = sng3PayoutLadder(pool, "winner-take-all");
+      this.payouts = tablePayouts("final", ladder); // SNG3: ICM sempre ativo (winner-take-all)
+
+      this.seatDefs = [
+        { name: this.heroName(), isHero: true },
+        ...buildFieldSeats(cfg.buyIn, 2, this.rng), // 2 bots no SNG3
+      ];
+
+      // Stacks iguais em SNG (sem unevenStacks — fairness do SNG)
+      const startingChips = SNG3_STARTING_BB * sng3Level.bb;
+      const seats = this.seatDefs.map((s) => ({ ...s, stack: startingChips }));
+
+      this.table = createTable(
+        { smallBlind: sng3Level.sb, bigBlind: sng3Level.bb, ante: 0 },
+        seats,
+        0,
+        "sng3",
+      );
+      for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+
+      this.tournament = {
+        buyIn: cfg.buyIn,
+        entrants: 3,
+        stage: "inicio",
+        initialStage: "inicio",
+        levelIndex: 0,
+        prizePool: pool,
+        ladder,
+        handsPerLevel: SNG3_HANDS_PER_LEVEL,
+        handsThisLevel: 0,
+        fieldRemaining: 3,
+        bubbleBurst: false,
+        finalTableFormed: true,
+        tables: 1,
+        tableId: 1,
+        mode: cfg.mode ?? "livre",
+        circuitStage: undefined,
+      };
+      this.finalTableAnnounced = true;
+      this.headsUpAnnounced = false;
+      this.phase = "handOver";
+      this.lastHand = null;
+      this.handLog = [];
+      this.feedback = [];
+      this.tournamentOver = false;
+      this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
+      this.sessionMistakes = [];
+      return; // SNG3 configurado, sair
+    }
+
+    // --- MTT (9-max) path existente ---
     const stageInfo = STAGES[cfg.stage];
     const levelIndex = stageInfo.levelIndex;
     const level = BLIND_LEVELS[levelIndex];
@@ -378,8 +441,9 @@ export class GameController {
 
   /** Aplica um nível de blind (usado pelo filtro clicável e pela subida automática). */
   setBlindLevel(levelIndex: number): void {
-    const idx = Math.max(0, Math.min(BLIND_LEVELS.length - 1, levelIndex));
-    const level = BLIND_LEVELS[idx];
+    const levels = this.table.variant === "sng3" ? SNG3_BLIND_LEVELS : BLIND_LEVELS;
+    const idx = Math.max(0, Math.min(levels.length - 1, levelIndex));
+    const level = levels[idx];
     this.table.smallBlind = level.sb;
     this.table.bigBlind = level.bb;
     this.table.ante = level.ante;
@@ -493,10 +557,12 @@ export class GameController {
   private refillSeats(): number {
     if (!this.tournament) {
       // Sessão livre (sem torneio): mantém a mesa cheia, como sempre foi.
-      return this.fillEmptySeats(9);
+      return this.fillEmptySeats(this.table.variant === "sng3" ? 3 : 9);
     }
     // Mesa final já formada: só ENCOLHE — não repõe cadeira vazia nem move ninguém.
     if (this.tournament.finalTableFormed) return 0;
+    // SNG3: mesa única, nunca repõe — encolhe até heads-up.
+    if (this.table.variant === "sng3") return 0;
 
     const remaining = Math.max(1, Math.round(this.tournament.fieldRemaining));
     const tables = Math.max(1, Math.ceil(remaining / 9));
@@ -580,7 +646,17 @@ export class GameController {
     // Torneio: campo global encolhe a cada mão (gente bustando em outras mesas),
     // sobe o nível de blind e detecta o estouro da bolha.
     let bubbleMsg = false;
-    if (this.tournament && Math.round(this.tournament.fieldRemaining) > 9) {
+    if (this.tournament && this.table.variant === "sng3") {
+      // SNG3: sem atrito — campo é fixo em 3 jogadores (mesa única).
+      // O campo encolhe quando alguém busta na própria mesa.
+      this.tournament.fieldRemaining = this.table.players.filter((p) => p.stack > 0).length;
+      const paid = this.tournament.ladder.length;
+      if (!this.tournament.bubbleBurst && Math.round(this.tournament.fieldRemaining) <= paid) {
+        this.tournament.bubbleBurst = true;
+        bubbleMsg = true;
+        this.onBubble?.();
+      }
+    } else if (this.tournament && Math.round(this.tournament.fieldRemaining) > 9) {
       const busts = attritionPerHand(this.tournament.fieldRemaining, this.tournament.levelIndex);
       let after = this.tournament.fieldRemaining - busts;
       // Não deixa o campo global passar da mesa final por atrito abstrato.
@@ -628,7 +704,7 @@ export class GameController {
       this.tournament.handsThisLevel++;
       if (
         this.tournament.handsThisLevel > this.tournament.handsPerLevel &&
-        this.tournament.levelIndex < BLIND_LEVELS.length - 1
+        this.tournament.levelIndex < (this.table.variant === "sng3" ? SNG3_BLIND_LEVELS.length : BLIND_LEVELS.length) - 1
       ) {
         this.setBlindLevel(this.tournament.levelIndex + 1);
         levelUp = true;
@@ -652,7 +728,8 @@ export class GameController {
     } else if (this.heroMovedTo > 0) {
       this.setMessage("msg.tableMoved", { n: this.heroMovedTo });
     } else if (levelUp) {
-      const lv = BLIND_LEVELS[this.tournament!.levelIndex];
+      const levels = this.table.variant === "sng3" ? SNG3_BLIND_LEVELS : BLIND_LEVELS;
+      const lv = levels[this.tournament!.levelIndex];
       this.setMessage("msg.levelUp", { sb: lv.sb, bb: lv.bb });
     } else if (refilled > 0) {
       this.setMessage(refilled === 1 ? "msg.refillOne" : "msg.refillMany", { n: refilled });

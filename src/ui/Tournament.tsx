@@ -51,9 +51,12 @@ export function TournamentSetup({
   const [entrants, setEntrants] = useState(500);
   const [stage, setStage] = useState<Stage>("inicio");
   const [speed, setSpeed] = useState<Speed>("normal");
-  const [gameType, setGameType] = useState<"nlhe" | "plo">("nlhe");
+  const [gameType, setGameType] = useState<"nlhe" | "plo" | "sng3">("nlhe");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
     return localStorage.getItem("omaha_dev_unlock") === "true";
+  });
+  const [sng3Unlocked, setSng3Unlocked] = useState<boolean>(() => {
+    return localStorage.getItem("sng3_dev_unlock") === "true";
   });
 
   // Modo de jogo: Treino Livre (padrão) ou Circuito. Se há um torneio do
@@ -277,6 +280,27 @@ export function TournamentSetup({
             >
               {omahaUnlocked ? "Omaha" : "Omaha 🔒"}
             </button>
+            <button
+              className={`tab ${gameType === "sng3" ? "active" : ""}`}
+              onClick={() => {
+                if (sng3Unlocked) {
+                  setGameType("sng3");
+                } else {
+                  const code = prompt("🔒 SNG 3-max");
+                  if (code === "sng32026") {
+                    localStorage.setItem("sng3_dev_unlock", "true");
+                    setSng3Unlocked(true);
+                    setGameType("sng3");
+                  } else {
+                    alert("Sit & Go 3-max em desenvolvimento. Disponível em breve!");
+                  }
+                }
+              }}
+              title={sng3Unlocked ? "SNG 3-max" : "Em breve — SNG 3-max"}
+              style={sng3Unlocked ? {} : { opacity: 0.5, cursor: "not-allowed" }}
+            >
+              {sng3Unlocked ? "SNG 3-max" : "SNG 3-max 🔒"}
+            </button>
           </div>
         </div>
 
@@ -350,10 +374,10 @@ export function TournamentSetup({
           onClick={() =>
             onStart({
               buyIn,
-              entrants: Math.max(2, entrants),
+              entrants: gameType === "sng3" ? 3 : Math.max(2, entrants),
               stage,
               handsPerLevel: SPEED_HANDS[speed],
-              variant: gameType === "plo" ? "omaha" : "holdem",
+              variant: gameType === "plo" ? "omaha" : gameType === "sng3" ? "sng3" : "holdem",
               mode: "livre",
             })
           }
@@ -371,7 +395,7 @@ export function TournamentSetup({
                 {num(
                   computePoyPoints({
                     stage: "inicio",
-                    entrants: Math.max(2, entrants),
+                    entrants: gameType === "sng3" ? 3 : Math.max(2, entrants),
                     buyIn,
                     finishPosition: 1,
                   }).points,

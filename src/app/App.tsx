@@ -62,9 +62,12 @@ export function App() {
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
-  const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
+  const [gameVariant, setGameVariant] = useState<"holdem" | "omaha" | "sng3">("holdem");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
     return localStorage.getItem("omaha_dev_unlock") === "true";
+  });
+  const [sng3Unlocked, setSng3Unlocked] = useState<boolean>(() => {
+    return localStorage.getItem("sng3_dev_unlock") === "true";
   });
   const {
     controller,
@@ -228,6 +231,8 @@ export function App() {
           setGameVariant={setGameVariant}
           omahaUnlocked={omahaUnlocked}
           setOmahaUnlocked={setOmahaUnlocked}
+          sng3Unlocked={sng3Unlocked}
+          setSng3Unlocked={setSng3Unlocked}
           onOpenProgress={() => setProgressOpen(true)}
           buildLabel={formatBuild(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}

@@ -30,7 +30,7 @@ export interface ScenarioSpec {
   raiserPosition?: Position;
   openSizeBB?: number;
   icmSpot?: IcmSpot;
-  variant?: "holdem" | "omaha";
+  variant?: "holdem" | "omaha" | "sng3";
 }
 
 export interface TrainAction {
@@ -50,7 +50,7 @@ function pick<T>(arr: T[], rng: () => number): T {
 }
 
 /** Duas cartas aleatórias distintas. */
-export function randomHand(rng: () => number, variant: "holdem" | "omaha" = "holdem"): Card[] {
+export function randomHand(rng: () => number, variant: "holdem" | "omaha" | "sng3" = "holdem"): Card[] {
   const d = shuffle(fullDeck(), rng);
   return variant === "omaha" ? [d[0], d[1], d[2], d[3]] : [d[0], d[1]];
 }
@@ -168,7 +168,7 @@ export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Sc
 }
 
 /** Monta um cenário completo: sorteia a mão e calcula a estratégia correta. */
-export function buildScenario(module: TrainModule, rng: () => number, variant: "holdem" | "omaha" = "holdem"): Scenario {
+export function buildScenario(module: TrainModule, rng: () => number, variant: "holdem" | "omaha" | "sng3" = "holdem"): Scenario {
   const spec = module.gen(rng);
   spec.variant = variant;
   return buildScenarioFromSpec(spec, rng);

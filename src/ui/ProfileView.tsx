@@ -19,14 +19,18 @@ export function ProfileView({
   setGameVariant,
   omahaUnlocked,
   setOmahaUnlocked,
+  sng3Unlocked,
+  setSng3Unlocked,
   onOpenProgress,
   buildLabel,
   onCheckUpdate,
 }: {
-  gameVariant: "holdem" | "omaha";
-  setGameVariant: (v: "holdem" | "omaha") => void;
+  gameVariant: "holdem" | "omaha" | "sng3";
+  setGameVariant: (v: "holdem" | "omaha" | "sng3") => void;
   omahaUnlocked: boolean;
   setOmahaUnlocked: (v: boolean) => void;
+  sng3Unlocked: boolean;
+  setSng3Unlocked: (v: boolean) => void;
   onOpenProgress: () => void;
   buildLabel: string;
   onCheckUpdate: () => void;
@@ -136,6 +140,26 @@ export function ProfileView({
               style={omahaUnlocked ? {} : { opacity: 0.5 }}
             >
               {omahaUnlocked ? "Omaha" : "Omaha 🔒"}
+            </button>
+            <button
+              className={`variant-btn ${gameVariant === "sng3" && sng3Unlocked ? "active" : ""}`}
+              onClick={() => {
+                if (sng3Unlocked) {
+                  setGameVariant("sng3");
+                } else {
+                  const code = prompt("🔒 SNG 3-max");
+                  if (code === "sng32026") {
+                    localStorage.setItem("sng3_dev_unlock", "true");
+                    setSng3Unlocked(true);
+                    setGameVariant("sng3");
+                  } else {
+                    alert("Sit & Go 3-max em desenvolvimento. Disponível em breve!");
+                  }
+                }
+              }}
+              style={sng3Unlocked ? {} : { opacity: 0.5 }}
+            >
+              {sng3Unlocked ? "SNG 3-max" : "SNG 3-max 🔒"}
             </button>
           </div>
         </div>

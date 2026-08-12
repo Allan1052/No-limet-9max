@@ -20,7 +20,7 @@ import type { ParsedHand } from "./handHistory";
 
 declare module "./handHistory" {
   interface ParsedHand {
-    variant?: "holdem" | "omaha";
+    variant?: "holdem" | "omaha" | "sng3";
   }
 }
 
