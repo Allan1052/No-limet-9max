@@ -4,6 +4,9 @@ import { CardView } from "./Card";
 import { actionLabel } from "../feedback/analyzer";
 import { toBB } from "../app/format";
 import type { HandHistory } from "../app/replay";
+import { HandShareButton } from "./HandShareButton";
+import type { HandShareData } from "../app/handShareCard";
+import type { FeedbackItem } from "../feedback/analyzer";
 
 function optimalMatches(actionType: string, adviceAction: string): boolean {
   const fam = (a: string) =>
@@ -12,7 +15,15 @@ function optimalMatches(actionType: string, adviceAction: string): boolean {
   return fam(ht) === fam(adviceAction);
 }
 
-export function Replayer({ hand, onClose }: { hand: HandHistory; onClose: () => void }) {
+export function Replayer({
+  hand,
+  onClose,
+  feedback = [],
+}: {
+  hand: HandHistory;
+  onClose: () => void;
+  feedback?: FeedbackItem[];
+}) {
   const total = hand.events.length;
   const [step, setStep] = useState(0);
   const atResult = step >= total;
@@ -22,6 +33,43 @@ export function Replayer({ hand, onClose }: { hand: HandHistory; onClose: () => 
   const pot = atResult
     ? Object.values(hand.result?.winningsBySeat ?? {}).reduce((a, b) => a + b, 0)
     : (ev?.pot ?? 0);
+
+  // Dados para o Hand Share Card — usa a última decisão do herói avaliada.
+  const shareData: HandShareData | null = (() => {
+    if (feedback.length === 0) return null;
+    const lastItem = feedback[feedback.length - 1];
+    const heroCards = hand.holeCards[hand.heroSeat] ?? [];
+
+    // Monta contexto
+    const contextParts: string[] = [];
+    if (lastItem.equity !== undefined) {
+      contextParts.push(`Equity: ${Math.round(lastItem.equity * 100)}%`);
+    }
+    if (lastItem.potOdds !== undefined) {
+      contextParts.push(`Preço: ${Math.round(lastItem.potOdds * 100)}%`);
+    }
+    if (lastItem.evBB !== undefined) {
+      contextParts.push(`EV call: ${lastItem.evBB.toFixed(1)}bb`);
+    }
+    const effectiveBB = hand.startingStacks?.[hand.heroSeat]
+      ? Math.round((hand.startingStacks[hand.heroSeat] / hand.bigBlind))
+      : undefined;
+    if (effectiveBB !== undefined) {
+      contextParts.push(`Stack: ${effectiveBB}bb`);
+    }
+
+    return {
+      heroCards,
+      board: hand.finalBoard,
+      heroAction: lastItem.heroAction.toUpperCase(),
+      coachAction: lastItem.advice.toUpperCase(),
+      rating: lastItem.rating,
+      coachTip: lastItem.text,
+      street: lastItem.street,
+      tournamentInfo: "Call ou Fold · Simulador grátis",
+      context: contextParts.length > 0 ? contextParts.join(" · ") : "",
+    };
+  })();
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -110,6 +158,12 @@ export function Replayer({ hand, onClose }: { hand: HandHistory; onClose: () => 
             Próximo ▶
           </button>
         </div>
+        {/* Botão de compartilhar a mão */}
+        {atResult && shareData ? (
+          <div style={{ marginTop: 14, textAlign: "center" }}>
+            <HandShareButton data={shareData} label="📤 Compartilhar mão" className="btn primary" />
+          </div>
+        ) : null}
       </div>
     </div>
   );

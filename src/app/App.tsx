@@ -308,7 +308,11 @@ export function App() {
       )}
 
       {replayOpen && controller.lastHand ? (
-        <Replayer hand={controller.lastHand} onClose={() => setReplayOpen(false)} />
+        <Replayer
+          hand={controller.lastHand}
+          feedback={controller.feedback}
+          onClose={() => setReplayOpen(false)}
+        />
       ) : null}
 
       {tipsOpen ? (

@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.112.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.43.0",
+    "html2canvas-pro": "^2.3.5",
     "js-sha256": "^1.0.0",
     "lucide-react": "^1.27.0",
     "qrcode-generator": "^1.4.4",

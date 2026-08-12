@@ -12,6 +12,8 @@ import { submitTournamentResult, type TournamentSubmitResult } from "../lib/rank
 import { getNickname } from "../lib/nickname";
 import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
+import { HandShareButton } from "./HandShareButton";
+import type { HandShareData } from "../app/handShareCard";
 
 const RATING_LABEL: Record<string, string> = {
   boa: "Boa",
@@ -67,6 +69,24 @@ export function TournamentSummary({
   const stageInfo = summary.circuitStage ? circuitStage(summary.circuitStage) : undefined;
   const anatomy: AnatomyResult = anatomyFromDecisions(summary.decisions ?? []);
   const a = (n: number) => `${n}%`;
+
+  // Dados para o Hand Share Card do resultado do torneio.
+  const totalRated = summary.ratings.boa + summary.ratings.ok + summary.ratings.imprecisa + summary.ratings.ruim;
+  const correctPct = totalRated > 0 ? Math.round(((summary.ratings.boa + summary.ratings.ok) / totalRated) * 100) : 0;
+  const modeLabel = summary.mode === "circuito" ? "Circuito" : "Treino Livre";
+  const stageLabel = summary.circuitStage ? `E${summary.circuitStage}` : "";
+  const shareData: HandShareData = {
+    heroCards: [],
+    board: [],
+    heroAction: champ ? "CAMPEÃO" : `🏆 ${summary.finishPlace}º LUGAR`,
+    coachAction: "PARABÉNS",
+    rating: "boa",
+    coachTip: `${summary.handsPlayed} mãos · ${correctPct}% decisões corretas · VPIP ${summary.vpip}% · PFR ${summary.pfr}%`,
+    street: "Resultado",
+    tournamentInfo: `${modeLabel} ${stageLabel} · Buy-in $${summary.buyIn} · ${num(summary.entrants)} inscritos`,
+    tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`, 
+    context: summary.inMoney ? `Prêmio: $${Math.round(summary.cash)}` : "Fora do dinheiro",
+  };
 
   // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
   // Sem filtro (null), mostra as "mãos para rever" (imprecisa + ruim).
@@ -260,7 +280,16 @@ export function TournamentSummary({
           </div>
         )}
 
-        <button className="btn primary" onClick={onClose}>
+        {/* Compartilhar resultado do torneio */}
+        <div style={{ marginTop: 14, textAlign: "center" }}>
+          <HandShareButton
+            data={shareData}
+            label="📤 Compartilhar resultado"
+            className="btn primary"
+          />
+        </div>
+
+        <button className="btn primary" onClick={onClose} style={{ marginTop: 10 }}>
           Fechar e configurar novo torneio
         </button>
       </div>
