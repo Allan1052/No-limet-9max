@@ -73,13 +73,7 @@ function drawCardOnCanvas(
   ctx.font = `${h * 0.42}px Georgia, serif`;
   ctx.fillText(suit, x + w / 2, y + h * 0.68);
 
-  // Rank pequeno embaixo (rotacionado 180°)
-  ctx.save();
-  ctx.translate(x + w / 2, y + h);
-  ctx.rotate(Math.PI);
-  ctx.font = `bold ${h * 0.18}px Georgia, serif`;
-  ctx.fillText(rank, 0, -h * 0.08);
-  ctx.restore();
+  // Rank pequeno embaixo (sem rotação — mais limpo no card)
 }
 
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
@@ -283,46 +277,49 @@ export async function drawHandShareCard(data: HandShareData): Promise<Blob | nul
   ctx.textBaseline = "middle";
   ctx.fillText(badgeText, S / 2, coachY);
 
-  // ── TIP DO COACH ──
+    // ── TIP DO COACH ──
   const tipY = coachY + 55;
-
   // Fundo escurecido para o tip
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  roundRect(ctx, 80, tipY - 35, S - 160, 100, 12);
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  roundRect(ctx, 70, tipY - 30, S - 140, 130, 12);
   ctx.fill();
-
   ctx.fillStyle = COLOR_CREAM;
-  ctx.font = "italic 30px Georgia, serif";
+  ctx.font = "italic 24px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-
-  // Quebra o tip em 2 linhas se necessário
-  const maxTipWidth = S - 200;
+  // Quebra o tip em até 3 linhas se necessário
+  const maxTipWidth = S - 220;
   const tipWords = data.coachTip.split(" ");
-  let line1 = "";
-  let line2 = "";
+  const tipLines: string[] = [];
+  let currentLine = "";
   for (const word of tipWords) {
-    const testWidth = ctx.measureText(line1 + (line1 ? " " : "") + word).width;
-    if (testWidth <= maxTipWidth && !line2) {
-      line1 += (line1 ? " " : "") + word;
+    const testWidth = ctx.measureText(currentLine + (currentLine ? " " : "") + word).width;
+    if (testWidth <= maxTipWidth) {
+      currentLine += (currentLine ? " " : "") + word;
     } else {
-      line2 += (line2 ? " " : "") + word;
+      if (currentLine) tipLines.push(currentLine);
+      currentLine = word;
     }
   }
-
-  if (line2) {
-    ctx.fillText(`"${line1}"`, S / 2, tipY - 5);
-    ctx.fillText(`"${line2}"`, S / 2, tipY + 35);
-  } else {
-    ctx.fillText(`"${data.coachTip}"`, S / 2, tipY + 15);
+  if (currentLine) tipLines.push(currentLine);
+  // Limitar a 3 linhas
+  const maxLines = 3;
+  const displayLines = tipLines.length > maxLines
+    ? [...tipLines.slice(0, maxLines - 1), tipLines.slice(maxLines - 1).join(" ") + "…"]
+    : tipLines;
+  const lineHeight = 30;
+  const startTipY = tipY + 10;
+  for (let i = 0; i < displayLines.length; i++) {
+    ctx.fillText(`"${displayLines[i]}"`, S / 2, startTipY + i * lineHeight);
   }
 
   // ── RODAPÉ ──
+  const footerY = tipY + 130 + 30;
   ctx.fillStyle = COLOR_GOLD;
-  ctx.font = "600 24px Georgia, serif";
+  ctx.font = "600 22px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, S - 75);
+  ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
 }

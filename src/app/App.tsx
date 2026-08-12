@@ -62,6 +62,7 @@ export function App() {
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
   const [splashComplete, setSplashComplete] = useState(false);
+  const [guidedDone, setGuidedDone] = useState<boolean>(() => hasSeenGuidedHand());
   const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
     return localStorage.getItem("omaha_dev_unlock") === "true";
@@ -362,9 +363,10 @@ export function App() {
         <Onboarding onClose={() => setOnboarded(true)} />
       ) : null}
       {/* Mão guiada: primeira vez que o usuário entra no jogo (após onboarding) */}
-      {onboarded && !hasSeenGuidedHand() ? (
+      {onboarded && !guidedDone ? (
         <GuidedHand onDone={() => {
           markGuidedHandDone();
+          setGuidedDone(true);
         }} />
       ) : null}
 
