@@ -21,6 +21,7 @@ import { omahaPreflopDecision } from "./omahaPreflop";
 import { rfiRange, RFI_BASE_PERCENT } from "./charts/rfi";
 import { stackDepthAdjust } from "./stackDepth";
 import { icmTightenFactor, type IcmSpot } from "./icm";
+import { facingAllinDecision } from "./facingAllin";
 import {
   comboToHandType,
   isSuited,
@@ -67,6 +68,18 @@ export interface PreflopContext {
    * 4-bet / pagar / foldar.
    */
   threeBet?: boolean;
+
+  // ---- PILAR 1: dados da mesa para decidir all-in por EQUITY REAL + side pot ----
+  /** Pote que o herói pode REALMENTE ganhar (soma, por oponente, de min(aposta,
+   *  meu total) — já com side pot), em bb. Quando presente, o call de all-in é
+   *  decidido por equity vs range em vez do heurístico. */
+  contestablePotBB?: number;
+  /** Fichas (bb) que o herói paga para chamar o all-in. */
+  callAmountBB?: number;
+  /** Nº de oponentes que vão ao showdown (têm que ser TODOS batidos). */
+  numContesting?: number;
+  /** RNG (semeado por mão) para o Monte Carlo da equity — estável no coach. */
+  rng?: () => number;
 }
 
 export interface PreflopFreq {
@@ -147,6 +160,39 @@ const WAR_PREMIUM_CALL = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
 /** Um all-in DEPOIS de guerra de re-raises (5-bet+)? Aí a decisão é binária. */
 function isReRaiseWar(betLevelFaced?: number): boolean {
   return (betLevelFaced ?? 0) >= 4;
+}
+
+/**
+ * PILAR 1 — decide o call de all-in por EQUITY REAL vs range + side pot, quando
+ * os dados da mesa (pote disputável, valor do call, nº de oponentes) estão
+ * presentes no contexto. Devolve `null` para o chamador cair no heurístico
+ * (usado por testes/chamadas que não passam esses dados).
+ */
+function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision | null {
+  if (
+    ctx.contestablePotBB === undefined ||
+    ctx.callAmountBB === undefined ||
+    ctx.numContesting === undefined
+  ) {
+    return null;
+  }
+  const d = facingAllinDecision({
+    hero: ctx.hand,
+    betLevelFaced: ctx.betLevelFaced ?? 1,
+    numContesting: ctx.numContesting,
+    contestablePotBB: ctx.contestablePotBB,
+    callBB: ctx.callAmountBB,
+    effectiveBB: ctx.effectiveBB,
+    icmSpot: ctx.icmSpot,
+    rng: ctx.rng,
+    iterations: 2500,
+  });
+  return {
+    action: d.action,
+    sizeBB: d.action === "call" ? ctx.effectiveBB : 0,
+    reason: `${handType}: ${d.reason}`,
+    handType,
+  };
 }
 
 
@@ -395,6 +441,9 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
     const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
     if (callIsAllIn) {
+      // PILAR 1: com os dados da mesa, decide por EQUITY REAL vs range + side pot.
+      const eq = equityAllinCall(ctx, handType);
+      if (eq) return eq;
       if (isReRaiseWar(ctx.betLevelFaced)) {
         // Guerra de re-raises: decisão BINÁRIA — só o topo premium paga.
         if (WAR_PREMIUM_CALL.has(handType)) {
@@ -709,6 +758,8 @@ function vsThreeBetDecision(ctx: PreflopContext, handType: string, sd: any, icmF
   // nunca 4-bet. Vale em qualquer profundidade — não só no push/fold.
   const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
   if (callIsAllIn) {
+    const eq = equityAllinCall(ctx, handType);
+    if (eq) return eq;
     if (isReRaiseWar(ctx.betLevelFaced)) {
       // Guerra de re-raises: decisão BINÁRIA — só o topo premium paga.
       if (WAR_PREMIUM_CALL.has(handType)) {

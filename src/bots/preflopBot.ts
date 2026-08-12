@@ -16,6 +16,7 @@ import { seatPositions } from "./seatPosition";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { legalActions } from "../game/betting";
 import { totalPot } from "../game/engine";
+import { seededRng } from "../engine/cards";
 import type { Action } from "../game/engine";
 import type { IcmSpot } from "../ranges/icm";
 import type { TableState } from "../game/state";
@@ -91,6 +92,24 @@ export function preflopContextFor(
   // 4-bet), 3 = 4-bet (spot de 5-bet)... Com 2+, é re-agressão → range apertado.
   const betLevelFaced = t.preflopRaises;
 
+  // ---- PILAR 1: dados para decidir all-in por EQUITY REAL + side pot ----
+  const bb = t.bigBlind || 1;
+  const toCall = Math.max(0, t.currentBet - p.committed);
+  const callAmt = Math.min(toCall, p.stack); // fichas que o herói paga
+  const heroTotal = p.totalCommitted + callAmt; // total do herói se pagar
+  // Pote disputável (side pot): cada oponente contribui só até o total do herói;
+  // o excedente vira pote lateral que o herói não pode ganhar. Fichas mortas de
+  // quem foldou também entram (capadas). Nº de oponentes = quem vai ao showdown.
+  let contestable = 0;
+  let numContesting = 0;
+  for (const o of t.players) {
+    if (o.seat === seat) continue;
+    contestable += Math.min(o.totalCommitted, heroTotal);
+    if (o.status === "active" || o.status === "allin") numContesting++;
+  }
+  // Semente estável por spot: o coach não "pisca" entre renders; bots variam por mão.
+  const seed = (((p.holeCards[0] ?? 0) + 1) * 2654435761 + ((p.holeCards[1] ?? 0) + 1) * 40503 + Math.round(t.currentBet) * 2246822519) >>> 0;
+
   return {
     heroPosition,
     hand: p.holeCards,
@@ -102,6 +121,11 @@ export function preflopContextFor(
     allInsAhead,
     betLevelFaced,
     threeBet: betLevelFaced >= 2, // re-raise (open+3bet já ocorreram) → lógica de 4-bet
+
+    contestablePotBB: contestable / bb,
+    callAmountBB: callAmt / bb,
+    numContesting,
+    rng: seededRng(seed),
 
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
     variant: t.variant ?? "holdem",

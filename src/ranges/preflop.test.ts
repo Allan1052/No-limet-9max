@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cardsFromString } from "../engine/cards";
+import { cardsFromString, seededRng } from "../engine/cards";
 import { preflopDecision, nBetLabel } from "./preflop";
 import { profileById, BASELINE_PROFILE } from "../bots/profiles";
 
@@ -265,5 +265,30 @@ describe("pré-flop — guerra de re-raises (5-bet+ all-in) só o topo premium p
   });
   it("shove SIMPLES (bet level 1) NÃO é afetado — 99 ainda paga um shove curto", () => {
     expect(decide("9d9h", "BB", { effectiveBB: 12, raiserPosition: "BTN", openSizeBB: 12, betLevelFaced: 1 }).action).toBe("call");
+  });
+});
+
+// PILAR 1 (ligado) — quando os dados da mesa chegam (pote disputável, call, nº de
+// oponentes), o all-in é decidido por EQUITY REAL vs range + side pot, e a razão
+// traz a CONTA. É o que alimenta o card técnico.
+describe("pré-flop — all-in por equity real (Pilar 1 ligado)", () => {
+  const war = {
+    effectiveBB: 30, raiserPosition: "UTG1" as const, openSizeBB: 30, betLevelFaced: 5,
+    numContesting: 3, contestablePotBB: 91.5, callAmountBB: 30.5,
+  };
+  it("99 no spot do print: FOLD por equity (16% < 25% com side pot)", () => {
+    const d = decide("9d9h", "CO", { ...war, rng: seededRng(7) });
+    expect(d.action).toBe("fold");
+    expect(d.reason).toMatch(/equity \d+% . preço \d+%/); // a conta aparece
+  });
+  it("AA no mesmo spot: CALL (equity domina o preço)", () => {
+    expect(decide("AsAc", "CO", { ...war, rng: seededRng(7) }).action).toBe("call");
+  });
+  it("AK paga um shove curto simples via equity (63% > 44%)", () => {
+    const d = decide("AsKd", "BB", {
+      effectiveBB: 12, raiserPosition: "BTN", openSizeBB: 12, betLevelFaced: 1,
+      numContesting: 1, contestablePotBB: 15, callAmountBB: 12, rng: seededRng(7),
+    });
+    expect(d.action).toBe("call");
   });
 });
