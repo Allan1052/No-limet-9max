@@ -1,3 +1,0 @@
-Card 5 ainda com logo duplicada. A imagem original da IA tem 4 logos CF empilhadas no topo, ocupando mais de 300px. O overlay de 120px + logo_space de 170px = 290px, mas as logos vão até ~400px.
-
-Solução: para o card 5, cortar 350px do topo da imagem ORIGINAL (antes do resize), depois redimensionar. Isso remove completamente a região com as logos da IA.

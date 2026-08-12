@@ -1,5 +1,0 @@
-As imagens RAW da IA para cards 5 e 6 foram sobrescritas pelo script de processamento. O card 4 RAW ainda existe (1632x2176).
-
-Para o card 5, o problema é que a imagem gerada pela IA tem 4 logos CF empilhadas no topo. Preciso regenerar a imagem sem a logo embutida.
-
-Solução: gerar uma nova imagem para o card 5 com o prompt ajustado para não incluir a logo CF. E usar a imagem RAW do card 4 como referência.

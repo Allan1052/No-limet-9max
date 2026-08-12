@@ -1,7 +1,0 @@
-Problemas a corrigir no card:
-1. O botão CTA "Começar a jogar" está sem texto - o texto não está sendo desenhado (anchor "mm" pode estar cortando)
-2. A parte inferior tem muito espaço vazio
-3. Os textos dos passos estão sobrepondo os círculos numerados - need to adjust vertical positioning
-4. O subtítulo e o passo 1 estão muito próximos
-5. Precisa redistribuir melhor o espaço vertical
-6. Os passos não mostram os números 1-4 claramente

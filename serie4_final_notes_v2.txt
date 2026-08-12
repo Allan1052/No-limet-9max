@@ -1,3 +1,0 @@
-Card 4 corrigido: logo duplicada removida com sucesso. A imagem agora está limpa no topo, com apenas a logo CF original no card montado. Ficou perfeito.
-
-Verificando cards 5 e 6 e a capa.

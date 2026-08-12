@@ -1,2 +1,0 @@
-Card 4 (torneio) com script limpo: ficou perfeito. Logo CF única no topo, imagem limpa com overlay escuro cobrindo a logo da IA, fade no topo e fundo, frase e CTA corretos, rodapé "AQUI É POSSÍVEL". Sem logo duplicada.
-Verificar cards 5 e 6.

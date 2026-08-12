@@ -1,6 +1,0 @@
-Problemas:
-1. Logo com artefatos dourados no fundo (glow point-by-point está pixelado)
-2. Muito espaço vazio embaixo - precisa centralizar melhor o conteúdo
-3. O glow do topo ficou estranho com o point-by-point
-4. Preciso usar abordagem mais limpa: sem glow pixelado, melhor distribuição vertical
-5. O card precisa parecer mais premium e limpo

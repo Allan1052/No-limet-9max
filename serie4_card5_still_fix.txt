@@ -1,5 +1,0 @@
-Card 5 ainda tem logo duplicada — a logo da IA está mais abaixo na imagem (não no topo). Preciso cortar mais, talvez 20% do topo. Mas isso pode cortar parte importante da imagem do homem no ônibus.
-
-Alternativa: aumentar o logo_space para cobrir a logo da IA com o logo do card.
-
-Melhor solução: usar draw_logo com fundo escuro que cubra a logo da IA.

@@ -1,1 +1,0 @@
-Logo Call ou Fold: dourada em fundo verde escuro/preto. Monograma "CF" à esquerda com barra vertical separando. Texto "Call ou Fold" com "ou" em itálico. Subtítulo "AQUI É POSSÍVEL" em letras espaçadas abaixo. Estilo elegante, sofisticado, cores dourada e verde escuro.

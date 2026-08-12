@@ -1,7 +1,0 @@
-Novas imagens RAW geradas com sucesso:
-
-Card 5 (patrocínio) - raw-card5-patrocinio.png: Homem de capuz no ônibus à noite, segurando celular mostrando um jogador profissional, crachá de trabalho no pescoço, chuva na janela, reflexo da cidade. SEM logo embutida. Perfeita.
-
-Card 6 (degrau) - raw-card6-degrau.png: Homem de costas subindo escadas douradas com símbolo de espadas no topo, crachá de trabalho, celular na mão com poker. Escadas iluminadas em dourado. SEM logo embutida. Perfeita.
-
-Ambas 1632x2176, consistentes com o card 4 RAW. Agora atualizar o script para usar as novas imagens.

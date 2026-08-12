@@ -1,3 +1,0 @@
-Card 5 com crop 45%: a logo duplicada foi removida, mas o texto aparece DUPLICADO. O problema é que o text_area_y é calculado como logo_space + art.height - 55, e após o crop a art.height ficou muito menor, fazendo o texto aparecer duas vezes (uma no final da imagem, outra na área de texto normal).
-
-Preciso verificar o cálculo do text_area_y e garantir que ele fique na posição correta após o crop.

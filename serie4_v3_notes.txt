@@ -1,2 +1,0 @@
-Card 4 (torneio) corrigido: fade no topo funciona perfeitamente, logo CF única no topo, imagem limpa, frase e CTA corretos. Sem logo duplicada.
-Agora verificar cards 5, 6 e capa.
