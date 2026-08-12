@@ -125,6 +125,7 @@ export function preflopContextFor(
     contestablePotBB: contestable / bb,
     callAmountBB: callAmt / bb,
     numContesting,
+    potBB: totalPot(t) / bb, // pote cheio (p/ o preço do flat numa re-agressão não-all-in)
     rng: seededRng(seed),
 
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),

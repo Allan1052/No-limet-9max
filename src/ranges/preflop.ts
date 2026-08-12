@@ -22,6 +22,7 @@ import { rfiRange, RFI_BASE_PERCENT } from "./charts/rfi";
 import { stackDepthAdjust } from "./stackDepth";
 import { icmTightenFactor, type IcmSpot } from "./icm";
 import { facingAllinDecision } from "./facingAllin";
+import { vsReraiseDecision } from "./vsReraise";
 import {
   comboToHandType,
   isSuited,
@@ -78,6 +79,9 @@ export interface PreflopContext {
   callAmountBB?: number;
   /** Nº de oponentes que vão ao showdown (têm que ser TODOS batidos). */
   numContesting?: number;
+  /** Pote total (bb) no meio ANTES do herói agir — para o preço do flat (call)
+   *  numa re-agressão que NÃO é all-in (spot de 4-bet/5-bet fundo). */
+  potBB?: number;
   /** RNG (semeado por mão) para o Monte Carlo da equity — estável no coach. */
   rng?: () => number;
 }
@@ -686,6 +690,68 @@ const VS3BET_VALUE = new Set(["AA", "KK", "QQ", "AKs", "AKo"]); // 4-bet sempre
 const VS3BET_BLUFF = new Set(["A5s", "A4s"]); // bloqueadores de ás — 4-bet de blefe fino
 const VS3BET_IP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs", "ATs"]); // flat só EM POSIÇÃO
 
+/**
+ * PILAR 1 (parte 2) — decide a re-agressão NÃO all-in (4-bet/5-bet) por EQUITY
+ * REAL quando há dados de mesa (pote e valor do call). Só atua com stack FUNDO;
+ * o curto cai no jam/fold heurístico (e o all-in de verdade vai pro motor de
+ * equity de all-in). Devolve `null` para o chamador usar o heurístico — mantém
+ * testes e chamadas sem dados de mesa funcionando igual.
+ */
+function equityReraise(
+  ctx: PreflopContext,
+  handType: string,
+  opts: { short: boolean; inPos: boolean; openSize: number; fourBetSize: number; icmFactor: number },
+): PreflopDecision | null {
+  if (opts.short) return null;
+  if (ctx.potBB === undefined || ctx.callAmountBB === undefined) return null;
+
+  const d = vsReraiseDecision({
+    hero: ctx.hand,
+    betLevelFaced: ctx.betLevelFaced ?? 2,
+    inPosition: opts.inPos,
+    potBB: ctx.potBB,
+    callBB: ctx.callAmountBB,
+    icmSpot: ctx.icmSpot,
+    rng: ctx.rng,
+    iterations: 2500,
+  });
+
+  if (d.action === "reraise") {
+    return { action: "3bet", sizeBB: opts.fourBetSize, reason: `${handType}: ${d.reason}`, handType };
+  }
+  if (d.action === "call") {
+    return { action: "call", sizeBB: opts.openSize, reason: `${handType}: ${d.reason}`, handType };
+  }
+
+  // Fold pela conta — mas o blefe de bloqueador (A5s/A4s) é uma jogada MISTA
+  // decidida aqui por cima, mantendo o comportamento atual (nunca 100%).
+  if (VS3BET_BLUFF.has(handType)) {
+    const bf = blockerBluffFreq(ctx.profile, opts.icmFactor, 0.32);
+    const mix: PreflopFreq[] = [
+      { action: "3bet", freq: bf },
+      { action: "fold", freq: 1 - bf },
+    ];
+    if (fireBluff(ctx, bf)) {
+      return {
+        action: "3bet",
+        sizeBB: opts.fourBetSize,
+        reason: `${handType}: 4-bet de blefe (bloqueador de ás) — jogada mista (~${Math.round(bf * 100)}%). Pela conta, ${d.reason}`,
+        handType,
+        mix,
+      };
+    }
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `${handType}: blefe fino — na maioria FOLDA (4-bet só ~${Math.round(bf * 100)}%). ${d.reason}`,
+      handType,
+      mix,
+    };
+  }
+
+  return { action: "fold", sizeBB: 0, reason: `${handType}: ${d.reason}`, handType };
+}
+
 /** Decisão Hold'em quando o herói abriu e levou 3-bet: 4-bet / pagar (IP) / foldar. */
 function holdemVsThreeBet(
   ctx: PreflopContext,
@@ -698,6 +764,10 @@ function holdemVsThreeBet(
   const inPos = ctx.raiserPosition ? heroIpVsThreeBettor(ctx.heroPosition, ctx.raiserPosition) : false;
   const openSize = ctx.openSizeBB ?? 7;
   const fourBetSize = Math.min(eff, openSize * 2.2);
+
+  // PILAR 1 (parte 2): stack fundo + dados de mesa → decide por EQUITY REAL.
+  const eq = equityReraise(ctx, handType, { short, inPos, openSize, fourBetSize, icmFactor });
+  if (eq) return eq;
 
   // Valor: 4-bet sempre (all-in se stack curto). Nunca folda.
   if (VS3BET_VALUE.has(handType)) {
