@@ -10,6 +10,10 @@ import { TournamentSetup } from "../ui/Tournament";
 import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
+import { AchievementsPanel } from "../ui/AchievementsPanel";
+import { HandHistoryPanel } from "../ui/HandHistoryPanel";
+import { AchievementToastPopup } from "../ui/AchievementToast";
+import { isXpUnlocked } from "./achievements";
 
 // Get the base URL from the manifest or default to '/'
 function getBasePath(): string {
@@ -91,6 +95,8 @@ export function App() {
     dismissHeadsUp,
     champion,
     dismissChampion,
+    xpToasts,
+    dismissXpToasts,
   } = useGame(userSubscriptionLevel, { variant: gameVariant });
   // Esconde a landing page overlay quando o app está pronto
   useEffect(() => {
@@ -108,6 +114,9 @@ export function App() {
   const [replayOpen, setReplayOpen] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
   const t = controller.table;
@@ -283,6 +292,14 @@ export function App() {
               <button className="btn" onClick={() => setProgressOpen(true)}>
                 📊 {tr("btn.progress")}
               </button>
+              {isXpUnlocked() ? (
+                <button className="btn" onClick={() => setAchievementsOpen(true)}>
+                  🏆 Conquistas
+                </button>
+              ) : null}
+              <button className="btn" onClick={() => setHistoryOpen(true)}>
+                📋 Histórico
+              </button>
               <button
                 className="btn"
                 disabled={controller.handLog.length === 0}
@@ -313,6 +330,25 @@ export function App() {
           hand={controller.lastHand}
           feedback={controller.feedback}
           onClose={() => setReplayOpen(false)}
+        />
+      ) : null}
+
+      {historyReplayIdx !== null && controller.handLog[historyReplayIdx] ? (
+        <Replayer
+          hand={controller.handLog[historyReplayIdx]}
+          feedback={controller.handLog[historyReplayIdx].handFeedback ?? []}
+          onClose={() => setHistoryReplayIdx(null)}
+        />
+      ) : null}
+
+      {historyOpen ? (
+        <HandHistoryPanel
+          hands={controller.handLog}
+          onClose={() => setHistoryOpen(false)}
+          onSelectHand={(idx) => {
+            setHistoryOpen(false);
+            setHistoryReplayIdx(idx);
+          }}
         />
       ) : null}
 
@@ -385,6 +421,14 @@ export function App() {
       ) : null}
 
       <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
+
+      {isXpUnlocked() ? (
+        <AchievementToastPopup toasts={xpToasts} onDismiss={dismissXpToasts} />
+      ) : null}
+
+      {achievementsOpen ? (
+        <AchievementsPanel onClose={() => setAchievementsOpen(false)} />
+      ) : null}
 
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
 

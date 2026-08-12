@@ -9,6 +9,7 @@
 
 import type { Card } from "../engine/cards";
 import type { HandResult } from "../game/state";
+import type { FeedbackItem } from "../feedback/analyzer";
 
 export interface ReplayAdvice {
   action: string;
@@ -47,4 +48,6 @@ export interface HandHistory {
   /** Stack (em fichas) de cada assento no INÍCIO da mão — para o range por profundidade. */
   startingStacks?: Record<number, number>;
   result?: HandResult;
+  /** FeedbackItems gerados durante esta mão (para filtros de histórico). */
+  handFeedback?: FeedbackItem[];
 }
