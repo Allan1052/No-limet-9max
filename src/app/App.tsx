@@ -11,6 +11,7 @@ import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "../ui/AchievementsPanel";
+import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
 
@@ -114,6 +115,8 @@ export function App() {
   const [tipsOpen, setTipsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
   const t = controller.table;
@@ -294,6 +297,9 @@ export function App() {
                   🏆 Conquistas
                 </button>
               ) : null}
+              <button className="btn" onClick={() => setHistoryOpen(true)}>
+                📋 Histórico
+              </button>
               <button
                 className="btn"
                 disabled={controller.handLog.length === 0}
@@ -324,6 +330,25 @@ export function App() {
           hand={controller.lastHand}
           feedback={controller.feedback}
           onClose={() => setReplayOpen(false)}
+        />
+      ) : null}
+
+      {historyReplayIdx !== null && controller.handLog[historyReplayIdx] ? (
+        <Replayer
+          hand={controller.handLog[historyReplayIdx]}
+          feedback={controller.handLog[historyReplayIdx].handFeedback ?? []}
+          onClose={() => setHistoryReplayIdx(null)}
+        />
+      ) : null}
+
+      {historyOpen ? (
+        <HandHistoryPanel
+          hands={controller.handLog}
+          onClose={() => setHistoryOpen(false)}
+          onSelectHand={(idx) => {
+            setHistoryOpen(false);
+            setHistoryReplayIdx(idx);
+          }}
         />
       ) : null}
 

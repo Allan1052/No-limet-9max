@@ -1106,6 +1106,7 @@ export class GameController {
       bigBlind: this.table.bigBlind,
       startingStacks: { ...this.handStartStacks },
       result: this.table.result,
+      handFeedback: this.feedback.slice(),
     };
     // Guarda no log da sessão (limita para não crescer sem fim).
     this.handLog.push(this.lastHand);
