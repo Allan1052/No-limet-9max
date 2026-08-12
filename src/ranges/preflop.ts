@@ -370,9 +370,8 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // em QUALQUER profundidade, não só no push/fold: era o bug de o bot "não
     // enxergar o all-in" com 30-40bb e tratar o shove como uma abertura normal
     // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
-    const ultraShort = ctx.effectiveBB <= 5;
     const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
-    if ((sd.pushFold || ultraShort) && callIsAllIn) {
+    if (callIsAllIn) {
       const depthWidth = Math.max(0.20, Math.min(0.6, 0.62 - ctx.effectiveBB * 0.028));
       const profAdj = 0.7 + 0.3 * ctx.profile.defendFactor;
       const rawWidth = Math.min(0.9, depthWidth * profAdj * icmFactor);
