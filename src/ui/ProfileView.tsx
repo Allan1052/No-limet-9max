@@ -20,6 +20,7 @@ export function ProfileView({
   omahaUnlocked,
   setOmahaUnlocked,
   onOpenProgress,
+  onOpenAchievements,
   buildLabel,
   onCheckUpdate,
 }: {
@@ -28,6 +29,7 @@ export function ProfileView({
   omahaUnlocked: boolean;
   setOmahaUnlocked: (v: boolean) => void;
   onOpenProgress: () => void;
+  onOpenAchievements: () => void;
   buildLabel: string;
   onCheckUpdate: () => void;
 }) {
@@ -93,6 +95,11 @@ export function ProfileView({
         {/* Evolução */}
         <button className="btn profile-evolution" onClick={onOpenProgress}>
           📊 {t("profile.evolution")}
+        </button>
+
+        {/* Conquistas — visível para todos (XP destravado globalmente) */}
+        <button className="btn profile-evolution" onClick={onOpenAchievements}>
+          🏆 Conquistas
         </button>
 
         {/* Ajustes */}

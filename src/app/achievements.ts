@@ -7,13 +7,9 @@
 // ---------------------------------------------------------------------------
 import type { Rating } from "../feedback/analyzer";
 
-// ── Dev-unlock ──
+// ── Acesso global (antes era dev-unlock xp_dev_unlock, agora aberto pra todos) ──
 export function isXpUnlocked(): boolean {
-  try {
-    return localStorage.getItem("xp_dev_unlock") === "true";
-  } catch {
-    return false;
-  }
+  return true;
 }
 
 // ── Tipos ──

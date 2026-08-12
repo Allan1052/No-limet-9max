@@ -239,6 +239,7 @@ export function App() {
           omahaUnlocked={omahaUnlocked}
           setOmahaUnlocked={setOmahaUnlocked}
           onOpenProgress={() => setProgressOpen(true)}
+          onOpenAchievements={() => setAchievementsOpen(true)}
           buildLabel={formatBuild(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}
         />
