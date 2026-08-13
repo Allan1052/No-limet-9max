@@ -23,6 +23,7 @@ import { CircuitPicker } from "./CircuitPicker";
 import { NicknamePrompt } from "./NicknamePrompt";
 import { getNickname, restoreNickname } from "../lib/nickname";
 import { computePoyPoints } from "../tournament/poyPoints";
+import { isBuyInUnlocked, unlockRequirement, loadEliteWins } from "../tournament/eliteUnlock";
 
 export type PlayMode = "livre" | "circuito";
 
@@ -64,6 +65,17 @@ export function TournamentSetup({
   );
   const [nickname, setNickname] = useState<string | null>(() => getNickname());
   const [askNickname, setAskNickname] = useState(false);
+  // Desbloqueios de elite ($1.000 / $10.300). Recarrega a cada montagem da tela.
+  const eliteWins = loadEliteWins();
+  const unlocked = (v: number) => isBuyInUnlocked(v, eliteWins);
+  /** Seleciona um buy-in; se estiver travado, mostra o requisito. */
+  const pickBuyIn = (v: number) => {
+    if (!unlocked(v)) {
+      alert(`🔒 Torneio de elite bloqueado.\n\n${unlockRequirement(v)}.`);
+      return;
+    }
+    setBuyIn(v);
+  };
   /** Etapa escolhida no circuito, guardada enquanto o apelido é definido. */
   const [pendingStage, setPendingStage] = useState<{ index: number; entrants: number } | null>(null);
 
@@ -82,6 +94,10 @@ export function TournamentSetup({
 
   /** Inicia uma etapa do circuito: sempre do início, inscritos fixos. */
   function startCircuitStage(stageIndex: number, stageEntrants: number) {
+    if (!unlocked(buyIn)) {
+      alert(`🔒 Torneio de elite bloqueado.\n\n${unlockRequirement(buyIn)}.`);
+      return;
+    }
     onStart({
       buyIn,
       entrants: stageEntrants,
@@ -172,15 +188,21 @@ export function TournamentSetup({
           <div className="t-field circuit-buyin panel">
             <label>Faixa de buy-in</label>
             <div className="t-btns">
-              {BUY_INS.map((b) => (
-                <button
-                  key={b.value}
-                  className={`tab ${buyIn === b.value ? "active" : ""}`}
-                  onClick={() => setBuyIn(b.value)}
-                >
-                  {b.label}
-                </button>
-              ))}
+              {BUY_INS.map((b) => {
+                const locked = !unlocked(b.value);
+                return (
+                  <button
+                    key={b.value}
+                    className={`tab ${buyIn === b.value ? "active" : ""}`}
+                    onClick={() => pickBuyIn(b.value)}
+                    title={locked ? unlockRequirement(b.value) ?? "" : ""}
+                    style={locked ? { opacity: 0.55 } : undefined}
+                  >
+                    {b.label}
+                    {locked ? " 🔒" : ""}
+                  </button>
+                );
+              })}
             </div>
             <span className="t-suffix">
               Cada faixa tem o próprio circuito e o próprio ranking.
@@ -283,16 +305,21 @@ export function TournamentSetup({
         <div className="t-field">
           <label>Buy-in</label>
           <div className="t-btns">
-            {BUY_INS.map((b) => (
-              <button
-                key={b.value}
-                className={`tab ${buyIn === b.value ? "active" : ""}`}
-                onClick={() => setBuyIn(b.value)}
-              >
-                {b.label}
-                {savedBuyIns.has(b.value) ? " 💾" : ""}
-              </button>
-            ))}
+            {BUY_INS.map((b) => {
+              const locked = !unlocked(b.value);
+              return (
+                <button
+                  key={b.value}
+                  className={`tab ${buyIn === b.value ? "active" : ""}`}
+                  onClick={() => pickBuyIn(b.value)}
+                  title={locked ? unlockRequirement(b.value) ?? "" : ""}
+                  style={locked ? { opacity: 0.55 } : undefined}
+                >
+                  {b.label}
+                  {locked ? " 🔒" : savedBuyIns.has(b.value) ? " 💾" : ""}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -347,7 +374,11 @@ export function TournamentSetup({
         <button
           className="btn primary"
           style={{ marginTop: 10 }}
-          onClick={() =>
+          onClick={() => {
+            if (!unlocked(buyIn)) {
+              alert(`🔒 Torneio de elite bloqueado.\n\n${unlockRequirement(buyIn)}.`);
+              return;
+            }
             onStart({
               buyIn,
               entrants: Math.max(2, entrants),
@@ -355,8 +386,8 @@ export function TournamentSetup({
               handsPerLevel: SPEED_HANDS[speed],
               variant: gameType === "plo" ? "omaha" : "holdem",
               mode: "livre",
-            })
-          }
+            });
+          }}
         >
           Iniciar torneio
         </button>

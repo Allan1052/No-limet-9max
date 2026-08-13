@@ -57,4 +57,16 @@ describe("composição do campo por buy-in", () => {
     };
     expect(countReg(109)).toBeGreaterThan(countReg(5) + 1.5);
   });
+
+  it("ELITE ($10.300): campo é quase só tubarão — o peixe some", () => {
+    const high = fieldWeights(109);
+    const elite = fieldWeights(10300);
+    const fishHigh = FISH_ARR.reduce((s, a) => s + high[a], 0);
+    const fishElite = FISH_ARR.reduce((s, a) => s + elite[a], 0);
+    expect(fishElite).toBeLessThan(fishHigh * 0.25); // peixe cai muito na elite
+    // e os regs concentram o campo
+    expect(elite.tag).toBeGreaterThan(high.tag);
+  });
 });
+
+const FISH_ARR = ["recreativo", "station", "spewy"] as const;

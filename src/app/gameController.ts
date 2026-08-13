@@ -58,6 +58,7 @@ import {
   stageForField,
   type FieldStatus,
 } from "../tournament/field";
+import { recordTournamentWin } from "../tournament/eliteUnlock";
 
 export type UserSubscriptionLevel = 'free' | 'technical' | 'ultra';
 
@@ -569,6 +570,12 @@ export class GameController {
         this.tournamentFinishPlace = 1;
         this.tournamentResult = "campeao";
         this.tournamentOver = true;
+        // Desbloqueio de elite: vitória do início com 100+ libera o próximo rolê.
+        recordTournamentWin(
+          this.tournament.buyIn,
+          this.tournament.entrants,
+          this.tournament.initialStage ?? this.tournament.stage,
+        );
         this.onTournamentEnd?.({ result: "campeao", inMoney: true });
         this.onChampion?.({
           entrants: this.tournament.entrants,

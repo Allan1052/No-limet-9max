@@ -25,6 +25,9 @@ export const BUY_INS: BuyIn[] = [
   { label: "$22", value: 22 },
   { label: "$55", value: 55 },
   { label: "$109", value: 109 },
+  // Elite (desbloqueáveis) — o topo da escada. Ver tournament/eliteUnlock.ts.
+  { label: "$1.000", value: 1000 },
+  { label: "$10.300", value: 10300 },
 ];
 
 export interface BlindLevel {

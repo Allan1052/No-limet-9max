@@ -8,7 +8,7 @@
 // tem vários peixes), dando a cada assento um apelido distinto.
 // ---------------------------------------------------------------------------
 
-import { buyInToughness, type Archetype } from "./profiles";
+import { buyInToughness, fieldEliteness, type Archetype } from "./profiles";
 
 /** Apelidos por arquétipo (o 1º é o nome canônico do perfil). */
 const NAME_POOL: Record<Archetype, string[]> = {
@@ -44,6 +44,16 @@ export function fieldWeights(buyIn?: number): Record<Archetype, number> {
   for (const a of ARCHETYPES) {
     const [lo, hi] = MICRO_HIGH[a];
     out[a] = lo * (1 - t) + hi * t;
+  }
+  // ELITE ($1.000+): os peixes somem e os regulares dominam — "só a nata".
+  const e = fieldEliteness(buyIn);
+  if (e > 0) {
+    for (const a of ["recreativo", "station", "spewy"] as Archetype[]) {
+      out[a] *= (1 - e) * (1 - e); // peixe some rápido conforme sobe o rolê
+    }
+    for (const a of ["tag", "lag", "nit"] as Archetype[]) {
+      out[a] *= 1 + 0.8 * e; // regulares concentram o campo
+    }
   }
   return out;
 }

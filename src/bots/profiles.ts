@@ -200,6 +200,18 @@ export function buyInToughness(buyIn?: number): number {
 }
 
 /**
+ * "Eliteness" (0..1) ACIMA do $109 — mede o quanto o torneio é de alto rolê.
+ * 0 até $109, sobe até 1 no $10.300. Usada pra tirar os peixes do campo de
+ * elite ("só a nata") sem mexer na calibração do $5–$109.
+ */
+export function fieldEliteness(buyIn?: number): number {
+  if (!buyIn || buyIn <= 109) return 0;
+  const lo = Math.log10(109);
+  const hi = Math.log10(10300);
+  return Math.max(0, Math.min(1, (Math.log10(buyIn) - lo) / (hi - lo)));
+}
+
+/**
  * Ajusta um perfil conforme o buy-in: em stakes altas o campo vê MENOS flops
  * (quase ninguém limpa, menos flat) e ROUBA mais (mais 3-bet e agressão de
  * posição tardia). No micro nada muda — os bots ficam largos e passivos como
