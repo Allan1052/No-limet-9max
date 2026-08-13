@@ -77,7 +77,7 @@ export interface StageInfo {
 }
 
 export const STAGES: Record<Stage, StageInfo> = {
-  inicio: { id: "inicio", label: "Início", levelIndex: 0, avgBB: 100, spread: 0.18, icm: "none" },
+  inicio: { id: "inicio", label: "Início", levelIndex: 0, avgBB: 200, spread: 0, icm: "none" },
   meio: { id: "meio", label: "Meio", levelIndex: 2, avgBB: 45, spread: 0.3, icm: "none" },
   bolha: { id: "bolha", label: "Bolha", levelIndex: 4, avgBB: 22, spread: 0.5, icm: "bubble" },
   mesa_final: { id: "mesa_final", label: "Mesa final", levelIndex: 5, avgBB: 20, spread: 0.62, icm: "final" },

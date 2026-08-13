@@ -7,6 +7,7 @@ import {
   tablePayouts,
   unevenStacks,
   STAGES,
+  BLIND_LEVELS,
 } from "./structure";
 
 describe("premiação e escada de prêmios", () => {
@@ -91,5 +92,18 @@ describe("stacks desiguais", () => {
     const rng = seededRng(3);
     const stacks = unevenStacks(10000, 9, 0.6, rng, 2000);
     for (const s of stacks) expect(s).toBeGreaterThanOrEqual(1200); // piso ~12% da média
+  });
+});
+
+describe("início do torneio: todos começam IGUAIS com 10.000 fichas", () => {
+  it("spread 0 no Início → stacks idênticos", () => {
+    const rng = seededRng(11);
+    const level = BLIND_LEVELS[STAGES.inicio.levelIndex];
+    const avg = STAGES.inicio.avgBB * level.bb;
+    const stacks = unevenStacks(avg, 9, STAGES.inicio.spread, rng, level.bb * 3);
+    // Todos exatamente iguais.
+    expect(new Set(stacks).size).toBe(1);
+    // E o valor é 10.000 fichas (avgBB 200 × bb 50).
+    expect(stacks[0]).toBe(10000);
   });
 });
