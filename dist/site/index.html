@@ -522,11 +522,12 @@
     </div>
     <p class="tagline">Feito por um brasileiro. No ônibus. Entre turnos.</p>
     <span class="eyebrow">Poker pra quem joga por diversão</span>
+    <div class="new-features" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;"><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🎯 Drill Mode</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📊 Hand Lab Pós-Flop</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📤 Card Compartilhável</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🏆 XP + Conquistas</span></div>
     <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
-    <p class="sub">Simulador de estudo de <b>NL Hold'em 9-max</b>. Treine decisões de verdade, sem dinheiro real, no seu tempo.</p>
+    <p class="sub">Simulador de poker <b>NL Hold'em 9-max</b> com coach inteligente. Treine decisões de verdade, ganhe XP, suba no ranking. <b>Grátis. Sem dinheiro real.</b></p>
     <p class="sub">A maioria das mãos é decisão simples. Quem chega longe não erra as simples — e treina as poucas difíceis. Sem curso caro, sem jargão, no seu tempo.</p>
     <div class="cta-row">
-      <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'hero'})">♠ Começar agora — grátis</a>
+      <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'hero'})">♠ JOGAR AGORA — grátis</a>
       <span style="display:block; margin-top:8px; font-size:13px; color:var(--gold-soft);">🔥 Seja um dos primeiros jogadores — grátis pra sempre</span>
     </div>
     <div class="cards" aria-hidden="true">
@@ -929,15 +930,79 @@
     });
     })();
 
-  // PWA Install Prompt
+  // PWA Install Banner (proeminente, fixo no fundo da tela)
   (function() {
     var deferredPrompt = null;
     var installBtn = document.getElementById('pwa-install-btn');
+    var bannerShown = localStorage.getItem('cf_install_banner_seen');
+    var isAlreadyInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                             navigator.standalone === true;
+
+    if (isAlreadyInstalled) return; // já instalado, não mostrar
+
+    function createBanner() {
+      if (bannerShown) return;
+      var banner = document.createElement('div');
+      banner.id = 'install-banner';
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:linear-gradient(160deg,#1a3a25,#0d2418);border-top:1px solid #d4af37;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;z-index:9999;gap:12px;animation:slideUp .4s ease-out;';
+      banner.innerHTML = '<div style="font-size:13px;line-height:1.4;color:#ece7d5;"><strong style="color:#d4af37;font-size:14px;">📲 Jogue direto do celular</strong><br>Adicione o Call ou Fold à sua tela inicial — fica como um app!</div><div style="display:flex;gap:8px;flex-shrink:0;">' +
+        '<button id="banner-install" style="background:#d4af37;color:#0d0f0d;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>' +
+        '<button id="banner-close" style="background:transparent;color:#9a9686;border:1px solid #3f4332;padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;">✕</button></div>';
+      document.body.appendChild(banner);
+
+      // Animation
+      var style = document.createElement('style');
+      style.textContent = '@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
+      document.head.appendChild(style);
+
+      document.getElementById('banner-close').addEventListener('click', function() {
+        banner.style.transform = 'translateY(100%)';
+        setTimeout(function() { banner.remove(); }, 300);
+        localStorage.setItem('cf_install_banner_seen', '1');
+      });
+
+      document.getElementById('banner-install').addEventListener('click', function() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function(choiceResult) {
+            banner.remove();
+            if (choiceResult.outcome === 'accepted') {
+              if (umami) umami.track('pwa_installed_banner');
+            }
+            deferredPrompt = null;
+          });
+        } else {
+          var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+          var msg = isIOS
+            ? 'Para instalar: toque em Compartilhar (ícone de seta) → "Adicionar à Tela de Início"'
+            : 'Para instalar: toque nos 3 pontos (⋮) → "Adicionar à tela inicial"';
+          alert(msg);
+        }
+      });
+
+      // Auto-hide after 8 seconds
+      setTimeout(function() {
+        if (banner.parentElement) {
+          banner.style.transform = 'translateY(100%)';
+          setTimeout(function() { banner.remove(); }, 300);
+        }
+      }, 8000);
+    }
+
     window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
       deferredPrompt = e;
-      if (installBtn) installBtn.style.display = 'block';
+      // Show banner when prompt is available AND user has been on page for 3s
+      setTimeout(createBanner, 3000);
     });
+
+    // Also try to show for iOS (no beforeinstallprompt event)
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS && !bannerShown) {
+      setTimeout(createBanner, 3000);
+    }
+
+    // Fallback button
     if (installBtn) {
       installBtn.addEventListener('click', function() {
         if (deferredPrompt) {
@@ -950,7 +1015,6 @@
             deferredPrompt = null;
           });
         } else {
-          // Fallback: tell user to use "Add to Home Screen"
           var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
           var msg = isIOS
             ? 'Para instalar: toque em Compartilhar (ícone de seta) → "Adicionar à Tela de Início"'
