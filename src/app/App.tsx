@@ -45,7 +45,7 @@ import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
 import { ProfileView } from "../ui/ProfileView";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
-import { OnboardingScreen, isFirstOpen, markFirstOpen } from "../ui/AvatarSelector";
+import { markFirstOpen } from "../ui/AvatarSelector";
 import { GuidedHand, hasSeenGuidedHand, markGuidedHandDone } from "../ui/GuidedHand";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { SpotRangePopup } from "../ui/SpotRangePopup";
@@ -406,14 +406,9 @@ export function App() {
         />
       ) : null}
 
-      {/* Onboarding de avatar: mostra na primeira vez que abre o app */}
-      {isFirstOpen() ? (
-        <OnboardingScreen onDone={() => {
-          markFirstOpen();
-          setOnboarded(true);
-        }} />
-      ) : !onboarded ? (
-        <Onboarding onClose={() => setOnboarded(true)} />
+      {/* Onboarding: mostra na primeira vez que abre o app */}
+      {!onboarded ? (
+        <Onboarding onClose={() => { setOnboarded(true); markFirstOpen(); }} />
       ) : null}
       {/* Mão guiada: primeira vez que o usuário entra no jogo (após onboarding) */}
       {onboarded && !guidedDone ? (
