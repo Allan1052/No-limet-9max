@@ -50,33 +50,90 @@ function drawCardOnCanvas(
   const s = suitOf(card);
   const rank = RANKS[r - 2];
   const suit = SUIT_SYMBOL[s];
-  const red = SUIT_RED[s];
+  const color = SUIT_RED[s] ? COLOR_RED_SUIT : COLOR_BLACK_SUIT;
+  const radius = Math.min(w, h) * 0.09;
 
-  // Sombra sutil
-  ctx.shadowColor = "rgba(0,0,0,0.35)";
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 3;
-
-  // Carta branca com cantos arredondados
+  // Carta branca com sombra suave (projeta a carta sobre o feltro)
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 9;
   ctx.fillStyle = COLOR_CARD_WHITE;
-  roundRect(ctx, x, y, w, h, Math.min(w, h) * 0.08);
+  roundRect(ctx, x, y, w, h, radius);
   ctx.fill();
+  ctx.restore();
 
-  ctx.shadowColor = "transparent";
+  // Borda interna fina (acabamento de carta impressa)
+  ctx.strokeStyle = "rgba(0,0,0,0.09)";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, x + 4, y + 4, w - 8, h - 8, radius - 2);
+  ctx.stroke();
 
-  // Texto da carta
-  ctx.fillStyle = red ? COLOR_RED_SUIT : COLOR_BLACK_SUIT;
+  ctx.fillStyle = color;
+
+  // Índice do canto: rank + naipe pequeno empilhados. Desenhado no topo-esquerdo
+  // e espelhado 180° no canto inferior-direito — como carta de baralho de verdade.
+  const idxSize = h * 0.155;
+  const ax = w * 0.19; // centro da coluna do índice
+  const ay = h * 0.075;
+  const drawIndex = () => {
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.font = `bold ${idxSize}px Georgia, serif`;
+    ctx.fillText(rank, ax, ay);
+    ctx.font = `${idxSize * 0.82}px Georgia, serif`;
+    ctx.fillText(suit, ax, ay + idxSize * 0.98);
+  };
+  ctx.save();
+  ctx.translate(x, y);
+  drawIndex();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(x + w, y + h);
+  ctx.rotate(Math.PI);
+  drawIndex();
+  ctx.restore();
+
+  // Pip central grande
+  ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.font = `${h * 0.4}px Georgia, serif`;
+  ctx.fillText(suit, x + w / 2, y + h * 0.55);
+}
 
-  // Rank grande no topo
-  ctx.font = `bold ${h * 0.38}px Georgia, serif`;
-  ctx.fillText(rank, x + w / 2, y + h * 0.28);
+/** Chip arredondado de nota (✓ verde / ✗ vermelho) com brilho — usado nos dois modos. */
+function drawRatingChip(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  label: string,
+  correct: boolean,
+) {
+  const color = correct ? COLOR_GREEN_OK : COLOR_RED_ERR;
+  ctx.font = "bold 27px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const tw = ctx.measureText(label).width;
+  const chipH = 48;
+  const chipW = Math.max(210, tw + 56);
+  const chipX = cx - chipW / 2;
 
-  // Naipe grande no centro
-  ctx.font = `${h * 0.42}px Georgia, serif`;
-  ctx.fillText(suit, x + w / 2, y + h * 0.68);
+  ctx.save();
+  ctx.shadowColor = correct ? "rgba(45,122,58,0.6)" : "rgba(192,57,43,0.6)";
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 4;
+  ctx.fillStyle = color;
+  roundRect(ctx, chipX, cy - chipH / 2, chipW, chipH, chipH / 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 27px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, cx, cy + 1);
 }
 
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
@@ -237,6 +294,13 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   }
   ctx.globalAlpha = 1;
 
+  // ── Vinheta: escurece os cantos, dá profundidade de mesa ──
+  const vig = ctx.createRadialGradient(S / 2, S / 2, S * 0.34, S / 2, S / 2, S * 0.72);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,0.4)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, S, S);
+
   // ── Linha dourada superior (sem moldura pesada) ──
   ctx.strokeStyle = "rgba(212,175,55,0.5)";
   ctx.lineWidth = 2;
@@ -267,12 +331,24 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   ctx.stroke();
 
   // ── CARTAS DO HERÓI ──
-  const cardW = 156;
-  const cardH = 218;
-  const gap = 28;
+  // Sem board, as cartas do herói são maiores (protagonistas) e descem um pouco,
+  // pra o card não ficar com um vazio grande embaixo.
+  const hasBoard = data.board.length > 0;
+  const cardW = hasBoard ? 148 : 188;
+  const cardH = hasBoard ? 204 : 262;
+  const gap = hasBoard ? 28 : 32;
   const cardsTotalW = cardW * 2 + gap;
   const cardsX = (S - cardsTotalW) / 2;
-  const cardsY = 268;
+  const cardsY = hasBoard ? 268 : 300;
+
+  // Brilho dourado atrás das cartas do herói — destaca "a mão" como protagonista.
+  const glowCx = S / 2;
+  const glowCy = cardsY + cardH / 2;
+  const glow = ctx.createRadialGradient(glowCx, glowCy, 30, glowCx, glowCy, cardsTotalW * 0.7);
+  glow.addColorStop(0, "rgba(230,196,84,0.2)");
+  glow.addColorStop(1, "rgba(230,196,84,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(glowCx - cardsTotalW, glowCy - cardH, cardsTotalW * 2, cardH * 2);
 
   if (data.heroCards.length >= 1) {
     drawCardOnCanvas(ctx, data.heroCards[0], cardsX, cardsY, cardW, cardH);
@@ -297,47 +373,37 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   }
 
   // ── POSIÇÃO + STACK (SEMPRE visível) — com respiro após as cartas ──
-  const posStackY = bottomY + 44;
+  // Sem board há mais espaço vertical: alarga os intervalos pra distribuir.
+  const g = hasBoard ? 0 : 12;
+  const posStackY = bottomY + (hasBoard ? 40 : 58);
   ctx.fillStyle = COLOR_GOLD_BRIGHT;
   ctx.font = "bold 30px Georgia, serif";
   ctx.textAlign = "center";
   ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
 
   // ── CONTEXTO DA AÇÃO ──
-  const ctxY = posStackY + 38;
+  const ctxY = posStackY + 36 + g;
   ctx.fillStyle = COLOR_CREAM_DIM;
   ctx.font = "600 26px Georgia, serif";
   ctx.fillText(data.street + " — " + data.context, S / 2, ctxY);
 
   // ── DECISÃO ──
-  const decY = ctxY + 46;
+  const decY = ctxY + 44 + g;
   ctx.fillStyle = COLOR_CREAM;
   ctx.font = "bold 38px Georgia, serif";
   ctx.fillText(`Você: ${data.heroAction}`, S / 2, decY);
 
   // ── VEREDITO / NOTA ──
-  const verY = decY + 44;
+  const verY = decY + 42 + g;
 
+  const correct = isRatingCorrect(data.rating);
   if (mode === "simples") {
-    // Modo simples: nota em palavra colorida
-    const noteColor = isRatingCorrect(data.rating) ? COLOR_GREEN_OK : COLOR_RED_ERR;
-    const note = ratingWord(data.rating);
-    ctx.fillStyle = noteColor;
-    ctx.font = "bold 34px Georgia, serif";
-    ctx.fillText(note, S / 2, verY);
+    // Chip com ícone + nota (ex.: "✓ BOA!" / "✗ ERRO")
+    const label = `${correct ? "✓" : "✗"} ${ratingWord(data.rating).toUpperCase()}`;
+    drawRatingChip(ctx, S / 2, verY, label, correct);
   } else {
-    // Modo técnico: badge CORRETO/ERROU
-    const badgeColor = isRatingCorrect(data.rating) ? COLOR_GREEN_OK : COLOR_RED_ERR;
-    const badgeW = 220;
-    const badgeH = 42;
-    const badgeX = S / 2 - badgeW / 2;
-    ctx.fillStyle = badgeColor;
-    roundRect(ctx, badgeX, verY - badgeH / 2, badgeW, badgeH, 21);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 24px Georgia, serif";
-    ctx.textBaseline = "middle";
-    ctx.fillText(ratingVerdict(data.rating), S / 2, verY);
+    // Chip com veredito técnico ("✓ CORRETO" / "✗ ERROU")
+    drawRatingChip(ctx, S / 2, verY, ratingVerdict(data.rating), correct);
   }
 
   // ── MATEMÁTICA (só no modo técnico) ──
@@ -370,10 +436,10 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
     const lastLine = tipLines.slice(maxLines - 1).join(" ");
     tipLines = [...tipLines.slice(0, maxLines - 1), lastLine + "…"];
   }
-  const lineHeight = 30;
-  const boxPad = 22;
+  const lineHeight = 28;
+  const boxPad = 19;
   const tipBoxH = boxPad * 2 + tipLines.length * lineHeight;
-  const tipBoxTop = statsY + 6;
+  const tipBoxTop = statsY + 6 + g;
 
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   roundRect(ctx, 70, tipBoxTop, S - 140, tipBoxH, 12);
@@ -385,10 +451,17 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
     ctx.fillText(tipLines[i], S / 2, firstLineY + i * lineHeight);
   }
 
-  // ── RODAPÉ ──
-  const footerY = S - 44;
-  ctx.fillStyle = COLOR_GOLD;
-  ctx.font = "600 20px Georgia, serif";
+  // ── RODAPÉ — garante folga do bloco da dica e fica sempre visível ──
+  const footerY = Math.max(S - 52, tipBoxTop + tipBoxH + 40);
+  // Linha dourada fina acima do rodapé (fecha o card).
+  ctx.strokeStyle = "rgba(212,175,55,0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(200, footerY - 26);
+  ctx.lineTo(S - 200, footerY - 26);
+  ctx.stroke();
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "600 22px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
