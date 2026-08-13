@@ -36,20 +36,36 @@ export function LeaksPanel({
         style={{ maxHeight: "90vh", overflowY: "auto", width: "min(95vw, 480px)", padding: "20px" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h2 style={{ color: "#d4af37", margin: 0, fontSize: 22 }}>🎯 Seus Pontos Fracos</h2>
-          <button className="btn" onClick={onClose} style={{ fontSize: 14 }}>✕</button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ color: "#d4af37", margin: 0, fontSize: 22, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.02em" }}>🎯 Seus Pontos Fracos</h2>
+          <button className="btn" onClick={onClose} style={{ fontSize: 14, color: "#8a8a7a", background: "none", border: "none", cursor: "pointer" }}>✕</button>
         </div>
 
-        <div style={{ fontSize: 12, color: "#8a8a7a", marginBottom: 16 }}>
-          {total > 0
-            ? `${total} decisões analisadas · ${aligned}% alinhadas com o ótimo`
-            : "Ainda sem decisões analisadas."}
-        </div>
+        {/* Barra de progresso — % alinhado com o ótimo */}
+        {total > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#a8a898", marginBottom: 4 }}>
+              <span>{total} decisões analisadas</span>
+              <span style={{ color: aligned >= 70 ? "#5fb96a" : aligned >= 50 ? "#d4af37" : "#e06b6b", fontWeight: 600 }}>{aligned}% alinhado</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${aligned}%`,
+                  borderRadius: 3,
+                  background: aligned >= 70 ? "linear-gradient(90deg, #2d8b4a, #5fb96a)" : aligned >= 50 ? "linear-gradient(90deg, #b8962e, #d4af37)" : "linear-gradient(90deg, #c0392b, #e06b6b)",
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {total < 5 ? (
-          <div style={{ textAlign: "center", color: "#8a8a7a", padding: 24, fontSize: 14, lineHeight: 1.6 }}>
-            🃏 Jogue algumas mãos que eu mapeio seus pontos fracos e mostro exatamente
+          <div style={{ textAlign: "center", color: "#8a8a7a", padding: 32, fontSize: 14, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🃏</div>
+            Jogue algumas mãos que eu mapeio seus pontos fracos e mostro exatamente
             onde focar o treino.
           </div>
         ) : leaks.length === 0 ? (

@@ -176,10 +176,10 @@ function HandRow({ h, onClick }: { h: HandHistory; onClick: () => void }) {
       }}
     >
       {/* Cartas do herói */}
-      <div style={{ display: "flex", gap: 3, minWidth: 50 }}>
+      <div style={{ display: "flex", gap: 4, minWidth: 56 }}>
         {heroCards.length > 0 ? (
           heroCards.map((c, i) => (
-            <span key={i} style={{ fontSize: 12, fontWeight: 700, color: cardColor(c) }}>
+            <span key={i} style={{ fontSize: 14, fontWeight: 800, color: cardColor(c) }}>
               {cardLabel(c)}
             </span>
           ))
@@ -197,9 +197,14 @@ function HandRow({ h, onClick }: { h: HandHistory; onClick: () => void }) {
             </span>
             <span
               style={{
-                fontSize: 11,
-                color: ratingColor[lastHeroDecision.rating] ?? "#8a8a7a",
+                fontSize: 10,
                 fontWeight: 700,
+                padding: "1px 6px",
+                borderRadius: 8,
+                border: `1px solid ${ratingColor[lastHeroDecision.rating] ?? "#8a8a7a"}`,
+                color: ratingColor[lastHeroDecision.rating] ?? "#8a8a7a",
+                background: "transparent",
+                lineHeight: "14px",
               }}
             >
               {ratingIcon[lastHeroDecision.rating]} {capitalize(lastHeroDecision.rating)}

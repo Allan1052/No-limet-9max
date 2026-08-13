@@ -37,8 +37,8 @@ export function AchievementsPanel({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 style={{ color: "#d4af37", margin: 0, fontSize: 22 }}>🏆 Conquistas</h2>
-          <button className="btn" onClick={onClose} style={{ fontSize: 14 }}>
+          <h2 style={{ color: "#d4af37", margin: 0, fontSize: 22, fontFamily: "'Playfair Display', serif", letterSpacing: "-0.02em" }}>🏆 Conquistas</h2>
+          <button className="btn" onClick={onClose} style={{ fontSize: 14, color: "#8a8a7a", background: "none", border: "none", cursor: "pointer" }}>
             ✕
           </button>
         </div>
@@ -109,29 +109,44 @@ export function AchievementsPanel({ onClose }: { onClose: () => void }) {
 }
 
 function AchievementCard({ def, unlocked }: { def: AchievementDef; unlocked: boolean }) {
+  const catLabel = CATEGORY_LABELS[def.category] || def.category;
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 10,
-        padding: "10px 12px",
+        gap: 12,
+        padding: "12px 14px",
         borderRadius: 8,
-        background: unlocked ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${unlocked ? "rgba(212,175,55,0.4)" : "rgba(255,255,255,0.08)"}`,
-        opacity: unlocked ? 1 : 0.5,
+        background: unlocked ? "rgba(212,175,55,0.08)" : "rgba(255,255,255,0.03)",
+        border: `1px solid ${unlocked ? "rgba(212,175,55,0.35)" : "rgba(255,255,255,0.08)"}`,
+        opacity: unlocked ? 1 : 0.55,
         transition: "all 0.2s ease",
       }}
     >
-      <span style={{ fontSize: 24 }}>{def.icon}</span>
+      <div
+        style={{
+          fontSize: 22,
+          width: 36,
+          height: 36,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          background: unlocked ? "rgba(212,175,55,0.2)" : "rgba(255,255,255,0.06)",
+          flexShrink: 0,
+        }}
+      >
+        {unlocked ? def.icon : "🔒"}
+      </div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: unlocked ? "#d4af37" : "#ece7d5" }}>
           {def.name}
-          {unlocked && <span style={{ marginLeft: 6, fontSize: 12 }}>✓</span>}
+          {unlocked && <span style={{ marginLeft: 6, fontSize: 11, color: "#5fb96a" }}>✓</span>}
         </div>
-        <div style={{ fontSize: 12, color: "#8a8a7a", marginTop: 2 }}>{def.description}</div>
+        <div style={{ fontSize: 12, color: "#8a8a7a", marginTop: 2, lineHeight: 1.4 }}>{def.description}</div>
+        <div style={{ fontSize: 10, color: "#5a5a50", marginTop: 3 }}>{catLabel}</div>
       </div>
-      {!unlocked && <span style={{ fontSize: 16 }}>🔒</span>}
     </div>
   );
 }

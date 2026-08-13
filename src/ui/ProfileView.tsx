@@ -92,15 +92,15 @@ export function ProfileView({
           </div>
         </div>
 
-        {/* Evolução */}
-        <button className="btn profile-evolution" onClick={onOpenProgress}>
-          📊 {t("profile.evolution")}
-        </button>
-
-        {/* Conquistas — visível para todos (XP destravado globalmente) */}
-        <button className="btn profile-evolution" onClick={onOpenAchievements}>
-          🏆 Conquistas
-        </button>
+        {/* Progressão — XP + Conquistas */}
+        <div className="profile-progress-row">
+          <button className="btn profile-evolution" onClick={onOpenProgress}>
+            📊 {t("profile.evolution")}
+          </button>
+          <button className="btn profile-evolution" onClick={onOpenAchievements}>
+            🏆 Conquistas
+          </button>
+        </div>
 
         {/* Ajustes */}
         <div className="profile-section-title">{t("profile.settings")}</div>
@@ -163,13 +163,13 @@ export function ProfileView({
           <div className="profile-help-title">🤝 {t("profile.helpTitle")}</div>
           <div className="profile-help-note">{t("profile.helpNote")}</div>
           <div className="profile-help-row">
-            <button className="btn" onClick={() => window.open(INSTAGRAM_URL, "_blank")}>
+            <button className="btn profile-help-btn" onClick={() => window.open(INSTAGRAM_URL, "_blank")}>
               📸 {t("profile.follow")}
             </button>
-            <button className="btn" onClick={shareApp}>
+            <button className="btn profile-help-btn" onClick={shareApp}>
               📣 {t("profile.share")}
             </button>
-            <button className="btn" onClick={inviteFriend}>
+            <button className="btn profile-help-btn" onClick={inviteFriend}>
               💬 {t("profile.invite")}
             </button>
           </div>

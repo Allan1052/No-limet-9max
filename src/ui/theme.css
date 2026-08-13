@@ -3588,6 +3588,9 @@ body {
   font-size: 11.5px; color: var(--dim, #9a9686); letter-spacing: .2px;
 }
 .profile-aura-badge b { color: var(--gold-bright, #e6c454); }
+.profile-progress-row { display: flex; gap: 8px; margin-top: 8px; }
+.profile-progress-row .btn { flex: 1; }
+.profile-help-btn { font-size: 12px; padding: 8px 12px; flex: 1; }
 
 /* ---- Áurea: o boneco animado farmando áurea na tela de conquista ---- */
 .aura-char-wrap {
