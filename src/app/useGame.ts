@@ -88,11 +88,17 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       heroType,
       isPreflop,
       buyIn,
+      heroBB,
+      facingAllin,
+      finalTable,
     }: {
       rating: Rating;
       heroType: string;
       isPreflop: boolean;
       buyIn?: number;
+      heroBB?: number;
+      facingAllin?: boolean;
+      finalTable?: boolean;
     }) => {
       recordDecision(progressRef.current, rating);
       saveProgress(progressRef.current);
@@ -102,7 +108,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       // XP + Achievements
       if (isXpUnlocked()) {
         const xpState = loadXpState();
-        const result = processXpEvent(xpState, { type: "decision", rating, heroType, isPreflop });
+        const result = processXpEvent(xpState, { type: "decision", rating, heroType, isPreflop, buyIn, heroBB, facingAllin, finalTable });
         saveXpState(result.state);
         if (result.newAchievements.length > 0) {
           setXpToasts((prev) => [...prev, ...result.newAchievements]);

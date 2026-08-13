@@ -159,6 +159,68 @@ describe("achievements unlock", () => {
   });
 });
 
+// Conquistas que ANTES eram impossíveis (check auto-referente, nunca setado) ou
+// mal atribuídas. Estes testes travam o conserto: elas precisam ser ganháveis e
+// disparar o toast (aparecer em newAchievements).
+describe("conquistas corrigidas (antes impossíveis/furadas)", () => {
+  it("'high_roller' desbloqueia ao jogar um torneio de $109", () => {
+    const state = defaultState();
+    const event: XpEvent = { type: "decision", rating: "ok", buyIn: 109 };
+    const { newAchievements } = processXpEvent(state, event);
+    expect(newAchievements.some((a) => a.id === "high_roller")).toBe(true);
+  });
+
+  it("'high_roller' NÃO desbloqueia num torneio barato", () => {
+    const state = defaultState();
+    const event: XpEvent = { type: "decision", rating: "ok", buyIn: 11 };
+    const { newAchievements } = processXpEvent(state, event);
+    expect(newAchievements.some((a) => a.id === "high_roller")).toBe(false);
+  });
+
+  it("'deep_run' desbloqueia na mesa final com menos de 20bb", () => {
+    const state = defaultState();
+    const event: XpEvent = { type: "decision", rating: "ok", finalTable: true, heroBB: 14 };
+    const { newAchievements } = processXpEvent(state, event);
+    expect(newAchievements.some((a) => a.id === "deep_run")).toBe(true);
+  });
+
+  it("'deep_run' NÃO desbloqueia com stack fundo na mesa final", () => {
+    const state = defaultState();
+    const event: XpEvent = { type: "decision", rating: "ok", finalTable: true, heroBB: 45 };
+    const { newAchievements } = processXpEvent(state, event);
+    expect(newAchievements.some((a) => a.id === "deep_run")).toBe(false);
+  });
+
+  it("'short_stack' desbloqueia após 10 decisões com menos de 10bb", () => {
+    let state = defaultState();
+    let unlocked = false;
+    for (let i = 0; i < 10; i++) {
+      const r = processXpEvent(state, { type: "decision", rating: "ok", heroBB: 8 });
+      state = r.state;
+      if (r.newAchievements.some((a) => a.id === "short_stack")) unlocked = true;
+    }
+    expect(unlocked).toBe(true);
+  });
+
+  it("'bluff_catcher' desbloqueia SÓ num call contra all-in (não em call normal)", () => {
+    // Call normal (sem all-in) NÃO conta.
+    let state = defaultState();
+    let r = processXpEvent(state, { type: "decision", rating: "boa", heroType: "call", facingAllin: false });
+    expect(r.newAchievements.some((a) => a.id === "bluff_catcher")).toBe(false);
+    // Call contra all-in conta E dispara o toast.
+    r = processXpEvent(r.state, { type: "decision", rating: "boa", heroType: "call", facingAllin: true });
+    expect(r.newAchievements.some((a) => a.id === "bluff_catcher")).toBe(true);
+  });
+
+  it("'circuit_complete' só desbloqueia após 4 torneios (não no primeiro)", () => {
+    let state = defaultState();
+    let r = processXpEvent(state, { type: "tournamentOver", inMoney: false });
+    expect(r.newAchievements.some((a) => a.id === "circuit_complete")).toBe(false);
+    for (let i = 0; i < 3; i++) r = processXpEvent(r.state, { type: "tournamentOver", inMoney: false });
+    expect(r.state.unlocked.includes("circuit_complete")).toBe(true);
+  });
+});
+
 describe("getXpSummary", () => {
   it("returns correct structure", () => {
     const summary = getXpSummary();

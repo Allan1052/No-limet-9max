@@ -46,6 +46,14 @@ export interface XpState {
   lastPlayDate: string;
   /** Dias seguidos de jogo. */
   streakDays: number;
+  /** Jogou um torneio de buy-in alto ($109+)? (high_roller). */
+  highRollerPlayed: boolean;
+  /** Chegou à mesa final com menos de 20bb? (deep_run). */
+  deepRunReached: boolean;
+  /** Nº de decisões jogadas com menos de 10bb (short_stack). */
+  shortStackDecisions: number;
+  /** Nº de calls corretos contra all-in (bluff_catcher). */
+  bluffCatchCount: number;
   /** IDs dos achievements desbloqueados. */
   unlocked: string[];
   /** Flags temporárias (não persistidas — usadas pra detectar eventos). */
@@ -63,6 +71,14 @@ export interface XpEvent {
   finishPlace?: number; // 1 = venceu
   inMoney?: boolean;
   isFinalTable?: boolean;
+  /** Buy-in do torneio (para high_roller). */
+  buyIn?: number;
+  /** Profundidade do herói em bb no momento da decisão (deep_run/short_stack). */
+  heroBB?: number;
+  /** A decisão foi um call CONTRA um all-in? (bluff_catcher). */
+  facingAllin?: boolean;
+  /** A mão está sendo jogada na MESA FINAL? (deep_run). */
+  finalTable?: boolean;
 }
 
 export interface AchievementToast {
@@ -196,15 +212,15 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     icon: "🏊",
     category: "torneio",
     description: "Chegue na mesa final com menos de 20bb.",
-    check: (s) => s.unlocked.includes("deep_run"), // set manualmente
+    check: (s) => s.deepRunReached,
   },
   {
     id: "circuit_complete",
     name: "Circuito Completo",
     icon: "🌟",
     category: "torneio",
-    description: "Finalize um Circuito Mensal.",
-    check: (s) => s.tournamentsFinished >= 1, // simplificado — quando circuito existir de verdade
+    description: "Finalize 4 torneios.",
+    check: (s) => s.tournamentsFinished >= 4,
   },
   // Avançado
   {
@@ -213,15 +229,15 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     icon: "🎰",
     category: "avancado",
     description: "Jogue um torneio de $109.",
-    check: (s) => s.unlocked.includes("high_roller"), // set manualmente
+    check: (s) => s.highRollerPlayed,
   },
   {
     id: "short_stack",
     name: "Short Stack Survivor",
     icon: "🧗",
     category: "avancado",
-    description: "Sobreviva com menos de 10bb por 10 mãos.",
-    check: (s) => s.unlocked.includes("short_stack"), // set manualmente
+    description: "Jogue 10 decisões com menos de 10bb.",
+    check: (s) => s.shortStackDecisions >= 10,
   },
   {
     id: "bluff_catcher",
@@ -229,7 +245,7 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     icon: "🎣",
     category: "avancado",
     description: "Faça um call correto contra all-in.",
-    check: (s) => s.unlocked.includes("bluff_catcher"), // set manualmente
+    check: (s) => s.bluffCatchCount >= 1,
   },
   {
     id: "hand_share",
@@ -268,6 +284,10 @@ function defaultState(): XpState {
     playDays: 0,
     lastPlayDate: "",
     streakDays: 0,
+    highRollerPlayed: false,
+    deepRunReached: false,
+    shortStackDecisions: 0,
+    bluffCatchCount: 0,
     unlocked: [],
     updatedAt: new Date().toISOString(),
   };
@@ -354,6 +374,13 @@ export function processXpEvent(state: XpState, event: XpEvent): { state: XpState
       const xp = xpForRating(rating);
       s.xp = Math.max(0, s.xp + xp);
 
+      // Marcos que independem da nota (contam por CONTEXTO da decisão):
+      if (event.buyIn !== undefined && event.buyIn >= 109) s.highRollerPlayed = true;
+      if (event.heroBB !== undefined && event.heroBB < 10) s.shortStackDecisions += 1;
+      if (event.finalTable && event.heroBB !== undefined && event.heroBB < 20) {
+        s.deepRunReached = true;
+      }
+
       if (rating === "boa" || rating === "ok") {
         s.correctDecisions += 1;
         s.correctStreak += 1;
@@ -366,10 +393,10 @@ export function processXpEvent(state: XpState, event: XpEvent): { state: XpState
         if ((event.heroType === "raise" || event.heroType === "allin") && !event.isPreflop) {
           s.raiseCorrect += 1;
         }
-        // Bluff catcher: call correto vs all-in
-        if (event.heroType === "call") {
-          s.unlocked.includes("bluff_catcher") || s.unlocked.push("bluff_catcher");
-          // Na verdade só se foi contra all-in — simplificado aqui
+        // Bluff catcher: call CORRETO e de fato CONTRA um all-in (a conquista é
+        // concedida pelo laço de checagem abaixo, que dispara o toast).
+        if (event.heroType === "call" && event.facingAllin) {
+          s.bluffCatchCount += 1;
         }
       } else {
         s.correctStreak = 0;
