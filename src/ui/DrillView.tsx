@@ -12,6 +12,7 @@ import { useState, useCallback } from "react";
 import { CardView } from "./Card";
 
 import { actionLabel } from "../feedback/analyzer";
+import { DrillPostflopView } from "./DrillPostflopView";
 import {
   DRILL_PRESETS,
   createDrillSession,
@@ -24,8 +25,10 @@ import {
 } from "../train/drill";
 
 type Phase = "select" | "drill" | "done";
+type DrillMode = "preflop" | "postflop";
 
 export function DrillView() {
+  const [drillMode, setDrillMode] = useState<DrillMode>("preflop");
   const [phase, setPhase] = useState<Phase>("select");
   const [session, setSession] = useState<DrillSession | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; rating: string; advice: string } | null>(null);
@@ -81,6 +84,11 @@ export function DrillView() {
   // ---------------------------------------------------------------------------
   // Tela de seleção de spots
   // ---------------------------------------------------------------------------
+  // Se estiver no modo pós-flop, renderizar o DrillPostflopView
+  if (drillMode === "postflop") {
+    return <DrillPostflopView />;
+  }
+
   if (phase === "select") {
     return (
       <div className="max-w-md mx-auto px-4 py-6">
@@ -104,6 +112,21 @@ export function DrillView() {
           </div>
         )}
 
+        {/* Toggle Pré-flop / Pós-flop */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setDrillMode("preflop")}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${drillMode === "preflop" ? "bg-gold text-black" : "bg-white/10 text-white/70"}`}
+          >
+            🃏 Pré-flop
+          </button>
+          <button
+            onClick={() => setDrillMode("postflop")}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${drillMode === ("postflop" as DrillMode) ? "bg-gold text-black" : "bg-white/10 text-white/70"}`}
+          >
+            🌊 Pós-flop
+          </button>
+        </div>
         {/* Lista de presets */}
         <div className="space-y-3">
           {DRILL_PRESETS.map((preset) => (
