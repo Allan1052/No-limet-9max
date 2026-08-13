@@ -13,6 +13,8 @@
 
 import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, buyInToughness, type BotProfile } from "./profiles";
 import { personalize, seedFromName } from "./personality";
+import { tiltAdjust, type TiltState } from "./tilt";
+import { adaptToHero, type HeroRead } from "./adapt";
 import { seatPositions } from "./seatPosition";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { legalActions } from "../game/betting";
@@ -27,6 +29,25 @@ export interface BotContext {
   payouts?: number[];
   /** Buy-in do torneio: ajusta o campo (stakes altas jogam mais apertado-agressivo). */
   buyIn?: number;
+  /** Estado emocional do bot (Camada 2 — tilt). */
+  tilt?: TiltState;
+  /** Leitura acumulada do herói (Camada 3 — adaptação). */
+  heroRead?: HeroRead;
+}
+
+/** Aplica personalidade + tilt + adaptação sobre o perfil-base ajustado por buy-in. */
+export function effectiveProfile(
+  base: BotProfile,
+  seat: number,
+  p: { profileId?: string; name: string; personalitySeed?: number },
+  ctx: BotContext,
+): BotProfile {
+  const adjusted = adjustProfileForBuyIn(base, ctx.buyIn);
+  if (!p.profileId) return adjusted; // herói / baseline: sem personalidade
+  let prof = personalize(adjusted, p.personalitySeed ?? seedFromName(p.name, seat), buyInToughness(ctx.buyIn));
+  if (ctx.tilt) prof = tiltAdjust(prof, ctx.tilt); // Camada 2
+  if (ctx.heroRead) prof = adaptToHero(prof, ctx.heroRead, prof.skill); // Camada 3
+  return prof;
 }
 
 /** Profundidade efetiva (em BB) do assento contra o maior adversário na mão. */
@@ -138,11 +159,8 @@ export function preflopContextFor(
 export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = {}): Action {
   const p = t.players[seat];
   const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
-  const adjusted = adjustProfileForBuyIn(base, ctx.buyIn);
-  // Camada 1: cada bot tem um estilo próprio (jitter semeado, ciente da dureza).
-  const profile = p.profileId
-    ? personalize(adjusted, p.personalitySeed ?? seedFromName(p.name, seat), buyInToughness(ctx.buyIn))
-    : adjusted;
+  // Camadas 1-3: personalidade única + tilt + adaptação ao herói.
+  const profile = effectiveProfile(base, seat, p, ctx);
   const la = legalActions(t);
   const decision = preflopDecision(preflopContextFor(t, seat, profile, ctx));
   return toEngineAction(t, decision.action, decision.sizeBB, la);

@@ -59,6 +59,9 @@ import {
   type FieldStatus,
 } from "../tournament/field";
 import { recordTournamentWin } from "../tournament/eliteUnlock";
+import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
+import type { HeroRead } from "../bots/adapt";
+import type { Archetype } from "../bots/profiles";
 
 export type UserSubscriptionLevel = 'free' | 'technical' | 'ultra';
 
@@ -254,6 +257,8 @@ export class GameController {
   private history: ReplayEvent[] = [];
   private handStartStacks: Record<number, number> = {};
   private perHand: Record<number, PerHandFlags> = {};
+  /** Estado emocional (tilt) por assento — Camada 2. */
+  private tilt: Record<number, TiltState> = {};
   private payouts?: number[];
   private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean; personalitySeed?: number }>;
   private rng = Math.random;
@@ -340,6 +345,7 @@ export class GameController {
       newVariant,
     );
     for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+    this.tilt = {}; // zera o estado emocional dos bots (Camada 2)
     const fieldRemaining = initialFieldRemaining(cfg.entrants, cfg.stage, ladder.length);
     this.tournament = {
       buyIn: cfg.buyIn,
@@ -432,6 +438,7 @@ export class GameController {
       p.profileId = rep.profileId;
       p.name = rep.name;
       p.personalitySeed = 1 + Math.floor(this.rng() * 2_000_000_000); // estilo próprio (Camada 1)
+      this.tilt[p.seat] = freshTilt(); // adversário novo entra calmo (Camada 2)
       p.stack = this.variedStack(avg);
       p.status = "active";
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
@@ -646,6 +653,9 @@ export class GameController {
     this.feedback = [];
     this.lastActionLabel = {};
     this.history = [];
+    // Camada 2: atualiza o tilt dos bots com o RESULTADO da mão que acabou
+    // (antes de startHand postar as blinds da próxima e mexer nos stacks).
+    this.updateTiltAfterHand();
     // Baralho verdadeiramente aleatório a cada mão (sem semente fixa — senão
     // toda sessão repetiria a mesma sequência de cartas e o mesmo vencedor).
     startHand(this.table, freshShuffledDeck());
@@ -758,15 +768,43 @@ export class GameController {
     if (this.table.handOver) this.finishHand();
   }
 
+  /** Leitura do herói para os bots adaptarem (Camada 3). Precisa de amostra. */
+  private heroReadForBots(): HeroRead | undefined {
+    const s = this.stats[this.heroSeat];
+    if (!s || s.handsDealt < 6) return undefined;
+    return {
+      hands: s.handsDealt,
+      vpip: s.vpip / s.handsDealt,
+      pfr: s.pfr / s.handsDealt,
+      threeBet: s.threeBetOpp > 0 ? s.threeBet / s.threeBetOpp : 0,
+    };
+  }
+
+  /** Atualiza o tilt de cada bot pelo resultado da mão anterior (Camada 2). */
+  private updateTiltAfterHand(): void {
+    for (const p of this.table.players) {
+      if (!p.profileId) continue; // só bots
+      let next = decayTilt(this.tilt[p.seat] ?? freshTilt());
+      const start = this.handStartStacks[p.seat];
+      if (start && start > 0 && p.status !== "out") {
+        const lossFrac = (start - p.stack) / start;
+        next = updateTilt(next, p.profileId as Archetype, lossFrac, lossFrac > 0.35);
+      }
+      this.tilt[p.seat] = next;
+    }
+  }
+
   /** Executa a ação de UM bot (a UI chama isto com um pequeno atraso). */
   botStep(): void {
     if (this.phase !== "playing" || this.isHeroTurn() || this.table.handOver) return;
     const seat = this.table.toAct;
     const buyIn = this.tournament?.buyIn;
+    const tilt = this.tilt[seat];
+    const heroRead = this.heroReadForBots();
     const action =
       this.table.street === "preflop"
-        ? botPreflopAction(this.table, seat, { payouts: this.payouts, buyIn })
-        : botPostflopAction(this.table, seat, this.rng, 800, this.payouts, buyIn);
+        ? botPreflopAction(this.table, seat, { payouts: this.payouts, buyIn, tilt, heroRead })
+        : botPostflopAction(this.table, seat, this.rng, 800, this.payouts, buyIn, tilt, heroRead);
     this.applyLabeled(action);
   }
 

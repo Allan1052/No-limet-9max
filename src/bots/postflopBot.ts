@@ -6,8 +6,10 @@
 // resultado numa ação válida do motor, respeitando `legalActions`.
 // ---------------------------------------------------------------------------
 
-import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, buyInToughness, type BotProfile } from "./profiles";
-import { personalize, seedFromName } from "./personality";
+import { profileById, BASELINE_PROFILE, type BotProfile } from "./profiles";
+import { effectiveProfile } from "./preflopBot";
+import type { TiltState } from "./tilt";
+import type { HeroRead } from "./adapt";
 import { postflopDecision, type PostflopContext } from "./decision";
 import { estimateVillainRangePct } from "./villainRange";
 import { legalActions } from "../game/betting";
@@ -105,14 +107,13 @@ export function botPostflopAction(
   equityIterations?: number,
   payouts?: number[],
   buyIn?: number,
+  tilt?: TiltState,
+  heroRead?: HeroRead,
 ): Action {
   const p = t.players[seat];
   const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
-  const adjusted = adjustProfileForBuyIn(base, buyIn);
-  // Camada 1: estilo próprio por bot (mesmo jitter do pré-flop, estável na mão).
-  const profile = p.profileId
-    ? personalize(adjusted, p.personalitySeed ?? seedFromName(p.name, seat), buyInToughness(buyIn))
-    : adjusted;
+  // Camadas 1-3: personalidade + tilt + adaptação (mesmo motor do pré-flop).
+  const profile = effectiveProfile(base, seat, p, { buyIn, tilt, heroRead });
   const la = legalActions(t);
   const decision = postflopDecision(
     postflopContextFor(t, seat, profile, rng, equityIterations, payouts),
