@@ -22,10 +22,8 @@ import {
   type Scenario,
   type ScenarioSpec,
 } from "../train/scenarios";
-import { awardDecisionAura } from "../train/aura";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
-import { AuraChip } from "./AuraChip";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -147,7 +145,6 @@ export function UltraTrainer() {
 
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [result, setResult] = useState<FeedbackItem | null>(null);
-  const [auraDelta, setAuraDelta] = useState<number | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
   const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
 
@@ -160,20 +157,17 @@ export function UltraTrainer() {
 
   const start = () => {
     setResult(null);
-    setAuraDelta(null);
     setSession({ correct: 0, total: 0 });
     setVillain(pickVillain()); // novo carrasco a cada sessão de treino
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
   };
   const next = () => {
     setResult(null);
-    setAuraDelta(null);
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
   };
   const back = () => {
     setScenario(null);
     setResult(null);
-    setAuraDelta(null);
   };
   const appUrl =
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
@@ -194,7 +188,6 @@ export function UltraTrainer() {
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
-    setAuraDelta(awardDecisionAura(ok).delta);
     markActiveToday();
     recordDecision(key);
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
@@ -404,7 +397,6 @@ export function UltraTrainer() {
             <div className={`fb-item ${result.rating}`}>
               <div className="fb-text">{result.text}</div>
             </div>
-            {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
             {isCorrect(result) ? (
               <button className="btn hit-share-btn" onClick={onShareHit}>
                 📣 {t("share.hitBtn")}

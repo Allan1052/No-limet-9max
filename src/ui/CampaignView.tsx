@@ -34,8 +34,6 @@ import {
   type CampaignProgress,
 } from "../train/campaign";
 import { shareSpot } from "../app/share";
-import { drawAuraCard } from "../app/auraImage";
-import { addAura, auraForStage, auraTier } from "../train/aura";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -136,8 +134,6 @@ export function CampaignView() {
   const [done, setDone] = useState<{
     passed: boolean;
     correct: number;
-    aura: number;
-    auraTotal: number;
   } | null>(null);
   const [showAvatar, setShowAvatar] = useState(false);
 
@@ -200,18 +196,13 @@ export function CampaignView() {
     const stage = STAGES[stageIdx];
     if (round + 1 >= stage.rounds) {
       // Primeira vez que bate este estágio? (checar ANTES de registrar)
-      const firstClear = !progress.cleared.includes(stage.id);
       const { passed, progress: np } = recordStage(progress, stage.id, correct);
       saveCampaign(np);
       setProgress(np);
       // Farmar áurea — só quando passa. Guarda no celular.
-      let aura = 0;
-      let auraTotal = 0;
       if (passed) {
-        aura = auraForStage(stageIdx, correct, stage.rounds, firstClear);
-        auraTotal = addAura(aura);
       }
-      setDone({ passed, correct, aura, auraTotal });
+      setDone({ passed, correct });
       // Toca som de vitória ou derrota
       if (passed) {
         playVictory();
@@ -262,7 +253,7 @@ export function CampaignView() {
             {/* Os dois lados */}
             <div className="confirm-arena">
               <div className="confirm-side hero-side">
-                <div className="confirm-avatar hero-avatar" style={{ borderColor: heroAvatar.color, boxShadow: `0 0 16px ${heroAvatar.color}44` }}>
+                <div className="confirm-avatar hero-avatar" style={{ borderColor: heroAvatar.color}}>
                   <img src={heroAvatar.image} alt="" className="confirm-hero-img" />
                 </div>
                 <div className="confirm-name">{t(heroAvatar.nameKey as TransKey)}</div>
@@ -329,23 +320,8 @@ export function CampaignView() {
   if (done && stageIdx != null) {
     const stage = STAGES[stageIdx];
     const rivalAvatar = getRivalAvatarByStageIdx(stageIdx);
-    const heroAvatar = getHeroAvatarData();
-    const tier = auraTier(done.auraTotal);
     const shareText = t("mission.shareText", { n: stageIdx + 1, pos: stage.heroPosition });
     const onShare = () => void shareSpot(null, appUrl, shareText);
-    const onShareAura = async () => {
-      const blob = await drawAuraCard({
-        avatarUrl: heroAvatar.image,
-        avatarColor: heroAvatar.color,
-        auraTotal: done.auraTotal,
-        word: t("aura.word"),
-        tierEmoji: tier.emoji,
-        tierLabel: t(tier.key as TransKey),
-        kicker: t("aura.cardKicker"),
-        footer: t("aura.cardFooter"),
-      });
-      void shareSpot(blob, appUrl, t("aura.shareText", { total: done.auraTotal }), t("disclaimer"));
-    };
     const onWhats = () =>
       window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText} ${appUrl}`)}`, "_blank");
     const hasNext = stageIdx + 1 < STAGES.length;
@@ -365,34 +341,6 @@ export function CampaignView() {
           <div className="mission-score">
             {done.correct}/{stage.rounds} · {t("mission.needed", { n: stage.passNeeded })}
           </div>
-          {done.passed && done.aura > 0 ? (
-            <div className="aura-burst">
-              <div className="aura-char-wrap">
-                <span className="aura-char-glow" />
-                <picture>
-                  <source srcSet={`${import.meta.env.BASE_URL}aura/farm.webp`} type="image/webp" />
-                  <img
-                    src={`${import.meta.env.BASE_URL}aura/farm.gif`}
-                    alt=""
-                    className="aura-char-img"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                </picture>
-              </div>
-              <div className="aura-gain">
-                +{done.aura} <span>{t("aura.word")}</span>
-              </div>
-              <div className="aura-farmline">{t("aura.farmLine")}</div>
-              <div className="aura-total">
-                {t("aura.totalLabel")}: <b>{done.auraTotal}</b> · {tier.emoji} {t(tier.key as TransKey)}
-              </div>
-              <button className="btn aura-share-btn" onClick={onShareAura}>
-                ✨ {t("aura.shareBtn")}
-              </button>
-            </div>
-          ) : null}
           {done.passed ? (
             <>
               <p className="mission-share-cta">{t("mission.shareCta")}</p>

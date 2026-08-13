@@ -24,10 +24,8 @@ import {
 import { makeRandomChallenge } from "../app/challenge";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
-import { awardDecisionAura } from "../train/aura";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
-import { AuraChip } from "./AuraChip";
 import { DailyHand } from "./DailyHand";
 import { StreakBanner } from "./StreakBanner";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -57,7 +55,6 @@ export function TrainView() {
     else if (res === "failed") setChallengeMsg(t("challenge.failed"));
   };
   const [result, setResult] = useState<FeedbackItem | null>(null);
-  const [auraDelta, setAuraDelta] = useState<number | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
 
   const persist = (next: MasteryState) => {
@@ -69,14 +66,12 @@ export function TrainView() {
     setModuleId(m.id);
     setSession({ correct: 0, total: 0 });
     setResult(null);
-    setAuraDelta(null);
     setScenario(buildScenario(m, Math.random));
   };
 
   const next = () => {
     if (!moduleId) return;
     setResult(null);
-    setAuraDelta(null);
     setScenario(buildScenario(moduleById(moduleId), Math.random));
   };
 
@@ -101,7 +96,6 @@ export function TrainView() {
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
-    setAuraDelta(awardDecisionAura(ok).delta);
     markActiveToday();
     recordDecision(key);
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
@@ -200,7 +194,6 @@ export function TrainView() {
             <div className={`fb-item ${result.rating}`}>
               <div className="fb-text">{result.text}</div>
             </div>
-            {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
             {isCorrect(result) ? (
               <button className="btn hit-share-btn" onClick={onShareHit}>
                 📣 {t("share.hitBtn")}

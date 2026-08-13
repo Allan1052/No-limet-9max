@@ -1,0 +1,5 @@
+Com base no vídeo, aqui está a descrição dos eventos solicitados:
+
+1.  **Como o app abre:** O aplicativo abre com uma tela de splash (tela de carregamento). Primeiro, exibe um logo dourado com as letras "CF" em um fundo escuro. Em seguida, o logo diminui suavemente e o texto "CALL OU FOLD" aparece logo abaixo. Não há piscadas na tela, a transição para a tela inicial do app é suave e leva cerca de dois segundos.
+2.  **Saída e retorno ao app:** Por volta dos 00:07, quando o usuário sai e volta para o aplicativo, ele não retorna instantaneamente para a tela onde estava. Em vez disso, o app exibe novamente a tela de splash com o logo e o nome do aplicativo, indicando que está recarregando ou reiniciando a interface.
+3.  **Efeito de aura no perfil:** Sim, na tela de "Perfil" (que aparece aos 00:31), há um efeito visual de aura. Ao redor da imagem do avatar do usuário, existe um círculo brilhante e animado na cor amarela/dourada.

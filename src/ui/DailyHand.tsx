@@ -7,11 +7,9 @@ import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { evaluateChoice, isCorrect } from "../train/scenarios";
 import { buildDailyScenario, loadDaily, saveDaily } from "../train/daily";
-import { awardDecisionAura } from "../train/aura";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
 import { trackEvent } from "../app/analytics";
-import { AuraChip } from "./AuraChip";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -24,7 +22,6 @@ export function DailyHand() {
   const doneBefore = prior?.day === day;
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<FeedbackItem | null>(null);
-  const [auraDelta, setAuraDelta] = useState<number | null>(null);
 
   const spec = scenario.spec;
   const appUrl =
@@ -35,7 +32,6 @@ export function DailyHand() {
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
-    setAuraDelta(awardDecisionAura(ok).delta);
     markActiveToday();
     recordDecision(key);
     saveDaily(day, ok);
@@ -120,7 +116,6 @@ export function DailyHand() {
               <div className={`fb-item ${result.rating}`}>
                 <div className="fb-text">{result.text}</div>
               </div>
-              {auraDelta != null ? <AuraChip delta={auraDelta} /> : null}
               <button className="btn hit-share-btn" onClick={onShare}>
                 📣 {t("daily.share")}
               </button>

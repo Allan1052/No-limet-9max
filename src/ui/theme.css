@@ -2731,7 +2731,7 @@ body {
 .hero-avatar {
   background: radial-gradient(circle at 50% 40%, #1a3a2a, #0a1a10);
   border: 2px solid var(--gold);
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+
 }
 .villain-avatar {
   background: radial-gradient(circle at 50% 40%, #2a1010, #120707);
@@ -3619,7 +3619,6 @@ body {
 .aura-avatar-img {
   width: 82px; height: 82px; border-radius: 50%; object-fit: cover; position: relative; z-index: 2;
   border: 2px solid var(--aura-color, #e6c454);
-  box-shadow: 0 0 26px var(--aura-color, #e6c454), 0 0 6px var(--aura-color, #e6c454);
   animation: auraBob 1.4s ease-in-out infinite;
 }
 .aura-ring {

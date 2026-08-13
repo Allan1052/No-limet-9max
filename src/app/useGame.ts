@@ -255,6 +255,19 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     // Enquanto isso, a UI mostra o toggle mas a mesa atual continua.
   }
 
+  // Salva o torneio em andamento no localStorage assim que a página fica
+  // oculta (troca de app, WhatsApp, tela desliga). Quando o Android/Chrome
+  // suspende o PWA e ele é recarregado, o restore() no mount retoma do slot.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden" && ref.current) {
+        persist(ref.current);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   const g = ref.current;
   const [, force] = useReducer((x) => x + 1, 0);
 

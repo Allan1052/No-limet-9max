@@ -20,8 +20,8 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setFade(true);
-      setTimeout(onComplete, 600);
-    }, 2400);
+      setTimeout(onComplete, 300);
+    }, 200);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
