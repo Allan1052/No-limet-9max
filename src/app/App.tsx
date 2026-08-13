@@ -29,6 +29,7 @@ function getBasePath(): string {
 }
 import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";
+import { DrillView } from "../ui/DrillView";
 import { HandLab } from "../ui/HandLab";
 import { CampaignView } from "../ui/CampaignView";
 import { ImportView } from "../ui/ImportView";
@@ -218,6 +219,8 @@ export function App() {
         <IcmCalculator />
       ) : view === "ultra" ? (
         <UltraTrainer />
+      ) : view === "drill" ? (
+        <DrillView />
       ) : view === "suamao" ? (
         <HandLab />
       ) : view === "campanha" ? (

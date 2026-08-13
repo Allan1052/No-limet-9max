@@ -21,17 +21,18 @@ export type AppView =
   | "campanha"
   | "ranking"
   | "anatomia"
-  | "perfil";
+  | "perfil"
+  | "drill";
 
 type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
 
 // Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
-const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar"];
+const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar", "drill"];
 
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
 export const HUBS: Hub[] = [
   { id: "jogar", icon: "🃏", labelKey: "nav.play", views: ["play", "torneio"] },
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "suamao", "campanha"] },
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "icm", "importar"] },
   { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
   { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
@@ -43,6 +44,7 @@ const SUB_LABEL: Record<AppView, TransKey> = {
   torneio: "tab.tournament",
   treino: "tab.train",
   ultra: "nav.sub.ultra",
+  drill: "nav.sub.drill",
   suamao: "nav.sub.suamao",
   campanha: "nav.sub.campanha",
   anatomia: "tab.anatomia",

@@ -17,7 +17,10 @@
 //
 // Tudo puro e testável; a UI só apresenta o resultado.
 // ---------------------------------------------------------------------------
-import { cardFromString, type Card } from "../engine/cards";
+import { cardFromString, cardsToString, type Card } from "../engine/cards";
+import { equityHandVsRange } from "../engine/equity";
+import { buildTopRange } from "../ranges/build";
+import { rangeCombos, type Range } from "../ranges/types";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { stackDepthAdjust } from "../ranges/stackDepth";
@@ -58,6 +61,9 @@ export interface HandLabSpec {
   stage: StageKey;
   stackBB: number; // stack efetivo em BB (o estágio dá um padrão, mas o usuário pode ajustar)
   hand: Card[]; // 2 cartas do herói
+  board?: Card[]; // cartas da mesa (3-5) para análise pós-flop
+  potBB?: number; // pote em BB (para calcular pot-odds)
+  villainBetBB?: number; // aposta do vilão em BB (para calcular pot-odds)
 }
 
 export interface HandAnalysis {
@@ -248,4 +254,128 @@ export const SUIT_OPTIONS = [
 /** Rótulo bonito da mão, ex. "K♠ Q♥" → "KQo / KQs". */
 export function handLabel(cards: Card[]): string {
   return comboToHandType(cards[0], cards[1]);
+}
+
+
+// ---------------------------------------------------------------------------
+// PÓS-FLOP — análise quando o jogador informa o board.
+// ---------------------------------------------------------------------------
+
+/** Street atual baseado no tamanho do board. */
+export function boardStreet(board: Card[]): string {
+  if (board.length === 3) return "Flop";
+  if (board.length === 4) return "Turn";
+  if (board.length === 5) return "River";
+  return "";
+}
+
+/**
+ * Resultado da análise pós-flop.
+ */
+export interface PostflopAnalysis {
+  equity: number; // % de equity do herói vs villain
+  potOdds: number | null; // % de pot odds (null se não tem aposta pra pagar)
+  evLabel: string; // "+EV" / "0" / "-EV"
+  recommendation: string; // fold | call | raise | check
+  simpleText: string;
+  technicalText: string;
+}
+
+/**
+ * % de range do vilão baseada na situação (abertura genérica).
+ * BTN abre largo (40%), MP aperto (25%), UTG muito aperto (15%), CO (30%).
+ */
+function villainOpenPercent(pos: Position): number {
+  const map: Record<string, number> = {
+    UTG: 0.15,
+    MP: 0.20,
+    HJ: 0.25,
+    CO: 0.30,
+    BTN: 0.40,
+    SB: 0.35,
+    BB: 0.30,
+  };
+  return map[pos] ?? 0.25;
+}
+
+/**
+ * Analisa a mão do herói contra o board e a range do vilão.
+ * Usa Monte Carlo (2000 iterações) pra calcular equity.
+ */
+export function analyzePostflop(spec: HandLabSpec): PostflopAnalysis {
+  const board = spec.board ?? [];
+  if (board.length === 0 || board.length > 5) {
+    return {
+      equity: 0,
+      potOdds: null,
+      evLabel: "0",
+      recommendation: "check",
+      simpleText: "Sem board — volte pro pré-flop.",
+      technicalText: "Sem board informado, não é possível calcular equity.",
+    };
+  }
+
+  // Range do vilão baseada na posição dele
+  const vPercent = villainOpenPercent(spec.villainPosition);
+  const villainRange: Range = buildTopRange(vPercent);
+  const villainCombos: Card[][] = rangeCombos(villainRange);
+
+  // Equity do herói vs villain no board
+  const eqResult = equityHandVsRange(spec.hand, villainCombos, board, 2000);
+  const equity = Math.round(eqResult.equity * 100);
+
+  // Pot odds
+  let potOdds: number | null = null;
+  let potBB = spec.potBB ?? 0;
+  let villainBetBB = spec.villainBetBB ?? 0;
+  if (villainBetBB > 0 && potBB > 0) {
+    potOdds = Math.round((villainBetBB / (potBB + villainBetBB * 2)) * 100);
+  }
+
+  // Recomendação
+  let recommendation: string;
+  let evLabel: string;
+  if (potOdds === null) {
+    // Sem aposta pra pagar — check ou bet
+    recommendation = equity > 60 ? "raise" : "check";
+    evLabel = equity > 50 ? "+EV" : "-EV";
+  } else {
+    // Tem aposta — precisa pagar. Equity > pot odds = call.
+    if (equity >= potOdds + 5) {
+      recommendation = equity > 70 ? "raise" : "call";
+      evLabel = "+EV";
+    } else if (equity >= potOdds - 5) {
+      recommendation = "call"; // borderline
+      evLabel = "0";
+    } else {
+      recommendation = "fold";
+      evLabel = "-EV";
+    }
+  }
+
+  const street = boardStreet(board);
+  const handType = comboToHandType(spec.hand[0], spec.hand[1]);
+  const boardText = cardsToString(board);
+
+  // Voz simples
+  const simpleText =
+    potOdds !== null
+      ? `${handType} no ${street} (${boardText}). Você tem ${equity}% de equity. O vilão aposta ${villainBetBB}bb num pote de ${potBB}bb — o preço é ${potOdds}%. ${equity > potOdds ? "Equity ganha do preço — paga!" : "Equity não paga o preço — fold é a escolha certa."}`
+      : `${handType} no ${street} (${boardText}). Você tem ${equity}% de equity. ${equity > 60 ? "Você é favorito — aposta pra extrair valor!" : equity > 40 ? "Board é disputado — check e reavalie." : "Você está atrás — check ou fold se tomar aposta."}`;
+
+  // Voz técnica
+  const rangeLabel = `${vPercent * 100}% das mãos`;
+  const technicalText =
+    potOdds !== null
+      ? `No ${street}, sua equity contra a range de abertura do vilão (${rangeLabel}) é ${equity}% (Monte Carlo, 2000 iterações). Pot odds: ${potOdds}%. ${equity > potOdds ? `Equity > pot odds → call/raise é +EV. ${equity > 70 ? "Com margem grande, raise captura mais valor." : "Call direto, sem margem pra raise."}` : `Equity < pot odds → fold é a decisão correta. A matemática não permite pagar aqui.`}`
+      : `No ${street}, sua equity contra a range de abertura do vilão (${rangeLabel}) é ${equity}%. ${equity > 60 ? "Você tem vantagem clara — bet por valor extrai. Considere sizing 2/3 a 3/4 pot." : equity > 40 ? "Equity é marginal — check-call é a linha padrão. Não precisa dar graça, mas também não precisa inflar o pote." : "Você está atrás da range do vilão. Check-fold ou bet de controle de pote."}`;
+
+  return {
+    equity,
+    potOdds,
+    evLabel,
+    recommendation,
+    simpleText,
+    technicalText,
+  };
 }

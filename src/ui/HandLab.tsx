@@ -18,6 +18,7 @@ import { recordDecision } from "../train/decisionStats";
 import { markActiveToday } from "../train/streak";
 import {
   analyzeHand,
+  analyzePostflop,
   parseHand,
   RANK_OPTIONS,
   STAGE_BB,
@@ -29,7 +30,7 @@ import {
 } from "../train/stage";
 
 type Mode = "simple" | "technical";
-
+type Tab = "preflop" | "postflop";
 const STACK_PRESETS = [10, 20, 40, 60, 100];
 
 function cardText(rank: string, suit: string): string {
@@ -37,6 +38,7 @@ function cardText(rank: string, suit: string): string {
 }
 
 export function HandLab() {
+  const [tab, setTab] = useState<Tab>("preflop");
   const [hero, setHero] = useState<Position>("BTN");
   const [villain, setVillain] = useState<Position>("CO");
   const [situation, setSituation] = useState<SituationKey>("vsopen");
@@ -49,6 +51,16 @@ export function HandLab() {
   const [mode, setMode] = useState<Mode>("simple");
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Board picks
+  const [bRank1, setBRank1] = useState("A");
+  const [bSuit1, setBSuit1] = useState("s");
+  const [bRank2, setBRank2] = useState("K");
+  const [bSuit2, setBSuit2] = useState("d");
+  const [bRank3, setBRank3] = useState("Q");
+  const [bSuit3, setBSuit3] = useState("c");
+  const [potBB, setPotBB] = useState("");
+  const [villainBetBB, setVillainBetBB] = useState("");
+  const [pfResult, setPfResult] = useState<ReturnType<typeof analyzePostflop> | null>(null);
 
   // Ao montar, lê um spec que veio do botão "Treinar esse spot" do resultado.
   useEffect(() => {
@@ -79,20 +91,46 @@ export function HandLab() {
   const analyze = () => {
     setErr(null);
     setResult(null);
+    setPfResult(null);
     if (!hand) {
       setErr("Cartas inválidas — escolha duas cartas diferentes.");
       return;
     }
-    setResult(
-      analyzeHand({
-        heroPosition: hero,
-        villainPosition: villain,
-        situation,
-        stage,
-        stackBB,
-        hand,
-      }),
-    );
+    if (tab === "preflop") {
+      setResult(
+        analyzeHand({
+          heroPosition: hero,
+          villainPosition: villain,
+          situation,
+          stage,
+          stackBB,
+          hand,
+        }),
+      );
+    } else {
+      const boardText =
+        cardText(bRank1, bSuit1) + cardText(bRank2, bSuit2) + cardText(bRank3, bSuit3);
+      const board = parseHand(boardText);
+      if (!board || board.length < 3) {
+        setErr("Board inválido — escolha 3 cartas diferentes.");
+        return;
+      }
+      const pot = parseFloat(potBB) || 0;
+      const bet = parseFloat(villainBetBB) || 0;
+      setPfResult(
+        analyzePostflop({
+          heroPosition: hero,
+          villainPosition: villain,
+          situation,
+          stage,
+          stackBB,
+          hand,
+          board,
+          potBB: pot,
+          villainBetBB: bet,
+        }),
+      );
+    }
     markActiveToday();
   };
 
@@ -125,6 +163,22 @@ export function HandLab() {
           na voz de um amigo e na voz de um pro.
         </p>
       </header>
+
+      {/* Tab toggle Pré-flop / Pós-flop */}
+      <div className="hl-tab-row">
+        <button
+          className={`hl-tab-btn${tab === "preflop" ? " on" : ""}`}
+          onClick={() => { setTab("preflop"); setPfResult(null); setResult(null); }}
+        >
+          Pré-flop
+        </button>
+        <button
+          className={`hl-tab-btn${tab === "postflop" ? " on" : ""}`}
+          onClick={() => { setTab("postflop"); setResult(null); setPfResult(null); }}
+        >
+          Pós-flop
+        </button>
+      </div>
 
       <section className="handlab-form">
         <label className="hl-label">Sua posição</label>
@@ -219,6 +273,55 @@ export function HandLab() {
           ))}
         </div>
 
+        {tab === "postflop" && (
+          <>
+            <label className="hl-label">Board (mesa)</label>
+            <div className="hl-hand-grid">
+              {([
+                { r: bRank1, s: bSuit1, setR: setBRank1, setS: setBSuit1, n: 1 },
+                { r: bRank2, s: bSuit2, setR: setBRank2, setS: setBSuit2, n: 2 },
+                { r: bRank3, s: bSuit3, setR: setBRank3, setS: setBSuit3, n: 3 },
+              ] as const).map((c) => (
+                <div key={c.n} className="hl-card-picker">
+                  <select
+                    className="hl-select hl-select-rank"
+                    value={c.r}
+                    onChange={(e) => c.setR(e.target.value)}
+                  >
+                    {RANK_OPTIONS.map((rk) => (
+                      <option key={rk} value={rk}>{rk}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="hl-select hl-select-suit"
+                    value={c.s}
+                    onChange={(e) => c.setS(e.target.value)}
+                  >
+                    {SUIT_OPTIONS.map((su) => (
+                      <option key={su.key} value={su.key}>{su.symbol} {su.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <label className="hl-label">Pote (bb)</label>
+            <input
+              className="hl-input"
+              type="number"
+              placeholder="Ex: 10"
+              value={potBB}
+              onChange={(e) => setPotBB(e.target.value)}
+            />
+            <label className="hl-label">Aposta do vilão (bb)</label>
+            <input
+              className="hl-input"
+              type="number"
+              placeholder="Ex: 5"
+              value={villainBetBB}
+              onChange={(e) => setVillainBetBB(e.target.value)}
+            />
+          </>
+        )}
         <label className="hl-label">Stack efetivo (bb)</label>
         <div className="hl-stack-row">
           {STACK_PRESETS.map((bb) => (
@@ -287,6 +390,58 @@ export function HandLab() {
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
           </button>
+        </section>
+      )}
+
+      {/* Pós-flop result */}
+      {pfResult && tab === "postflop" && (
+        <section className="hl-result">
+          <div className="hl-verdict">
+            <span className="hl-verdict-tag">
+              {pfResult.recommendation === "fold"
+                ? "FOLD"
+                : pfResult.recommendation === "call"
+                  ? "CALL"
+                  : pfResult.recommendation === "raise"
+                    ? "RAISE"
+                    : "CHECK"}
+            </span>
+            <div className="hl-pf-stats">
+              <span className="hl-pf-stat">Equity: <strong>{pfResult.equity}%</strong></span>
+              {pfResult.potOdds !== null && (
+                <span className="hl-pf-stat">Pot odds: <strong>{pfResult.potOdds}%</strong></span>
+              )}
+              <span
+                className={`hl-pf-stat hl-ev-${
+                  pfResult.evLabel === "+EV" ? "good" : pfResult.evLabel === "-EV" ? "bad" : "neutral"
+                }`}
+              >
+                {pfResult.evLabel}
+              </span>
+            </div>
+          </div>
+          <div className="hl-mode-row">
+            <button
+              className={`hl-mode-btn${mode === "simple" ? " on simple" : ""}`}
+              onClick={() => setMode("simple")}
+            >
+              🟡 Simples
+            </button>
+            <button
+              className={`hl-mode-btn${mode === "technical" ? " on tech" : ""}`}
+              onClick={() => setMode("technical")}
+            >
+              ⚫ Técnico
+            </button>
+          </div>
+          <div className={`hl-voice-card ${mode}`}>
+            <p className="hl-voice-title">
+              {mode === "simple" ? "Na voz de um amigo" : "No vocabulário de pro"}
+            </p>
+            <p className="hl-voice-body">
+              {mode === "simple" ? pfResult.simpleText : pfResult.technicalText}
+            </p>
+          </div>
         </section>
       )}
     </div>
