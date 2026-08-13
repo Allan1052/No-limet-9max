@@ -12,6 +12,7 @@ import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "../ui/AchievementsPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
+import { LeaksPanel } from "../ui/LeaksPanel";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
 
@@ -116,6 +117,7 @@ export function App() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [leaksOpen, setLeaksOpen] = useState(false);
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
@@ -301,6 +303,9 @@ export function App() {
               <button className="btn" onClick={() => setHistoryOpen(true)}>
                 📋 Histórico
               </button>
+              <button className="btn" onClick={() => setLeaksOpen(true)}>
+                🎯 Pontos fracos
+              </button>
               <button
                 className="btn"
                 disabled={controller.handLog.length === 0}
@@ -351,6 +356,10 @@ export function App() {
             setHistoryReplayIdx(idx);
           }}
         />
+      ) : null}
+
+      {leaksOpen ? (
+        <LeaksPanel hands={controller.handLog} onClose={() => setLeaksOpen(false)} />
       ) : null}
 
       {tipsOpen ? (
