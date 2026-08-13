@@ -8,6 +8,7 @@
 // Ao final: % de acerto, mastery level (beginner→master), e lista dos erros.
 // Progresso persistido em localStorage.
 // ---------------------------------------------------------------------------
+import { TrainingShareButton } from './TrainingShareButton';
 import { useState, useCallback } from "react";
 import { CardView } from "./Card";
 
@@ -186,6 +187,17 @@ export function DrillView() {
           </div>
         )}
 
+        <div className="mb-4">
+          <TrainingShareButton
+            data={{
+              trainingType: "Drill Mode",
+              spot: (session?.spot.type || "") + " · " + (session?.spot.heroPosition || "") + " · " + (session?.spot.effectiveBB || 0) + "bb",
+              score: result.correctCount + "/" + result.totalHands,
+              accuracy: result.accuracy + "%",
+              rating: result.mastery,
+            }}
+          />
+        </div>
         <button
           onClick={resetDrill}
           className="px-6 py-3 rounded-xl bg-gold text-black font-bold hover:opacity-90 transition-opacity"

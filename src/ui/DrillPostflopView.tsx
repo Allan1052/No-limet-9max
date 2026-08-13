@@ -6,6 +6,7 @@
 // (fold/check/call/bet/raise), recebe feedback instantâneo.
 // ---------------------------------------------------------------------------
 import { useState, useCallback } from "react";
+import { TrainingShareButton } from "./TrainingShareButton";
 import { CardView } from "./Card";
 import {
   POSTFLOP_DRILL_SPOTS,
@@ -130,6 +131,17 @@ export function DrillPostflopView() {
             </div>
           </div>
         )}
+        <div className="mb-4">
+          <TrainingShareButton
+            data={{
+              trainingType: "Drill Mode",
+              spot: session.spot.title + " · " + session.spot.potBB + "bb pot · bet " + session.spot.villainBetBB + "bb",
+              score: session.correctCount + "/" + session.hands.length,
+              accuracy: accuracy + "%",
+              rating: mastery,
+            }}
+          />
+        </div>
         <button
           onClick={resetDrill}
           className="px-6 py-3 rounded-xl bg-gold text-black font-bold hover:opacity-90 transition-opacity"

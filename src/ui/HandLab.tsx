@@ -11,6 +11,8 @@
 // Botão "Treinar esse spot" → leva ao Treino 1×1 já configurado na mesma
 // situação (via localStorage cof-sua-mao-spec, lido pelo UltraTrainer).
 // ---------------------------------------------------------------------------
+import { cardsToString } from '../engine/cards';
+import { TrainingShareButton } from './TrainingShareButton';
 import { useEffect, useMemo, useState } from "react";
 
 import { POSITIONS, type Position } from "../ranges/types";
@@ -287,6 +289,20 @@ export function HandLab() {
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
           </button>
+                  {/* Compartilhar resultado */}
+          <div className="mt-4">
+            <TrainingShareButton
+              data={{
+                trainingType: "Hand Lab",
+                spot: `${result.spec.heroPosition} vs ${result.spec.villainPosition} · ${result.spec.stackBB}bb`,
+                score: result.recommended.toUpperCase(),
+                accuracy: "—",
+                rating: result.handType,
+                heroCards: cardsToString(result.spec.hand),
+              }}
+              label="📤 Compartilhar análise"
+            />
+          </div>
         </section>
       )}
     </div>
