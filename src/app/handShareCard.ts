@@ -136,6 +136,42 @@ function drawRatingChip(
   ctx.fillText(label, cx, cy + 1);
 }
 
+/** Uma linha da timeline da mão: "PRÉ-FLOP · Raise 2.3bb ✓" (rua dourada, ação
+ *  creme, marca verde/vermelha), centralizada. */
+function drawTimelineRow(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  y: number,
+  street: string,
+  action: string,
+  correct: boolean,
+) {
+  const streetTxt = street.toUpperCase();
+  const midTxt = ` · ${action}`;
+  const mark = correct ? "  ✓" : "  ✗";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.font = "bold 25px Georgia, serif";
+  const w1 = ctx.measureText(streetTxt).width;
+  ctx.font = "600 25px Georgia, serif";
+  const w2 = ctx.measureText(midTxt).width;
+  ctx.font = "bold 25px Georgia, serif";
+  const w3 = ctx.measureText(mark).width;
+  let x = cx - (w1 + w2 + w3) / 2;
+
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 25px Georgia, serif";
+  ctx.fillText(streetTxt, x, y);
+  x += w1;
+  ctx.fillStyle = COLOR_CREAM;
+  ctx.font = "600 25px Georgia, serif";
+  ctx.fillText(midTxt, x, y);
+  x += w2;
+  ctx.fillStyle = correct ? "#5fb96a" : "#e07b6b";
+  ctx.font = "bold 25px Georgia, serif";
+  ctx.fillText(mark, x, y);
+}
+
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
 function drawLogoImage(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number): Promise<void> {
   return new Promise((resolve) => {
@@ -211,6 +247,10 @@ export interface HandShareData {
   potOdds?: number;
   /** EV em big blinds (ex.: -16.8). Só visível no modo técnico. */
   evBB?: number;
+  /** Linha do tempo da mão: uma entrada por RUA jogada (pré-flop→river), com a
+   *  ação e se foi correta. Quando tem 2+, o card mostra a mão inteira em vez de
+   *  só a última decisão. */
+  decisions?: { street: string; action: string; correct: boolean }[];
 }
 
 /**
@@ -381,44 +421,53 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   ctx.textAlign = "center";
   ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
 
-  // ── CONTEXTO DA AÇÃO ──
-  const ctxY = posStackY + 36 + g;
-  ctx.fillStyle = COLOR_CREAM_DIM;
-  ctx.font = "600 26px Georgia, serif";
-  ctx.fillText(data.street + " — " + data.context, S / 2, ctxY);
+  const useTimeline = !!data.decisions && data.decisions.length >= 2;
+  let statsY: number;
 
-  // ── DECISÃO ──
-  const decY = ctxY + 44 + g;
-  ctx.fillStyle = COLOR_CREAM;
-  ctx.font = "bold 38px Georgia, serif";
-  ctx.fillText(`Você: ${data.heroAction}`, S / 2, decY);
-
-  // ── VEREDITO / NOTA ──
-  const verY = decY + 42 + g;
-
-  const correct = isRatingCorrect(data.rating);
-  if (mode === "simples") {
-    // Chip com ícone + nota (ex.: "✓ BOA!" / "✗ ERRO")
-    const label = `${correct ? "✓" : "✗"} ${ratingWord(data.rating).toUpperCase()}`;
-    drawRatingChip(ctx, S / 2, verY, label, correct);
+  if (useTimeline) {
+    // ── LINHA DO TEMPO DA MÃO — uma linha por rua (pré-flop→river) ──
+    let ry = posStackY + 42;
+    for (const d of data.decisions!) {
+      drawTimelineRow(ctx, S / 2, ry, d.street, d.action, d.correct);
+      ry += 36;
+    }
+    statsY = ry - 36 + 46; // após a última rua, espaço antes da dica
   } else {
-    // Chip com veredito técnico ("✓ CORRETO" / "✗ ERROU")
-    drawRatingChip(ctx, S / 2, verY, ratingVerdict(data.rating), correct);
-  }
+    // ── CONTEXTO + DECISÃO + CHIP (mão de uma decisão só, ex.: all-in pré) ──
+    const ctxY = posStackY + 36 + g;
+    ctx.fillStyle = COLOR_CREAM_DIM;
+    ctx.font = "600 26px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText(data.street + " — " + data.context, S / 2, ctxY);
 
-  // ── MATEMÁTICA (só no modo técnico) ──
-  let statsY = verY + 40;
-  if (mode === "tecnico") {
-    const statParts: string[] = [];
-    if (data.equity !== undefined) statParts.push(`Equity ${Math.round(data.equity * 100)}%`);
-    if (data.potOdds !== undefined) statParts.push(`Pot odds ${Math.round(data.potOdds * 100)}%`);
-    if (data.evBB !== undefined) statParts.push(`EV ${data.evBB.toFixed(1)}bb`);
-    if (statParts.length > 0) {
-      ctx.fillStyle = COLOR_GOLD_BRIGHT;
-      ctx.font = "600 24px Georgia, serif";
-      ctx.textAlign = "center";
-      ctx.fillText(statParts.join("  ·  "), S / 2, statsY);
-      statsY += 38;
+    const decY = ctxY + 44 + g;
+    ctx.fillStyle = COLOR_CREAM;
+    ctx.font = "bold 38px Georgia, serif";
+    ctx.fillText(`Você: ${data.heroAction}`, S / 2, decY);
+
+    const verY = decY + 42 + g;
+    const correct = isRatingCorrect(data.rating);
+    if (mode === "simples") {
+      const label = `${correct ? "✓" : "✗"} ${ratingWord(data.rating).toUpperCase()}`;
+      drawRatingChip(ctx, S / 2, verY, label, correct);
+    } else {
+      drawRatingChip(ctx, S / 2, verY, ratingVerdict(data.rating), correct);
+    }
+
+    // ── MATEMÁTICA (só no modo técnico, mão de uma decisão) ──
+    statsY = verY + 40;
+    if (mode === "tecnico") {
+      const statParts: string[] = [];
+      if (data.equity !== undefined) statParts.push(`Equity ${Math.round(data.equity * 100)}%`);
+      if (data.potOdds !== undefined) statParts.push(`Pot odds ${Math.round(data.potOdds * 100)}%`);
+      if (data.evBB !== undefined) statParts.push(`EV ${data.evBB.toFixed(1)}bb`);
+      if (statParts.length > 0) {
+        ctx.fillStyle = COLOR_GOLD_BRIGHT;
+        ctx.font = "600 24px Georgia, serif";
+        ctx.textAlign = "center";
+        ctx.fillText(statParts.join("  ·  "), S / 2, statsY);
+        statsY += 38;
+      }
     }
   }
 

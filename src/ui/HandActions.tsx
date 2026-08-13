@@ -34,6 +34,16 @@ export function HandActions({
       : undefined;
     if (effectiveBB !== undefined) contextParts.push(`Stack: ${effectiveBB}bb`);
 
+    // Linha do tempo: uma entrada por RUA jogada (a última decisão de cada rua),
+    // na ordem em que aconteceram — conta a mão inteira, não só o último lance.
+    const byStreet = new Map<string, FeedbackItem>();
+    for (const it of feedback) byStreet.set(it.street, it);
+    const decisions = [...byStreet.values()].map((it) => ({
+      street: it.street,
+      action: it.heroAction,
+      correct: it.rating === "boa" || it.rating === "ok",
+    }));
+
     return {
       heroCards,
       board: hand.finalBoard,
@@ -50,6 +60,7 @@ export function HandActions({
       equity: lastItem.equity,
       potOdds: lastItem.potOdds,
       evBB: lastItem.evBB,
+      decisions,
     };
   })();
 
