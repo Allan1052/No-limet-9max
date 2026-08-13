@@ -13,6 +13,7 @@ import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "../ui/AchievementsPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
+import { HandActions } from "../ui/HandActions";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
 
@@ -292,6 +293,9 @@ export function App() {
               <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
                 {tr("btn.reviewHand")}
               </button>
+              {controller.lastHand ? (
+                <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+              ) : null}
               <button className="btn" onClick={() => setProgressOpen(true)}>
                 📊 {tr("btn.progress")}
               </button>

@@ -1,16 +1,12 @@
 // Replayer: percorre uma mão gravada passo a passo, com a decisão ótima.
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 import { CardView } from "./Card";
 import { actionLabel } from "../feedback/analyzer";
 import { toBB } from "../app/format";
 import type { HandHistory } from "../app/replay";
-import { HandShareButton } from "./HandShareButton";
-import type { HandShareData } from "../app/handShareCard";
 import type { FeedbackItem } from "../feedback/analyzer";
-import { MODULES, buildScenario } from "../train/scenarios";
-import { encodeChallenge, challengeUrl } from "../app/challenge";
-import { shareSpot } from "../app/share";
+import { HandActions } from "./HandActions";
 
 function optimalMatches(actionType: string, adviceAction: string): boolean {
   const fam = (a: string) =>
@@ -46,67 +42,6 @@ export function Replayer({
   const pot = atResult
     ? Object.values(hand.result?.winningsBySeat ?? {}).reduce((a, b) => a + b, 0)
     : (ev?.pot ?? 0);
-
-  // Dados para o Hand Share Card — usa a última decisão do herói avaliada.
-  const shareData: HandShareData | null = (() => {
-    if (feedback.length === 0) return null;
-    const lastItem = feedback[feedback.length - 1];
-    const heroCards = hand.holeCards[hand.heroSeat] ?? [];
-
-    // Monta contexto
-    const contextParts: string[] = [];
-    if (lastItem.equity !== undefined) {
-      contextParts.push(`Equity: ${Math.round(lastItem.equity * 100)}%`);
-    }
-    if (lastItem.potOdds !== undefined) {
-      contextParts.push(`Preço: ${Math.round(lastItem.potOdds * 100)}%`);
-    }
-    if (lastItem.evBB !== undefined) {
-      contextParts.push(`EV call: ${lastItem.evBB.toFixed(1)}bb`);
-    }
-    const effectiveBB = hand.startingStacks?.[hand.heroSeat]
-      ? Math.round((hand.startingStacks[hand.heroSeat] / hand.bigBlind))
-      : undefined;
-    if (effectiveBB !== undefined) {
-      contextParts.push(`Stack: ${effectiveBB}bb`);
-    }
-
-    return {
-      heroCards,
-      board: hand.finalBoard,
-      heroAction: lastItem.heroAction.toUpperCase(),
-      coachAction: lastItem.advice.toUpperCase(),
-      rating: lastItem.rating,
-      coachTip: lastItem.text,
-      street: lastItem.street,
-      tournamentInfo: "Call ou Fold · Simulador grátis",
-      context: contextParts.length > 0 ? contextParts.join(" · ") : "",
-      // NOVOS campos — sempre visíveis no card:
-      position: hand.heroPosition ?? "MP",
-      stackBB: effectiveBB !== undefined ? `${effectiveBB}bb` : "100bb",
-      stage: hand.tournamentStage,
-      equity: lastItem.equity,
-      potOdds: lastItem.potOdds,
-      evBB: lastItem.evBB,
-    };
-  })();
-
-  // Dados para o Desafiar amigo — gera um spot de pré-flop com a mesma mão.
-  const onChallenge = useCallback(async () => {
-    const heroCards = hand.holeCards[hand.heroSeat] ?? [];
-    if (heroCards.length < 2) return;
-
-    // Usa o módulo default (sem ICM) com o stack da mão.
-    const mod = MODULES.filter((m) => m.id !== "final_icm")[0] ?? MODULES[0];
-    const effectiveBB = hand.startingStacks?.[hand.heroSeat]
-      ? Math.round(hand.startingStacks[hand.heroSeat] / hand.bigBlind)
-      : 50;
-    const scenario = buildScenario(mod, Math.random);
-    const spec = { ...scenario.spec, effectiveBB, heroPosition: scenario.spec.heroPosition };
-    const code = encodeChallenge(spec, heroCards);
-    const url = challengeUrl(code);
-    await shareSpot(null, url, "Desafio Call ou Fold — jogue a mesma mão que eu!", "");
-  }, [hand]);
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -195,17 +130,10 @@ export function Replayer({
             Próximo ▶
           </button>
         </div>
-        {/* Botão de compartilhar a mão */}
-        {atResult && shareData ? (
-          <div style={{ marginTop: 14, textAlign: "center" }}>
-            <HandShareButton data={shareData} label="📤 Compartilhar mão" className="btn primary" />
-            <div style={{ marginTop: 8 }}>
-              <button className="btn" onClick={onChallenge}>
-                🤝 Desafiar amigo
-              </button>
-            </div>
-          </div>
-        ) : null}
+        {/* Compartilhar / Desafiar — sempre disponível na revisão (não só no fim) */}
+        <div className="replay-actions" style={{ marginTop: 14, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+          <HandActions hand={hand} feedback={feedback} />
+        </div>
       </div>
     </div>
   );
