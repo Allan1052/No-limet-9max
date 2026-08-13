@@ -267,12 +267,12 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   ctx.stroke();
 
   // ── CARTAS DO HERÓI ──
-  const cardW = 180;
-  const cardH = 250;
-  const gap = 30;
+  const cardW = 156;
+  const cardH = 218;
+  const gap = 28;
   const cardsTotalW = cardW * 2 + gap;
   const cardsX = (S - cardsTotalW) / 2;
-  const cardsY = 290;
+  const cardsY = 268;
 
   if (data.heroCards.length >= 1) {
     drawCardOnCanvas(ctx, data.heroCards[0], cardsX, cardsY, cardW, cardH);
@@ -282,24 +282,22 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   }
 
   // ── BOARD (se houver) ──
-  let bottomY = cardsY + cardH; // posição para o próximo bloco
+  let bottomY = cardsY + cardH; // borda inferior do último bloco de cartas
   if (data.board.length > 0) {
-    const bCardW = 110;
-    const bCardH = 152;
+    const bCardW = 96;
+    const bCardH = 134;
     const bGap = 10;
     const bTotalW = data.board.length * bCardW + (data.board.length - 1) * bGap;
     const bX = (S - bTotalW) / 2;
-    const bY = cardsY + cardH + 16;
+    const bY = cardsY + cardH + 14;
     for (let i = 0; i < data.board.length; i++) {
       drawCardOnCanvas(ctx, data.board[i], bX + i * (bCardW + bGap), bY, bCardW, bCardH);
     }
-    bottomY = bY + bCardH + 12;
-  } else {
-    bottomY = cardsY + cardH + 12;
+    bottomY = bY + bCardH;
   }
 
-  // ── POSIÇÃO + STACK (SEMPRE visível) ──
-  const posStackY = bottomY;
+  // ── POSIÇÃO + STACK (SEMPRE visível) — com respiro após as cartas ──
+  const posStackY = bottomY + 44;
   ctx.fillStyle = COLOR_GOLD_BRIGHT;
   ctx.font = "bold 30px Georgia, serif";
   ctx.textAlign = "center";
@@ -359,34 +357,36 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   }
 
   // ── TIP DO COACH (texto limpo, sem aspas quebradas) ──
+  // Quebra o texto ANTES pra a caixa ter a altura exata (sem espaço morto) e
+  // nunca invadir o rodapé.
   const cleanTip = cleanCoachText(data.coachTip);
-  const tipY = statsY + 12;
-  // Fundo escurecido para o tip
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  const tipBoxH = mode === "tecnico" ? 140 : 120;
-  roundRect(ctx, 70, tipY - 16, S - 140, tipBoxH, 12);
-  ctx.fill();
-
-  ctx.fillStyle = COLOR_CREAM;
   ctx.font = "italic 23px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const maxTipWidth = S - 220;
   let tipLines = wrapText(ctx, cleanTip, maxTipWidth);
-  // Limitar linhas
-  const maxLines = mode === "tecnico" ? 4 : 3;
+  const maxLines = 3;
   if (tipLines.length > maxLines) {
     const lastLine = tipLines.slice(maxLines - 1).join(" ");
     tipLines = [...tipLines.slice(0, maxLines - 1), lastLine + "…"];
   }
-  const lineHeight = 28;
-  const startTipY = tipY + 8;
+  const lineHeight = 30;
+  const boxPad = 22;
+  const tipBoxH = boxPad * 2 + tipLines.length * lineHeight;
+  const tipBoxTop = statsY + 6;
+
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  roundRect(ctx, 70, tipBoxTop, S - 140, tipBoxH, 12);
+  ctx.fill();
+
+  ctx.fillStyle = COLOR_CREAM;
+  const firstLineY = tipBoxTop + boxPad + lineHeight / 2;
   for (let i = 0; i < tipLines.length; i++) {
-    ctx.fillText(tipLines[i], S / 2, startTipY + i * lineHeight);
+    ctx.fillText(tipLines[i], S / 2, firstLineY + i * lineHeight);
   }
 
   // ── RODAPÉ ──
-  const footerY = S - 40;
+  const footerY = S - 44;
   ctx.fillStyle = COLOR_GOLD;
   ctx.font = "600 20px Georgia, serif";
   ctx.textAlign = "center";
