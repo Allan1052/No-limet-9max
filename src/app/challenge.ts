@@ -20,7 +20,7 @@ interface ChallengePayload {
   bb: number; // stack efetivo
   r?: Position; // posição de quem abriu (se enfrenta raise)
   s?: number; // tamanho da abertura (bb)
-  v?: "holdem" | "omaha" | "sng3"; // variante do jogo
+  v?: "holdem" | "omaha" | "sng3" | "cash"; // variante do jogo
 }
 
 function toBase64Url(s: string): string {

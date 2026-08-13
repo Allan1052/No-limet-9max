@@ -87,8 +87,8 @@ export interface GameOptions {
   onHeadsUp?: (d: { heroStackBB: number; villainName: string; villainStackBB: number }) => void;
   /** Chamado quando o herói VENCE o torneio — comemoração de campeão. */
   onChampion?: (d: { entrants: number; cash: number }) => void;
-  /** Variante do jogo: "holdem" (padrão), "omaha" (PLO) ou "sng3" (Sit & Go 3-max). */
-  variant?: "holdem" | "omaha" | "sng3";
+  /** Variante do jogo: "holdem" (padrão), "omaha" (PLO), "sng3" (Sit & Go 3-max) ou "cash" (Cash Game). */
+  variant?: "holdem" | "omaha" | "sng3" | "cash";
 
   // ---- Disciplina / progressão ----
   /** Fold pré-flop correto (para VPIP e badges). */
@@ -109,8 +109,8 @@ export interface TournamentConfig {
   stage: Stage;
   /** Mãos por nível antes de as blinds subirem (0 = não sobem sozinhas). */
   handsPerLevel?: number;
-  /** Variante: "holdem" (padrão), "omaha" (PLO) ou "sng3" (Sit & Go 3-max). */
-  variant?: "holdem" | "omaha" | "sng3";
+  /** Variante: "holdem" (padrão), "omaha" (PLO), "sng3" (Sit & Go 3-max) ou "cash" (Cash Game). */
+  variant?: "holdem" | "omaha" | "sng3" | "cash";
   /** Modo curto (10 mãos) para "Omaha no Ônibus". */
   shortMode?: boolean;
   /**
@@ -202,8 +202,8 @@ export interface GameSnapshot {
   tournamentFinishPlace: number | null;
   /** Histórico de mãos jogadas (para o export continuar após retomar). */
   handLog?: HandHistory[];
-  /** Variante do jogo salva ("holdem", "omaha" ou "sng3"). */
-  variant?: "holdem" | "omaha" | "sng3";
+  /** Variante do jogo salva ("holdem", "omaha", "sng3" ou "cash"). */
+  variant?: "holdem" | "omaha" | "sng3" | "cash";
   savedAt: string;
 }
 
@@ -300,6 +300,21 @@ export class GameController {
         ? PROFILES.slice(0, 2).map((p) => ({ name: p.name, profileId: p.id }))
         : PROFILES.map((p) => ({ name: p.name, profileId: p.id }))),
     ];
+    // Cash Game: 6-max, blinds fixas, stack 100bb (sem torneio)
+    if (opts.variant === "cash") {
+      const bb = opts.bigBlind ?? 100;
+      const sb = opts.smallBlind ?? bb / 2;
+      const cashStack = 100 * bb;
+      this.seatDefs = [
+        { name: this.heroName(), isHero: true },
+        ...PROFILES.slice(0, 5).map((p) => ({ name: p.name, profileId: p.id })),
+      ];
+      const seats = this.seatDefs.map((s) => ({ ...s, stack: cashStack }));
+      this.table = createTable({ smallBlind: sb, bigBlind: bb, ante: 0 }, seats, 0, "cash");
+      for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+      return;
+    }
+
     const seats = this.seatDefs.map((s) => ({ ...s, stack }));
     this.table = createTable(
       { smallBlind: opts.smallBlind ?? 25, bigBlind: opts.bigBlind ?? 50 },
@@ -320,6 +335,39 @@ export class GameController {
   }
 
   configureTournament(cfg: TournamentConfig): void {
+    // --- CASH GAME: path curto — sem torneio, blinds fixas, 6-max, sem eliminação ---
+    if (cfg.variant === "cash") {
+      // Blinds fixas baseadas no buy-in (como num cash real):
+      //   $11  → SB 25 / BB 50  (100bb = 5000)
+      //   $22  → SB 50 / BB 100 (100bb = 10000)
+      //   $55+ → SB 100 / BB 200 (100bb = 20000)
+      const bb = cfg.buyIn >= 55 ? 200 : cfg.buyIn >= 22 ? 100 : 50;
+      const sb = bb / 2;
+      const cashStack = 100 * bb; // 100bb padrão cash
+      this.payouts = undefined; // Sem premiação — cash é ganha/perde fichas
+      this.seatDefs = [
+        { name: this.heroName(), isHero: true },
+        ...PROFILES.slice(0, 5).map((p) => ({ name: p.name, profileId: p.id })),
+      ];
+      const seats = this.seatDefs.map((s) => ({ ...s, stack: cashStack }));
+      this.table = createTable({ smallBlind: sb, bigBlind: bb, ante: 0 }, seats, 0, "cash");
+      for (const p of this.table.players) this.stats[p.seat] = emptyStats();
+      // Sem tournament (session cash pura — o motor já lida com isso)
+      this.tournament = null;
+      this.finalTableAnnounced = true; // Nunca anuncia mesa final em cash
+      this.headsUpAnnounced = true;
+      this.phase = "handOver";
+      this.lastHand = null;
+      this.handLog = [];
+      this.feedback = [];
+      this.tournamentOver = false;
+      this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
+      this.sessionMistakes = [];
+      this.sessionDecisions = [];
+      this.sessionReview = [];
+      return; // Cash configurado, sair
+    }
+
     // --- SNG 3-MAX: path curto e específico (sem atrito, sem redraw, stacks iguais) ---
     if (cfg.variant === "sng3") {
       const sng3Level = SNG3_BLIND_LEVELS[0];
@@ -557,7 +605,9 @@ export class GameController {
   private refillSeats(): number {
     if (!this.tournament) {
       // Sessão livre (sem torneio): mantém a mesa cheia, como sempre foi.
-      return this.fillEmptySeats(this.table.variant === "sng3" ? 3 : 9);
+      if (this.table.variant === "sng3") return this.fillEmptySeats(3);
+      if (this.table.variant === "cash") return this.fillEmptySeats(6);
+      return this.fillEmptySeats(9);
     }
     // Mesa final já formada: só ENCOLHE — não repõe cadeira vazia nem move ninguém.
     if (this.tournament.finalTableFormed) return 0;

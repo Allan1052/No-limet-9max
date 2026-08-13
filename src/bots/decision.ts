@@ -61,7 +61,7 @@ export interface PostflopContext {
   rng?: () => number;
   equityIterations?: number;
   /** Variante do jogo: "holdem" (2 cartas) ou "omaha" (4 cartas). */
-  variant?: "holdem" | "omaha" | "sng3";
+  variant?: "holdem" | "omaha" | "sng3" | "cash";
 }
 
 export interface PostflopDecision {

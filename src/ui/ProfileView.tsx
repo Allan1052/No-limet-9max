@@ -21,16 +21,20 @@ export function ProfileView({
   setOmahaUnlocked,
   sng3Unlocked,
   setSng3Unlocked,
+  cashUnlocked,
+  setCashUnlocked,
   onOpenProgress,
   buildLabel,
   onCheckUpdate,
 }: {
-  gameVariant: "holdem" | "omaha" | "sng3";
-  setGameVariant: (v: "holdem" | "omaha" | "sng3") => void;
+  gameVariant: "holdem" | "omaha" | "sng3" | "cash";
+  setGameVariant: (v: "holdem" | "omaha" | "sng3" | "cash") => void;
   omahaUnlocked: boolean;
   setOmahaUnlocked: (v: boolean) => void;
   sng3Unlocked: boolean;
   setSng3Unlocked: (v: boolean) => void;
+  cashUnlocked: boolean;
+  setCashUnlocked: (v: boolean) => void;
   onOpenProgress: () => void;
   buildLabel: string;
   onCheckUpdate: () => void;
@@ -160,6 +164,26 @@ export function ProfileView({
               style={sng3Unlocked ? {} : { opacity: 0.5 }}
             >
               {sng3Unlocked ? "SNG 3-max" : "SNG 3-max 🔒"}
+            </button>
+            <button
+              className={`variant-btn ${gameVariant === "cash" && cashUnlocked ? "active" : ""}`}
+              onClick={() => {
+                if (cashUnlocked) {
+                  setGameVariant("cash");
+                } else {
+                  const code = prompt("🔒 Cash Game");
+                  if (code === "cash2026") {
+                    localStorage.setItem("cash_dev_unlock", "true");
+                    setCashUnlocked(true);
+                    setGameVariant("cash");
+                  } else {
+                    alert("Cash Game em desenvolvimento. Disponível em breve!");
+                  }
+                }
+              }}
+              style={cashUnlocked ? {} : { opacity: 0.5 }}
+            >
+              {cashUnlocked ? "Cash" : "Cash 🔒"}
             </button>
           </div>
         </div>

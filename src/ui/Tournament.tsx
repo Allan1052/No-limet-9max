@@ -51,12 +51,15 @@ export function TournamentSetup({
   const [entrants, setEntrants] = useState(500);
   const [stage, setStage] = useState<Stage>("inicio");
   const [speed, setSpeed] = useState<Speed>("normal");
-  const [gameType, setGameType] = useState<"nlhe" | "plo" | "sng3">("nlhe");
+  const [gameType, setGameType] = useState<"nlhe" | "plo" | "sng3" | "cash">("nlhe");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
     return localStorage.getItem("omaha_dev_unlock") === "true";
   });
   const [sng3Unlocked, setSng3Unlocked] = useState<boolean>(() => {
     return localStorage.getItem("sng3_dev_unlock") === "true";
+  });
+  const [cashUnlocked, setCashUnlocked] = useState<boolean>(() => {
+    return localStorage.getItem("cash_dev_unlock") === "true";
   });
 
   // Modo de jogo: Treino Livre (padrão) ou Circuito. Se há um torneio do
@@ -301,6 +304,27 @@ export function TournamentSetup({
             >
               {sng3Unlocked ? "SNG 3-max" : "SNG 3-max 🔒"}
             </button>
+            <button
+              className={`tab ${gameType === "cash" ? "active" : ""}`}
+              onClick={() => {
+                if (cashUnlocked) {
+                  setGameType("cash");
+                } else {
+                  const code = prompt("🔒 Cash Game");
+                  if (code === "cash2026") {
+                    localStorage.setItem("cash_dev_unlock", "true");
+                    setCashUnlocked(true);
+                    setGameType("cash");
+                  } else {
+                    alert("Cash Game em desenvolvimento. Disponível em breve!");
+                  }
+                }
+              }}
+              title={cashUnlocked ? "Cash Game" : "Em breve — Cash Game"}
+              style={cashUnlocked ? {} : { opacity: 0.5, cursor: "not-allowed" }}
+            >
+              {cashUnlocked ? "Cash" : "Cash 🔒"}
+            </button>
           </div>
         </div>
 
@@ -377,7 +401,7 @@ export function TournamentSetup({
               entrants: gameType === "sng3" ? 3 : Math.max(2, entrants),
               stage,
               handsPerLevel: SPEED_HANDS[speed],
-              variant: gameType === "plo" ? "omaha" : gameType === "sng3" ? "sng3" : "holdem",
+              variant: gameType === "plo" ? "omaha" : gameType === "sng3" ? "sng3" : gameType === "cash" ? "cash" : "holdem",
               mode: "livre",
             })
           }

@@ -44,7 +44,7 @@ export function createTable(
   config: TableConfig,
   seats: SeatConfig[],
   buttonSeat = 0,
-  variant: "holdem" | "omaha" | "sng3" = "holdem",
+  variant: "holdem" | "omaha" | "sng3" | "cash" = "holdem",
 ): TableState {
   const players: PlayerState[] = seats.map((s, i) => ({
     seat: i,

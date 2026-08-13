@@ -37,7 +37,7 @@ export interface PreflopContext {
   hand: Card[]; // 2 cartas para Hold'em, 4 para Omaha
   effectiveBB: number; // stack efetivo em big blinds
   profile: BotProfile;
-  variant: "holdem" | "omaha" | "sng3";
+  variant: "holdem" | "omaha" | "sng3" | "cash";
   /** Posição de quem abriu, se o pote já foi aberto com raise. */
   raiserPosition?: Position;
   /** Tamanho da abertura do vilão em BB (default 2.3). */
