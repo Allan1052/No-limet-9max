@@ -73,9 +73,16 @@ export interface FeedbackItem {
   mix?: AdviceFreq[];
   /** EV (em bb) de pagar neste spot — foldar vale 0. */
   evBB?: number;
+  /** Pré ou pós-flop — para agrupar vazamentos por fase. */
+  kind?: "preflop" | "postflop";
+  /** Família da SUA ação (fold/check/call/aggro) — p/ detectar vazamentos sem
+   *  parsear rótulos de texto. */
+  heroFam?: Family;
+  /** Família da ação RECOMENDADA. */
+  adviceFam?: Family;
 }
 
-type Family = "fold" | "check" | "call" | "aggro";
+export type Family = "fold" | "check" | "call" | "aggro";
 
 function family(action: string): Family {
   switch (action) {
@@ -196,6 +203,9 @@ function gradeCore(
     equity: eq,
     potOdds: odds,
     mix: advice.mix,
+    kind: advice.kind,
+    heroFam: hf,
+    adviceFam: af,
   };
 
   // ----- All-in FUNDO quando o certo era um raise/3-bet NORMAL (não jam) -----
