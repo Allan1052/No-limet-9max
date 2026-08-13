@@ -11,7 +11,8 @@
 // pagam apostas pequenas e desistem de apostas grandes.
 // ---------------------------------------------------------------------------
 
-import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, type BotProfile } from "./profiles";
+import { profileById, BASELINE_PROFILE, adjustProfileForBuyIn, buyInToughness, type BotProfile } from "./profiles";
+import { personalize, seedFromName } from "./personality";
 import { seatPositions } from "./seatPosition";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { legalActions } from "../game/betting";
@@ -137,7 +138,11 @@ export function preflopContextFor(
 export function botPreflopAction(t: TableState, seat: number, ctx: BotContext = {}): Action {
   const p = t.players[seat];
   const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
-  const profile = adjustProfileForBuyIn(base, ctx.buyIn);
+  const adjusted = adjustProfileForBuyIn(base, ctx.buyIn);
+  // Camada 1: cada bot tem um estilo próprio (jitter semeado, ciente da dureza).
+  const profile = p.profileId
+    ? personalize(adjusted, p.personalitySeed ?? seedFromName(p.name, seat), buyInToughness(ctx.buyIn))
+    : adjusted;
   const la = legalActions(t);
   const decision = preflopDecision(preflopContextFor(t, seat, profile, ctx));
   return toEngineAction(t, decision.action, decision.sizeBB, la);

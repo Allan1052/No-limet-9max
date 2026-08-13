@@ -254,7 +254,7 @@ export class GameController {
   private handStartStacks: Record<number, number> = {};
   private perHand: Record<number, PerHandFlags> = {};
   private payouts?: number[];
-  private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean }>;
+  private seatDefs: Array<{ name: string; profileId?: string; isHero?: boolean; personalitySeed?: number }>;
   private rng = Math.random;
   private onDecision?: (d: { rating: Rating; heroType: string; isPreflop: boolean; buyIn?: number; heroBB?: number; facingAllin?: boolean; finalTable?: boolean }) => void;
   private onHeroHand?: () => void;
@@ -430,6 +430,7 @@ export class GameController {
       usedNames.add(rep.name);
       p.profileId = rep.profileId;
       p.name = rep.name;
+      p.personalitySeed = 1 + Math.floor(this.rng() * 2_000_000_000); // estilo próprio (Camada 1)
       p.stack = this.variedStack(avg);
       p.status = "active";
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas

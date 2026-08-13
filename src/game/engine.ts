@@ -31,6 +31,7 @@ import {
 export interface SeatConfig {
   name: string;
   profileId?: string;
+  personalitySeed?: number;
   isHero?: boolean;
   stack: number;
 }
@@ -50,6 +51,7 @@ export function createTable(
     seat: i,
     name: s.name,
     profileId: s.profileId,
+    personalitySeed: s.personalitySeed,
     isHero: !!s.isHero,
     stack: s.stack,
     committed: 0,

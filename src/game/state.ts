@@ -18,6 +18,8 @@ export interface PlayerState {
   name: string;
   /** id do perfil de bot (undefined = herói humano). */
   profileId?: string;
+  /** Semente de personalidade do bot: cada um vira um estilo único (Camada 1). */
+  personalitySeed?: number;
   isHero: boolean;
   /** Fichas ainda na frente do jogador (atrás). */
   stack: number;

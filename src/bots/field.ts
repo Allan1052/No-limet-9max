@@ -71,11 +71,11 @@ export function buildFieldSeats(
   buyIn: number | undefined,
   count: number,
   rng: () => number,
-): { name: string; profileId: string }[] {
+): { name: string; profileId: string; personalitySeed: number }[] {
   const weights = fieldWeights(buyIn);
   const counts: Partial<Record<Archetype, number>> = {};
   const used = new Set<string>();
-  const out: { name: string; profileId: string }[] = [];
+  const out: { name: string; profileId: string; personalitySeed: number }[] = [];
   for (let i = 0; i < count; i++) {
     const w = { ...weights };
     for (const a of ARCHETYPES) if ((counts[a] ?? 0) >= MAX_PER_ARCHETYPE) w[a] = 0;
@@ -83,7 +83,8 @@ export function buildFieldSeats(
     counts[arch] = (counts[arch] ?? 0) + 1;
     const name = pickName(arch, used);
     used.add(name);
-    out.push({ name, profileId: arch });
+    // Semente única por bot: cada um vira um estilo próprio (Camada 1).
+    out.push({ name, profileId: arch, personalitySeed: 1 + Math.floor(rng() * 2_000_000_000) });
   }
   return out;
 }
