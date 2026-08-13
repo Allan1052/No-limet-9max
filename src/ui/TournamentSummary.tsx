@@ -16,6 +16,27 @@ import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 
+/**
+ * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
+ * com a ação do herói e se foi correta. Usa as decisões da última mão jogada
+ * (as que têm street preenchida) para contar a história da mão decisiva.
+ */
+function buildTimelineFromSummary(summary: Summary): { street: string; action: string; correct: boolean }[] {
+  // Pega as decisões com street preenchida (só decisões pós-feedback têm street)
+  const streeted = (summary.review ?? []).filter((d) => d.street && d.street !== "Resultado");
+  if (streeted.length < 2) return []; // precisa de 2+ ruas pra mostrar a timeline
+
+  // Dedupe por rua: pega a última decisão de cada rua (na ordem do torneio)
+  const byStreet = new Map<string, (typeof streeted)[0]>();
+  for (const d of streeted) byStreet.set(d.street, d);
+
+  return [...byStreet.values()].map((d) => ({
+    street: d.street,
+    action: d.heroAction,
+    correct: d.rating === "boa" || d.rating === "ok",
+  }));
+}
+
 const RATING_LABEL: Record<string, string> = {
   boa: "Boa",
   ok: "Ok",
@@ -91,6 +112,9 @@ export function TournamentSummary({
     position: "Mesa Final", // resultado do torneio — sem posição específica
     stackBB: "—",
     stage: STAGES[summary.initialStage]?.label ?? "Torneio",
+    // Linha do tempo da mão decisiva: as ruas com feedback do replay final,
+    // usando a última mão da lista de mãos jogadas no torneio.
+    decisions: buildTimelineFromSummary(summary),
   };
 
   // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
