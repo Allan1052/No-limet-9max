@@ -219,6 +219,18 @@
 
       // Auto-recovery: se o bundle JS falhar, tenta recarregar com cache-buster
       // (Isso resolve o problema de "app fora do ar" após deploy no GitHub Pages)
+      // Otimização de abertura: enquanto o usuário lê a landing, o bundle
+      // principal já começa a ser baixado (sem bloquear a renderização).
+      try {
+        var lh = document.querySelector('script[type="module"]');
+        if (lh && lh.src) {
+          var preload = document.createElement('link');
+          preload.rel = 'modulepreload';
+          preload.href = lh.src;
+          document.head.appendChild(preload);
+        }
+      } catch (err) { /* ignorar: a entrada via /src/main.tsx continua normal */ }
+
       window.addEventListener('error', function(e) {
         if (e.filename && e.filename.includes('/assets/')) {
           // Provavelmente um bundle antigo que não existe mais no servidor

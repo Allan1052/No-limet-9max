@@ -18,11 +18,14 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFade(true);
-      setTimeout(onComplete, 300);
-    }, 200);
-    return () => clearTimeout(timer);
+    // Sem espera artificial: a logo aparece enquanto o JS carrega; assim que
+    // o React monta este componente, começa o fade e entra no app na hora.
+    const t1 = setTimeout(() => setFade(true), 150);
+    const t2 = setTimeout(() => onComplete(), 350);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [onComplete]);
 
   return (
