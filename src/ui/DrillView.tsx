@@ -11,7 +11,6 @@
 import { TrainingShareButton } from './TrainingShareButton';
 import { useState, useCallback } from "react";
 import { CardView } from "./Card";
-
 import { actionLabel } from "../feedback/analyzer";
 import { DrillPostflopView } from "./DrillPostflopView";
 import {
@@ -25,12 +24,288 @@ import {
   type DrillResult,
 } from "../train/drill";
 
+// Estilos inline para o Drill Mode (paleta do app)
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    maxWidth: 620,
+    margin: '0 auto',
+    padding: '16px',
+    minHeight: '100%',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: '#f0ede0',
+    margin: 0,
+  },
+  subtitle: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#a8a596',
+    marginBottom: 24,
+  },
+  progressBox: {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 12,
+  },
+  progressTitle: {
+    fontWeight: 700,
+    marginBottom: 8,
+    color: '#f0ede0',
+  },
+  progressGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 8,
+  },
+  progressItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: 11,
+    color: '#a8a596',
+  },
+  toggleRow: {
+    display: 'flex',
+    gap: 8,
+    marginBottom: 16,
+  },
+  toggleBtn: {
+    flex: 1,
+    padding: '10px 8px',
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
+    border: '1px solid rgba(255,255,255,0.15)',
+    transition: 'all 0.2s',
+  },
+  toggleActive: {
+    background: 'linear-gradient(160deg, #f7e79b, #e6c454)',
+    color: '#0a0d0a',
+    borderColor: '#e6c454',
+  } as React.CSSProperties,
+  toggleInactive: {
+    background: 'rgba(255,255,255,0.05)',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  spotBtn: {
+    width: '100%',
+    textAlign: 'left' as const,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    marginBottom: 12,
+  },
+  spotInner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  spotIcon: {
+    fontSize: 24,
+  },
+  spotTitle: {
+    fontWeight: 700,
+    fontSize: 15,
+    color: '#f0ede0',
+    margin: 0,
+  },
+  spotDesc: {
+    fontSize: 12,
+    opacity: 0.6,
+    color: '#a8a596',
+    margin: 0,
+  },
+  spotProgress: {
+    marginTop: 8,
+    fontSize: 11,
+    color: '#a8a596',
+  },
+  gold: {
+    color: '#e6c454',
+    fontWeight: 700,
+  },
+  // Tela de drill
+  drillHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    fontSize: 12,
+    color: '#a8a596',
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    background: 'rgba(255,255,255,0.1)',
+    borderRadius: 99,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    background: 'linear-gradient(90deg, #e6c454, #f7e79b)',
+    transition: 'width 0.3s',
+    borderRadius: 99,
+  },
+  context: {
+    textAlign: 'center' as const,
+    marginBottom: 16,
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#f0ede0',
+  },
+  cardsRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  feedbackBox: {
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    textAlign: 'center' as const,
+  },
+  feedbackTitle: {
+    fontSize: 18,
+    fontWeight: 800,
+    marginBottom: 4,
+  },
+  feedbackAdvice: {
+    fontSize: 12,
+    opacity: 0.8,
+    color: '#a8a596',
+  },
+  feedbackText: {
+    fontSize: 11,
+    opacity: 0.6,
+    color: '#a8a596',
+    marginTop: 4,
+  },
+  actionGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12,
+    marginTop: 'auto',
+  },
+  actionBtn: {
+    padding: '16px 0',
+    borderRadius: 14,
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: 'pointer',
+    border: '1px solid',
+    transition: 'opacity 0.15s',
+  },
+  foldBtn: {
+    background: 'rgba(139,0,0,0.3)',
+    borderColor: 'rgba(180,60,60,0.4)',
+    color: '#e0958c',
+  },
+  callBtn: {
+    background: 'rgba(0,50,139,0.3)',
+    borderColor: 'rgba(60,100,180,0.4)',
+    color: '#8cb8e0',
+  },
+  raiseBtn: {
+    background: 'rgba(0,100,50,0.3)',
+    borderColor: 'rgba(60,160,100,0.4)',
+    color: '#8ce0a8',
+  },
+  allinBtn: {
+    background: 'rgba(230,196,84,0.15)',
+    borderColor: 'rgba(230,196,84,0.4)',
+    color: '#e6c454',
+  },
+  quitBtn: {
+    marginTop: 16,
+    fontSize: 12,
+    opacity: 0.5,
+    background: 'none',
+    border: 'none',
+    color: '#a8a596',
+    cursor: 'pointer',
+  },
+  // Resultado
+  resultTitle: {
+    fontSize: 24,
+    fontWeight: 800,
+    marginBottom: 8,
+    color: '#f0ede0',
+  },
+  resultPct: {
+    fontSize: 52,
+    fontWeight: 900,
+    color: '#e6c454',
+    marginBottom: 4,
+  },
+  resultInfo: {
+    fontSize: 15,
+    marginBottom: 4,
+    color: '#f0ede0',
+  },
+  resultMastery: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: '#e6c454',
+    marginBottom: 24,
+  },
+  errorsBox: {
+    textAlign: 'left' as const,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(180,40,40,0.12)',
+    border: '1px solid rgba(180,40,40,0.25)',
+  },
+  errorsTitle: {
+    fontWeight: 700,
+    marginBottom: 12,
+    fontSize: 13,
+    color: '#e0958c',
+  },
+  errorsList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+    maxHeight: 200,
+    overflowY: 'auto' as const,
+    fontSize: 11,
+    color: '#a8a596',
+  },
+  backBtn: {
+    padding: '12px 24px',
+    borderRadius: 12,
+    background: 'linear-gradient(160deg, #f7e79b, #e6c454)',
+    color: '#0a0d0a',
+    fontWeight: 800,
+    fontSize: 15,
+    border: 'none',
+    cursor: 'pointer',
+  },
+};
+
 type Phase = "select" | "drill" | "done";
 type DrillMode = "preflop" | "postflop";
 
 export function DrillView() {
-  const [drillMode, setDrillMode] = useState<DrillMode>("preflop");
+  const [drillMode, setDrillMode] = useState<DrillMode & string>("preflop");
   const [phase, setPhase] = useState<Phase>("select");
+  const [activePresetId, setActivePresetId] = useState<string>("");
   const [session, setSession] = useState<DrillSession | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; rating: string; advice: string } | null>(null);
   const [progress, setProgress] = useState(() => loadDrillProgress());
@@ -38,6 +313,7 @@ export function DrillView() {
 
   // Selecionar preset e iniciar drill
   const startDrill = useCallback((presetId: string) => {
+    setActivePresetId(presetId);
     const s = createDrillSession(presetId, 30);
     setSession(s);
     setPhase("drill");
@@ -49,14 +325,12 @@ export function DrillView() {
   const answer = useCallback((choice: "fold" | "call" | "raise" | "allin") => {
     if (!session || showingFeedback) return;
     const { feedback: fb } = answerDrillHand(session, choice);
-
     setFeedback({
       text: fb.text,
       rating: fb.rating,
       advice: fb.advice,
     });
     setShowingFeedback(true);
-
     // Auto-avançar após delay
     setTimeout(() => {
       setShowingFeedback(false);
@@ -78,6 +352,7 @@ export function DrillView() {
   const resetDrill = useCallback(() => {
     setPhase("select");
     setSession(null);
+    setActivePresetId("");
     setFeedback(null);
     setShowingFeedback(false);
   }, []);
@@ -92,66 +367,70 @@ export function DrillView() {
 
   if (phase === "select") {
     return (
-      <div className="max-w-md mx-auto px-4 py-6">
-        <h2 className="text-xl font-bold text-center mb-2">🎯 Drill Mode</h2>
-        <p className="text-center text-sm opacity-70 mb-6">
+      <div style={styles.container}>
+        <h2 style={styles.title}>🎯 Drill Mode</h2>
+        <p style={styles.subtitle}>
           Treine um spot específico até dominar. 30 mãos seguidas, feedback instantâneo.
         </p>
-
         {/* Progresso geral */}
         {Object.keys(progress).length > 0 && (
-          <div className="mb-6 p-3 rounded-lg bg-white/5 text-xs">
-            <p className="font-semibold mb-2">📊 Seu progresso:</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div style={styles.progressBox}>
+            <p style={styles.progressTitle}>📊 Seu progresso:</p>
+            <div style={styles.progressGrid}>
               {Object.entries(progress).slice(0, 6).map(([id, p]) => (
-                <div key={id} className="flex justify-between">
+                <div key={id} style={styles.progressItem}>
                   <span>{id}</span>
-                  <span className="text-gold">{p.bestAccuracy}%</span>
+                  <span style={styles.gold}>{p.bestAccuracy}%</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-
         {/* Toggle Pré-flop / Pós-flop */}
-        <div className="flex gap-2 mb-4">
+        <div style={styles.toggleRow}>
           <button
             onClick={() => setDrillMode("preflop")}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${drillMode === "preflop" ? "bg-gold text-black" : "bg-white/10 text-white/70"}`}
+            style={{
+              ...styles.toggleBtn,
+              ...(drillMode === "preflop" ? styles.toggleActive : styles.toggleInactive),
+            }}
           >
             🃏 Pré-flop
           </button>
           <button
             onClick={() => setDrillMode("postflop")}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${drillMode === ("postflop" as DrillMode) ? "bg-gold text-black" : "bg-white/10 text-white/70"}`}
+            style={{
+              ...styles.toggleBtn,
+              ...(drillMode === ("postflop" as string) ? styles.toggleActive : styles.toggleInactive),
+            }}
           >
             🌊 Pós-flop
           </button>
         </div>
         {/* Lista de presets */}
-        <div className="space-y-3">
-          {DRILL_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => startDrill(preset.id)}
-              className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{preset.icon}</span>
-                <div>
-                  <p className="font-semibold">{preset.title}</p>
-                  <p className="text-xs opacity-60">{preset.description}</p>
-                </div>
+        {DRILL_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => startDrill(preset.id)}
+            style={styles.spotBtn}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+          >
+            <div style={styles.spotInner}>
+              <span style={styles.spotIcon}>{preset.icon}</span>
+              <div>
+                <p style={styles.spotTitle}>{preset.title}</p>
+                <p style={styles.spotDesc}>{preset.description}</p>
               </div>
-              {/* Melhor resultado deste spot */}
-              {progress[preset.id] && (
-                <div className="mt-2 text-xs">
-                  Melhor: <span className="text-gold font-bold">{progress[preset.id].bestAccuracy}%</span> · {progress[preset.id].mastery}
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
+            </div>
+            {/* Melhor resultado deste spot */}
+            {progress[preset.id] && (
+              <div style={styles.spotProgress}>
+                Melhor: <span style={styles.gold}>{progress[preset.id].bestAccuracy}%</span> · {progress[preset.id].mastery}
+              </div>
+            )}
+          </button>
+        ))}
       </div>
     );
   }
@@ -162,32 +441,29 @@ export function DrillView() {
   if (phase === "done" && result) {
     const masteryEmoji = result.mastery === "master" ? "👑" : result.mastery === "advanced" ? "🔥" : result.mastery === "intermediate" ? "💪" : "📚";
     return (
-      <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold mb-2">{masteryEmoji} Resultado do Drill</h2>
-        <p className="text-sm opacity-70 mb-6">
-          {session?.spot.type} · {session?.spot.heroPosition} · {session?.spot.effectiveBB}bb
+      <div style={{ ...styles.container, textAlign: 'center', padding: '32px 16px' }}>
+        <h2 style={styles.resultTitle}>{masteryEmoji} Resultado do Drill</h2>
+        <p style={{ ...styles.subtitle, marginBottom: 24 }}>
+          {DRILL_PRESETS.find((p) => p.id === activePresetId)?.title || ""}
         </p>
-
-        <div className="text-6xl font-black mb-2">{result.accuracy}%</div>
-        <p className="text-lg mb-1">{result.correctCount}/{result.totalHands} acertos</p>
-        <p className="text-gold font-semibold text-xl mb-6 capitalize">{result.mastery}</p>
-
+        <div style={styles.resultPct}>{result.accuracy}%</div>
+        <p style={styles.resultInfo}>{result.correctCount}/{result.totalHands} acertos</p>
+        <p style={styles.resultMastery}>{result.mastery}</p>
         {/* Erros */}
         {result.mistakes.length > 0 && (
-          <div className="text-left mb-6 p-4 rounded-xl bg-red-900/20 border border-red-800/30">
-            <p className="font-semibold mb-3 text-sm">❌ Erros ({result.mistakes.length}):</p>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div style={styles.errorsBox}>
+            <p style={styles.errorsTitle}>❌ Erros ({result.mistakes.length}):</p>
+            <div style={styles.errorsList}>
               {result.mistakes.map((m, i) => (
-                <div key={i} className="text-xs flex justify-between">
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{m.hand}</span>
-                  <span>Você: {m.choice} · Certo: {actionLabel(m.advice)}</span>
+                  <span>Você: {m.choice} → {actionLabel(m.advice)}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-
-        <div className="mb-4">
+        <div style={{ marginBottom: 16 }}>
           <TrainingShareButton
             data={{
               trainingType: "Drill Mode",
@@ -198,10 +474,7 @@ export function DrillView() {
             }}
           />
         </div>
-        <button
-          onClick={resetDrill}
-          className="px-6 py-3 rounded-xl bg-gold text-black font-bold hover:opacity-90 transition-opacity"
-        >
+        <button onClick={resetDrill} style={styles.backBtn}>
           Voltar aos spots
         </button>
       </div>
@@ -214,7 +487,6 @@ export function DrillView() {
   if (phase === "drill" && session) {
     const currentHand = session.hands[session.currentIndex];
     if (!currentHand) return null;
-
     const spotLabel = `${session.spot.heroPosition}`;
     const contextLabel = session.spot.type === "open"
       ? `${spotLabel} · ${session.spot.effectiveBB}bb · Pote não aberto`
@@ -224,83 +496,50 @@ export function DrillView() {
           ? `${spotLabel} · ${session.spot.effectiveBB}bb · Tomou 3-bet`
           : `${spotLabel} · ${session.spot.effectiveBB}bb · Push ou Fold`;
 
+    const feedbackColor = (feedback?.rating === "boa" || feedback?.rating === "ok") ? '#5cbe8d' : '#e0645f';
+    const feedbackEmoji = feedback?.rating === "boa" ? "✅" : feedback?.rating === "ok" ? "👍" : feedback?.rating === "imprecisa" ? "⚠️" : "❌";
+
     return (
-      <div className="max-w-md mx-auto px-4 py-4 flex flex-col h-full">
+      <div style={{ ...styles.container, display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-xs opacity-70">
-            Mão {session.currentIndex + 1}/{session.hands.length}
-          </span>
-          <span className="text-xs text-gold font-semibold">
-            Acertos: {session.correctCount}
-          </span>
+        <div style={styles.drillHeader}>
+          <span>Mão {session.currentIndex + 1}/{session.hands.length}</span>
+          <span style={{ color: '#e6c454', fontWeight: 700 }}>Acertos: {session.correctCount}</span>
         </div>
-
         {/* Barra de progresso */}
-        <div className="w-full h-2 bg-white/10 rounded-full mb-4 overflow-hidden">
-          <div
-            className="h-full bg-gold transition-all duration-300"
-            style={{ width: `${(session.currentIndex / session.hands.length) * 100}%` }}
-          />
+        <div style={styles.progressBar}>
+          <div style={{ ...styles.progressFill, width: `${(session.currentIndex / session.hands.length) * 100}%` }} />
         </div>
-
         {/* Contexto */}
-        <div className="text-center mb-4">
-          <p className="text-sm font-semibold">{contextLabel}</p>
+        <div style={styles.context}>
+          <p style={{ margin: 0 }}>{contextLabel}</p>
         </div>
-
         {/* Cartas */}
-        <div className="flex justify-center gap-2 mb-6">
+        <div style={styles.cardsRow}>
           <CardView card={currentHand.hand[0]} />
           <CardView card={currentHand.hand[1]} />
         </div>
-
-        {/* Feedback (se estiver mostrando) */}
+        {/* Feedback */}
         {showingFeedback && feedback && (
-          <div className="mb-4 p-4 rounded-xl bg-white/10 border border-white/20 text-center animate-in">
-            <p className={`text-lg font-bold mb-1 ${feedback.rating === "boa" || feedback.rating === "ok" ? "text-green-400" : "text-red-400"}`}>
-              {feedback.rating === "boa" ? "✅ Boa!" : feedback.rating === "ok" ? "👍 Ok" : feedback.rating === "imprecisa" ? "⚠️ Imprecisa" : "❌ Errada"}
+          <div style={styles.feedbackBox}>
+            <p style={{ ...styles.feedbackTitle, color: feedbackColor }}>
+              {feedbackEmoji} {feedback.rating === "boa" ? "Boa!" : feedback.rating === "ok" ? "Ok" : feedback.rating === "imprecisa" ? "Imprecisa" : "Errada"}
             </p>
-            <p className="text-xs opacity-80">Certo: {feedback.advice}</p>
-            <p className="text-xs opacity-60 mt-1">{feedback.text}</p>
+            <p style={styles.feedbackAdvice}>Certo: {feedback.advice}</p>
+            <p style={styles.feedbackText}>{feedback.text}</p>
           </div>
         )}
-
         {/* Botões de ação */}
         {!showingFeedback && (
-          <div className="grid grid-cols-2 gap-3 mt-auto">
-            <button
-              onClick={() => answer("fold")}
-              className="py-4 rounded-xl bg-red-900/40 border border-red-700/50 text-lg font-bold hover:bg-red-800/50 transition-colors"
-            >
-              FOLD
-            </button>
-            <button
-              onClick={() => answer("call")}
-              className="py-4 rounded-xl bg-blue-900/40 border border-blue-700/50 text-lg font-bold hover:bg-blue-800/50 transition-colors"
-            >
-              CALL
-            </button>
-            <button
-              onClick={() => answer("raise")}
-              className="py-4 rounded-xl bg-green-900/40 border border-green-700/50 text-lg font-bold hover:bg-green-800/50 transition-colors"
-            >
-              RAISE
-            </button>
-            <button
-              onClick={() => answer("allin")}
-              className="py-4 rounded-xl bg-gold/20 border border-gold/50 text-lg font-bold hover:bg-gold/30 transition-colors"
-            >
-              ALL-IN
-            </button>
+          <div style={styles.actionGrid}>
+            <button onClick={() => answer("fold")} style={{ ...styles.actionBtn, ...styles.foldBtn }}>FOLD</button>
+            <button onClick={() => answer("call")} style={{ ...styles.actionBtn, ...styles.callBtn }}>CALL</button>
+            <button onClick={() => answer("raise")} style={{ ...styles.actionBtn, ...styles.raiseBtn }}>RAISE</button>
+            <button onClick={() => answer("allin")} style={{ ...styles.actionBtn, ...styles.allinBtn }}>ALL-IN</button>
           </div>
         )}
-
-        {/* Botão de desistir */}
-        <button
-          onClick={resetDrill}
-          className="mt-4 text-xs opacity-50 hover:opacity-100 transition-opacity"
-        >
+        {/* Desistir */}
+        <button onClick={resetDrill} style={styles.quitBtn}>
           ✕ Desistir do drill
         </button>
       </div>

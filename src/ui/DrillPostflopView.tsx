@@ -16,6 +16,267 @@ import {
   type PostflopDrillAction,
 } from "../train/drillPostflop";
 
+// Estilos inline para o Drill Pós-Flop (paleta do app)
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    maxWidth: 620,
+    margin: '0 auto',
+    padding: '16px',
+    minHeight: '100%',
+  },
+  header: { textAlign: 'center' as const },
+  title: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: '#f0ede0',
+    margin: '0 0 8px 0',
+  },
+  subtitle: {
+    textAlign: 'center' as const,
+    fontSize: 13,
+    color: '#a8a596',
+    marginBottom: 24,
+  },
+  spotBtn: {
+    width: '100%',
+    textAlign: 'left' as const,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    marginBottom: 12,
+  },
+  spotInner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  spotIcon: { fontSize: 24 },
+  spotTitle: {
+    fontWeight: 700,
+    fontSize: 15,
+    color: '#f0ede0',
+    margin: 0,
+  },
+  spotDesc: {
+    fontSize: 12,
+    opacity: 0.6,
+    color: '#a8a596',
+    margin: 0,
+  },
+  backLink: {
+    marginTop: 24,
+    fontSize: 12,
+    opacity: 0.5,
+    background: 'none',
+    border: 'none',
+    color: '#a8a596',
+    cursor: 'pointer',
+    display: 'block',
+    margin: '24px auto 0',
+  },
+  // Resultado
+  resultTitle: {
+    fontSize: 24,
+    fontWeight: 800,
+    marginBottom: 8,
+    color: '#f0ede0',
+  },
+  resultPct: {
+    fontSize: 52,
+    fontWeight: 900,
+    color: '#e6c454',
+    marginBottom: 4,
+  },
+  resultInfo: {
+    fontSize: 15,
+    marginBottom: 4,
+    color: '#f0ede0',
+  },
+  resultMastery: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: '#e6c454',
+    marginBottom: 24,
+  },
+  errorsBox: {
+    textAlign: 'left' as const,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(180,40,40,0.12)',
+    border: '1px solid rgba(180,40,40,0.25)',
+  },
+  errorsTitle: {
+    fontWeight: 700,
+    marginBottom: 12,
+    fontSize: 13,
+    color: '#e0958c',
+  },
+  errorsList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+    maxHeight: 200,
+    overflowY: 'auto' as const,
+    fontSize: 11,
+    color: '#a8a596',
+  },
+  backBtn: {
+    padding: '12px 24px',
+    borderRadius: 12,
+    background: 'linear-gradient(160deg, #f7e79b, #e6c454)',
+    color: '#0a0d0a',
+    fontWeight: 800,
+    fontSize: 15,
+    border: 'none',
+    cursor: 'pointer',
+  },
+  // Drill
+  drillHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    fontSize: 12,
+    color: '#a8a596',
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    background: 'rgba(255,255,255,0.1)',
+    borderRadius: 99,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    background: 'linear-gradient(90deg, #e6c454, #f7e79b)',
+    transition: 'width 0.3s',
+    borderRadius: 99,
+  },
+  context: {
+    textAlign: 'center' as const,
+    marginBottom: 12,
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#f0ede0',
+  },
+  contextSub: {
+    textAlign: 'center' as const,
+    fontSize: 12,
+    opacity: 0.6,
+    color: '#a8a596',
+    marginBottom: 16,
+  },
+  boardRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 12,
+  },
+  boardCard: {
+    width: 40,
+    height: 56,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 18,
+    fontWeight: 700,
+    borderRadius: 6,
+    background: '#faf7f0',
+    color: '#1c1c1c',
+    border: '1px solid rgba(0,0,0,0.2)',
+  },
+  cardsRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  feedbackBox: {
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    textAlign: 'center' as const,
+  },
+  feedbackTitle: {
+    fontSize: 18,
+    fontWeight: 800,
+    marginBottom: 4,
+  },
+  feedbackAdvice: {
+    fontSize: 12,
+    opacity: 0.8,
+    color: '#a8a596',
+  },
+  feedbackText: {
+    fontSize: 11,
+    opacity: 0.6,
+    color: '#a8a596',
+    marginTop: 4,
+  },
+  actionGrid2: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12,
+    marginTop: 'auto',
+  },
+  actionGrid3: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: 8,
+    marginTop: 'auto',
+  },
+  actionBtn: {
+    padding: '16px 0',
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 800,
+    cursor: 'pointer',
+    border: '1px solid',
+    transition: 'opacity 0.15s',
+  },
+  foldBtn: {
+    background: 'rgba(139,0,0,0.3)',
+    borderColor: 'rgba(180,60,60,0.4)',
+    color: '#e0958c',
+  },
+  callBtn: {
+    background: 'rgba(0,50,139,0.3)',
+    borderColor: 'rgba(60,100,180,0.4)',
+    color: '#8cb8e0',
+  },
+  raiseBtn: {
+    background: 'rgba(0,100,50,0.3)',
+    borderColor: 'rgba(60,160,100,0.4)',
+    color: '#8ce0a8',
+  },
+  checkBtn: {
+    background: 'rgba(100,100,100,0.25)',
+    borderColor: 'rgba(150,150,150,0.4)',
+    color: '#c8c8c8',
+  },
+  betBtn: {
+    background: 'rgba(230,196,84,0.15)',
+    borderColor: 'rgba(230,196,84,0.4)',
+    color: '#e6c454',
+  },
+  quitBtn: {
+    marginTop: 16,
+    fontSize: 12,
+    opacity: 0.5,
+    background: 'none',
+    border: 'none',
+    color: '#a8a596',
+    cursor: 'pointer',
+  },
+};
+
 type PfPhase = "select" | "drill" | "done";
 
 export function DrillPostflopView() {
@@ -69,33 +330,32 @@ export function DrillPostflopView() {
   // ---------------------------------------------------------------------------
   if (phase === "select") {
     return (
-      <div className="max-w-md mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-2 text-center">🌊 Drill Pós-Flop</h2>
-        <p className="text-center text-sm opacity-70 mb-6">
+      <div style={styles.container}>
+        <h2 style={styles.title}>🌊 Drill Pós-Flop</h2>
+        <p style={styles.subtitle}>
           Treine spots pós-flop até dominar. 30 mãos seguidas, mesmo board.
         </p>
-        <div className="space-y-3">
+        <div>
           {POSTFLOP_DRILL_SPOTS.map((spot) => (
             <button
               key={spot.id}
               onClick={() => startDrill(spot.id)}
-              className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
+              style={styles.spotBtn}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{spot.icon}</span>
+              <div style={styles.spotInner}>
+                <span style={styles.spotIcon}>{spot.icon}</span>
                 <div>
-                  <p className="font-semibold">{spot.title}</p>
-                  <p className="text-xs opacity-60">{spot.description}</p>
+                  <p style={styles.spotTitle}>{spot.title}</p>
+                  <p style={styles.spotDesc}>{spot.description}</p>
                 </div>
               </div>
             </button>
           ))}
         </div>
-        <button
-          onClick={resetDrill}
-          className="mt-6 text-xs opacity-50 hover:opacity-100 transition-opacity block mx-auto"
-        >
-          ← Voltar ao Drill Pré-Flop
+        <button onClick={() => {}} style={styles.backLink}>
+          (Voltar — use o toggle acima)
         </button>
       </div>
     );
@@ -108,22 +368,24 @@ export function DrillPostflopView() {
     const accuracy = Math.round((session.correctCount / session.hands.length) * 100);
     const mastery = accuracy >= 90 ? "master" : accuracy >= 75 ? "advanced" : accuracy >= 60 ? "intermediate" : "beginner";
     const masteryEmoji = mastery === "master" ? "👑" : mastery === "advanced" ? "🔥" : mastery === "intermediate" ? "💪" : "📚";
+    const wrongCount = session.hands.filter((h) => !h.correct).length;
+
     return (
-      <div className="max-w-md mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold mb-2">{masteryEmoji} Resultado</h2>
-        <p className="text-sm opacity-70 mb-6">
+      <div style={{ ...styles.container, textAlign: 'center', padding: '32px 16px' }}>
+        <h2 style={styles.resultTitle}>{masteryEmoji} Resultado</h2>
+        <p style={{ ...styles.subtitle, marginBottom: 24 }}>
           {session.spot.title} · {session.spot.potBB}bb pot · bet {session.spot.villainBetBB}bb
         </p>
-        <div className="text-6xl font-black mb-2">{accuracy}%</div>
-        <p className="text-lg mb-1">{session.correctCount}/{session.hands.length} acertos</p>
-        <p className="text-gold font-semibold text-xl mb-6 capitalize">{mastery}</p>
+        <div style={styles.resultPct}>{accuracy}%</div>
+        <p style={styles.resultInfo}>{session.correctCount}/{session.hands.length} acertos</p>
+        <p style={styles.resultMastery}>{mastery}</p>
         {/* Erros */}
-        {session.hands.filter((h) => !h.correct).length > 0 && (
-          <div className="text-left mb-6 p-4 rounded-xl bg-red-900/20 border border-red-800/30">
-            <p className="font-semibold mb-3 text-sm">❌ Erros ({session.hands.filter((h) => !h.correct).length}):</p>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+        {wrongCount > 0 && (
+          <div style={styles.errorsBox}>
+            <p style={styles.errorsTitle}>❌ Erros ({wrongCount}):</p>
+            <div style={styles.errorsList}>
               {session.hands.filter((h) => !h.correct).map((h, i) => (
-                <div key={i} className="text-xs flex justify-between">
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{h.hand.map((c) => cardToStringHelper(c)).join(" ")}</span>
                   <span>Você: {h.heroChoice} · Certo: {h.bestAction}</span>
                 </div>
@@ -131,7 +393,7 @@ export function DrillPostflopView() {
             </div>
           </div>
         )}
-        <div className="mb-4">
+        <div style={{ marginBottom: 16 }}>
           <TrainingShareButton
             data={{
               trainingType: "Drill Mode",
@@ -142,10 +404,7 @@ export function DrillPostflopView() {
             }}
           />
         </div>
-        <button
-          onClick={resetDrill}
-          className="px-6 py-3 rounded-xl bg-gold text-black font-bold hover:opacity-90 transition-opacity"
-        >
+        <button onClick={resetDrill} style={styles.backBtn}>
           Voltar aos spots
         </button>
       </div>
@@ -159,91 +418,79 @@ export function DrillPostflopView() {
     const currentHand = session.hands[session.currentIndex];
     if (!currentHand) return null;
     const spotLabel = session.spot.title;
-
     const actions: PostflopDrillAction[] =
       session.spot.villainBetBB > 0
         ? ["fold", "call", "raise"]
         : ["check", "bet"];
 
+    const actionStyles: Record<string, React.CSSProperties> = {
+      fold: { ...styles.actionBtn, ...styles.foldBtn },
+      call: { ...styles.actionBtn, ...styles.callBtn },
+      raise: { ...styles.actionBtn, ...styles.raiseBtn },
+      check: { ...styles.actionBtn, ...styles.checkBtn },
+      bet: { ...styles.actionBtn, ...styles.betBtn },
+    };
+    const actionLabels: Record<string, string> = {
+      fold: "FOLD", call: "CALL", raise: "RAISE", check: "CHECK", bet: "BET",
+    };
+
     return (
-      <div className="max-w-md mx-auto px-4 py-4 flex flex-col h-full">
+      <div style={{ ...styles.container, display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-xs opacity-70">
-            Mão {session.currentIndex + 1}/{session.hands.length}
-          </span>
-          <span className="text-xs text-gold font-semibold">
-            Acertos: {session.correctCount}
-          </span>
+        <div style={styles.drillHeader}>
+          <span>Mão {session.currentIndex + 1}/{session.hands.length}</span>
+          <span style={{ color: '#e6c454', fontWeight: 700 }}>Acertos: {session.correctCount}</span>
         </div>
         {/* Barra */}
-        <div className="w-full h-2 bg-white/10 rounded-full mb-4 overflow-hidden">
-          <div
-            className="h-full bg-gold transition-all duration-300"
-            style={{ width: `${(session.currentIndex / session.hands.length) * 100}%` }}
-          />
+        <div style={styles.progressBar}>
+          <div style={{ ...styles.progressFill, width: `${(session.currentIndex / session.hands.length) * 100}%` }} />
         </div>
         {/* Contexto */}
-        <div className="text-center mb-4">
-          <p className="text-sm font-semibold">{spotLabel}</p>
-          <p className="text-xs opacity-60">
+        <div style={styles.context}>
+          <p style={{ margin: 0 }}>{spotLabel}</p>
+        </div>
+        <div style={styles.contextSub}>
+          <p style={{ margin: 0 }}>
             Pote: {session.spot.potBB}bb · Vilão bet: {session.spot.villainBetBB > 0 ? `${session.spot.villainBetBB}bb` : "passou"}
           </p>
         </div>
         {/* Board */}
-        <div className="flex justify-center gap-1 mb-3">
+        <div style={styles.boardRow}>
           {session.spot.board.map((card, i) => (
-            <div key={i} className="w-10 h-14 flex items-center justify-center text-lg font-bold rounded bg-white/10 border border-white/20">
+            <div key={i} style={styles.boardCard}>
               {cardToStringHelper(card)}
             </div>
           ))}
         </div>
         {/* Cartas */}
-        <div className="flex justify-center gap-2 mb-6">
+        <div style={styles.cardsRow}>
           <CardView card={currentHand.hand[0]} />
           <CardView card={currentHand.hand[1]} />
         </div>
         {/* Feedback */}
         {showingFeedback && feedback && (
-          <div className="mb-4 p-4 rounded-xl bg-white/10 border border-white/20 text-center animate-in">
-            <p className={`text-lg font-bold mb-1 ${feedback.correct ? "text-green-400" : "text-red-400"}`}>
+          <div style={styles.feedbackBox}>
+            <p style={{ ...styles.feedbackTitle, color: feedback.correct ? '#5cbe8d' : '#e0645f' }}>
               {feedback.correct ? "✅ Boa!" : "❌ Errada"}
             </p>
-            <p className="text-xs opacity-80">
+            <p style={styles.feedbackAdvice}>
               Certo: {feedback.bestAction} · Equity {feedback.equity}% vs Pot odds {feedback.potOdds}%
             </p>
-            <p className="text-xs opacity-60 mt-1">{feedback.explanation}</p>
+            <p style={styles.feedbackText}>{feedback.explanation}</p>
           </div>
         )}
         {/* Botões */}
         {!showingFeedback && (
-          <div className={`grid gap-3 mt-auto ${actions.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          <div style={actions.length === 2 ? styles.actionGrid2 : styles.actionGrid3}>
             {actions.map((action) => (
-              <button
-                key={action}
-                onClick={() => answer(action)}
-                className={`py-4 rounded-xl text-lg font-bold transition-colors ${
-                  action === "fold"
-                    ? "bg-red-900/40 border border-red-700/50 hover:bg-red-800/50"
-                    : action === "call"
-                      ? "bg-blue-900/40 border border-blue-700/50 hover:bg-blue-800/50"
-                      : action === "raise"
-                        ? "bg-green-900/40 border border-green-700/50 hover:bg-green-800/50"
-                        : action === "check"
-                          ? "bg-gray-700/40 border border-gray-500/50 hover:bg-gray-600/50"
-                          : "bg-gold/20 border border-gold/50 hover:bg-gold/30"
-                }`}
-              >
-                {action === "fold" ? "FOLD" : action === "call" ? "CALL" : action === "raise" ? "RAISE" : action === "check" ? "CHECK" : "BET"}
+              <button key={action} onClick={() => answer(action)} style={actionStyles[action]}>
+                {actionLabels[action]}
               </button>
             ))}
           </div>
         )}
         {/* Desistir */}
-        <button
-          onClick={resetDrill}
-          className="mt-4 text-xs opacity-50 hover:opacity-100 transition-opacity"
-        >
+        <button onClick={resetDrill} style={styles.quitBtn}>
           ✕ Desistir do drill
         </button>
       </div>
@@ -253,7 +500,7 @@ export function DrillPostflopView() {
   return null;
 }
 
-// Helper para converter card → string (sem importar de cards.ts pra evitar duplicar)
+// Helper para converter card → string
 function cardToStringHelper(card: number): string {
   const RANKS = "23456789TJQKA";
   const SUITS = "cdhs";
