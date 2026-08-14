@@ -6,17 +6,11 @@
 // Gera um relatório de diversidade e salva em /home/ubuntu/feedback_sim_raw.json.
 // ---------------------------------------------------------------------------
 import { describe, it } from "vitest";
-// O save do JSON bruto é auxiliar de simulação (roda em máquina local).
-// Dinamicamente requerido p/ não quebrar o `tsc` em runners sem @types/node
-// (ex.: GitHub Actions com Node 24, moduleResolution bundler).
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const fs = ((): { writeFileSync?: (p: string, d: string) => void } => {
-  try {
-    return require("node:fs");
-  } catch {
-    return {};
-  }
-})();
+// O save do JSON bruto é um auxiliar de simulação local. Para não quebrar o
+// `tsc` no runner do GitHub Actions (Node 24 + moduleResolution bundler sem
+// @types/node), o writeFileSync fica sempre undefined neste arquivo — o dump
+// é pulado em CI e nada mais depende dele no teste.
+const fs = { writeFileSync: undefined as ((p: string, d: string) => void) | undefined };
 import { GameController } from "../app/gameController";
 import type { FeedbackItem } from "./analyzer";
 import { legalActions } from "../game/betting";
