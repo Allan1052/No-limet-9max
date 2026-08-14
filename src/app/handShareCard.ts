@@ -287,6 +287,133 @@ function isRatingCorrect(rating: Rating): boolean {
   return rating === "boa" || rating === "ok";
 }
 
+// ── Card de Conquista ("Trophy Room" — compartilhar vitória/ITM) ──────────
+export interface TrophyShareData {
+  /** Torneio (ex.: "Circuito · Etapa 3 — Buy-in $109"). */
+  tournamentInfo: string;
+  /** Colocação (1 = campeão). */
+  finishPlace: number;
+  entrants: number;
+  /** Prêmio recebido ($). */
+  cash: number;
+  inMoney: boolean;
+}
+
+export async function drawTrophyCard(data: TrophyShareData): Promise<Blob | null> {
+  return drawTrophyCanvas(data);
+}
+
+async function drawTrophyCanvas(data: TrophyShareData): Promise<Blob | null> {
+  const S = 1080;
+  const canvas = document.createElement("canvas");
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.resolve(null);
+
+  // Fundo: feltro escuro com gradiente radial (mesmo estilo do hand card)
+  const bgGrad = ctx.createRadialGradient(S / 2, S * 0.4, S * 0.1, S / 2, S * 0.5, S * 0.8);
+  bgGrad.addColorStop(0, COLOR_BG_FELT);
+  bgGrad.addColorStop(1, COLOR_BG_DARK);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, S, S);
+
+  // Textura de feltro sutil
+  ctx.globalAlpha = 0.03;
+  for (let i = 0; i < 200; i++) {
+    const px = Math.random() * S;
+    const py = Math.random() * S;
+    ctx.fillStyle = Math.random() > 0.5 ? "#fff" : "#000";
+    ctx.fillRect(px, py, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Vinheta
+  const vig2 = ctx.createRadialGradient(S / 2, S / 2, S * 0.34, S / 2, S / 2, S * 0.72);
+  vig2.addColorStop(0, "rgba(0,0,0,0)");
+  vig2.addColorStop(1, "rgba(0,0,0,0.4)");
+  ctx.fillStyle = vig2;
+  ctx.fillRect(0, 0, S, S);
+
+  // Linha dourada superior
+  ctx.strokeStyle = "rgba(212,175,55,0.5)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(S - 60, 20);
+  ctx.stroke();
+
+  // Logo oficial no topo
+  await drawLogoImage(ctx, S / 2, 85, 88);
+  ctx.fillStyle = COLOR_GOLD;
+  ctx.font = "bold 48px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("CALL OU FOLD", S / 2, 178);
+
+  // Torneio
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 26px Georgia, serif";
+  ctx.fillText(data.tournamentInfo, S / 2, 222);
+
+  // Separador dourado
+  ctx.strokeStyle = "rgba(212,175,55,0.4)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(120, 256);
+  ctx.lineTo(S - 120, 256);
+  ctx.stroke();
+
+  // Troféu (emoji em dourado) + colocação
+  ctx.font = "130px serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("🏆", S / 2, 380);
+
+    // "1º DE 100 INSCRITOS"
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "600 34px Georgia, serif";
+  const placeLabel = `${data.finishPlace}º DE ${data.entrants} INSCRITOS`;
+  ctx.fillText(placeLabel, S / 2, 490);
+
+  // CAMPEÃO! (ou "NO DINHEIRO")
+  const isChamp = data.finishPlace === 1 && data.inMoney;
+  const headline = isChamp ? "CAMPEÃO!" : "NO DINHEIRO!";
+  const headlineSize = isChamp ? 118 : 92;
+  ctx.save();
+  ctx.shadowColor = "rgba(230,196,84,0.55)";
+  ctx.shadowBlur = 48;
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = `bold ${headlineSize}px Georgia, serif`;
+  ctx.fillText(headline, S / 2, 610);
+  ctx.restore();
+
+  // Prêmio
+  if (data.inMoney && data.cash > 0) {
+    ctx.fillStyle = COLOR_CREAM;
+    ctx.font = "bold 44px Georgia, serif";
+    ctx.fillText(`Prêmio: $${Math.round(data.cash).toLocaleString("pt-BR")} 💰`, S / 2, 720);
+  }
+
+  // Rodapé
+  ctx.strokeStyle = "rgba(212,175,55,0.4)";
+  ctx.beginPath();
+  ctx.moveTo(120, 810);
+  ctx.lineTo(S - 120, 810);
+  ctx.stroke();
+
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 30px Georgia, serif";
+  ctx.fillText("Treina de graça · calloufold.com.br", S / 2, 870);
+  ctx.font = "500 24px Georgia, serif";
+  ctx.fillStyle = "rgba(236,231,213,0.5)";
+  ctx.fillText("App de estudo. Sem apostas nem dinheiro real.", S / 2, 920);
+
+  return new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b), "image/png");
+  });
+}
+
 /** Quebra um texto em linhas para caber no canvas. */
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(" ");

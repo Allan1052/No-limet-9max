@@ -4832,3 +4832,104 @@ body {
 .tips-tab:active {
   transform: scale(0.97);
 }
+
+/* ── Top 10 Premiações (mural de troféus do jogador) ───────────────────── */
+.tp-panel {
+  background: #0d1f16;
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 14px;
+  padding: 16px 18px 14px;
+  margin: 14px 0 6px;
+}
+.tp-title {
+  color: var(--gold, #e6c454);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.tp-sub {
+  color: var(--text-dim, #a8a596);
+  font-size: 13px;
+  margin: 2px 0 10px;
+}
+.tp-list { display: flex; flex-direction: column; gap: 6px; }
+.tp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.tp-row.top {
+  border-color: rgba(230,196,84,0.6);
+  background: rgba(230,196,84,0.08);
+  box-shadow: 0 0 14px rgba(230,196,84,0.18);
+}
+.tp-rank { font-size: 24px; min-width: 32px; text-align: center; }
+.tp-body { flex: 1; min-width: 0; }
+.tp-place { color: var(--text, #f0ede0); font-size: 14px; font-weight: 700; }
+.tp-meta { color: var(--text-dim, #a8a596); font-size: 11.5px; margin-top: 1px; }
+.tp-bar-wrap { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); margin-top: 5px; overflow: hidden; }
+.tp-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #b8912e, #e6c454);
+  transition: width 0.4s ease;
+}
+.tp-cash {
+  color: var(--text, #f0ede0);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tp-cash.gold { color: var(--gold-bright, #f7e79b); text-shadow: 0 0 10px rgba(230,196,84,0.4); }
+.tp-empty {
+  background: #0d1f16;
+  border: 1px dashed rgba(212,175,55,0.4);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 14px 0 6px;
+  text-align: center;
+  color: var(--text, #f0ede0);
+}
+.tp-empty-sub { color: var(--text-dim, #a8a596); font-size: 13px; margin-top: 6px; }
+
+/* ---- Histórico de Mãos (perfil, filtro por tipo de erro) ---- */
+.hh-modal { max-height: 88vh; overflow-y: auto; }
+.hh-panel { width: 100%; }
+.hh-title { font-size: 17px; font-weight: 800; color: #d4af37; margin-bottom: 4px; }
+.hh-sub { font-size: 12px; color: #9aa89e; margin-bottom: 10px; line-height: 1.45; }
+.hh-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; align-items: center; }
+.hh-chip {
+  font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid #3a4a3f; background: transparent; color: #ece7d5; cursor: pointer;
+}
+.hh-chip.active { background: #d4af37; color: #10120c; border-color: #d4af37; }
+.hh-chip.small { font-size: 11px; padding: 4px 9px; }
+.hh-fam-row { display: flex; align-items: center; gap: 5px; width: 100%; }
+.hh-fam-lbl { font-size: 11px; color: #9aa89e; }
+.hh-list { display: flex; flex-direction: column; gap: 7px; }
+.hh-entry {
+  width: 100%; text-align: left; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+  padding: 9px 11px; cursor: pointer;
+}
+.hh-entry.ruim { border-left: 3px solid #ef4444; }
+.hh-entry.imprecisa { border-left: 3px solid #f97316; }
+.hh-entry.ok { border-left: 3px solid #fbbf24; }
+.hh-entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hh-street { font-size: 11px; font-weight: 800; color: #d4af37; background: rgba(212,175,55,0.12); padding: 2px 7px; border-radius: 999px; }
+.hh-what { flex: 1; font-size: 12.5px; color: #ece7d5; }
+.hh-tag {
+  font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15); color: #ece7d5; background: transparent;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.hh-tag.ruim { color: #ef4444; border-color: #ef4444; }
+.hh-tag.imprecisa { color: #f97316; border-color: #f97316; }
+.hh-tag.ok { color: #fbbf24; border-color: #fbbf24; }
+.hh-meta { font-size: 10.5px; color: #8a9a8e; margin-top: 3px; }
+.hh-empty { text-align: center; color: #8a9a8e; font-size: 13px; padding: 22px 8px; }
+.hh-tip { margin-top: 7px; }

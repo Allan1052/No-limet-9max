@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
@@ -11,6 +11,7 @@ import { RangeGrid } from "../ui/RangeGrid";
 import { MissionsPanel } from "../ui/MissionsPanel";
 import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "../ui/AchievementsPanel";
+import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
 import { HandActions } from "../ui/HandActions";
@@ -61,6 +62,8 @@ import { useT } from "../i18n";
 import { useSettings } from "./settings";
 import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
+import { addTournamentResult } from "./resultsLog";
+import { appendHandLog } from "./handHistoryLog";
 import "../ui/theme.css";
 
 export function App() {
@@ -103,6 +106,43 @@ export function App() {
     xpToasts,
     dismissXpToasts,
   } = useGame(effectiveLevel, { variant: gameVariant });
+  // Diário de resultados ("Trophy Room"): grava no aparelho do jogador
+  // uma única vez por torneio concluído, com todos os dados do summary.
+  const summaryRef = useRef<string>("");
+  useEffect(() => {
+    if (controller.tournamentOver && controller.tournamentSummary()) {
+      const s = controller.tournamentSummary()!;
+      const key = `${s.buyIn}:${s.mode}:${s.finishPlace}:${s.cash}`;
+      if (summaryRef.current !== key) {
+        summaryRef.current = key;
+        addTournamentResult({
+          finishPlace: s.finishPlace,
+          entrants: s.entrants,
+          buyIn: s.buyIn,
+          cash: s.cash,
+          inMoney: s.inMoney,
+          mode: s.mode,
+          circuitStage: s.circuitStage,
+          timestamp: Date.now(),
+        });
+        // Histórico de mãos: grava as decisões não-"boa" da sessão (com
+        // contexto do torneio) para o filtro por tipo de erro no app.
+        appendHandLog(
+          (s.review ?? []).map((item) => ({
+            item,
+            buyIn: s.buyIn,
+            mode: s.mode,
+            circuitStage: s.circuitStage,
+            entrants: s.entrants,
+            timestamp: Date.now(),
+          })),
+        );
+      }
+    } else {
+      summaryRef.current = "";
+    }
+  }, [controller.tournamentOver, controller.tournamentSummary()]);
+
   // Esconde a landing page overlay quando o app está pronto
   useEffect(() => {
     const lh = document.getElementById("landing-hero");
@@ -121,6 +161,7 @@ export function App() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLogOpen, setHistoryLogOpen] = useState(false);
   const [leaksOpen, setLeaksOpen] = useState(false);
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
@@ -267,6 +308,7 @@ export function App() {
           setOmahaUnlocked={setOmahaUnlocked}
           onOpenProgress={() => setProgressOpen(true)}
           onOpenAchievements={() => setAchievementsOpen(true)}
+          onOpenHistory={() => setHistoryLogOpen(true)}
           buildLabel={formatBuild(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}
         />
@@ -329,7 +371,7 @@ export function App() {
                 </button>
               ) : null}
               <button className="btn" onClick={() => setHistoryOpen(true)}>
-                📋 Histórico
+                📋 Mãos desta sessão
               </button>
               <button className="btn" onClick={() => setLeaksOpen(true)}>
                 🎯 Pontos fracos
@@ -376,14 +418,29 @@ export function App() {
       ) : null}
 
       {historyOpen ? (
-        <HandHistoryPanel
-          hands={controller.handLog}
-          onClose={() => setHistoryOpen(false)}
-          onSelectHand={(idx) => {
-            setHistoryOpen(false);
-            setHistoryReplayIdx(idx);
-          }}
-        />
+        <div className="overlay" onClick={() => setHistoryOpen(false)}>
+          <div className="replay progress-modal hh-modal" onClick={(e) => e.stopPropagation()}>
+            <SessionHistoryPanel
+              hands={controller.handLog}
+              onClose={() => setHistoryOpen(false)}
+              onSelectHand={(idx) => {
+                setHistoryOpen(false);
+                setHistoryReplayIdx(idx);
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {historyLogOpen ? (
+        <div className="overlay" onClick={() => setHistoryLogOpen(false)}>
+          <div className="replay progress-modal hh-modal" onClick={(e) => e.stopPropagation()}>
+            <HandHistoryPanel />
+            <button className="btn" style={{ width: "100%" }} onClick={() => setHistoryLogOpen(false)}>
+              fechar
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {leaksOpen ? (

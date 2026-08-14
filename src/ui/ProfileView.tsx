@@ -11,6 +11,7 @@ import { LangSelect } from "./LangSelect";
 import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { SupportPix } from "./SupportPix";
+import { TopPrizesPanel } from "./TopPrizesPanel";
 
 export function ProfileView({
   gameVariant,
@@ -19,6 +20,7 @@ export function ProfileView({
   setOmahaUnlocked,
   onOpenProgress,
   onOpenAchievements,
+  onOpenHistory,
   buildLabel,
   onCheckUpdate,
 }: {
@@ -28,6 +30,7 @@ export function ProfileView({
   setOmahaUnlocked: (v: boolean) => void;
   onOpenProgress: () => void;
   onOpenAchievements: () => void;
+  onOpenHistory: () => void;
   buildLabel: string;
   onCheckUpdate: () => void;
 }) {
@@ -88,6 +91,15 @@ export function ProfileView({
             🏆 Conquistas
           </button>
         </div>
+
+        {/* Mural de troféus: os 10 maiores prêmios do jogador */}
+        <TopPrizesPanel />
+
+        {/* Diário de decisões: histórico de mãos com filtro por tipo de erro */}
+        <div className="profile-section-title">📜 Histórico de Mãos</div>
+        <button className="btn profile-evolution" onClick={onOpenHistory}>
+          📜 Histórico de Mãos
+        </button>
 
         {/* Ajustes */}
         <div className="profile-section-title">{t("profile.settings")}</div>

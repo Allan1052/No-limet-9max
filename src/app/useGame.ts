@@ -133,8 +133,9 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     }
   }, []);
 
-  const onTournamentEnd = useCallback(({ result, inMoney }: { result: "campeao" | "eliminado"; inMoney: boolean }) => {
-    fireMission({ type: "tournamentEnd", result, inMoney });
+  const onTournamentEnd = useCallback(
+    ({ result, inMoney }: { result: "campeao" | "eliminado"; inMoney: boolean }) => {
+      fireMission({ type: "tournamentEnd", result, inMoney });
     // XP: torneio terminado
     if (isXpUnlocked()) {
       const xpState = loadXpState();

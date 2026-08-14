@@ -14,7 +14,8 @@ import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
 import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
-import type { HandShareData } from "../app/handShareCard";
+import { TrophyShareButton } from "./TrophyShareButton";
+import type { HandShareData, TrophyShareData } from "../app/handShareCard";
 
 /**
  * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
@@ -115,6 +116,18 @@ export function TournamentSummary({
     // Linha do tempo da mão decisiva: as ruas com feedback do replay final,
     // usando a última mão da lista de mãos jogadas no torneio.
     decisions: buildTimelineFromSummary(summary),
+  };
+
+  // Dados para o Card de Conquista (troféu): compartilhável quando chega ao
+  // dinheiro ou vence — prova social da conquista do jogador.
+  const trophyData: TrophyShareData = {
+    tournamentInfo: summary.mode === "circuito"
+      ? (summary.circuitStage ? `Circuito · Etapa ${summary.circuitStage}` : "Circuito") + ` — Buy-in $${summary.buyIn}`
+      : `Treino Livre · Buy-in $${summary.buyIn}`,
+    finishPlace: summary.finishPlace,
+    entrants: summary.entrants,
+    cash: summary.cash,
+    inMoney: summary.inMoney,
   };
 
   // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
@@ -317,6 +330,17 @@ export function TournamentSummary({
             className="btn primary"
           />
         </div>
+
+        {/* Card de Conquista (troféu): só quando chega ao dinheiro ou vence */}
+        {summary.inMoney && (
+          <div style={{ marginTop: 8, textAlign: "center" }}>
+            <TrophyShareButton
+              data={trophyData}
+              label={champ ? "🏆 Compartilhar conquista" : "🏆 Compartilhar resultado"}
+              className="btn primary"
+            />
+          </div>
+        )}
 
         <button className="btn primary" onClick={onClose} style={{ marginTop: 10 }}>
           Fechar e configurar novo torneio
