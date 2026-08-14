@@ -6,7 +6,17 @@
 // Gera um relatório de diversidade e salva em /home/ubuntu/feedback_sim_raw.json.
 // ---------------------------------------------------------------------------
 import { describe, it } from "vitest";
-import { writeFileSync } from "node:fs";
+// O save do JSON bruto é auxiliar de simulação (roda em máquina local).
+// Dinamicamente requerido p/ não quebrar o `tsc` em runners sem @types/node
+// (ex.: GitHub Actions com Node 24, moduleResolution bundler).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fs = ((): { writeFileSync?: (p: string, d: string) => void } => {
+  try {
+    return require("node:fs");
+  } catch {
+    return {};
+  }
+})();
 import { GameController } from "../app/gameController";
 import type { FeedbackItem } from "./analyzer";
 import { legalActions } from "../game/betting";
@@ -163,12 +173,16 @@ describe("feedback diversity (simulação 20 mil mãos)", () => {
     console.log(analyze("free", rowsFree));
     console.log(analyze("technical", rowsTech));
 
-    // Salva JSON bruto
-    writeFileSync(
-      "/home/ubuntu/feedback_sim_raw.json",
-      JSON.stringify({ free: rowsFree, technical: rowsTech }),
-    );
-    console.log("JSON bruto salvo: /home/ubuntu/feedback_sim_raw.json");
+    // Salva JSON bruto (apenas em ambiente com acesso a disco, ex.: local)
+    if (fs.writeFileSync) {
+      fs.writeFileSync(
+        "/home/ubuntu/feedback_sim_raw.json",
+        JSON.stringify({ free: rowsFree, technical: rowsTech }),
+      );
+      console.log("JSON bruto salvo: /home/ubuntu/feedback_sim_raw.json");
+    } else {
+      console.log("(fs indisponível neste ambiente — JSON bruto não salvo, console acima contém o relatório)");
+    }
   });
 
   it("feedback de bolha/mesa final traz o sufixo de pressão", async () => {
