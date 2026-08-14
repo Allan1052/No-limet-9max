@@ -27,7 +27,7 @@ import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
 import { buildFieldSeats, pickReplacement } from "../bots/field";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
-import { gradeDecision, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
+import { gradeDecision, type FeedbackContext, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
 import {
   beginHand,
   emptyStats,
@@ -838,11 +838,19 @@ export class GameController {
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
       const heroType = action.type === "raise" ? "raise" : action.type;
-      const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice);
+      // Contexto da mão p/ o texto do feedback (posição, stack, estágio) —
+      // UI-only, não altera nota nem decisão.
+      const posMap = seatPositions(this.table);
+      const feedbackCtx: FeedbackContext = {
+        heroPosition: posMap.get(this.heroSeat),
+        heroBB: (this.table.players[this.heroSeat].stack + this.table.players[this.heroSeat].committed) / (this.table.bigBlind || 1),
+        stage: this.tournament?.stage,
+      };
+      const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice, feedbackCtx);
       this.feedback.push(item);
       // Gera também nos modos free e technical para as abas do modal de dicas.
-      this.feedbackFree.push(gradeDecision(streetLabel, "free", heroType, advice));
-      this.feedbackTechnical.push(gradeDecision(streetLabel, "technical", heroType, advice));
+      this.feedbackFree.push(gradeDecision(streetLabel, "free", heroType, advice, feedbackCtx));
+      this.feedbackTechnical.push(gradeDecision(streetLabel, "technical", heroType, advice, feedbackCtx));
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;
       // Alimenta o placar de evolução e as missões.

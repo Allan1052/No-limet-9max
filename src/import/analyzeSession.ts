@@ -141,6 +141,9 @@ export function analyzeHand(h: ParsedHand): HandReport {
     action: dec.action,
     reason: dec.reason,
     mix: dec.mix?.map((m) => ({ action: m.action, freq: m.freq })),
+  }, {
+    heroPosition: hero.position,
+    heroBB: base.effectiveBB,
   });
 
   const situation = facingRaise

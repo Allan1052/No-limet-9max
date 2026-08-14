@@ -41,6 +41,19 @@ export interface HeroAdvice {
   nBet?: string;
 }
 
+/**
+ * Contexto da mão para enriquecer o texto do feedback (não altera a nota).
+ * Passado pelo gameController e pelo import — opcional, textos funcionam sem.
+ */
+export interface FeedbackContext {
+  /** Posição do herói (UTG, MP, CO, BTN, SB, BB...). */
+  heroPosition?: string;
+  /** Stack do herói em big blinds. */
+  heroBB?: number;
+  /** Estágio do torneio: "inicio" | "meio" | "bolha" | "mesa_final". */
+  stage?: string;
+}
+
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
 export function mixText(mix: AdviceFreq[] | undefined): string {
   if (!mix || mix.length === 0) return "";
@@ -121,8 +134,9 @@ export function gradeDecision(
   userSubscriptionLevel: UserSubscriptionLevel,
   heroAction: string,
   advice: HeroAdvice,
+  ctx?: FeedbackContext,
 ): FeedbackItem {
-  const item = gradeCore(streetLabel, userSubscriptionLevel, heroAction, advice);
+  const item = gradeCore(streetLabel, userSubscriptionLevel, heroAction, advice, ctx);
   // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {
@@ -193,6 +207,7 @@ function gradeCore(
   userSubscriptionLevel: UserSubscriptionLevel,
   heroAction: string,
   advice: HeroAdvice,
+  ctx?: FeedbackContext,
 ): FeedbackItem {
   const hf = family(heroAction === "allin" ? "raise" : heroAction);
   const af = family(advice.action);
@@ -227,11 +242,15 @@ function gradeCore(
     return {
       ...base,
       rating: deep ? "ruim" : "imprecisa",
-      text: `All-in aqui é overbet: com ${eff}bb, o certo era um ${actionLabel(
-        advice.action,
-      )} de tamanho normal. Jogando all-in você faz mão pior largar e só é pago por mão melhor — ${
-        deep ? "vira jogada perdedora" : "perde valor"
-      }. Guarde o all-in pra stack curto (push/fold).`,
+      text: enrich(
+        deep ? "ruim" : "imprecisa",
+        `All-in aqui é overbet: com ${eff}bb, o certo era um ${actionLabel(
+          advice.action,
+        )} de tamanho normal. Jogando all-in você faz mão pior largar e só é pago por mão melhor — ${
+          deep ? "vira jogada perdedora" : "perde valor"
+        }. Guarde o all-in pra stack curto (push/fold).`,
+        ctx,
+      ),
     };
   }
 
@@ -249,21 +268,21 @@ function gradeCore(
       return {
         ...base,
         rating: "boa",
-        text: getFeedbackText(userSubscriptionLevel, 'boa', 'freqMain', { heroAction, heroFreq }),
+        text: getFeedbackText(userSubscriptionLevel, 'boa', 'freqMain', { heroAction, heroFreq, street: streetLabel, ctx }),
       };
     }
     if (heroFreq >= 0.25) {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'freqValid', { heroAction, heroFreq, mainLabel }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'freqValid', { heroAction, heroFreq, mainLabel, street: streetLabel, ctx }),
       };
     }
     if (heroFreq >= 0.08) {
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'freqMinor', { heroFreq, mainLabel }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'freqMinor', { heroFreq, mainLabel, street: streetLabel, ctx }),
       };
     }
     // Frequência quase nula → é erro de verdade: segue para a análise de EV.
@@ -271,7 +290,7 @@ function gradeCore(
 
   // Bateu com a recomendação: boa jogada.
   if (hf === af) {
-    return { ...base, rating: "boa", text: getFeedbackText(userSubscriptionLevel, 'boa', 'aligned', { reason: advice.reason }) };
+    return { ...base, rating: "boa", text: getFeedbackText(userSubscriptionLevel, 'boa', 'aligned', { reason: advice.reason, street: streetLabel, ctx }) };
   }
 
   const hasNumbers = eq !== undefined && odds !== undefined;
@@ -284,7 +303,7 @@ function gradeCore(
       return {
         ...base,
         rating: surplus > 0.1 ? "ruim" : "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, surplus > 0.1 ? 'ruim' : 'imprecisa', 'foldWithPrice', { equity: eq!, odds: odds!, adviceAction: advice.action, surplus }),
+        text: getFeedbackText(userSubscriptionLevel, surplus > 0.1 ? 'ruim' : 'imprecisa', 'foldWithPrice', { equity: eq!, odds: odds!, adviceAction: advice.action, surplus, street: streetLabel, ctx }),
       };
     }
     // Pagou sem preço.
@@ -293,7 +312,7 @@ function gradeCore(
       return {
         ...base,
         rating: gap > 0.15 ? "ruim" : "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, gap > 0.15 ? 'ruim' : 'imprecisa', 'callWithoutOdds', { equity: eq!, odds: odds!, gap }),
+        text: getFeedbackText(userSubscriptionLevel, gap > 0.15 ? 'ruim' : 'imprecisa', 'callWithoutOdds', { equity: eq!, odds: odds!, gap, street: streetLabel, ctx }),
       };
     }
     // Agressivo demais.
@@ -301,7 +320,7 @@ function gradeCore(
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroTooMuch', { adviceAction: advice.action }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroTooMuch', { adviceAction: advice.action, street: streetLabel, ctx }),
       };
     }
     // Passivo com mão de valor.
@@ -309,7 +328,7 @@ function gradeCore(
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'passiveWithValue', { adviceAction: advice.action, equity: eq }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'passiveWithValue', { adviceAction: advice.action, equity: eq, street: streetLabel, ctx }),
       };
     }
   }
@@ -320,28 +339,28 @@ function gradeCore(
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'loosePlay', {}),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'loosePlay', { street: streetLabel, ctx }),
       };
     }
     if (hf === "fold" && af !== "fold") {
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'tooTight', { adviceAction: advice.action }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'tooTight', { adviceAction: advice.action, street: streetLabel, ctx }),
       };
     }
     if (hf === "call" && af === "aggro") {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'couldBeAggro', { adviceAction: advice.action }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'couldBeAggro', { adviceAction: advice.action, street: streetLabel, ctx }),
       };
     }
     if (hf === "aggro" && af === "call") {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroButPlayable', { adviceAction: advice.action }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroButPlayable', { adviceAction: advice.action, street: streetLabel, ctx }),
       };
     }
   }
@@ -350,7 +369,7 @@ function gradeCore(
     return {
       ...base,
       rating: "imprecisa",
-      text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'differentPattern', { adviceAction: advice.action, reason: advice.reason }),
+      text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'differentPattern', { adviceAction: advice.action, reason: advice.reason, street: streetLabel, ctx }),
     };
 }
 
@@ -368,92 +387,362 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
   // const ev = vars.ev !== undefined ? vars.ev.toFixed(1) : ''; // Removido pois não é utilizado
   const gap = vars.gap !== undefined ? vars.gap.toFixed(1) : '';
 
-  const texts: Record<UserSubscriptionLevel, Record<Rating, Record<string, string>>> = {
+  // Cada chave pode ter VÁRIAS variações do mesmo feedback — sorteia uma por
+  // decisão, pra o texto não sair "copia e cola" de mão pra mão. O sorteador
+  // recebe um seed determinístico (chave + rua + ação) pra não mudar o texto
+  // se o mesmo feedback for renderizado de novo (ex.: modal reaberto).
+  // Variação depende do momento exato da decisão (rua + ação + contexto),
+  // então a mesma chave gera textos diferentes entre mãos — mas o texto
+  // continua estável se a mesma decisão for avaliada de novo.
+  const seed = `${key}-${vars.street ?? ""}-${vars.heroAction ?? ""}-${vars.ctx?.heroPosition ?? ""}-${Math.round((vars.ctx?.heroBB ?? 0) * 5)}`;
+
+  const texts: Record<UserSubscriptionLevel, Record<Rating, Record<string, string[]>>> = {
     free: {
       boa: {
-        freqMain: `Boa! Essa é a jogada principal aqui. Jogadores sólidos fazem ${heroAction} nesse spot. Continue assim.`,
-        aligned: `Boa! Você fez o que um jogador experiente faria. ${vars.reason}`,
+        freqMain: [
+          `Boa! Essa é a jogada principal aqui. Jogadores sólidos fazem ${heroAction} nesse spot. Continue assim.`,
+          `Isso aí. ${heroAction} é o que a maioria dos jogadores fortes faz nesse spot — tava no caminho certo.`,
+          `Jogada certa. ${heroAction} é a linha principal do spot — segue nesse ritmo.`,
+        ],
+        aligned: [
+          `Boa! Você fez o que um jogador experiente faria. ${vars.reason}`,
+          `Jogada sólida. ${vars.reason}`,
+          `Correto — foi o que um jogador experiente faria. ${vars.reason}`,
+        ],
       },
       ok: {
-        freqValid: `Ok, dá pra fazer assim, mas nesse spot o mais comum é ${mainLabel}.`,
-        aggroTooMuch: `Você foi agressivo demais aqui. O padrão seria ${adviceAction}. Não é erro, mas pode encher o pote sem precisar.`,
-        couldBeAggro: `Dava pra pressionar mais. O padrão aqui é ${adviceAction} — vale a pena experimentar.`,
-        aggroButPlayable: `Mais agressivo que o padrão (${adviceAction}). Jogável, mas cuidado com o risco.`,
+        freqValid: [
+          `Ok, dá pra fazer assim, mas nesse spot o mais comum é ${mainLabel}.`,
+          `Jogada aceitável, mas o mais frequente aqui é ${mainLabel} — fica de olho.`,
+          `Passou, mas o padrão desse spot pede ${mainLabel}.`,
+        ],
+        aggroTooMuch: [
+          `Você foi agressivo demais aqui. O padrão seria ${adviceAction}. Não é erro, mas pode encher o pote sem precisar.`,
+          `Agressividade a mais: o padrão era ${adviceAction}. Dá pra jogar assim, mas sem necessidade.`,
+          `Aqui o padrão pedia ${adviceAction}. Agressivo demais pode engordar o pote à toa.`,
+        ],
+        couldBeAggro: [
+          `Dava pra pressionar mais. O padrão aqui é ${adviceAction} — vale a pena experimentar.`,
+          `Mão forte demais pra ficar quieto: o padrão aqui é ${adviceAction}.`,
+          `Aqui o padrão pede ${adviceAction} — deixar o vilão agir de graça é perder valor.`,
+        ],
+        aggroButPlayable: [
+          `Mais agressivo que o padrão (${adviceAction}). Jogável, mas cuidado com o risco.`,
+          `Saiu do padrão (${adviceAction}), mas é linha que dá pra jogar — só saiba o que arrisca.`,
+          `O padrão aqui é ${adviceAction}; o que você fez ainda é jogável, com ressalvas.`,
+        ],
       },
       imprecisa: {
-        freqMinor: `Essa é uma linha que se usa de vez em quando, mas o mais comum nesse spot é ${mainLabel}.`,
-        foldWithPrice: `Aqui o padrão era continuar. Sua mão tinha chance suficiente de ganhar — o preço que te pediram valia o risco. Foldear aqui entrega fichas de graça.`,
-        callWithoutOdds: `Aqui o padrão era foldar. Sua mão não tinha chance suficiente pro preço que te pediram. Guardou as fichas pra chegar na final.`,
-        passiveWithValue: `Aqui o padrão era ${adviceAction}. Sua mão era forte o suficiente pra pressionar — deixar o vilão agir de graça perde valor.`,
-        loosePlay: `Jogada solta. Sua mão não deve ser jogada dessa posição. O padrão era foldar.`,
-        tooTight: `Apertado demais. Sua mão era boa o suficiente pra ${adviceAction} dessa posição. Não deixe fichas boas na mão.`,
-        differentPattern: `Diferente do padrão. O que um jogador experiente faria aqui é ${adviceAction}. ${vars.reason}`,
+        freqMinor: [
+          `Essa é uma linha que se usa de vez em quando, mas o mais comum nesse spot é ${mainLabel}.`,
+          `Dá pra usar assim de vez em quando, mas o mais comum aqui é ${mainLabel}.`,
+          `Linha menos frequente: o padrão costuma ser ${mainLabel} nesse spot.`,
+        ],
+        foldWithPrice: [
+          `Aqui o padrão era continuar. Sua mão tinha chance suficiente de ganhar — o preço que te pediram valia o risco. Foldear aqui entrega fichas de graça.`,
+          `O preço valia o risco: sua mão tinha chance de ganhar e o padrão era ${adviceAction}. Foldear aqui foi entregar fichas.`,
+          `Mão boa demais pra foldar com esse preço — o padrão era ${adviceAction}. Continue quando o preço for justo.`,
+        ],
+        callWithoutOdds: [
+          `Aqui o padrão era foldar. Sua mão não tinha chance suficiente pro preço que te pediram. Guardou as fichas pra chegar na final.`,
+          `O padrão era foldar: sua mão não tinha chance suficiente pro preço. Fichas guardadas são fichas pra final.`,
+          `Mão fraca demais pra esse preço — o padrão era foldar. Guardar fichas também é ganhar.`,
+        ],
+        passiveWithValue: [
+          `Aqui o padrão era ${adviceAction}. Sua mão era forte o suficiente pra pressionar — deixar o vilão agir de graça perde valor.`,
+          `Mão forte pedindo ação: o padrão era ${adviceAction}. Deixar o vilão jogar de graça joga valor fora.`,
+          `O padrão aqui é ${adviceAction} — com essa mão, pressão é o que paga suas fichas.`,
+        ],
+        loosePlay: [
+          `Jogada solta. Sua mão não deve ser jogada dessa posição. O padrão era foldar.`,
+          `Mão fraca demais pra essa posição — o padrão era foldar. Paciência é o que te leva à final.`,
+          `Aqui o padrão é esperar mão melhor: sua mão não é jogável dessa posição.`,
+          `Jogou mão que não é pra essa cadeira. O padrão era foldar — guarda as fichas pra chegar na final.`,
+        ],
+        tooTight: [
+          `Apertado demais. Sua mão era boa o suficiente pra ${adviceAction} dessa posição. Não deixe fichas boas na mão.`,
+          `Mão boa demais pra foldar — era ${adviceAction} dessa posição. Apertar demais também custa fichas.`,
+          `Aqui sua mão estava no range de ${adviceAction} — foldar foi deixar fichas boas na mão.`,
+        ],
+        differentPattern: [
+          `Diferente do padrão. O que um jogador experiente faria aqui é ${adviceAction}. ${vars.reason}`,
+          `O padrão aqui é ${adviceAction}. ${vars.reason}`,
+          `Saiu da linha padrão: o que um jogador experiente faria é ${adviceAction}. ${vars.reason}`,
+        ],
       },
       ruim: {
-        foldWithPrice: `Fold ruim: sua mão tinha chance de ganhar e o preço valia o risco. O padrão era ${adviceAction}.`,
-        callWithoutOdds: `Pagou caro demais. Sua mão não tinha chance de ganhar o suficiente. O padrão era foldar.`,
+        foldWithPrice: [
+          `Fold ruim: sua mão tinha chance de ganhar e o preço valia o risco. O padrão era ${adviceAction}.`,
+          `Erro claro: o preço valia o risco e o padrão era ${adviceAction} — foldar aqui custou caro.`,
+        ],
+        callWithoutOdds: [
+          `Pagou caro demais. Sua mão não tinha chance de ganhar o suficiente. O padrão era foldar.`,
+          `Call caro: sua mão não pagava o preço. O padrão era foldar — essas fichas fazem falta.`,
+        ],
       },
     },
     technical: {
       boa: {
-        freqMain: `Excelente! Sua jogada está alinhada com a frequência principal (${heroFreq}) da estratégia mista.`, 
-        aligned: `Alinhado com o padrão. ${vars.reason}`,
+        freqMain: [
+          `Excelente! Sua jogada está alinhada com a frequência principal (${heroFreq}) da estratégia mista.`,
+          `Jogada ótima — você seguiu a frequência principal (${heroFreq}) da estratégia mista.`,
+        ],
+        aligned: [
+          `Alinhado com o padrão. ${vars.reason}`,
+          `Boa jogada, alinhada ao padrão. ${vars.reason}`,
+        ],
       },
       ok: {
-        freqValid: `Jogada válida da estratégia mista (~${heroFreq}), mas o padrão prefere ${mainLabel} para otimizar o EV.`, 
-        aggroTooMuch: `Mais agressivo que o padrão (${adviceAction}). Jogável, mas pode inflar o pote sem precisar.`, 
-        couldBeAggro: `Dava para ser mais agressivo: o padrão aqui é ${adviceAction}.`, 
-        aggroButPlayable: `Mais agressivo que o padrão (${adviceAction}); jogável.`, 
+        freqValid: [
+          `Jogada válida da estratégia mista (~${heroFreq}), mas o padrão prefere ${mainLabel} para otimizar o EV.`,
+          `Linha válida (~${heroFreq}) da estratégia mista, mas ${mainLabel} otimiza mais o EV.`,
+        ],
+        aggroTooMuch: [
+          `Mais agressivo que o padrão (${adviceAction}). Jogável, mas pode inflar o pote sem precisar.`,
+          `Agressividade acima do padrão (${adviceAction}): jogável, mas infla o pote sem necessidade.`,
+        ],
+        couldBeAggro: [
+          `Dava para ser mais agressivo: o padrão aqui é ${adviceAction}.`,
+          `Perda de EV: o padrão aqui é ${adviceAction} — agressão é a linha de maior valor.`,
+        ],
+        aggroButPlayable: [
+          `Mais agressivo que o padrão (${adviceAction}); jogável.`,
+          `Linha mais agressiva que o padrão (${adviceAction}); jogável, mas com risco.`,
+        ],
       },
       imprecisa: {
-        freqMinor: `Linha minoritária (~${heroFreq}): pode ser usada ocasionalmente, mas o padrão costuma ${mainLabel}.`, 
-        foldWithPrice: `Fold ${surplus > 0.1 ? "ruim" : "apertado"}: sua equity (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`, 
-        callWithoutOdds: `Call com EV negativo: equity (${equity}) abaixo do preço (${odds}). O padrão era foldar.`, 
-        passiveWithValue: `Perdeu valor/iniciativa: o padrão aqui é ${adviceAction} (equity ${equity}).`, 
-        loosePlay: `Leak de range: sua mão está fora do range recomendado para a posição. O padrão era foldar.`, 
-        tooTight: `Apertado demais: sua mão estava no range de ${adviceAction} para a posição.`, 
-        differentPattern: `Diferente do padrão (${adviceAction}). ${vars.reason}`,
+        freqMinor: [
+          `Linha minoritária (~${heroFreq}): pode ser usada ocasionalmente, mas o padrão costuma ${mainLabel}.`,
+          `Frequência baixa (~${heroFreq}): ocasional, mas o padrão prefere ${mainLabel}.`,
+        ],
+        foldWithPrice: [
+          `Fold ${surplus > 0.1 ? "ruim" : "apertado"}: sua equity (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`,
+          `Sua equity (${equity}) pagava o preço (${odds}) — fold ${surplus > 0.1 ? "ruim" : "apertado"}. O padrão era ${adviceAction}.`,
+        ],
+        callWithoutOdds: [
+          `Call com EV negativo: equity (${equity}) abaixo do preço (${odds}). O padrão era foldar.`,
+          `Preço não fechou: equity (${equity}) < ${odds}. Call com EV negativo — o padrão era foldar.`,
+        ],
+        passiveWithValue: [
+          `Perdeu valor/iniciativa: o padrão aqui é ${adviceAction} (equity ${equity}).`,
+          `Equity ${equity} pede ação: o padrão é ${adviceAction} — passividade perdeu valor.`,
+        ],
+        loosePlay: [
+          `Leak de range: sua mão está fora do range recomendado para a posição. O padrão era foldar.`,
+          `Mão fora do range da posição: leak de range — o padrão era foldar.`,
+        ],
+        tooTight: [
+          `Apertado demais: sua mão estava no range de ${adviceAction} para a posição.`,
+          `Sua mão estava no range de ${adviceAction} — foldar foi apertar demais para a posição.`,
+        ],
+        differentPattern: [
+          `Diferente do padrão (${adviceAction}). ${vars.reason}`,
+          `Desvio do padrão (${adviceAction}). ${vars.reason}`,
+        ],
       },
       ruim: {
-        foldWithPrice: `Fold ruim: sua equity (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`,
-        callWithoutOdds: `Call com EV negativo: equity (${equity}) abaixo do preço (${odds}). O padrão era foldar.`,
+        foldWithPrice: [
+          `Fold ruim: sua equity (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`,
+          `Fold com EV negativo: equity (${equity}) > preço (${odds}). O padrão era ${adviceAction}.`,
+        ],
+        callWithoutOdds: [
+          `Call com EV negativo: equity (${equity}) abaixo do preço (${odds}). O padrão era foldar.`,
+          `Call caro: equity (${equity}) < ${odds} — EV negativo. O padrão era foldar.`,
+        ],
       },
     },
     ultra: {
       boa: {
-        freqMain: `Optimal play. Sua ação maximiza o EV neste spot, alinhada à frequência (${heroFreq}) da estratégia mista.`,
-        aligned: `Optimal play. ${vars.reason}`,
+        freqMain: [
+          `Optimal play. Sua ação maximiza o EV neste spot, alinhada à frequência (${heroFreq}) da estratégia mista.`,
+          `Optimal play: alinhado à frequência (${heroFreq}) da estratégia mista, maximizando EV.`,
+        ],
+        aligned: [
+          `Optimal play. ${vars.reason}`,
+          `Linha GTO. ${vars.reason}`,
+        ],
       },
       ok: {
-        freqValid: `Desvio marginal do GTO (~${heroFreq}), mas o padrão prefere ${mainLabel} para balanceamento de range.`,
-        aggroTooMuch: `Linha explorável: mais agressivo que o padrão (${adviceAction}). Pode ser explorado por vilões atentos.`,
-        couldBeAggro: `Perda de EV: o padrão aqui é ${adviceAction} para maximizar a fold equity e valor.`,
-        aggroButPlayable: `Linha explorável: mais agressivo que o padrão (${adviceAction}); jogável, mas com risco de desbalanceamento.`,
+        freqValid: [
+          `Desvio marginal do GTO (~${heroFreq}), mas o padrão prefere ${mainLabel} para balanceamento de range.`,
+          `Linha válida mas subótima (~${heroFreq}): ${mainLabel} balanceia melhor o range.`,
+        ],
+        aggroTooMuch: [
+          `Linha explorável: mais agressivo que o padrão (${adviceAction}). Pode ser explorado por vilões atentos.`,
+          `Overagression explorável (${adviceAction}): vilões atentos podem ajustar.`,
+        ],
+        couldBeAggro: [
+          `Perda de EV: o padrão aqui é ${adviceAction} para maximizar a fold equity e valor.`,
+          `O padrão é ${adviceAction} — passividade custa fold equity e valor.`,
+        ],
+        aggroButPlayable: [
+          `Linha explorável: mais agressivo que o padrão (${adviceAction}); jogável, mas com risco de desbalanceamento.`,
+          `Mais agressivo que o padrão (${adviceAction}); jogável, mas desbalanceia o range.`,
+        ],
       },
       imprecisa: {
-        freqMinor: `Linha minoritária (~${heroFreq}): pode ser usada para exploração, mas o padrão GTO costuma ${mainLabel}.`,
-        foldWithPrice: `Fold com -${surplus}bb de EV: sua equity (${equity}) pagava o preço (${odds}). O padrão GTO era ${adviceAction}.`,
-        callWithoutOdds: `Call com -${gap}bb de EV: equity (${equity}) abaixo do preço (${odds}). O padrão GTO era foldar.`,
-        passiveWithValue: `Perda de valor/iniciativa: o padrão GTO aqui é ${adviceAction} (equity ${equity}).`,
-        loosePlay: `Leak de range: sua mão está fora do range GTO recomendado para a posição. O padrão era foldar.`,
-        tooTight: `Apertado demais: sua mão estava no range de ${adviceAction} para a posição, perdendo EV.`,
-        differentPattern: `Desvio do padrão GTO (${adviceAction}). ${vars.reason}`,
+        freqMinor: [
+          `Linha minoritária (~${heroFreq}): pode ser usada para exploração, mas o padrão GTO costuma ${mainLabel}.`,
+          `Frequência baixa (~${heroFreq}): explorável ocasionalmente; o GTO costuma ${mainLabel}.`,
+        ],
+        foldWithPrice: [
+          `Fold com -${surplus}bb de EV: sua equity (${equity}) pagava o preço (${odds}). O padrão GTO era ${adviceAction}.`,
+          `EV de -${surplus}bb: equity (${equity}) > preço (${odds}). O padrão GTO era ${adviceAction}.`,
+        ],
+        callWithoutOdds: [
+          `Call com -${gap}bb de EV: equity (${equity}) abaixo do preço (${odds}). O padrão GTO era foldar.`,
+          `EV de -${gap}bb: equity (${equity}) < ${odds}. O padrão GTO era foldar.`,
+        ],
+        passiveWithValue: [
+          `Perda de valor/iniciativa: o padrão GTO aqui é ${adviceAction} (equity ${equity}).`,
+          `Equity ${equity} exige ação: o padrão GTO é ${adviceAction}.`,
+        ],
+        loosePlay: [
+          `Leak de range: sua mão está fora do range GTO recomendado para a posição. O padrão era foldar.`,
+          `Mão fora do range GTO da posição — leak. O padrão era foldar.`,
+        ],
+        tooTight: [
+          `Apertado demais: sua mão estava no range de ${adviceAction} para a posição, perdendo EV.`,
+          `Mão no range de ${adviceAction}: foldar perdeu EV e desbalanceou o range.`,
+        ],
+        differentPattern: [
+          `Desvio do padrão GTO (${adviceAction}). ${vars.reason}`,
+          `Fora do padrão GTO (${adviceAction}). ${vars.reason}`,
+        ],
       },
       ruim: {
-        foldWithPrice: `Fold com -${surplus}bb de EV: sua equity (${equity}) pagava o preço (${odds}). O padrão GTO era ${adviceAction}.`,
-        callWithoutOdds: `Call com -${gap}bb de EV: equity (${equity}) abaixo do preço (${odds}). O padrão GTO era foldar.`,
+        foldWithPrice: [
+          `Fold com -${surplus}bb de EV: sua equity (${equity}) pagava o preço (${odds}). O padrão GTO era ${adviceAction}.`,
+          `Erro GTO: -${surplus}bb de EV, equity (${equity}) > ${odds}. O padrão era ${adviceAction}.`,
+        ],
+        callWithoutOdds: [
+          `Call com -${gap}bb de EV: equity (${equity}) abaixo do preço (${odds}). O padrão GTO era foldar.`,
+          `Erro GTO: -${gap}bb de EV, equity (${equity}) < ${odds}. O padrão era foldar.`,
+        ],
       },
     },
   };
 
-  const feedbackText = texts[level]?.[rating]?.[key];
-  if (feedbackText) return feedbackText;
+  const baseText = pickVariation(seed)(texts[level]?.[rating]?.[key] ?? []) || resolveFallback(level, rating, key, texts);
 
-  // Fallback para níveis inferiores se o feedback específico não for encontrado
-  if (level === 'ultra' && texts.technical?.[rating]?.[key]) return texts.technical[rating][key];
-  if ((level === 'ultra' || level === 'technical') && texts.free?.[rating]?.[key]) return texts.free[rating][key];
+  // Enriquece o texto com o contexto da mão (posição, stack, estágio) sem
+  // alterar a nota — o texto fica mais vivo e menos "copia e cola".
+  return enrichContext(baseText, vars.ctx as FeedbackContext | undefined, rating);
+}
 
+function resolveFallback(level: UserSubscriptionLevel, rating: Rating, key: string, texts: Record<UserSubscriptionLevel, Record<Rating, Record<string, string[]>>>): string {
+  if (level === 'ultra' && texts.technical?.[rating]?.[key]) return pickVariation("fallback")(texts.technical[rating][key]);
+  if ((level === 'ultra' || level === 'technical') && texts.free?.[rating]?.[key]) return pickVariation("fallback")(texts.free[rating][key]);
   return `[Feedback não encontrado para ${level}/${rating}/${key}]`;
+}
+
+// Sorteador determinístico: mesma chave ⇒ mesma variação (o texto não muda
+// ao reabrir o modal ou re-renderizar a sessão). Mistura o seed em bits.
+function pickVariation(seed: string): (options: string[]) => string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return (options: string[]) => options[h % options.length];
+}
+
+/**
+ * Injeta contexto da mão no texto: posição/stack no início (modo simples
+ * com linguagem natural, técnico com rótulo curto) e pressão de bolha/mesa
+ * final no fim quando o torneio está em estágio tenso.
+ */
+function enrichContext(base: string, ctx: FeedbackContext | undefined, rating: Rating): string {
+  let text = base;
+
+  // Garante fluxo natural quando o prefixo de contexto entra: o texto base
+  // segue em minúscula depois de ":" (prefixos de stack) e continua normal
+  // após "," (prefixos de posição) — ajustando maiúscula inicial se preciso.
+  const afterComma = (s: string): string =>
+    s.charAt(0) === s.charAt(0).toUpperCase() && s.charAt(0) !== s.charAt(0).toLowerCase()
+      ? s.charAt(0).toLowerCase() + s.slice(1)
+      : s;
+
+  // --- Prefixo de contexto (só quando o texto não já começa com o que o
+  // --- contexto diria — fold correto de mão lixo não merece celebração). ---
+  if (ctx) {
+    const pos = ctx.heroPosition;
+    const bb = ctx.heroBB;
+    const stage = ctx.stage;
+
+    // Frase de pressão quando o torneio está tenso: bolha ou mesa final.
+    if ((stage === "bolha" || stage === "mesa_final") && isGoodDecision(rating)) {
+      const bubbleNote =
+        stage === "bolha"
+          ? " Na bolha, suas fichas valem mais do que o pote — seguir o padrão aqui protege o seu prêmio."
+          : " Na mesa final, cada decisão pesa no prêmio — seguir o padrão aqui te mantém no caminho do pódio.";
+      text += bubbleNote;
+    }
+
+    // Contexto de posição: menciona a cadeira quando a decisão é relevante
+    // para a posição (abertura pré-flop, defesas, etc.).
+    if (pos && isPreflopRelevant(text)) {
+      text = posContext(pos) + " " + afterComma(text);
+    }
+
+    // Contexto de stack: menciona a profundidade em spots onde ela importa
+    // (stack curto: sobreviver; stack fundo: jogo normal). O prefixo termina
+    // em ":" — o texto base entra com maiúscula preservada, fluxo natural.
+    if (bb !== undefined && bb > 0 && isStackRelevant(text, bb)) {
+      text = stackContext(bb) + " " + text;
+    }
+  }
+
+  return text;
+}
+
+/** Envoltope pós-texto: adiciona a nota de EV etc. (mantido para compatibilidade). */
+function enrich(rating: Rating, base: string, ctx: FeedbackContext | undefined): string {
+  return enrichContext(base, ctx, rating);
+}
+
+function isGoodDecision(rating: Rating): boolean {
+  return rating === "boa" || rating === "ok";
+}
+
+function isPreflopRelevant(text: string): boolean {
+  // Texto pré-flop costuma falar de range/posição/abertura.
+  if (!/range|abertura|posição|abrir|dessa posição|para a posição/i.test(text)) return false;
+  // Não duplica: se o texto já cita uma posição concreta (ex.: "...abertura de HJ"),
+  // o prefixo "Do Hijack (HJ)," ficaria redundante.
+  const posMentioned = /\b(UTG1?|MP|LJ|HJ|CO|BTN|SB|BB)\b/i.test(text);
+  return !posMentioned;
+}
+
+function isStackRelevant(text: string, bb: number): boolean {
+  // Stack importa quando o texto fala de all-in/push/fold ou quando o stack é curto.
+  if (bb > 15 && !/all-in|push|stack|short|curto/i.test(text)) return false;
+  // Não duplica: se o texto já menciona o valor do stack ("com 199bb", "25bb"),
+  // o prefixo ficaria redundante.
+  const alreadyMentioned = /\d+bb|stack/i.test(text);
+  return !alreadyMentioned;
+}
+
+function posContext(pos: string): string {
+  switch (pos) {
+    case "UTG": return "Do início da fila (UTG),";
+    case "UTG1": return "Da segunda posição (UTG+1),";
+    case "MP": return "Do meio da mesa (MP),";
+    case "LJ": return "Do late position (LJ),";
+    case "HJ": return "Do Hijack (HJ),";
+    case "CO": return "Do cutoff (CO),";
+    case "BTN": return "No botão (BTN),";
+    case "SB": return "No small blind (SB),";
+    case "BB": return "No big blind (BB),";
+    default: return `De ${pos},`;
+  }
+}
+
+function stackContext(bb: number): string {
+  const n = Math.round(bb);
+  if (n <= 10) return "Stack curtíssimo (" + n + "bb):";
+  if (n <= 20) return "Stack curto (" + n + "bb):";
+  if (n <= 40) return "Com " + n + "bb de stack,";
+  return "Com " + n + "bb de stack,";
 }
 
 /** Resumo curto da mão a partir das notas das decisões. */
@@ -471,7 +760,7 @@ export function summarize(items: FeedbackItem[], level: UserSubscriptionLevel): 
     technical: {
       ruim: "Erro crítico de EV detectado. Revise as decisões com EV negativo para otimizar sua estratégia.",
       imprecisa: "Sua jogada foi aceitável, mas com imprecisões que podem custar EV a longo prazo. Analise os desvios.",
-      boa: "Mão jogada com excelência. Suas decisões foram alinhadas com a estratégia mista e maximizaram o EV.",
+      boa: "Boa mão. Suas decisões foram alinhadas com a estratégia mista.",
     },
     ultra: {
       ruim: "Leak de EV catastrófico. Sua linha desviou significativamente do GTO, resultando em perda substancial de valor esperado.",
