@@ -433,23 +433,13 @@ export function CampaignView() {
   return (
     <div className="train-view">
       {/* Banner de Daily Hand — destaque no topo da tela inicial */}
-      <div style={{
-        padding: '12px 16px 10px',
-        background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(18,58,42,0.8))',
-        border: '1px solid rgba(212,175,55,0.3)',
-        borderRadius: '12px',
-        marginBottom: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        cursor: 'pointer',
-      }} onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('nav-to', { detail: 'treino' })); }}>
+      <div className="daily-hand-banner" onClick={() => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('nav-to', { detail: 'treino' })); }}>
         <div style={{ fontSize: '28px', lineHeight: 1 }}>🃏</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: '700', fontSize: '14px', color: '#d4af37', marginBottom: '2px' }}>Mão do Dia</div>
           <div style={{ fontSize: '12px', color: '#ece7d5', opacity: 0.85 }}>Nova mão toda manhã — 1 minuto de treino.</div>
         </div>
-        <div style={{ fontSize: '12px', color: '#d4af37', fontWeight: '600' }}>Jogar →</div>
+        <div className="daily-hand-cta">Jogar →</div>
       </div>
       <div className="panel mission-panel">
         {/* Header da missão */}

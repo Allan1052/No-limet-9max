@@ -67,7 +67,6 @@ export function App() {
   const { t: tr } = useT();
   const { onboarded, setOnboarded, mode } = useSettings();
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
-  const [userSubscriptionLevel] = useState<UserSubscriptionLevel>(() => mode === "tecnico" ? "technical" : "free");
   // Mapeia o mode de UI (simples/tecnico) para o nível de feedback (free/technical/ultra)
   // Quando o usuário troca de modo, o level muda junto
   const effectiveLevel: UserSubscriptionLevel = mode === "tecnico" ? "technical" : "free";
@@ -242,8 +241,8 @@ export function App() {
         ) : null}
       </div>
 
-      <HubSubNav view={view} setView={setView} info={playInfo} />
-
+            <HubSubNav view={view} setView={setView} info={playInfo} />
+      <div key={view} className="view-enter">
       {view === "icm" ? (
         <IcmCalculator />
       ) : view === "ultra" ? (
@@ -356,10 +355,10 @@ export function App() {
               isOmaha={t.variant === "omaha"}
               defaultRaiseTo={controller.suggestedRaiseTo()}
             />
-          )}
+                    )}
         </div>
       )}
-
+      </div>
       {replayOpen && controller.lastHand ? (
         <Replayer
           hand={controller.lastHand}
@@ -395,7 +394,7 @@ export function App() {
         <HandTipsModal
           items={controller.feedback}
           heroHand={controller.lastHand?.holeCards[controller.heroSeat] ?? []}
-          userSubscriptionLevel={userSubscriptionLevel}
+          userSubscriptionLevel={effectiveLevel}
           board={controller.lastHand?.finalBoard ?? []}
           onClose={() => setTipsOpen(false)}
         />

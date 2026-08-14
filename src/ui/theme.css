@@ -2579,7 +2579,7 @@ body {
 
 /* Avatar do rival no card de estágio */
 .duel-stage-avatar {
-  width: 48px;
+  width: 100px;
   height: 48px;
   flex-shrink: 0;
   display: flex;
@@ -3092,7 +3092,7 @@ body {
 
 /* Imagem do herói na tela de confirmação */
 .confirm-hero-img {
-  width: 48px;
+  width: 100px;
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
@@ -3214,7 +3214,7 @@ body {
 }
 .deco-card {
   display: inline-block;
-  width: 48px;
+  width: 100px;
   height: 68px;
   line-height: 68px;
   background: #fff;
@@ -3381,7 +3381,7 @@ body {
    RIVAL AVATAR IMAGES — fotorrealistas nos duelos
    --------------------------------------------------------------------------- */
 .confirm-rival-img {
-  width: 48px;
+  width: 100px;
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
@@ -4753,7 +4753,7 @@ body {
 
 /* Barra de progresso na mesa — quanto falta pro bubble */
 .ts-progress {
-  width: 48px;
+  width: 100px;
   height: 6px;
   background: rgba(255,255,255,0.1);
   border-radius: 3px;
@@ -4767,4 +4767,38 @@ body {
   background: linear-gradient(90deg, #123a2a, #d4af37);
   border-radius: 3px;
   transition: width 0.5s ease;
+}
+
+/* Transição para qualquer view com classe view-enter */
+.view-enter {
+  animation: view-enter 0.25s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-enter { animation: none !important; }
+}
+
+/* Daily Hand banner — destaque na tela inicial */
+.daily-hand-banner {
+  padding: 12px 16px 10px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(18,58,42,0.8));
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.daily-hand-banner:hover {
+  border-color: rgba(212,175,55,0.6);
+  box-shadow: 0 2px 12px rgba(212,175,55,0.15);
+}
+.daily-hand-banner:active {
+  transform: scale(0.98);
+}
+.daily-hand-cta {
+  font-size: 12px;
+  color: #d4af37;
+  font-weight: 600;
 }
