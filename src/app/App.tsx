@@ -178,6 +178,14 @@ export function App() {
     window.addEventListener("nav-to", handler);
     return () => window.removeEventListener("nav-to", handler);
   }, []);
+
+  // "Treinar esse spot" da Sua Mão: abre o Treino 1×1 (view "ultra") já com o
+  // spot analisado — o UltraTrainer lê o spec do localStorage no mount.
+  useEffect(() => {
+    const handler = () => setView("ultra");
+    window.addEventListener("cof-open-ultra", handler);
+    return () => window.removeEventListener("cof-open-ultra", handler);
+  }, []);
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();

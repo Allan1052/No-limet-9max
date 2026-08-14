@@ -44,6 +44,7 @@ export function HandLab() {
   const [situation, setSituation] = useState<SituationKey>("vsopen");
   const [stage, setStage] = useState<StageKey>("early");
   const [customBB, setCustomBB] = useState<number | null>(null);
+  const [villainBB, setVillainBB] = useState<number | null>(null);
   const [rank1, setRank1] = useState("K");
   const [suit1, setSuit1] = useState("s");
   const [rank2, setRank2] = useState("Q");
@@ -65,6 +66,7 @@ export function HandLab() {
           setSituation(s.situation);
           setStage(s.stage);
           setCustomBB(s.stackBB);
+          if (s.villainStackBB) setVillainBB(s.villainStackBB);
         }
       }
     } catch {
@@ -238,6 +240,23 @@ export function HandLab() {
           </span>
         </div>
 
+        <label className="hl-label">Stack do vilão (bb)</label>
+        <div className="hl-stack-row">
+          {STACK_PRESETS.map((bb) => (
+            <button
+              key={bb}
+              className={`hl-stack-btn${villainBB === bb ? " on" : ""}`}
+              onClick={() => setVillainBB(bb)}
+            >
+              {bb}bb
+            </button>
+          ))}
+          <span className="hl-stack-note">
+            Informativo — aparece no resumo do spot. O stack efetivo do confronto
+            já é calculado pelo menor dos dois stacks.
+          </span>
+        </div>
+
         <button className="btn primary hl-analyze-btn" onClick={analyze}>
           ANALISAR MINHA MÃO
         </button>
@@ -294,7 +313,7 @@ export function HandLab() {
             <TrainingShareButton
               data={{
                 trainingType: "Hand Lab",
-                spot: `${result.spec.heroPosition} vs ${result.spec.villainPosition} · ${result.spec.stackBB}bb`,
+                spot: `${result.spec.heroPosition} vs ${result.spec.villainPosition} · ${result.spec.stackBB}bb${villainBB ? ` (vilão ${villainBB}bb)` : ""}`,
                 score: result.recommended.toUpperCase(),
                 accuracy: "—",
                 rating: result.handType,
