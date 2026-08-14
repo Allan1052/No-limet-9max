@@ -9,12 +9,12 @@
 //
 // Usa o motor novo `src/train/streets/dynamicRanges` (só leitura dos motores).
 // ---------------------------------------------------------------------------
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CardView, CardBack } from "./Card";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { POSITIONS, comboToHandType, type Position } from "../ranges/types";
-import { seededRng, makeCard } from "../engine/cards";
+import { seededRng, makeCard, type Card } from "../engine/cards";
 import { handRank } from "../ranges/handStrength";
 import {
   analyzeBoard,
@@ -28,6 +28,7 @@ import {
   type StreetContext,
   type StreetName,
 } from "../train/streets/dynamicRanges";
+import type { HandLabSpec } from "../train/stage";
 
 // ----------------------------- Board presets -----------------------------
 
@@ -38,26 +39,27 @@ interface BoardPreset {
 }
 
 const FLOP_PRESETS: BoardPreset[] = [
-  { id: "dryA", label: "A♠ 8♦ 6♣ · seco, alto", cards: [makeCard(12, 3), makeCard(6, 1), makeCard(4, 0)] },
-  { id: "dryK", label: "K♥ 7♣ 3♦ · seco", cards: [makeCard(11, 2), makeCard(5, 0), makeCard(1, 1)] },
-  { id: "wet", label: "8♠ 9♠ T♥ · molhado", cards: [makeCard(6, 3), makeCard(7, 3), makeCard(8, 2)] },
-  { id: "flush", label: "K♠ 8♠ 2♠ · 3 do naipe", cards: [makeCard(11, 3), makeCard(6, 3), makeCard(0, 3)] },
-  { id: "paired", label: "8♠ 8♦ K♣ · par no board", cards: [makeCard(6, 3), makeCard(6, 1), makeCard(11, 0)] },
-  { id: "low", label: "5♦ 4♥ 2♣ · baixo", cards: [makeCard(3, 1), makeCard(2, 2), makeCard(0, 0)] },
+  // makeCard usa o rank real do poker (2..14). A=14, K=13, Q=12, J=11, T=10...
+  { id: "dryA", label: "A♠ 8♦ 6♣ · seco, alto", cards: [makeCard(14, 3), makeCard(8, 1), makeCard(6, 0)] },
+  { id: "dryK", label: "K♥ 7♣ 3♦ · seco", cards: [makeCard(13, 2), makeCard(7, 0), makeCard(3, 1)] },
+  { id: "wet", label: "8♠ 9♠ T♥ · molhado", cards: [makeCard(8, 3), makeCard(9, 3), makeCard(10, 2)] },
+  { id: "flush", label: "K♠ 8♠ 2♠ · 3 do naipe", cards: [makeCard(13, 3), makeCard(8, 3), makeCard(2, 3)] },
+  { id: "paired", label: "8♠ 8♦ K♣ · par no board", cards: [makeCard(8, 3), makeCard(8, 1), makeCard(13, 0)] },
+  { id: "low", label: "5♦ 4♥ 2♣ · baixo", cards: [makeCard(5, 1), makeCard(4, 2), makeCard(2, 0)] },
 ];
 
 const TURN_PRESETS: BoardPreset[] = [
-  { id: "blank", label: "2♠ carta branca", cards: [makeCard(0, 3)] },
-  { id: "over", label: "Q♣ carta alta", cards: [makeCard(10, 0)] },
-  { id: "pair", label: "6♦ par no board", cards: [makeCard(4, 1)] },
-  { id: "sweat", label: "J♠ completa draws", cards: [makeCard(9, 3)] },
+  { id: "blank", label: "2♠ carta branca", cards: [makeCard(2, 3)] },
+  { id: "over", label: "Q♣ carta alta", cards: [makeCard(12, 0)] },
+  { id: "pair", label: "6♦ par no board", cards: [makeCard(6, 1)] },
+  { id: "sweat", label: "J♠ completa draws", cards: [makeCard(11, 3)] },
 ];
 
 const RIVER_PRESETS: BoardPreset[] = [
-  { id: "blank", label: "3♣ carta branca", cards: [makeCard(1, 0)] },
-  { id: "sweat", label: "9♥ completa draws", cards: [makeCard(7, 2)] },
-  { id: "pair", label: "T♦ par no board", cards: [makeCard(8, 1)] },
-  { id: "brick", label: "2♥ tijolo", cards: [makeCard(0, 2)] },
+  { id: "blank", label: "3♣ carta branca", cards: [makeCard(3, 0)] },
+  { id: "sweat", label: "9♥ completa draws", cards: [makeCard(9, 2)] },
+  { id: "pair", label: "T♦ par no board", cards: [makeCard(10, 1)] },
+  { id: "brick", label: "2♥ tijolo", cards: [makeCard(2, 2)] },
 ];
 
 const EXTRA_PRESETS: Record<Exclude<StreetName, "flop">, BoardPreset[]> = {
@@ -94,18 +96,46 @@ export function StreetTrainer() {
   const [hand, setHand] = useState<SavedHand | null>(null);
   const [steps, setSteps] = useState<StreetStep[]>([]);
   const [current, setCurrent] = useState<StreetName>("flop");
-  const [flopChoice, setFlopChoice] = useState<BoardPreset | null>(null);
+  const [flopChoice, setFlopChoice] = useState<BoardPreset | null>(FLOP_PRESETS[0]);
   const [extraChoice, setExtraChoice] = useState<Record<Exclude<StreetName, "flop">, BoardPreset | null>>({ turn: null, river: null });
   const [showHeroRange, setShowHeroRange] = useState(false);
   const [showVillainRange, setShowVillainRange] = useState(false);
-  const [myAction, setMyAction] = useState<string | null>(null);
-  const [villainReact, setVillainReact] = useState<string | null>(null);
+  const [streetDec, setStreetDec] = useState<Record<StreetName, { hero: string | null; villain: string | null }>>({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
   const [score, setScore] = useState(0);
   const [streetScoreTotal, setStreetScoreTotal] = useState(0);
 
   const s = { heroPosition: heroPos, villainPosition: villainPos, effBB };
   const heroHandType = hand ? comboToHandType(hand.hero[0], hand.hero[1]) : null;
   const villainHandType = hand ? comboToHandType(hand.villain[0], hand.villain[1]) : null;
+
+  // Contexto do spot (pote + aposta enfrentada) — DECLARADO ANTES dos hooks que o usam
+  const ctxFor = (step: StreetStep, spec: typeof s): StreetContext => {
+    const openBB = 2.3;
+    const potAfterOpen = 1.5 + openBB;
+    const stepIdx = ["flop", "turn", "river"].indexOf(step.street);
+    // Pote cresce ~metade por street apostada; faced: betSmall=0.5×potPrev, betBig=0.75×potPrev
+    let pot = potAfterOpen;
+    let faced = 0;
+    for (let i = 0; i <= stepIdx; i++) {
+      const st = steps[i];
+      if (!st) break;
+      if (st.villainAction === "betSmall") faced = Math.round(pot * 0.5 * 10) / 10;
+      else if (st.villainAction === "betBig") faced = Math.round(pot * 0.75 * 10) / 10;
+      else faced = 0;
+      if (st.heroAction === "call") pot = Math.round((pot + faced) * 10) / 10;
+      else if (st.heroAction === "betSmall") pot = Math.round((pot + pot * 0.5) * 10) / 10;
+      else if (st.heroAction === "betBig") pot = Math.round((pot + pot * 0.75) * 10) / 10;
+      faced = 0;
+    }
+    return {
+      heroPosition: spec.heroPosition,
+      villainPosition: spec.villainPosition,
+      heroStackBB: spec.effBB,
+      villainStackBB: spec.effBB,
+      potBB: pot,
+      facedBetBB: faced,
+    };
+  };
 
   // Board corrente construído a partir das escolhas
   const boardSoFar = useMemo<BoardState>(() => {
@@ -139,6 +169,86 @@ export function StreetTrainer() {
     return prev;
   }, [steps, villainPos, effBB, s]);
 
+  // "Treinar rua por rua" da Sua Mão: o HandLab grava o spec do spot
+  // (cof-sua-mao-spec) e dispara cof-open-street — aqui ele é capturado e a
+  // sessão rua por rua começa já com a mão, posição e stack do jogador.
+  const [prefill, setPrefill] = useState<{
+    heroHand: Card[];
+    heroPosition: Position;
+    villainPosition: Position;
+    effBB: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const readSpec = (): { heroHand: Card[]; heroPosition: Position; villainPosition: Position; effBB: number } | null => {
+      const raw = localStorage.getItem("cof-sua-mao-spec");
+      if (!raw) return null;
+      try {
+        const s = JSON.parse(raw) as HandLabSpec;
+        if (!s.hand || s.hand.length < 2) return null;
+        return {
+          heroHand: s.hand.slice(0, 2),
+          heroPosition: s.heroPosition,
+          villainPosition: s.villainPosition,
+          effBB: s.stackBB,
+        };
+      } catch {
+        return null;
+      }
+    };
+    const existing = readSpec();
+    if (existing) {
+      localStorage.removeItem("cof-sua-mao-spec");
+      setPrefill(existing);
+    }
+    const onOpenStreet = () => {
+      const spec = readSpec();
+      localStorage.removeItem("cof-sua-mao-spec");
+      if (spec) setPrefill(spec);
+    };
+    window.addEventListener("cof-open-street", onOpenStreet);
+    return () => window.removeEventListener("cof-open-street", onOpenStreet);
+  }, []);
+
+  useEffect(() => {
+    if (!prefill) return;
+    setHeroPos(prefill.heroPosition);
+    setVillainPos(prefill.villainPosition);
+    setEffBB(prefill.effBB);
+    // Começa a sessão já com a mão e posição do jogador (sem sorteio).
+    const rng = seededRng(Math.floor(Math.random() * 1e9));
+    const villainIdx = Math.floor(rng() * 169);
+    const ranks = "AKQJT98765432";
+    const pickHand = (idx: number): number[] => {
+      const ht = (() => {
+        const ordered = Array.from({ length: 169 }, (_, i) => {
+          const ii = Math.floor(i / 13);
+          const jj = i % 13;
+          if (ii === jj) return ranks[ii] + ranks[jj];
+          if (ii < jj) return ranks[ii] + ranks[jj] + "s";
+          return ranks[jj] + ranks[ii] + "o";
+        }).sort((a, b) => handRank(a) - handRank(b));
+        return ordered[idx % 169];
+      })();
+      const hi = ranks.indexOf(ht[0]);
+      const lo = ht.length === 2 ? hi : ranks.indexOf(ht[1]);
+      const suited = ht.endsWith("s");
+      const suits = suited ? [0, 0] : [Math.floor(rng() * 4), Math.floor(rng() * 4)];
+      return [makeCard(hi + 2, suits[0]), makeCard(lo + 2, suits[1])];
+    };
+    setHand({ hero: prefill.heroHand, villain: pickHand(villainIdx) });
+    setSteps([]);
+    setCurrent("flop");
+    setFlopChoice(flopChoice ?? FLOP_PRESETS[0]);
+    setExtraChoice({ turn: TURN_PRESETS[0], river: RIVER_PRESETS[0] });
+    setShowHeroRange(false);
+    setShowVillainRange(false);
+    setStreetDec({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
+    setScore(0);
+    setStreetScoreTotal(0);
+    setPrefill(null);
+  }, [prefill]);
+
   const start = () => {
     const rng = seededRng(Math.floor(Math.random() * 1e9));
     // Mão do herói: prefere mãos médias/fortes (mais divertidas pra treinar)
@@ -165,12 +275,11 @@ export function StreetTrainer() {
     setHand({ hero: pickHand(heroIdx), villain: pickHand(villainIdx) });
     setSteps([]);
     setCurrent("flop");
-    setFlopChoice(null);
-    setExtraChoice({ turn: null, river: null });
+    setFlopChoice(flopChoice ?? FLOP_PRESETS[0]);
+    setExtraChoice({ turn: TURN_PRESETS[0], river: RIVER_PRESETS[0] });
     setShowHeroRange(false);
     setShowVillainRange(false);
-    setMyAction(null);
-    setVillainReact(null);
+    setStreetDec({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
     setScore(0);
     setStreetScoreTotal(0);
   };
@@ -182,33 +291,6 @@ export function StreetTrainer() {
     setShowVillainRange(false);
   };
 
-  const ctxFor = (step: StreetStep, spec: typeof s): StreetContext => {
-    const openBB = 2.3;
-    const potAfterOpen = 1.5 + openBB;
-    const stepIdx = ["flop", "turn", "river"].indexOf(step.street);
-    // Pote cresce ~metade por street apostada; faced: betSmall=0.5×potPrev, betBig=0.75×potPrev
-    let pot = potAfterOpen;
-    let faced = 0;
-    for (let i = 0; i <= stepIdx; i++) {
-      const st = steps[i];
-      if (!st) break;
-      if (st.villainAction === "betSmall") faced = Math.round(pot * 0.5 * 10) / 10;
-      else if (st.villainAction === "betBig") faced = Math.round(pot * 0.75 * 10) / 10;
-      else faced = 0;
-      if (st.heroAction === "call") pot = Math.round((pot + faced) * 10) / 10;
-      else if (st.heroAction === "betSmall") pot = Math.round((pot + pot * 0.5) * 10) / 10;
-      else if (st.heroAction === "betBig") pot = Math.round((pot + pot * 0.75) * 10) / 10;
-      faced = 0;
-    }
-    return {
-      heroPosition: spec.heroPosition,
-      villainPosition: spec.villainPosition,
-      heroStackBB: spec.effBB,
-      villainStackBB: spec.effBB,
-      potBB: pot,
-      facedBetBB: faced,
-    };
-  };
 
   // Ação do vilão reagindo à sua ação (perfil baseline: paga mais que folda com draw)
   const villainReaction = (your: string, _ctx: StreetContext): string => {
@@ -222,7 +304,7 @@ export function StreetTrainer() {
   };
 
   const decide = (action: string) => {
-    if (!hand || myAction) return;
+    if (!hand || streetDec[current].hero) return;
     const best = heroBestAction(heroHandType!, boardSoFar, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB, texture);
     const ok = action === "fold" && best.action === "fold"
       || action === "check" && best.action === "check"
@@ -232,9 +314,7 @@ export function StreetTrainer() {
     const ctx = ctxFor({ street: current, board: boardSoFar, heroAction: action, villainAction: null }, s);
     const vReact = villainReaction(action, ctx);
     const reactLabel = vReact === "fold" ? "check" : vReact; // vilão não folda a sua aposta sem aposta prévia; simplificação
-
-    setMyAction(action);
-    setVillainReact(reactLabel);
+    setStreetDec((d) => ({ ...d, [current]: { hero: action, villain: reactLabel } }));
     if (ok) setScore((v) => v + 1);
     setStreetScoreTotal((v) => v + 1);
     setSteps((prev) => [
@@ -303,7 +383,7 @@ export function StreetTrainer() {
 
   // ---------- Tela da rua ----------
   const ctxNow = ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s);
-  const isDone = current === "river" && myAction !== null;
+  const isDone = current === "river" && streetDec.river.hero !== null;
 
   const presets = current === "flop" ? FLOP_PRESETS : EXTRA_PRESETS[current as Exclude<StreetName, "flop">];
   const choice = current === "flop" ? flopChoice : extraChoice[current as Exclude<StreetName, "flop">];
@@ -370,7 +450,7 @@ export function StreetTrainer() {
         </div>
 
         {/* Escolha do board (antes de decidir) */}
-        {!myAction ? (
+        {!streetDec[current].hero ? (
           <>
             <div className="street-pick">
               <span className="street-pick-label">🎲 {t("street.pickBoard" as TransKey, { street: streetLabel(current) })}</span>
@@ -401,7 +481,7 @@ export function StreetTrainer() {
           // Decidiu: feedback + ranges
           <div className="train-result">
             <div className="street-reaction">
-              🦈 {t("street.reacted" as TransKey, { action: t((`street.act.${villainReact ?? "check"}`) as TransKey) })}
+              🦈 {t("street.reacted" as TransKey, { action: t((`street.act.${streetDec[current].villain ?? "check"}`) as TransKey) })}
             </div>
 
             <div className="street-range-btns">

@@ -187,6 +187,14 @@ export function App() {
     window.addEventListener("cof-open-ultra", handler);
     return () => window.removeEventListener("cof-open-ultra", handler);
   }, []);
+
+  // "Treinar rua por rua" da Sua Mão: abre o Treino Rua por Rua (view "street")
+  // já com a mão, posição e stack do jogador — o StreetTrainer lê o spec no mount.
+  useEffect(() => {
+    const handler = () => setView("street");
+    window.addEventListener("cof-open-street", handler);
+    return () => window.removeEventListener("cof-open-street", handler);
+  }, []);
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();

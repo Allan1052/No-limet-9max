@@ -120,6 +120,26 @@ export function HandLab() {
     window.dispatchEvent(new CustomEvent("cof-open-ultra"));
   };
 
+  const streetThisSpot = () => {
+    if (!result) return;
+    // O spot vira um treino rua por rua real: a SUA mão, a SUA posição e o spot
+    // do vilão — o jogador escolhe o flop/turn/river e decide a cada street.
+    // O spec (com hand, board e villainBetBB) é gravado no mesmo cof-sua-mao-spec
+    // e o evento cof-open-street abre o StreetTrainer.
+    const key =
+      result.recommended === "fold"
+        ? "fold"
+        : result.recommended === "call"
+          ? "call"
+          : result.recommended === "allin"
+            ? "allin"
+            : "raise";
+    recordDecision(key);
+    markActiveToday();
+    localStorage.setItem("cof-sua-mao-spec", JSON.stringify({ ...result.spec }));
+    window.dispatchEvent(new CustomEvent("cof-open-street"));
+  };
+
   return (
     <div className="handlab">
       <header className="handlab-head">
@@ -307,6 +327,13 @@ export function HandLab() {
 
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
+          </button>
+          <button
+            className="btn primary hl-train-btn"
+            style={{ marginTop: 8 }}
+            onClick={streetThisSpot}
+          >
+            🛣️ Treinar rua por rua
           </button>
                   {/* Compartilhar resultado */}
           <div className="mt-4">
