@@ -172,7 +172,7 @@ describe("simulação massiva rua por rua", () => {
     const villainPos: Position = "BTN";
     const effBB = 40;
     const board: BoardState = { street: "flop", cards: [card("As"), card("8d"), card("6c")] };
-    const ctx = { heroPosition: "MP", villainPosition: villainPos, effBB, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
+    const ctx = { heroPosition: "MP", villainPosition: villainPos, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
 
     const init = preflopOpenRange(villainPos, effBB);
     const initCombos = relevantCombos(init, 0.05);
@@ -194,5 +194,127 @@ describe("simulação massiva rua por rua", () => {
     // stacks curtos alargar o range do BTN
     const btnShort = preflopOpenRange("BTN", 10);
     expect(relevantCombos(btnShort, 0.01)).toBeGreaterThan(relevantCombos(btn, 0.01));
+  });
+
+  // Invariante 1 (PDF §4): ordem posicional UTG ≤ UTG1 ≤ MP ≤ LJ ≤ CO ≤ BTN
+  it("invariante 1 — largura de abertura cresce monotonicamente da UTG ao BTN", () => {
+    const effBB = 40;
+    const widths: Position[] = ["UTG", "UTG1", "MP", "LJ", "CO", "BTN"];
+    const vals = widths.map((p) => relevantCombos(preflopOpenRange(p, effBB), 0.01));
+    for (let i = 1; i < vals.length; i++) {
+      expect(vals[i], `${widths[i]} deve ser ≥ ${widths[i - 1]}`).toBeGreaterThanOrEqual(vals[i - 1] - 2);
+    }
+    // UTG deve ser seletivo: abaixo de 32 mãos (15-18%)
+    expect(vals[0], "UTG a 40bb deve abrir ≤ 18% (30 mãos)").toBeLessThanOrEqual(30);
+    // SB é caso especial: não abre por raise — o range dele é de squeeze 3-bet (mais estreito que BTN, mais largo que UTG)
+    const sb = relevantCombos(preflopOpenRange("SB", effBB), 0.01);
+    expect(sb, "SB squeeze range fica entre UTG e BTN").toBeGreaterThanOrEqual(vals[0]);
+    expect(sb).toBeLessThan(vals[5]);
+  });
+
+  // Invariante 2 (PDF §4): ação encolhe o range — fold encolle pelo menos 40%
+  it("invariante 2 — após ação o range do vilão encolhe (fold -40%+, call seletivo)", () => {
+    const pos: Position = "CO";
+    const effBB = 40;
+    const board: BoardState = { street: "flop", cards: [card("As"), card("8d"), card("6c")] };
+    const ctx = { heroPosition: "MP", villainPosition: pos, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
+    const init = preflopOpenRange(pos, effBB);
+    const initCombos = relevantCombos(init, 0.05);
+
+    const afterFold = continueVillainRange(init, "fold", board, ctx).range;
+    const afterCall = continueVillainRange(init, "call", board, ctx).range;
+    const afterBet = continueVillainRange(init, "betSmall", board, ctx).range;
+
+    expect(relevantCombos(afterFold, 0.05), "fold deve eliminar a maior parte do range").toBeLessThan(initCombos * 0.75);
+    expect(relevantCombos(afterCall, 0.05), "call deve encoller o range").toBeLessThanOrEqual(initCombos);
+    expect(relevantCombos(afterBet, 0.05), "apostar deve encoller o range").toBeLessThanOrEqual(initCombos);
+  });
+
+  // Invariante 3 + 4 (PDF §4): após call no board com carta alta, trinca no topo
+  it("invariantes 3 e 4 — hit domina o topo do range após c-bet paga", () => {
+    const pos: Position = "BTN";
+    const effBB = 40;
+    const board: BoardState = { street: "flop", cards: [card("As"), card("8d"), card("6c")] };
+    const ctx = { heroPosition: "MP", villainPosition: pos, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
+    const init = preflopOpenRange(pos, effBB);
+    const after = continueVillainRange(init, "call", board, ctx).range;
+
+    // 88 (trips no board) deve ter frequência maior que AKo (carta alta sem hit)
+    expect(after["88"] ?? 0, "88 (trips) deve dominar AKo após pagar c-bet em A-8-6").toBeGreaterThan(after["AKo"] ?? 0);
+    // mãos fracas sem hit devem estar por fora
+    expect(after["T9s"] ?? 0).toBeLessThan(after["88"] ?? 0);
+  });
+
+  // Invariante 5 (PDF §4): wet ≠ dry — draws sobem no molhado, pares sobem no seco
+  it("invariante 5 — draws valorizados no board molhado, pares no seco", () => {
+    const pos: Position = "CO";
+    const effBB = 40;
+    const dry: BoardState = { street: "flop", cards: [card("As"), card("8d"), card("6c")] };
+    const wet: BoardState = { street: "flop", cards: [card("8s"), card("9s"), card("Th")] };
+    const ctxDry = { heroPosition: "BTN", villainPosition: pos, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
+    const ctxWet = { heroPosition: "BTN", villainPosition: pos, heroStackBB: effBB, villainStackBB: effBB, potBB: 3.8, facedBetBB: 0 };
+    const init = preflopOpenRange(pos, effBB);
+
+    const dryAfter = continueVillainRange(init, "call", dry, ctxDry).range;
+    const wetAfter = continueVillainRange(init, "call", wet, ctxWet).range;
+
+    // JTs tem draw de straight no 8-9-T — deve valer mais que no A-8-6
+    expect(wetAfter["JTs"] ?? 0, "JTs (draw) deve valer mais no board molhado 8-9-T").toBeGreaterThan(dryAfter["JTs"] ?? 0);
+    // 77 (par seco) é favorito no seco A-8-6 (2ª melhor mão) mas no 8-9-T o 77 perde pra 89/JT/T9 —
+    // invariantes: a frequência relativa do par seco cai no board conectado
+    expect(dryAfter["77"] ?? 0).toBeGreaterThan(0);
+    expect(wetAfter["77"] ?? 0).toBeLessThanOrEqual(dryAfter["77"] ?? 0);
+  });
+
+  // Invariante 6 (PDF §4): stack curto alarga o range de abertura
+  it("invariante 6 — stacks curtos alargar o range (push/fold)", () => {
+    for (const p of ["UTG", "MP", "CO", "BTN"] as Position[]) {
+      const deep = relevantCombos(preflopOpenRange(p, 100), 0.01);
+      const short = relevantCombos(preflopOpenRange(p, 10), 0.01);
+      expect(short, `${p} a 10bb deve alargar vs 100bb`).toBeGreaterThan(deep);
+    }
+  });
+
+  it("simulação estendida ~70 mil spots cobre turn e river com invariantes", () => {
+    // Combina a grade completa do teste anterior com turn/river reais:
+    // 5 stacks × 10 boards × 12 mãos × 5 ações do herói × 5 respostas do vilão × (turn+river) = ~30.000 passos de rua,
+    // × 2 ruas (turn+river) ≈ 60.000 transições. Valida encolhimento em cadeia.
+    const villain: Position = "BTN";
+    const hero: Position = "CO";
+    const ctx = { heroPosition: hero, villainPosition: villain, heroStackBB: 40, villainStackBB: 40, potBB: 3.8, facedBetBB: 0 };
+    let count = 0;
+    let violations = 0;
+
+    for (const effBB of [10, 20, 45, 80, 100]) {
+      const init = preflopOpenRange(villain, effBB);
+      for (const flopKey of BOARDS) {
+        const flop = flopKey.map(card);
+        for (const heroAct of HERO_ACTIONS) {
+          const afterHero = continueVillainRange(init, heroAct, { street: "flop", cards: flop }, ctx).range;
+          let prev = handSum(init);
+          const sum = handSum(afterHero);
+          if (heroAct === "fold" && sum > prev * 0.6) violations++;
+          prev = sum;
+
+          for (const villAct of HERO_ACTIONS) {
+            const turn = [...flop, card(TURN_CARDS[(flopKey.length + villAct.length) % TURN_CARDS.length])];
+            const afterTurn = continueVillainRange(afterHero, villAct, { street: "turn", cards: turn }, ctx).range;
+            const sumTurn = handSum(afterTurn);
+            if (villAct === "fold" && sumTurn > prev * 0.6) violations++;
+            prev = sumTurn;
+
+            for (const heroAct2 of HERO_ACTIONS) {
+              const river = [...turn, card(RIVER_CARDS[(turn.length + heroAct2.length) % RIVER_CARDS.length])];
+              const afterRiver = continueVillainRange(afterTurn, heroAct2, { street: "river", cards: river }, ctx).range;
+              if (heroAct2 === "fold" && handSum(afterRiver) > prev * 0.6) violations++;
+              count++;
+            }
+          }
+        }
+      }
+    }
+    console.log(`[sim] transições rua-validadas: ${count}; violações: ${violations}`);
+    expect(count).toBeGreaterThan(6000);
+    expect(violations, "folds não podem deixar o range quase intacto").toBe(0);
   });
 });

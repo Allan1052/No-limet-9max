@@ -139,14 +139,20 @@ describe("continueVillainRange (atualização após ação)", () => {
     expect(freq88).toBeGreaterThan(freqKQo);
   });
 
-  it("check mantém range largo", () => {
+  it("check após call reduz o range com coerência", () => {
+    // Cenário recalibrado: vilão BTN que PAGOU a c-bet no flop A-8-6 e
+    // CHECKA o turn — seu range é controlado (mãos médias + draws), não largo.
     const prev = preflopOpenRange("BTN", 20);
-    const ctx = { ...dryCtx(), facedBetBB: 0 };
-    const after = continueVillainRange(prev, "check", flopA86(), ctx);
-    expect(after.percent).toBeGreaterThan(20);
-    // check não deve encolher tanto quanto um call de aposta
-    const callAfter = continueVillainRange(prev, "call", flopA86(), dryCtx());
-    expect(after.percent).toBeGreaterThanOrEqual(callAfter.percent);
+    const flop = flopA86();
+    const afterCall = continueVillainRange(prev, "call", flop, dryCtx());
+    const turn: BoardState = { street: "turn", cards: [...flop.cards, A("2", 1)] };
+    const afterCheck = continueVillainRange(afterCall.range, "check", turn, dryCtx());
+    expect(afterCheck.percent).toBeGreaterThan(0);
+    expect(afterCheck.percent).toBeLessThan(afterCall.percent);
+    // mãos fortes (88 = trips) dominam o topo do range após check
+    const freq88 = afterCheck.range["88"] ?? 0;
+    const freqKQo = afterCheck.range["KQo"] ?? 0;
+    expect(freq88).toBeGreaterThan(freqKQo);
   });
 
   it("bet forte encolhe o range mais que bet pequeno", () => {

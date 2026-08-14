@@ -6,7 +6,8 @@
 import { useState } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
-import { ModeToggle } from "./ModeToggle";
+import { ModeToggle } from "../ui/ModeToggle";
+import { isDevUnlocked, setDevLock } from "../lib/devLock";
 import { LangSelect } from "./LangSelect";
 import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
@@ -37,6 +38,30 @@ export function ProfileView({
   const { t } = useT();
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [ruaUnlocked, setRuaUnlocked] = useState(isDevUnlocked("rua2026"));
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const requestRuaUnlock = () => {
+    if (isDevUnlocked("rua2026")) {
+      setDevLock("rua2026", false);
+      setRuaUnlocked(false);
+    } else {
+      setPwInput("");
+      setPwError(false);
+      setPwOpen(true);
+    }
+  };
+  const submitRuaPw = () => {
+    if (pwInput.trim() === "rua2026") {
+      setDevLock("rua2026", true);
+      setRuaUnlocked(true);
+      setPwOpen(false);
+      setPwError(false);
+    } else {
+      setPwError(true);
+    }
+  };
   const avatar = getHeroAvatarData();
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
@@ -114,6 +139,17 @@ export function ProfileView({
           <LangSelect />
         </div>
 
+        {/* Gate de senha p/ features em teste ("rua2026") — só o Allan usa. */}
+        <div className="profile-setting">
+          <span className="ps-label">🔑 {t("profile.devTest")}</span>
+          <button
+            className={`btn tiny ${ruaUnlocked ? "devlock-on" : "devlock-off"}`}
+            onClick={requestRuaUnlock}
+          >
+            {ruaUnlocked ? "🟢 " + t("profile.devTestOn") : "🔒 " + t("profile.devTestOff")}
+          </button>
+        </div>
+
         <div className="profile-setting">
           <span className="ps-label">{t("profile.variant")}</span>
           <div className="variant-toggle">
@@ -182,6 +218,40 @@ export function ProfileView({
 
       {avatarOpen ? <AvatarSelector onClose={() => setAvatarOpen(false)} /> : null}
       {supportOpen ? <SupportPix onClose={() => setSupportOpen(false)} /> : null}
+
+      {/* Modal de senha para funcionalidades em teste — evita prompt() nativo, que trava o app no mobile. */}
+      {pwOpen ? (
+        <div className="devpw-overlay" onClick={() => setPwOpen(false)}>
+          <div className="devpw-box" onClick={(e) => e.stopPropagation()}>
+            <div className="devpw-title">🔑 {t("profile.devTestTitle")}</div>
+            <div className="devpw-note">{t("profile.devTestNote")}</div>
+            <input
+              className={`devpw-input${pwError ? " devpw-input-err" : ""}`}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              placeholder="senha"
+              value={pwInput}
+              onChange={(e) => {
+                setPwInput(e.target.value);
+                if (pwError) setPwError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitRuaPw();
+              }}
+            />
+            {pwError ? <div className="devpw-err">{t("profile.devTestWrong")}</div> : null}
+            <div className="devpw-btns">
+              <button className="btn tiny" onClick={() => setPwOpen(false)}>
+                {t("profile.devTestCancel")}
+              </button>
+              <button className="btn tiny" onClick={submitRuaPw}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

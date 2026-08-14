@@ -163,11 +163,10 @@ export function preflopOpenRange(villainPosition: string, effBB: number): Range 
     UTG: 0.15,
     UTG1: 0.18,
     MP: 0.21,
-    LJ: 0.25,
-    HJ: 0.29,
-    CO: 0.36,
-    BTN: 0.45,
-    SB: 0.34,
+    LJ: 0.24,
+    CO: 0.27,
+    BTN: 0.42,
+    SB: 0.35,
     BB: 0.15,
   };
   let width = widthByPos[villainPosition] ?? 0.3;
@@ -204,17 +203,19 @@ function continuationScore(
   const cheap = facedBetBB <= 0 ? 1 : facedBetBB <= potBB * 0.5 ? 0.55 : facedBetBB <= potBB ? 0.25 : 0.05;
 
   // ---- Componente base: força da mão no board ----
+  // Calibrado p/ torneio real: quem paga aposta cara raramente é com bottom
+  // pair fraco ou carta alta. A força cresce com o preço pago.
   let base: number;
   if (hit.made === "trips+" ) base = 1.0;
   else if (hit.made === "twoPairOrBetter") base = 0.95;
   else if (hit.made === "topPair") base = 0.82;
-  else if (hit.made === "middlePair") base = 0.62;
-  else if (hit.made === "bottomPair") base = 0.45;
+  else if (hit.made === "middlePair") base = 0.5;
+  else if (hit.made === "bottomPair") base = 0.32;
   else if (hit.made === "overPair") base = 0.78;
-  else if (hit.draw === "flushDraw") base = 0.34 + texture.wetness * 0.3;
-  else if (hit.draw === "straightDraw") base = 0.3 + texture.wetness * 0.3;
-  else if (hit.made === "weakPair") base = 0.3;
-  else base = 0.06 + strength * 0.24; // mão de carta alta sem hit (float)
+  else if (hit.draw === "flushDraw") base = 0.3 + texture.wetness * 0.3;
+  else if (hit.draw === "straightDraw") base = 0.25 + texture.wetness * 0.3;
+  else if (hit.made === "weakPair") base = 0.2;
+  else base = 0.02 + strength * 0.12; // mão de carta alta sem hit (float raro)
 
   // ---- Correção por textura: no board molhado, draws sobem, pares fracos caem ----
   if (texture.threeOfASuit && hit.draw === "flushDraw") base = Math.min(1, base + 0.25);
@@ -271,7 +272,10 @@ export function boardHit(handType: string, board: BoardState): { made: string; d
 function flushOrStraight(handType: string, board: BoardState): string | null {
   const ranks = board.cards.map(rankOf);
   const [hi, lo] = handTypeRanksNum(handType);
+  const isPocketPair = hi === lo;
   if (flushDrawChance(handType, board)) return "flushDraw";
+  // Pocket pair não completa straight — as duas cartas têm o mesmo rank.
+  if (isPocketPair) return null;
   const all = [...ranks, hi, lo].sort((a, b) => a - b);
   for (let i = 0; i <= all.length - 4; i++) {
     if (all[i + 3] - all[i] <= 4) return "straightDraw";
@@ -298,14 +302,16 @@ function handTypeRanksNum(handType: string): [number, number] {
 }
 
 // Frequência com que uma ação de CHECK ocorre para a mão no board.
+// Quem já PAGOU uma aposta no flop e CHECKA o turn tem range controlado:
+// mãos médias/fracas sem força p/ apostar + draws + algumas armadilhas.
 function checkScore(handType: string, board: BoardState, _texture: BoardTexture): number {
   const hit = boardHit(handType, board);
-  if (hit.made === "trips+" || hit.made === "twoPairOrBetter") return 0.25; // mãos fortes preferem apostar
-  if (hit.made === "topPair") return 0.45;
-  if (hit.made === "overPair") return 0.5;
-  if (hit.draw) return 0.35;
-  if (hit.made === "weakPair") return 0.6;
-  return 0.72; // mãos fracas sem hit quase sempre dão check (ou fold se apostarem)
+  if (hit.made === "trips+" || hit.made === "twoPairOrBetter") return 0.15; // mãos fortes preferem apostar
+  if (hit.made === "topPair") return 0.3;
+  if (hit.made === "overPair") return 0.35;
+  if (hit.draw) return 0.45;
+  if (hit.made === "weakPair") return 0.4;
+  return 0.3; // carta alta sem hit: quem checka com isso é minoria
 }
 
 // Frequência de APOSTAR (betSmall ~ meio pote) para a mão no board.
@@ -317,10 +323,10 @@ function betScore(handType: string, board: BoardState, texture: BoardTexture, _i
   else if (hit.made === "topPair") base = 0.62;
   else if (hit.made === "overPair") base = 0.58;
   else if (hit.draw) base = 0.5;
-  else if (hit.made === "middlePair") base = 0.42;
-  else if (hit.made === "bottomPair") base = 0.35;
-  else if (hit.made === "weakPair") base = 0.18 + texture.wetness * 0.15;
-  else base = 0.08 + texture.wetness * 0.28; // backdoor/air bluff em board molhado
+  else if (hit.made === "middlePair") base = 0.38;
+  else if (hit.made === "bottomPair") base = 0.28;
+  else if (hit.made === "weakPair") base = 0.12 + texture.wetness * 0.12;
+  else base = 0.04 + texture.wetness * 0.22; // backdoor/air bluff em board molhado
   return Math.min(1, Math.max(0, base));
 }
 
@@ -341,8 +347,11 @@ export function continueVillainRange(
   const out: Range = {};
 
   if (action === "fold") {
-    // Range "que foldou" = o que não continuou. Não usamos normalmente, mas
-    // o herói pode querer ver o que o vilão DESISTIU.
+    // Range "que foldou" = o que não continuou. Não dá pra foldar sem aposta
+    // na frente (facedBetBB <= 0) — nesse caso retornar range vazio.
+    if (faced <= 0) {
+      return normalizeSnapshot({}, prev, board, texture, ctx, action);
+    }
     for (const [ht, freq] of Object.entries(prev)) {
       if (freq <= 0) continue;
       const keep = 1 - continuationScore(ht, board, texture, faced, potBB);
@@ -361,7 +370,7 @@ export function continueVillainRange(
   // betSmall / betBig — quem aposta tem mãos feitas + draws + alguns bluffs.
     for (const [ht, freq] of Object.entries(prev)) {
       if (freq <= 0) continue;
-      const keep = betScore(ht, board, texture, true) * (action === "betBig" ? 0.9 : 1.1);
+      const keep = betScore(ht, board, texture, true) * (action === "betBig" ? 0.85 : 1.0);
       if (keep > 0.001) out[ht] = freq * keep;
     }
   }
@@ -403,12 +412,14 @@ function buildNarration(
     return `O que ele DESISTIU: o fundo do range — mãos sem hit e sem projeto. ${round}% do range não pagou.`;
   }
   if (action === "call") {
-    let line = `Ele pagou. O range encolheu para ~${round}% — quem paga aqui costuma ter hit no board, par na mão ou projeto de ${texture.threeOfASuit ? "flush" : texture.straightDrawFriendly ? "escada" : "melhoria"}.`;
-    if (texture.highCardPresent) line += " Cartas altas do board pesam: mãos com hit forte ficam no topo.";
+    let line = `Ele pagou e o range encolheu para ~${round}% — quem paga aqui carrega hit no board, par na mão ou projeto de ${texture.threeOfASuit ? "flush" : texture.straightDrawFriendly ? "escada" : "melhoria"}. O fundo do range sai.`;
+    if (texture.highCardPresent) line += " Carta alta no board pesa: mãos com hit forte dominam o topo.";
     return line;
   }
   if (action === "check") {
-    return `Ele deu check. O range fica largo (~${round}%) — check inclui tanto mãos fracas querendo ver carta de graça quanto mãos fortes jogando devagar.`;
+    let line = `Ele deu check. O range agora tem ~${round}% — misto de mãos médias querendo controle, draws e alguma armadilha. Topo e fundo do range saíram.`;
+    if (texture.highCardPresent) line += " Carta alta no board: o que sobrou acima é o que tinha hit.";
+    return line;
   }
   if (action === "betSmall") {
     let line = `Aposta pequena (~${round}%): mistura de valores médios (pares +), projetos e alguns bluffs.`;

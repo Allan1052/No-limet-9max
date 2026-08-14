@@ -32,6 +32,43 @@ import {
   type StreetName,
 } from "../train/streets/dynamicRanges";
 import type { HandLabSpec } from "../train/stage";
+import { isDevUnlocked } from "../lib/devLock";
+
+// ----------------------------- Legenda de cores -----------------------------
+
+/** Legenda ao lado da grade — o novato vê na hora o que cada cor significa. */
+export function RangeLegend({ mode }: { mode: "hero" | "villain" }) {
+  const { t } = useT();
+  const items =
+    mode === "hero"
+      ? [
+          { color: "var(--gold, #e6c454)", label: t("street.legend.bet") },
+          { color: "var(--blue, #4d8fe6)", label: t("street.legend.check") },
+          { color: "#5c6b60", label: t("street.legend.fold") },
+        ]
+      : [
+          { color: "var(--gold, #e6c454)", label: t("street.legend.likely") },
+          { color: "var(--blue, #4d8fe6)", label: t("street.legend.continuing") },
+          { color: "#5c6b60", label: t("street.legend.out") },
+        ];
+  return (
+    <div className="street-legend" role="note" aria-label={t("street.legend.title" as TransKey)}>
+      <span className="street-legend-title">{t("street.legend.title" as TransKey)}</span>
+      <div className="street-legend-items">
+        {items.map((it) => (
+          <span key={it.label} className="street-legend-item">
+            <span className="street-legend-swatch" style={{ background: it.color }} />
+            {it.label}
+          </span>
+        ))}
+        <span className="street-legend-item">
+          <span className="street-legend-swatch street-legend-split" />
+          {t("street.legend.mixed")}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // ----------------------------- Board presets -----------------------------
 
@@ -110,6 +147,9 @@ export function StreetTrainer() {
   // Trocador de carta do turn/river (a carta já vem pré-escolhida; o jogador
   // pode trocar quantas vezes quiser ANTES de decidir a rua).
   const [swapMode, setSwapMode] = useState<Exclude<StreetName, "flop"> | null>(null);
+  // Modo Estudo 🎬 — atrás da senha rua2026: o app joga a mão sozinho e mostra
+  // as grades evoluindo (útil p/ gravar Reels e estudar sem pressão).
+  const [studyMode, setStudyMode] = useState(false);
 
   const s = { heroPosition: heroPos, villainPosition: villainPos, effBB };
   const heroHandType = hand ? comboToHandType(hand.hero[0], hand.hero[1]) : null;
@@ -323,6 +363,21 @@ export function StreetTrainer() {
     return tight ? "fold" : v < 0.7 ? "call" : "raise";
   };
 
+  // Modo Estudo 🎬: o engine decide pelo herói (a melhor ação), e o jogador
+  // vê a grade ANTES — depois de decidir, a grade do vilão abre sozinha.
+  const decideWithEngine = () => {
+    if (!hand || !heroHandType || streetDec[current].hero) return;
+    const best = heroBestAction(
+      heroHandType,
+      boardSoFar,
+      ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB,
+      ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB,
+      texture,
+    );
+    setShowHeroRange(true);
+    setTimeout(() => decide(best.action), 40);
+  };
+
   const decide = (action: string) => {
     if (!hand || streetDec[current].hero) return;
     const best = heroBestAction(heroHandType!, boardSoFar, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB, texture);
@@ -395,6 +450,18 @@ export function StreetTrainer() {
             </div>
           </div>
 
+          {isDevUnlocked("rua2026") ? (
+            <label className="ultra-field study-toggle-label">
+              <span>{t("street.studyMode" as TransKey)}</span>
+              <button
+                className={`btn tiny ${studyMode ? "devlock-on" : "devlock-off"}`}
+                onClick={() => setStudyMode((v) => !v)}
+              >
+                🎬 {studyMode ? t("street.studyOn" as TransKey) : t("street.studyOff" as TransKey)}
+              </button>
+            </label>
+          ) : null}
+
           <button className="btn primary ultra-start" onClick={start}>
             {t("street.start" as TransKey)}
           </button>
@@ -425,6 +492,15 @@ export function StreetTrainer() {
           <span className="train-session">
             {t("street.score" as TransKey, { s: score, t: streetScoreTotal })}
           </span>
+          {isDevUnlocked("rua2026") ? (
+            <button
+              className={`btn tiny ${studyMode ? "devlock-on" : "devlock-off"}`}
+              onClick={() => setStudyMode((v) => !v)}
+              aria-label={t("street.studyMode" as TransKey)}
+            >
+              🎬 {t("street.studyMode" as TransKey)}
+            </button>
+          ) : null}
         </div>
 
         {/* Barra de progresso da rua */}
@@ -522,6 +598,7 @@ export function StreetTrainer() {
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.myRangeTitle" as TransKey)}</div>
                 <StreetRangeGrid grid={heroGrid} highlight={heroHandType!} cellNote={t("street.myRangeNote" as TransKey)} />
+                <RangeLegend mode="hero" />
               </div>
             ) : null}
 
@@ -529,6 +606,7 @@ export function StreetTrainer() {
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.villainRangeTitle" as TransKey)}</div>
                 <VillainRangeGrid range={openRangeFor("villain")} cellNote={t("street.villainRangeNote" as TransKey)} />
+                <RangeLegend mode="villain" />
               </div>
             ) : null}
 
@@ -588,8 +666,21 @@ export function StreetTrainer() {
           </div>
         ) : null}
 
+        {/* Modo Estudo 🎬: o app decide por você mostrando a grade antes */}
+        {studyMode && !streetDec[current].hero ? (
+          <div className="train-actions">
+            <button
+              className="btn ghost"
+              style={{ flexBasis: "100%", maxWidth: "100%" }}
+              onClick={() => decideWithEngine()}
+            >
+              🎬 {t("street.studyPlay" as TransKey)}
+            </button>
+          </div>
+        ) : null}
+
         {/* Botões de ação da rua */}
-        {!streetDec[current].hero && (
+        {!streetDec[current].hero && !studyMode ? (
           <div className="train-actions">
             <button className="btn primary" onClick={() => decide("fold")}>FOLD</button>
             <button className="btn primary" onClick={() => decide("check")}>CHECK</button>
@@ -597,7 +688,7 @@ export function StreetTrainer() {
             <button className="btn primary" onClick={() => decide("betSmall")}>APOSTA ½ POTE</button>
             <button className="btn primary" onClick={() => decide("betBig")}>APOSTA ¾ POTE</button>
           </div>
-        )}
+        ) : null}
 
         {/* Reação do vilão na rua atual */}
         {streetDec[current].villain && !isDone ? (

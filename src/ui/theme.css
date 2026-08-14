@@ -1060,6 +1060,20 @@ body {
 /* ---- Estatísticas ---- */
 .stats-head { display: flex; align-items: center; justify-content: space-between; }
 .btn.tiny { padding: 3px 8px; font-size: 11px; font-weight: 600; }
+
+/* Gate de senha p/ features em teste ("rua2026") — botão no Perfil. */
+.devlock-on {
+  color: #0a1410;
+  background: var(--gold-grad);
+  border: 1px solid var(--gold, #e6c454);
+  text-shadow: none;
+}
+.devlock-off {
+  color: var(--gold-dim, #b8912e);
+  background: transparent;
+  border: 1px dashed var(--gold-dim, #b8912e);
+  opacity: 0.9;
+}
 table.stats { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
 table.stats th {
   color: var(--gold-soft);
@@ -5111,4 +5125,53 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .ss-tap-seat { transition: none; }
+}
+
+/* ---- Legenda de cores da grade (novato entende na hora) ---- */
+.street-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px dashed rgba(212, 175, 55, 0.35);
+  border-radius: 10px;
+}
+.street-legend-title { font-size: 11px; font-weight: 700; color: var(--gold-soft, #d4af37); letter-spacing: 0.5px; text-transform: uppercase; }
+.street-legend-items { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.street-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #c9c2ad; }
+.street-legend-swatch {
+  width: 12px; height: 12px; border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.street-legend-split {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--gold, #e6c454) 0 4px,
+    var(--blue, #4d8fe6) 4px 8px
+  );
+}
+
+/* DEV PW modal — senha p/ funcionalidades em teste (não trava o mobile, sem prompt nativo) */
+.devpw-overlay{position:fixed;inset:0;background:rgba(5,10,8,.82);display:flex;align-items:center;justify-content:center;z-index:9000;padding:24px}
+.devpw-box{background:#11231a;border:1.5px solid #d4af37;border-radius:14px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.devpw-title{color:#d4af37;font-weight:800;font-size:17px;margin-bottom:8px}
+.devpw-note{color:#9db5a8;font-size:13px;margin-bottom:14px;line-height:1.45}
+.devpw-input{width:100%;box-sizing:border-box;background:#0a1410;border:1.5px solid #2a4a38;border-radius:8px;color:#ece7d5;font-size:16px;padding:10px 12px;outline:none}
+.devpw-input:focus{border-color:#d4af37}
+.devpw-input-err{border-color:#c0392b}
+.devpw-err{color:#e8857c;font-size:13px;margin:8px 0 4px}
+.devpw-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+
+/* Modo Estudo — toggle na tela de setup */
+.study-toggle-label {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.study-toggle-label > span {
+  font-size: 14px;
+  color: var(--cream, #ece7d5);
 }
