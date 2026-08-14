@@ -133,39 +133,6 @@ export function actionLabel(action: string): string {
 }
 
 /**
- * Gera um prefixo contextual baseado no stack e momento do torneio.
- * Ex: "Com 10bb você tá na zona push/fold — " ou "Stack fundo (60bb), tem espaço pra manobra — "
- */
-function stackContext(effectiveBB: number, stageLabel?: string): string {
-  if (!effectiveBB) return "";
-  
-  const isPushFold = effectiveBB <= 12;
-  const isShort = effectiveBB <= 25;
-  const isMedium = effectiveBB <= 45;
-  // isDeep = > 45
-  
-  // Adiciona contexto de estágio
-  let stagePrefix = "";
-  if (stageLabel) {
-    switch (stageLabel) {
-      case "inicio": stagePrefix = "Começo de torneio, stacks fundos — "; break;
-      case "meio": stagePrefix = "Meio do torneio, o campo encolhe — "; break;
-      case "bolha": stagePrefix = "Bolha perto, pressão de ICM — "; break;
-      case "mesa_final": stagePrefix = "Mesa final, cada decisão vale mais — "; break;
-    }
-  }
-  
-  if (isPushFold) {
-    return `${stagePrefix}Com ${effectiveBB}bb você tá na zona push/fold — `;
-  } else if (isShort) {
-    return `${stagePrefix}Stack curto (${effectiveBB}bb), hora de ser agressivo — `;
-  } else if (isMedium) {
-    return `${stagePrefix}Stack médio (${effectiveBB}bb), dá pra manobrar — `;
-  }
-  return `${stagePrefix}Stack fundo (${effectiveBB}bb), tem espaço pra jogar — `;
-}
-
-/**
  * Avalia uma decisão do herói. `heroAction` é o tipo da ação do motor
  * (fold/check/call/raise/allin); `advice` é a recomendação da linha de base.
  */
@@ -280,7 +247,11 @@ function gradeCore(
   ) {
     const eff = Math.round(advice.effectiveBB ?? 0);
     const deep = eff >= 50;
-    const ctx = stackContext(eff, advice.stageLabel);
+    const fctx: FeedbackContext = {
+      heroBB: eff,
+      stage: advice.stageLabel,
+      heroPosition: ctx?.heroPosition,
+    };
     return {
       ...base,
       rating: deep ? "ruim" : "imprecisa",
@@ -291,7 +262,7 @@ function gradeCore(
         )} de tamanho normal. Jogando all-in você faz mão pior largar e só é pago por mão melhor — ${
           deep ? "vira jogada perdedora" : "perde valor"
         }. Guarde o all-in pra stack curto (push/fold).`,
-        ctx,
+        fctx,
       ),
     };
   }
@@ -306,38 +277,46 @@ function gradeCore(
     const heroFreq = freqByFam[hf];
     const main = [...advice.mix].sort((a, b) => b.freq - a.freq)[0];
     const mainLabel = actionLabel(main.action);
-    const ctx = stackContext(effBB ?? 0, advice.stageLabel);
+    const fctx: FeedbackContext = {
+      heroBB: effBB ?? 0,
+      stage: advice.stageLabel,
+      heroPosition: ctx?.heroPosition,
+    };
     if (heroFreq >= 0.55) {
       return {
         ...base,
         rating: "boa",
-        text: getFeedbackText(userSubscriptionLevel, 'boa', 'freqMain', { heroAction, heroFreq, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'boa', 'freqMain', { heroAction, heroFreq, street: streetLabel, ctx: fctx }),
       };
     }
     if (heroFreq >= 0.25) {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'freqValid', { heroAction, heroFreq, mainLabel, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'freqValid', { heroAction, heroFreq, mainLabel, street: streetLabel, ctx: fctx }),
       };
     }
     if (heroFreq >= 0.08) {
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'freqMinor', { heroFreq, mainLabel, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'freqMinor', { heroFreq, mainLabel, street: streetLabel, ctx: fctx }),
       };
     }
     // Frequência quase nula → é erro de verdade: segue para a análise de EV.
   }
 
+  const hasNumbers = eq !== undefined && odds !== undefined;
+  const fctx: FeedbackContext = {
+    heroBB: effBB ?? 0,
+    stage: advice.stageLabel,
+    heroPosition: ctx?.heroPosition,
+  };
+
   // Bateu com a recomendação: boa jogada.
   if (hf === af) {
-    return { ...base, rating: "boa", text: getFeedbackText(userSubscriptionLevel, 'boa', 'aligned', { reason: advice.reason, street: streetLabel, ctx }) };
+    return { ...base, rating: "boa", text: getFeedbackText(userSubscriptionLevel, 'boa', 'aligned', { reason: advice.reason, street: streetLabel, ctx: fctx }) };
   }
-
-  const hasNumbers = eq !== undefined && odds !== undefined;
-  const ctx = stackContext(effBB ?? 0, advice.stageLabel);
 
   // ----- Erros de EV mensuráveis (pós-flop, com equity e odds) -----
   if (hasNumbers) {
@@ -347,7 +326,7 @@ function gradeCore(
       return {
         ...base,
         rating: surplus > 0.1 ? "ruim" : "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, surplus > 0.1 ? 'ruim' : 'imprecisa', 'foldWithPrice', { equity: eq!, odds: odds!, adviceAction: advice.action, surplus, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, surplus > 0.1 ? 'ruim' : 'imprecisa', 'foldWithPrice', { equity: eq!, odds: odds!, adviceAction: advice.action, surplus, street: streetLabel, ctx: fctx }),
       };
     }
     // Pagou sem preço.
@@ -356,7 +335,7 @@ function gradeCore(
       return {
         ...base,
         rating: gap > 0.15 ? "ruim" : "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, gap > 0.15 ? 'ruim' : 'imprecisa', 'callWithoutOdds', { equity: eq!, odds: odds!, gap, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, gap > 0.15 ? 'ruim' : 'imprecisa', 'callWithoutOdds', { equity: eq!, odds: odds!, gap, street: streetLabel, ctx: fctx }),
       };
     }
     // Agressivo demais.
@@ -364,7 +343,7 @@ function gradeCore(
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroTooMuch', { adviceAction: advice.action, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroTooMuch', { adviceAction: advice.action, street: streetLabel, ctx: fctx }),
       };
     }
     // Passivo com mão de valor.
@@ -372,7 +351,7 @@ function gradeCore(
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'passiveWithValue', { adviceAction: advice.action, equity: eq, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'passiveWithValue', { adviceAction: advice.action, equity: eq, street: streetLabel, ctx: fctx }),
       };
     }
   }
@@ -383,28 +362,28 @@ function gradeCore(
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'loosePlay', { street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'loosePlay', { street: streetLabel, ctx: fctx }),
       };
     }
     if (hf === "fold" && af !== "fold") {
       return {
         ...base,
         rating: "imprecisa",
-        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'tooTight', { adviceAction: advice.action, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'tooTight', { adviceAction: advice.action, street: streetLabel, ctx: fctx }),
       };
     }
     if (hf === "call" && af === "aggro") {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'couldBeAggro', { adviceAction: advice.action, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'couldBeAggro', { adviceAction: advice.action, street: streetLabel, ctx: fctx }),
       };
     }
     if (hf === "aggro" && af === "call") {
       return {
         ...base,
         rating: "ok",
-        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroButPlayable', { adviceAction: advice.action, street: streetLabel, ctx }),
+        text: getFeedbackText(userSubscriptionLevel, 'ok', 'aggroButPlayable', { adviceAction: advice.action, street: streetLabel, ctx: fctx }),
       };
     }
   }
@@ -413,7 +392,7 @@ function gradeCore(
     return {
       ...base,
       rating: "imprecisa",
-      text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'differentPattern', { adviceAction: advice.action, reason: advice.reason, street: streetLabel, ctx }),
+      text: getFeedbackText(userSubscriptionLevel, 'imprecisa', 'differentPattern', { adviceAction: advice.action, reason: advice.reason, street: streetLabel, ctx: fctx }),
     };
 }
 
