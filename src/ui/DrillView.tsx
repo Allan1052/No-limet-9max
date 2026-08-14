@@ -11,7 +11,9 @@
 import { TrainingShareButton } from './TrainingShareButton';
 import { useState, useCallback } from "react";
 import { CardView } from "./Card";
-import { actionLabel } from "../feedback/analyzer";
+import { actionLabel, gradeDecision, type FeedbackContext } from "../feedback/analyzer";
+import { cardsFromString } from "../engine/cards";
+import { HandTipsModal } from "./HandTipsModal";
 import { DrillPostflopView } from "./DrillPostflopView";
 import {
   DRILL_PRESETS,
@@ -287,6 +289,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 11,
     color: '#a8a596',
   },
+  errorRow: {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    padding: '8px 12px',
+    cursor: 'pointer',
+    color: '#a8a596',
+    fontSize: 11,
+    transition: 'background 0.15s',
+  } as React.CSSProperties,
   backBtn: {
     padding: '12px 24px',
     borderRadius: 12,
@@ -310,6 +322,44 @@ export function DrillView() {
   const [feedback, setFeedback] = useState<{ text: string; rating: string; advice: string } | null>(null);
   const [progress, setProgress] = useState(() => loadDrillProgress());
   const [showingFeedback, setShowingFeedback] = useState(false);
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [tipsItems, setTipsItems] = useState<{ free: any[]; tech: any[]; hand: any[] } | null>(null);
+
+  // Abre a análise (Simples/Técnico) de um erro do drill.
+  const openMistakeTips = useCallback((mistake: { hand: string; choice: string; advice: string }) => {
+    if (!session) return;
+    // Reconstrói a mão original do drill a partir do código da mão (ex.: "Kd8c").
+    // Card é um número 0..51, então comparamos as mãos diretamente.
+    const [c1, c2] = cardsFromString(mistake.hand);
+    const original = session.hands.find(
+      (h) => c1 !== undefined && h.hand[0] === c1 && h.hand[1] === c2,
+    );
+    const hand: any[] = original ? original.hand : c1 !== undefined ? [c1, c2] : [];
+    const heroAction = mistake.choice;
+    const ctx: FeedbackContext = {
+      heroPosition: session.spot.heroPosition,
+      heroBB: session.spot.effectiveBB,
+      stage: session.spot.type === "pushFold" ? "meio" : "inicio",
+    };
+    const spotLabel =
+      session.spot.type === "open" ? "Abertura (pote não aberto)"
+      : session.spot.type === "vsOpen" ? "vs abertura do " + (session.spot.raiserPosition || "vilão")
+      : session.spot.type === "vsThreeBet" ? "vs 3-bet"
+      : "Push ou fold";
+    const reasonText = original?.advice?.reason || "A jogada correta era " + actionLabel(mistake.advice) + ".";
+    void spotLabel;
+    const grade = (level: "free" | "technical") =>
+      gradeDecision("Drill · " + session.spot.heroPosition, level, heroAction, {
+        action: original?.advice?.action || mistake.advice,
+        reason: reasonText,
+        mix: original?.advice?.mix,
+        equity: original?.advice?.equity,
+        evBB: original?.advice?.evBB,
+        potOdds: original?.advice?.potOdds,
+      } as any, ctx);
+    setTipsItems({ free: [grade("free")], tech: [grade("technical")], hand });
+    setTipsOpen(true);
+  }, [session]);
 
   // Selecionar preset e iniciar drill
   const startDrill = useCallback((presetId: string) => {
@@ -455,10 +505,21 @@ export function DrillView() {
             <p style={styles.errorsTitle}>❌ Erros ({result.mistakes.length}):</p>
             <div style={styles.errorsList}>
               {result.mistakes.map((m, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <button
+                  key={i}
+                  onClick={() => openMistakeTips(m)}
+                  style={{
+                    ...styles.errorRow,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
                   <span>{m.hand}</span>
-                  <span>Você: {m.choice} → {actionLabel(m.advice)}</span>
-                </div>
+                  <span>Você: {m.choice} → {actionLabel(m.advice)} <span style={{ color: '#e6c454' }}>👁 ver</span></span>
+                </button>
               ))}
             </div>
           </div>
@@ -543,6 +604,24 @@ export function DrillView() {
           ✕ Desistir do drill
         </button>
       </div>
+    );
+  }
+
+  // Modal de análise do erro (Simples/Técnico)
+  if (tipsOpen && tipsItems) {
+    return (
+      <HandTipsModal
+        items={tipsItems.tech}
+        itemsFree={tipsItems.free}
+        itemsTechnical={tipsItems.tech}
+        heroHand={tipsItems.hand}
+        board={[]}
+        userSubscriptionLevel="free"
+        onClose={() => {
+          setTipsOpen(false);
+          setTipsItems(null);
+        }}
+      />
     );
   }
 
