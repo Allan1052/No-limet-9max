@@ -1,16 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
-import { IcmCalculator } from "../ui/IcmCalculator";
-import { TournamentSetup } from "../ui/Tournament";
-import { RangeGrid } from "../ui/RangeGrid";
-import { MissionsPanel } from "../ui/MissionsPanel";
+import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./LazyViews";
 import { MissionToast } from "../ui/MissionToast";
-import { AchievementsPanel } from "../ui/AchievementsPanel";
+import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
@@ -34,17 +31,19 @@ function getBasePath(): string {
   const legacy = base.match(/^(\/[^/]+\/)/);
   return legacy ? legacy[1] : '/';
 }
-import { TrainView } from "../ui/TrainView";
-import { UltraTrainer } from "../ui/UltraTrainer";
-import { StreetTrainer } from "../ui/StreetTrainer";
-import { DrillView } from "../ui/DrillView";
-import { HandLab } from "../ui/HandLab";
-import { CampaignView } from "../ui/CampaignView";
-import { ImportView } from "../ui/ImportView";
-import { Leaderboard } from "../ui/Leaderboard";
-import { AnatomiaTorneio } from "../ui/AnatomiaTorneio";
+import {
+  UltraTrainer,
+  StreetTrainer,
+  DrillView,
+  HandLab,
+  CampaignView,
+  TrainView,
+  ImportView,
+  Leaderboard,
+  AnatomiaTorneio,
+  ProfileView,
+} from "./LazyViews";
 import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
-import { ProfileView } from "../ui/ProfileView";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { markFirstOpen } from "../ui/AvatarSelector";
@@ -307,25 +306,25 @@ export function App() {
             <HubSubNav view={view} setView={setView} info={playInfo} />
       <div key={view} className="view-enter">
       {view === "icm" ? (
-        <IcmCalculator />
+        <Suspense><IcmCalculator /></Suspense>
       ) : view === "ultra" ? (
-        <UltraTrainer />
+        <Suspense><UltraTrainer /></Suspense>
       ) : view === "street" ? (
-        <StreetTrainer />
+        <Suspense><StreetTrainer /></Suspense>
       ) : view === "drill" ? (
-        <DrillView />
+        <Suspense><DrillView /></Suspense>
       ) : view === "suamao" ? (
-        <HandLab />
+        <Suspense><HandLab /></Suspense>
       ) : view === "campanha" ? (
-        <CampaignView />
+        <Suspense><CampaignView /></Suspense>
       ) : view === "treino" ? (
-        <TrainView />
+        <Suspense><TrainView /></Suspense>
       ) : view === "ranking" ? (
-        <Leaderboard />
+        <Suspense><Leaderboard /></Suspense>
       ) : view === "anatomia" ? (
-        <AnatomiaTorneio />
+        <Suspense><AnatomiaTorneio /></Suspense>
       ) : view === "perfil" ? (
-        <ProfileView
+        <Suspense><ProfileView
           gameVariant={gameVariant}
           setGameVariant={setGameVariant}
           omahaUnlocked={omahaUnlocked}
@@ -335,20 +334,20 @@ export function App() {
           onOpenHistory={() => setHistoryLogOpen(true)}
           buildLabel={formatBuild(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}
-        />
+        /></Suspense>
       ) : view === "importar" ? (
-        <ImportView />
+        <Suspense><ImportView /></Suspense>
       ) : view === "missoes" ? (
-        <MissionsPanel
+        <Suspense><MissionsPanel
           missions={missions()}
           done={missionCounts().done}
           total={missionCounts().total}
           onReset={resetMissions}
-        />
+        /></Suspense>
       ) : view === "ranges" ? (
-        <RangeGrid />
+        <Suspense><RangeGrid /></Suspense>
       ) : view === "torneio" ? (
-        <TournamentSetup
+        <Suspense><TournamentSetup
           saved={savedTournaments()}
           onResume={(buyIn) => {
             resumeTournament(buyIn);
@@ -359,7 +358,7 @@ export function App() {
             startTournament(cfg);
             setView("play");
           }}
-        />
+        /></Suspense>
       ) : (
         <div className="play">
           <PokerTable
