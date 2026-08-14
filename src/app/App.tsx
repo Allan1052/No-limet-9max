@@ -213,6 +213,11 @@ export function App() {
             </div>
           </>
         ) : null}
+        {controller.tournament?.buyIn != null ? (
+          <span className="ts-seg ts-buyin" title={`Torneio $${controller.tournament!.buyIn.toLocaleString("en-US")}`}>
+            🏆 ${controller.tournament!.buyIn.toLocaleString("en-US")}
+          </span>
+        ) : null}
         <span className="ts-seg ts-blinds">
           {t.smallBlind}/{t.bigBlind}
           {t.ante ? ` · a${t.ante}` : ""}

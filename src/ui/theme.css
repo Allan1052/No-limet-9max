@@ -3539,6 +3539,8 @@ body {
 .ts-rank i { color: #8a8f76; font-style: normal; font-weight: 600; }
 .ts-seg.itm { color: #37d07a; border-color: #2b6b47; background: #10180f; }
 .ts-blinds { color: #b9b39c; }
+/* Selo dourado do buy-in do torneio — visível na mesa e em vídeos/review. */
+.ts-buyin { color: #e6c454; border-color: #3d3315; background: #171308; }
 /* Selo do Circuito no cabeçalho (ao lado da marca), estilo GGPoker. */
 .topbar-circuit {
   flex: 0 0 auto;
