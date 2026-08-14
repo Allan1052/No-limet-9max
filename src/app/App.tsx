@@ -67,7 +67,10 @@ export function App() {
   const { t: tr } = useT();
   const { onboarded, setOnboarded, mode } = useSettings();
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
-  const [userSubscriptionLevel] = useState<UserSubscriptionLevel>("technical");
+  const [userSubscriptionLevel] = useState<UserSubscriptionLevel>(() => mode === "tecnico" ? "technical" : "free");
+  // Mapeia o mode de UI (simples/tecnico) para o nível de feedback (free/technical/ultra)
+  // Quando o usuário troca de modo, o level muda junto
+  const effectiveLevel: UserSubscriptionLevel = mode === "tecnico" ? "technical" : "free";
   const [splashComplete, setSplashComplete] = useState(false);
   const [guidedDone, setGuidedDone] = useState<boolean>(() => hasSeenGuidedHand());
   const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
@@ -100,7 +103,7 @@ export function App() {
     dismissChampion,
     xpToasts,
     dismissXpToasts,
-  } = useGame(userSubscriptionLevel, { variant: gameVariant });
+  } = useGame(effectiveLevel, { variant: gameVariant });
   // Esconde a landing page overlay quando o app está pronto
   useEffect(() => {
     const lh = document.getElementById("landing-hero");
@@ -123,6 +126,18 @@ export function App() {
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
+
+  // Navegação programática via evento customizado (ex: banners clicáveis)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && typeof detail === "string") {
+        setView(detail as AppView);
+      }
+    };
+    window.addEventListener("nav-to", handler);
+    return () => window.removeEventListener("nav-to", handler);
+  }, []);
   const t = controller.table;
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
@@ -147,8 +162,15 @@ export function App() {
             <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
               {fs.inMoney
                 ? `ITM $${Math.round(fs.currentCash).toLocaleString("en-US")}`
-                : `${tr("hud.paid")} ${fs.paidPlaces.toLocaleString("en-US")}`}
+                : `🎯 ${fs.toBubble} p/ bolha`}
             </span>
+            {/* Barra de progresso visual: quanto falta pro dinheiro */}
+            <div className="ts-progress" title={`Falta ${fs.toBubble} bustar pro dinheiro`}>
+              <div
+                className="ts-progress-fill"
+                style={{ width: `${Math.max(5, Math.min(100, ((fs.entrants - fs.remaining) / fs.entrants) * 100))}%` }}
+              />
+            </div>
           </>
         ) : null}
         <span className="ts-seg ts-blinds">

@@ -8,6 +8,13 @@ import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
 
+// Haptics — vibração sutil ao tocar nos botões de ação (mobile)
+function haptic() {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate(15); // vibração curta e leve
+  }
+}
+
 interface ControlsProps {
   legal: LegalActions;
   active: boolean; // é a vez do herói?
@@ -46,20 +53,20 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         <button
           className="btn danger"
           disabled={!active || !legal.canFold}
-          onClick={() => onAction({ type: "fold" })}
+          onClick={() => { haptic(); onAction({ type: "fold" }); }}
         >
           {t("ctrl.fold")}
         </button>
 
         {legal.canCheck ? (
-          <button className="btn" disabled={!active} onClick={() => onAction({ type: "check" })}>
+          <button className="btn" disabled={!active} onClick={() => { haptic(); onAction({ type: "check" }); }}>
             {t("ctrl.check")}
           </button>
         ) : (
           <button
             className="btn"
             disabled={!active || !legal.canCall}
-            onClick={() => onAction({ type: "call" })}
+            onClick={() => { haptic(); onAction({ type: "call" }); }}
           >
             {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
           </button>
@@ -68,11 +75,12 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         <button
           className="btn primary"
           disabled={!canRaise}
-          onClick={() =>
+          onClick={() => {
+            haptic();
             onAction(
               raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
-            )
-          }
+            );
+          }}
         >
           {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
         </button>

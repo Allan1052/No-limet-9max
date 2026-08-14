@@ -127,8 +127,11 @@ export function gradeDecision(
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {
     item.evBB = advice.evBB;
-    const note = getEvNote(heroAction, advice.evBB, userSubscriptionLevel);
-    if (note) item.text += ` ${note}`;
+    // No modo 'free' (simples), não mostrar nota de EV — linguagem humana
+    if (userSubscriptionLevel !== 'free') {
+      const note = getEvNote(heroAction, advice.evBB, userSubscriptionLevel);
+      if (note) item.text += ` ${note}`;
+    }
   }
   return item;
 }
@@ -368,27 +371,27 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
   const texts: Record<UserSubscriptionLevel, Record<Rating, Record<string, string>>> = {
     free: {
       boa: {
-        freqMain: `Boa! Você fez a jogada principal aqui, o padrão faz ${heroAction} em ~${heroFreq} das vezes.`, 
-        aligned: `Alinhado com o padrão. ${vars.reason}`,
+        freqMain: `Boa! Essa é a jogada principal aqui. Jogadores sólidos fazem ${heroAction} nesse spot. Continue assim.`,
+        aligned: `Boa! Você fez o que um jogador experiente faria. ${vars.reason}`,
       },
       ok: {
-        freqValid: `Ok, essa jogada é válida (~${heroFreq} das vezes), mas o padrão prefere ${mainLabel}.`, 
-        aggroTooMuch: `Você foi mais agressivo que o padrão (${adviceAction}). É jogável, mas pode inflar o pote sem precisar.`, 
-        couldBeAggro: `Dava para ser mais agressivo: o padrão aqui é ${adviceAction}.`, 
-        aggroButPlayable: `Mais agressivo que o padrão (${adviceAction}); jogável.`, 
+        freqValid: `Ok, dá pra fazer assim, mas nesse spot o mais comum é ${mainLabel}.`,
+        aggroTooMuch: `Você foi agressivo demais aqui. O padrão seria ${adviceAction}. Não é erro, mas pode encher o pote sem precisar.`,
+        couldBeAggro: `Dava pra pressionar mais. O padrão aqui é ${adviceAction} — vale a pena experimentar.`,
+        aggroButPlayable: `Mais agressivo que o padrão (${adviceAction}). Jogável, mas cuidado com o risco.`,
       },
       imprecisa: {
-        freqMinor: `Essa é uma linha minoritária (~${heroFreq}): dá para fazer de vez em quando, mas o padrão costuma ${mainLabel}.`, 
-        foldWithPrice: `Fold ${surplus > 0.1 ? "ruim" : "apertado"}: sua chance de ganhar (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`, 
-        callWithoutOdds: `Pagou sem odds: sua chance (${equity}) abaixo do preço (${odds}). O padrão era foldar.`, 
-        passiveWithValue: `Perdeu valor/iniciativa: o padrão aqui é ${adviceAction} (chance de ganhar ${equity}).`, 
-        loosePlay: `Jogada solta: sua mão está fora do que se deve jogar nesta posição. O padrão era foldar.`, 
-        tooTight: `Apertado demais: sua mão estava no range de ${adviceAction} para a posição.`, 
-        differentPattern: `Diferente do padrão (${adviceAction}). ${vars.reason}`,
+        freqMinor: `Essa é uma linha que se usa de vez em quando, mas o mais comum nesse spot é ${mainLabel}.`,
+        foldWithPrice: `Aqui o padrão era continuar. Sua mão tinha chance suficiente de ganhar — o preço que te pediram valia o risco. Foldear aqui entrega fichas de graça.`,
+        callWithoutOdds: `Aqui o padrão era foldar. Sua mão não tinha chance suficiente pro preço que te pediram. Guardou as fichas pra chegar na final.`,
+        passiveWithValue: `Aqui o padrão era ${adviceAction}. Sua mão era forte o suficiente pra pressionar — deixar o vilão agir de graça perde valor.`,
+        loosePlay: `Jogada solta. Sua mão não deve ser jogada dessa posição. O padrão era foldar.`,
+        tooTight: `Apertado demais. Sua mão era boa o suficiente pra ${adviceAction} dessa posição. Não deixe fichas boas na mão.`,
+        differentPattern: `Diferente do padrão. O que um jogador experiente faria aqui é ${adviceAction}. ${vars.reason}`,
       },
       ruim: {
-        foldWithPrice: `Fold ruim: sua chance de ganhar (${equity}) pagava o preço (${odds}). O padrão era ${adviceAction}.`, 
-        callWithoutOdds: `Pagou sem odds: sua chance (${equity}) abaixo do preço (${odds}). O padrão era foldar.`, 
+        foldWithPrice: `Fold ruim: sua mão tinha chance de ganhar e o preço valia o risco. O padrão era ${adviceAction}.`,
+        callWithoutOdds: `Pagou caro demais. Sua mão não tinha chance de ganhar o suficiente. O padrão era foldar.`,
       },
     },
     technical: {
