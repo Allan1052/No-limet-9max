@@ -197,6 +197,8 @@ export interface GameSnapshot {
   payouts?: number[];
   heroRatings: Record<Rating, number>;
   sessionMistakes: FeedbackItem[];
+  sessionFeedbackFree: FeedbackItem[];
+  sessionFeedbackTechnical: FeedbackItem[];
   tournamentResult: "eliminado" | "campeao" | null;
   tournamentFinishPlace: number | null;
   /** Histórico de mãos jogadas (para o export continuar após retomar). */
@@ -228,6 +230,10 @@ export class GameController {
   heroSeat = 0;
   phase: "playing" | "handOver" = "handOver";
   feedback: FeedbackItem[] = [];
+  /** Feedback gerado no modo Simples (free) — para as abas do modal de dicas. */
+  feedbackFree: FeedbackItem[] = [];
+  /** Feedback gerado no modo Técnico (technical) — para as abas do modal de dicas. */
+  feedbackTechnical: FeedbackItem[] = [];
   /**
    * Mensagem de status do topo. Mantemos o texto em PT (fallback e testes),
    * mas a UI prefere traduzir por `messageKey`/`messageVars` no idioma ativo.
@@ -373,6 +379,8 @@ export class GameController {
     this.lastHand = null;
     this.handLog = [];
     this.feedback = [];
+    this.feedbackFree = [];
+    this.feedbackTechnical = [];
     // Zera a análise acumulada do torneio (notas, erros e resultado).
     this.tournamentOver = false;
     this.heroRatings = { boa: 0, ok: 0, imprecisa: 0, ruim: 0 };
@@ -651,6 +659,8 @@ export class GameController {
       }
     }
     this.feedback = [];
+    this.feedbackFree = [];
+    this.feedbackTechnical = [];
     this.lastActionLabel = {};
     this.history = [];
     // Camada 2: atualiza o tilt dos bots com o RESULTADO da mão que acabou
@@ -830,6 +840,9 @@ export class GameController {
       const heroType = action.type === "raise" ? "raise" : action.type;
       const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice);
       this.feedback.push(item);
+      // Gera também nos modos free e technical para as abas do modal de dicas.
+      this.feedbackFree.push(gradeDecision(streetLabel, "free", heroType, advice));
+      this.feedbackTechnical.push(gradeDecision(streetLabel, "technical", heroType, advice));
       // Acumula a nota para a análise de fim de torneio.
       this.heroRatings[item.rating]++;
       // Alimenta o placar de evolução e as missões.
@@ -1058,6 +1071,8 @@ export class GameController {
       payouts: this.payouts,
       heroRatings: { ...this.heroRatings },
       sessionMistakes: this.sessionMistakes,
+      sessionFeedbackFree: this.feedbackFree,
+      sessionFeedbackTechnical: this.feedbackTechnical,
       tournamentResult: this.tournamentResult,
       tournamentFinishPlace: this.tournamentFinishPlace,
       // Guarda as últimas mãos para o export continuar após retomar (limita
@@ -1097,6 +1112,8 @@ export class GameController {
     this.payouts = snap.payouts;
     this.heroRatings = snap.heroRatings;
     this.sessionMistakes = snap.sessionMistakes;
+    this.feedbackFree = snap.sessionFeedbackFree ?? [];
+    this.feedbackTechnical = snap.sessionFeedbackTechnical ?? [];
     this.tournamentResult = snap.tournamentResult;
     this.tournamentFinishPlace = snap.tournamentFinishPlace;
     this.tournamentOver = false;
@@ -1104,6 +1121,8 @@ export class GameController {
     this.lastHand = null;
     this.handLog = snap.handLog ?? []; // preserva as mãos para o export
     this.feedback = [];
+    this.feedbackFree = [];
+    this.feedbackTechnical = [];
     this.setMessage("msg.tourneyResumed");
   }
 

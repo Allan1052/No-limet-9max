@@ -43,6 +43,8 @@ function fakeSnap(buyIn: number, savedAt: string, heroStack = 5000): GameSnapsho
     },
     heroRatings: { boa: 0, ok: 0, imprecisa: 0, ruim: 0 },
     sessionMistakes: [],
+    sessionFeedbackFree: [],
+    sessionFeedbackTechnical: [],
     tournamentResult: null,
     tournamentFinishPlace: null,
     savedAt,

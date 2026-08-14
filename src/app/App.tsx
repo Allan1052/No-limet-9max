@@ -393,6 +393,8 @@ export function App() {
       {tipsOpen ? (
         <HandTipsModal
           items={controller.feedback}
+          itemsFree={controller.feedbackFree}
+          itemsTechnical={controller.feedbackTechnical}
           heroHand={controller.lastHand?.holeCards[controller.heroSeat] ?? []}
           userSubscriptionLevel={effectiveLevel}
           board={controller.lastHand?.finalBoard ?? []}

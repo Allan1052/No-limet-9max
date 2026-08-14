@@ -4802,3 +4802,33 @@ body {
   color: #d4af37;
   font-weight: 600;
 }
+
+/* Abas Simples/Técnico do modal de dicas */
+.tips-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+.tips-tab {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--panel-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--cream, #ece7d5);
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.tips-tab.active {
+  background: var(--gold, #d4af37);
+  color: #0d1f16;
+  border-color: var(--gold-bright, #e6c454);
+}
+.tips-tab:hover:not(.active) {
+  border-color: var(--gold, #d4af37);
+}
+.tips-tab:active {
+  transform: scale(0.97);
+}

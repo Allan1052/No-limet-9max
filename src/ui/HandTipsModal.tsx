@@ -1,36 +1,49 @@
 // Modal com as DICAS COMPLETAS da mão — abre pelo botão no centro da mesa
 // depois do river/showdown. Reúne o resumo e cada decisão sua avaliada.
+import { useState } from "react";
 import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
-import { useSettings } from "../app/settings";
 import { findBlockers } from "../bots/blockers";
 import { classifyBoard } from "../bots/boardTexture";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
 
+type TipsMode = "free" | "technical";
+
 export function HandTipsModal({
   items,
+  itemsFree,
+  itemsTechnical,
   onClose,
   heroHand = [],
   board = [],
   userSubscriptionLevel,
 }: {
   items: FeedbackItem[];
+  itemsFree?: FeedbackItem[];
+  itemsTechnical?: FeedbackItem[];
   onClose: () => void;
   heroHand?: Card[];
   board?: Card[];
   userSubscriptionLevel: UserSubscriptionLevel;
 }) {
   const { t } = useT();
-  const { mode } = useSettings();
-  const tecnico = mode === "tecnico";
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
+  const [tipsMode, setTipsMode] = useState<TipsMode>("free");
+
+  const displayItems =
+    tipsMode === "free" && itemsFree && itemsFree.length > 0
+      ? itemsFree
+      : tipsMode === "technical" && itemsTechnical && itemsTechnical.length > 0
+        ? itemsTechnical
+        : items;
+  const tecnico = tipsMode === "technical";
 
   // Leitura avançada do board (só no modo técnico): tamanho de aposta por
   // textura + bloqueadores das suas cartas.
   const hasBoard = board.length >= 3;
-  const texture = hasBoard ? classifyBoard(board) : null;
+  const texture = tecnico && hasBoard ? classifyBoard(board) : null;
   const sizePct = texture ? Math.round((0.33 + 0.4 * texture.wetness) * 100) : 0;
   const texKey = texture
     ? texture.wetness < 0.4
@@ -39,8 +52,7 @@ export function HandTipsModal({
         ? "tips.texMed"
         : "tips.texWet"
     : "";
-  const blockers = hasBoard ? findBlockers(heroHand, board) : [];
-
+  const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay tips-modal" onClick={(e) => e.stopPropagation()}>
@@ -50,8 +62,24 @@ export function HandTipsModal({
             fechar ✕
           </button>
         </div>
-        <div className="summary">{summarize(items, userSubscriptionLevel)}</div>
 
+        {/* Abas Simples / Técnico */}
+        <div className="tips-mode-tabs">
+          <button
+            className={`tips-tab ${tipsMode === "free" ? "active" : ""}`}
+            onClick={() => setTipsMode("free")}
+          >
+            💬 Simples
+          </button>
+          <button
+            className={`tips-tab ${tipsMode === "technical" ? "active" : ""}`}
+            onClick={() => setTipsMode("technical")}
+          >
+            🔢 Técnico
+          </button>
+        </div>
+
+        <div className="summary">{summarize(displayItems, userSubscriptionLevel)}</div>
         {tecnico && texture ? (
           <div className="board-read">
             <div className="br-head">🧠 {t("tips.boardRead")}</div>
@@ -72,10 +100,10 @@ export function HandTipsModal({
             )}
           </div>
         ) : null}
-        {items.length === 0 ? (
+        {displayItems.length === 0 ? (
           <div className="legend">{t("tips.empty")}</div>
         ) : (
-          items.map((it, i) => (
+          displayItems.map((it, i) => (
             <div key={i} className={`fb-item ${it.rating}`}>
               <div className="fb-head">
                 <span>
