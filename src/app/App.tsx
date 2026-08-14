@@ -36,6 +36,7 @@ function getBasePath(): string {
 }
 import { TrainView } from "../ui/TrainView";
 import { UltraTrainer } from "../ui/UltraTrainer";
+import { StreetTrainer } from "../ui/StreetTrainer";
 import { DrillView } from "../ui/DrillView";
 import { HandLab } from "../ui/HandLab";
 import { CampaignView } from "../ui/CampaignView";
@@ -301,6 +302,8 @@ export function App() {
         <IcmCalculator />
       ) : view === "ultra" ? (
         <UltraTrainer />
+      ) : view === "street" ? (
+        <StreetTrainer />
       ) : view === "drill" ? (
         <DrillView />
       ) : view === "suamao" ? (
