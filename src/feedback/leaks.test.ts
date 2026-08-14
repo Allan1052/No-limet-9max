@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectLeaks, topLeaks } from "./leaks";
+import { detectLeaks, detectLeaksFromPairs, topLeaks, type LeakOccurrence } from "./leaks";
 import type { FeedbackItem } from "./analyzer";
 
 // Fábrica mínima de FeedbackItem só com o que o detector lê.
@@ -68,5 +68,46 @@ describe("TREINO DIRIGIDO — detector de vazamentos", () => {
   it("mesma família (só imprecisão de tamanho) não vira vazamento direcional", () => {
     const leaks = detectLeaks([fb("postflop", "aggro", "aggro", "imprecisa")]);
     expect(leaks).toHaveLength(0);
+  });
+
+  it("detectLeaksFromPairs carrega item + mão em cada ocorrência", () => {
+    const handA = {
+      heroSeat: 0,
+      holeCards: {},
+      events: [],
+      names: {},
+      finalBoard: [],
+      buttonSeat: 0,
+      bigBlind: 100,
+      heroPosition: "UTG",
+    } as unknown as import("../app/replay").HandHistory;
+    const handB = {
+      heroSeat: 0,
+      holeCards: {},
+      events: [],
+      names: {},
+      finalBoard: [],
+      buttonSeat: 0,
+      bigBlind: 100,
+      heroPosition: "BTN",
+    } as unknown as import("../app/replay").HandHistory;
+    const leaks = detectLeaksFromPairs([
+      { item: fb("preflop", "call", "fold", "ruim"), hand: handA },
+      { item: fb("preflop", "call", "fold", "imprecisa"), hand: handB },
+    ]);
+    expect(leaks).toHaveLength(1);
+    expect(leaks[0].occurrences.length).toBe(2);
+    expect(leaks[0].count).toBe(2);
+    expect((leaks[0].occurrences[0] as LeakOccurrence).hand).toBe(handA);
+    expect((leaks[0].occurrences[1] as LeakOccurrence).hand).toBe(handB);
+  });
+
+  it("detectLeaksFromPairs sem mãos equivale ao detector simples", () => {
+    const items = [fb("postflop", "call", "fold", "ruim"), fb("postflop", "call", "fold", "ruim")];
+    const plain = detectLeaks(items);
+    const pairs = detectLeaksFromPairs(items.map((item) => ({ item })));
+    expect(plain.length).toBe(pairs.length);
+    expect(plain[0].count).toBe(pairs[0].count);
+    expect(pairs[0].occurrences.length).toBe(2);
   });
 });

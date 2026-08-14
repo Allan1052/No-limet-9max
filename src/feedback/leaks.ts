@@ -12,6 +12,14 @@
 // ---------------------------------------------------------------------------
 
 import type { FeedbackItem, Family } from "./analyzer";
+import type { HandHistory } from "../app/replay";
+
+export interface LeakOccurrence {
+  /** O erro individual (o que jogou × o recomendado + nota). */
+  item: FeedbackItem;
+  /** A mão onde o erro aconteceu — pra mostrar carta, posição e abrir o Simples/Técnico. */
+  hand?: HandHistory;
+}
 
 export interface Leak {
   id: string;
@@ -25,6 +33,8 @@ export interface Leak {
   badCount: number;
   /** Peso pro ranking: erro claro conta dobrado. */
   severity: number;
+  /** Os erros INDIVIDUAIS que compõem esse vazamento — pra lista clicável na UI. */
+  occurrences: LeakOccurrence[];
 }
 
 interface LeakDef {
@@ -92,23 +102,43 @@ const LEAK_DEFS: LeakDef[] = [
 /**
  * Encontra os vazamentos no conjunto de decisões (só ERROS — imprecisa/ruim —
  * em que a família da sua ação difere da recomendada), rankeados por gravidade.
+ * Cada Leak carrega as ocorrências individuais (item + mão) pra UI listar e
+ * abrir o Simples/Técnico de cada erro específico.
+ *
+ * Forma A: `pairs` = { item, hand }[] — a mão entra junto (preferida).
+ * Forma B: `items` sozinho — as ocorrências ficam sem a mão de referência.
  */
-export function detectLeaks(items: FeedbackItem[]): Leak[] {
+export function detectLeaksFromPairs(
+  pairs: { item: FeedbackItem; hand?: HandHistory }[]
+): Leak[] {
   const acc = new Map<string, Leak>();
-  for (const it of items) {
+  for (const { item: it, hand } of pairs) {
     if (it.rating !== "imprecisa" && it.rating !== "ruim") continue; // só erros
     if (it.heroFam === undefined || it.adviceFam === undefined) continue; // sem dados
     if (it.heroFam === it.adviceFam) continue; // mesma família não é vazamento direcional
     const def = LEAK_DEFS.find((d) => d.match(it.kind, it.heroFam!, it.adviceFam!));
     if (!def) continue;
-    const cur =
-      acc.get(def.id) ?? { id: def.id, title: def.title, tip: def.tip, count: 0, badCount: 0, severity: 0 };
+    const cur = acc.get(def.id) ?? {
+      id: def.id,
+      title: def.title,
+      tip: def.tip,
+      count: 0,
+      badCount: 0,
+      severity: 0,
+      occurrences: [] as LeakOccurrence[],
+    };
     cur.count += 1;
     if (it.rating === "ruim") cur.badCount += 1;
     cur.severity = cur.badCount * 2 + (cur.count - cur.badCount);
+    cur.occurrences.push({ item: it, hand });
     acc.set(def.id, cur);
   }
   return [...acc.values()].sort((a, b) => b.severity - a.severity || b.count - a.count);
+}
+
+/** Compatibilidade: detector só com FeedbackItems (ocorrências sem mão). */
+export function detectLeaks(items: FeedbackItem[]): Leak[] {
+  return detectLeaksFromPairs(items.map((item) => ({ item })));
 }
 
 /** Os N maiores vazamentos (pro painel "Seus pontos fracos"). */

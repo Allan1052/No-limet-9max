@@ -4935,3 +4935,40 @@ body {
 .hh-meta { font-size: 10.5px; color: #8a9a8e; margin-top: 3px; }
 .hh-empty { text-align: center; color: #8a9a8e; font-size: 13px; padding: 22px 8px; }
 .hh-tip { margin-top: 7px; }
+
+/* ---- Painel "Seus Pontos Fracos" — erros individuais (expansível) ---- */
+.leak-card { border-radius: 8px; background: rgba(255, 255, 255, 0.03); }
+.leak-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.leak-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 14px 12px 14px;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  margin-top: 4px;
+}
+.leak-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #2a2f1c;
+  background: #12140d;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.leak-row:hover { background: #1c2215; }
+.leak-row:active { background: #232b1b; }
