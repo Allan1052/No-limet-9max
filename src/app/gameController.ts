@@ -936,7 +936,8 @@ export class GameController {
     if (this.table.street === "preflop") {
       const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet };
+      const positionLabels = ["BB", "SB", "BTN", "CO", "HJ", "LJ", "MP", "UTG1", "UTG"];
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9] };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);
@@ -947,6 +948,7 @@ export class GameController {
       ctx.toCall > 0
         ? (d.equity * (ctx.potSize + ctx.toCall) - ctx.toCall) / bb
         : undefined;
+    const positionLabels = ["BB", "SB", "BTN", "CO", "HJ", "LJ", "MP", "UTG1", "UTG"];
     return {
       kind: "postflop",
       action: d.action,
@@ -956,6 +958,8 @@ export class GameController {
       villainRangePct: d.villainRangePct,
       mix: d.mix,
       evBB,
+      stageLabel: this.tournament?.stage ?? undefined,
+      heroPosition: positionLabels[seat % 9],
     };
   }
 

@@ -5,6 +5,9 @@
 // de base (o perfil neutro/"quase-GTO"), usando a mesma matemática dos bots:
 // equity vs range e pot odds. O resultado é uma nota e uma explicação em texto
 // simples do porquê — foco em aprender, não em julgar.
+//
+// As mensagens agora incluem CONTEXTO do momento: stack (em bb), estágio do
+// torneio e profundidade — pra soar natural, como um coach de verdade.
 // ---------------------------------------------------------------------------
 
 export type Rating = "boa" | "ok" | "imprecisa" | "ruim";
@@ -39,6 +42,10 @@ export interface HeroAdvice {
   effectiveBB?: number;
   /** Rótulo do raise pelo nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
   nBet?: string;
+  /** Estágio do torneio (inicio/meio/bolha/mesa_final) — pra contextualizar a dica. */
+  stageLabel?: string;
+  /** Posição do herói (UTG, BTN, etc.) — pra contextualizar. */
+  heroPosition?: string;
 }
 
 /**
@@ -123,6 +130,39 @@ const LABELS: Record<string, string> = {
 
 export function actionLabel(action: string): string {
   return LABELS[action] ?? action;
+}
+
+/**
+ * Gera um prefixo contextual baseado no stack e momento do torneio.
+ * Ex: "Com 10bb você tá na zona push/fold — " ou "Stack fundo (60bb), tem espaço pra manobra — "
+ */
+function stackContext(effectiveBB: number, stageLabel?: string): string {
+  if (!effectiveBB) return "";
+  
+  const isPushFold = effectiveBB <= 12;
+  const isShort = effectiveBB <= 25;
+  const isMedium = effectiveBB <= 45;
+  // isDeep = > 45
+  
+  // Adiciona contexto de estágio
+  let stagePrefix = "";
+  if (stageLabel) {
+    switch (stageLabel) {
+      case "inicio": stagePrefix = "Começo de torneio, stacks fundos — "; break;
+      case "meio": stagePrefix = "Meio do torneio, o campo encolhe — "; break;
+      case "bolha": stagePrefix = "Bolha perto, pressão de ICM — "; break;
+      case "mesa_final": stagePrefix = "Mesa final, cada decisão vale mais — "; break;
+    }
+  }
+  
+  if (isPushFold) {
+    return `${stagePrefix}Com ${effectiveBB}bb você tá na zona push/fold — `;
+  } else if (isShort) {
+    return `${stagePrefix}Stack curto (${effectiveBB}bb), hora de ser agressivo — `;
+  } else if (isMedium) {
+    return `${stagePrefix}Stack médio (${effectiveBB}bb), dá pra manobrar — `;
+  }
+  return `${stagePrefix}Stack fundo (${effectiveBB}bb), tem espaço pra jogar — `;
 }
 
 /**
@@ -213,6 +253,7 @@ function gradeCore(
   const af = family(advice.action);
   const eq = advice.equity;
   const odds = advice.potOdds;
+  const effBB = advice.effectiveBB;
 
   const base: Omit<FeedbackItem, "rating" | "text"> = {
     street: streetLabel,
@@ -239,6 +280,7 @@ function gradeCore(
   ) {
     const eff = Math.round(advice.effectiveBB ?? 0);
     const deep = eff >= 50;
+    const ctx = stackContext(eff, advice.stageLabel);
     return {
       ...base,
       rating: deep ? "ruim" : "imprecisa",
@@ -264,6 +306,7 @@ function gradeCore(
     const heroFreq = freqByFam[hf];
     const main = [...advice.mix].sort((a, b) => b.freq - a.freq)[0];
     const mainLabel = actionLabel(main.action);
+    const ctx = stackContext(effBB ?? 0, advice.stageLabel);
     if (heroFreq >= 0.55) {
       return {
         ...base,
@@ -294,6 +337,7 @@ function gradeCore(
   }
 
   const hasNumbers = eq !== undefined && odds !== undefined;
+  const ctx = stackContext(effBB ?? 0, advice.stageLabel);
 
   // ----- Erros de EV mensuráveis (pós-flop, com equity e odds) -----
   if (hasNumbers) {
@@ -384,7 +428,6 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
 
   const heroFreq = vars.heroFreq !== undefined ? pc(vars.heroFreq) : '';
   const surplus = vars.surplus !== undefined ? vars.surplus.toFixed(1) : '';
-  // const ev = vars.ev !== undefined ? vars.ev.toFixed(1) : ''; // Removido pois não é utilizado
   const gap = vars.gap !== undefined ? vars.gap.toFixed(1) : '';
 
   // Cada chave pode ter VÁRIAS variações do mesmo feedback — sorteia uma por
@@ -753,9 +796,9 @@ export function summarize(items: FeedbackItem[], level: UserSubscriptionLevel): 
 
   const summaries: Record<UserSubscriptionLevel, Record<string, string>> = {
     free: {
-      ruim: "Houve pelo menos um erro claro de EV nesta mão — veja abaixo.",
-      imprecisa: "Jogo ok, com imprecisões pontuais para ajustar.",
-      boa: "Mão bem jogada — decisões alinhadas com o padrão.",
+      ruim: "Tiver erro claro aqui — olha embaixo.",
+      imprecisa: "Bom, com uns ajustes finos.",
+      boa: "Boa mão. Decisões alinhadas com o padrão.",
     },
     technical: {
       ruim: "Erro crítico de EV detectado. Revise as decisões com EV negativo para otimizar sua estratégia.",
@@ -763,9 +806,9 @@ export function summarize(items: FeedbackItem[], level: UserSubscriptionLevel): 
       boa: "Boa mão. Suas decisões foram alinhadas com a estratégia mista.",
     },
     ultra: {
-      ruim: "Leak de EV catastrófico. Sua linha desviou significativamente do GTO, resultando em perda substancial de valor esperado.",
-      imprecisa: "Desvio marginal do GTO. Sua linha é explorável e pode ser ajustada para otimizar o balanceamento de range.",
-      boa: "Optimal play. Suas decisões foram perfeitamente alinhadas com o GTO, maximizando o EV e explorando o range do vilão.",
+      ruim: "Leak de EV significativo. Linha desviou do GTO, perda de valor.",
+      imprecisa: "Desvio marginal do GTO. Linha explorável, dá pra ajustar o balanceamento.",
+      boa: "Optimal play. Decisões alinhadas ao GTO, maximizando EV e explorando o range do vilão.",
     },
   };
 
@@ -773,4 +816,3 @@ export function summarize(items: FeedbackItem[], level: UserSubscriptionLevel): 
   if (counts.imprecisa > 0) return summaries[level].imprecisa;
   return summaries[level].boa;
 }
-

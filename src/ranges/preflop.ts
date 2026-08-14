@@ -765,6 +765,19 @@ function holdemVsThreeBet(
   const openSize = ctx.openSizeBB ?? 7;
   const fourBetSize = Math.min(eff, openSize * 2.2);
 
+  // Contra 4-bet+ (betLevelFaced >= 3): a agressão acumulada indica mão premium
+  // ou dominação clara. 99 ou menor NUNCA paga 4-bet+. Só QQ+/AKs continua.
+  const betLevel = Math.max(0, Math.floor(ctx.betLevelFaced ?? 0));
+  if (betLevel >= 3) {
+    const premium = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
+    if (premium.has(handType)) {
+      return short
+        ? { action: "jam", sizeBB: eff, reason: `${handType}: ${nBetLabel(betLevel)} na frente — mão premium joga o torneio.`, handType }
+        : { action: "3bet", sizeBB: fourBetSize, reason: `${handType}: ${nBetLabel(betLevel)} na frente — premium continua por valor.`, handType };
+    }
+    return { action: "fold", sizeBB: 0, reason: `${handType}: ${nBetLabel(betLevel)} na frente — contra essa agressão, pares médios e largados são fold.`, handType };
+  }
+
   // PILAR 1 (parte 2): stack fundo + dados de mesa → decide por EQUITY REAL.
   const eq = equityReraise(ctx, handType, { short, inPos, openSize, fourBetSize, icmFactor });
   if (eq) return eq;
