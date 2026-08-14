@@ -293,7 +293,14 @@ export function UltraTrainer() {
   const handType = comboToHandType(scenario.hand[0], scenario.hand[1]);
   const openSize = s.openSizeBB ?? 2.3;
   // Pote na hora da decisão: blinds (SB 0.5 + BB 1) + a aberta do vilão, se houve.
+  // Ninguém pagou ainda: no treino 1×1 a decisão do herói acontece logo após
+  // a ação do vilão, sem callers — por isso o pote é só blinds + aberta.
   const potBB = Math.round((1.5 + (s.raiserPosition ? openSize : 0)) * 10) / 10;
+  // Nota de contexto do pote: mostra o que compõe o valor exibido,
+  // evitando a dúvida "cadê o call que faltou?".
+  const potNote = s.raiserPosition
+    ? t("ultra.potNote.raised", { size: openSize })
+    : t("ultra.potNote.waiting");
   return (
     <div className="train-view">
       <div className="panel">
@@ -344,6 +351,7 @@ export function UltraTrainer() {
             <div className="duel-center">
               <div className="duel-chip" aria-hidden />
               <div className="duel-pot">{t("ultra.pot", { bb: potBB })}</div>
+              <div className="duel-pot-note">{potNote}</div>
               <div className="duel-vs">VS</div>
             </div>
 
