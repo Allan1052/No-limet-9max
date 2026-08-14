@@ -5044,3 +5044,71 @@ body {
 .street-tl-st {
   font-weight: 700; color: var(--gold, #e6c454); min-width: 56px; flex: none;
 }
+
+/* Barra de progresso FLOP → TURN → RIVER (topo da arena). */
+.ss-progress {
+  display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;
+}
+.ss-progress-step {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: var(--cream-dim, #8a927c);
+}
+.ss-progress-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900;
+  border: 2px solid var(--gold-dim, #4a3f1e); background: rgba(0, 0, 0, 0.35);
+}
+.ss-progress-step.done .ss-progress-dot {
+  background: var(--gold, #e6c454); border-color: var(--gold, #e6c454); color: #12140c;
+}
+.ss-progress-step.active {
+  color: var(--gold, #e6c454);
+  text-shadow: 0 0 8px rgba(230, 196, 84, 0.4);
+}
+.ss-progress-step.active .ss-progress-dot {
+  border-color: var(--gold, #e6c454);
+  box-shadow: 0 0 10px rgba(230, 196, 84, 0.4);
+}
+.ss-progress-label { line-height: 1; }
+
+/* Assentos tocáveis — tocar no jogador abre o range (combinado com o Allan). */
+.ss-tap-seat {
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(230, 196, 84, 0.25);
+  transition: transform 0.12s ease;
+}
+.ss-tap-seat:active { transform: scale(0.96); }
+.ss-tap-hint {
+  font-size: 9.5px; font-weight: 700; color: var(--cream-dim, #9aa08a);
+  letter-spacing: 0.3px;
+}
+
+/* Carta do turn/river já escolhida — bloco compacto com opção de trocar. */
+.street-card-pick {
+  text-align: center; padding: 6px 0 2px;
+}
+.street-card-pick-label {
+  display: block; font-size: 13px; font-weight: 800; color: var(--gold, #e6c454);
+  margin-bottom: 6px;
+}
+.ss-swap-btn { font-size: 12px; padding: 7px 12px; }
+
+/* Célula da grade selecionada. */
+.rg-cell.sel {
+  outline: 2px solid #fff; outline-offset: -1px; z-index: 2;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.55);
+}
+
+/* Mini-card da célula tocada (mão + frequência). */
+.ss-cell-card {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 8px; padding: 7px 10px; border-radius: 8px;
+  background: #0d1f16; border: 1px solid var(--gold-dim, #4a3f1e);
+}
+.ss-cell-card-hand { font-size: 14px; font-weight: 900; color: var(--gold, #e6c454); }
+.ss-cell-card-freq { font-size: 11.5px; color: var(--cream-dim, #c9c2a5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-tap-seat { transition: none; }
+}

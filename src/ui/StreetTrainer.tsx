@@ -1,11 +1,14 @@
 // ---------------------------------------------------------------------------
 // STREET TRAINER — treino rua por rua com ranges dinâmicos (Fase 1).
 //
-// Módulo NOVO e isolado em UI (não toca o motor). Fluxo:
+// Módulo NOVO e isolado em UI (não toca o motor). Fluxo combinado:
 //   1. Configura o spot (mesma tela do UltraTrainer + vilão)
 //   2. Escolhe o board de cada rua (presets + aleatório)
 //   3. Por rua: decide a ação · "Ver meu range" · "🔍 Range do vilão"
-//   4. Timeline final com a linha da mão completa
+//   4. TOQUE NO JOGADOR: o assento do vilão e o seu assento são tocáveis —
+//      tocar no jogador abre a grade do range dele/na hora, sem botões.
+//      Cada célula da grade também é tocável: mostra a mão + frequência.
+//   5. Timeline final com a linha da mão completa
 //
 // Usa o motor novo `src/train/streets/dynamicRanges` (só leitura dos motores).
 // ---------------------------------------------------------------------------
@@ -104,6 +107,10 @@ export function StreetTrainer() {
   const [score, setScore] = useState(0);
   const [streetScoreTotal, setStreetScoreTotal] = useState(0);
 
+  // Trocador de carta do turn/river (a carta já vem pré-escolhida; o jogador
+  // pode trocar quantas vezes quiser ANTES de decidir a rua).
+  const [swapMode, setSwapMode] = useState<Exclude<StreetName, "flop"> | null>(null);
+
   const s = { heroPosition: heroPos, villainPosition: villainPos, effBB };
   const heroHandType = hand ? comboToHandType(hand.hero[0], hand.hero[1]) : null;
   const villainHandType = hand ? comboToHandType(hand.villain[0], hand.villain[1]) : null;
@@ -169,6 +176,17 @@ export function StreetTrainer() {
     return prev;
   }, [steps, villainPos, effBB, s]);
 
+  // Grade recomendada do herói (memo para não recalcular a cada render)
+  const heroGrid = useMemo(
+    () => heroRecommendedGrid(boardSoFar, heroPos, villainPos, effBB, false, ctxNowPot()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [boardSoFar, heroPos, villainPos, effBB]
+  );
+
+  function ctxNowPot(): number {
+    return ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB;
+  }
+
   // "Treinar rua por rua" da Sua Mão: o HandLab grava o spec do spot
   // (cof-sua-mao-spec) e dispara cof-open-street — aqui ele é capturado e a
   // sessão rua por rua começa já com a mão, posição e stack do jogador.
@@ -184,13 +202,13 @@ export function StreetTrainer() {
       const raw = localStorage.getItem("cof-sua-mao-spec");
       if (!raw) return null;
       try {
-        const s = JSON.parse(raw) as HandLabSpec;
-        if (!s.hand || s.hand.length < 2) return null;
+        const spec = JSON.parse(raw) as HandLabSpec;
+        if (!spec.hand || spec.hand.length < 2) return null;
         return {
-          heroHand: s.hand.slice(0, 2),
-          heroPosition: s.heroPosition,
-          villainPosition: s.villainPosition,
-          effBB: s.stackBB,
+          heroHand: spec.hand.slice(0, 2),
+          heroPosition: spec.heroPosition,
+          villainPosition: spec.villainPosition,
+          effBB: spec.stackBB,
         };
       } catch {
         return null;
@@ -239,10 +257,11 @@ export function StreetTrainer() {
     setHand({ hero: prefill.heroHand, villain: pickHand(villainIdx) });
     setSteps([]);
     setCurrent("flop");
-    setFlopChoice(flopChoice ?? FLOP_PRESETS[0]);
+    setFlopChoice(FLOP_PRESETS[0]);
     setExtraChoice({ turn: TURN_PRESETS[0], river: RIVER_PRESETS[0] });
     setShowHeroRange(false);
     setShowVillainRange(false);
+    setSwapMode(null);
     setStreetDec({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
     setScore(0);
     setStreetScoreTotal(0);
@@ -275,10 +294,11 @@ export function StreetTrainer() {
     setHand({ hero: pickHand(heroIdx), villain: pickHand(villainIdx) });
     setSteps([]);
     setCurrent("flop");
-    setFlopChoice(flopChoice ?? FLOP_PRESETS[0]);
+    setFlopChoice(FLOP_PRESETS[0]);
     setExtraChoice({ turn: TURN_PRESETS[0], river: RIVER_PRESETS[0] });
     setShowHeroRange(false);
     setShowVillainRange(false);
+    setSwapMode(null);
     setStreetDec({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
     setScore(0);
     setStreetScoreTotal(0);
@@ -322,11 +342,13 @@ export function StreetTrainer() {
       { street: current, board: boardSoFar, heroAction: action, villainAction: reactLabel },
     ]);
 
-    // Avança de rua
+    // Avança de rua — TRAVADO: só sai do turn quando o turn termina, só sai
+    // do river quando o river termina (a rua seguinte nunca é oferecida antes).
     if (current === "flop") setCurrent("turn");
     else if (current === "turn") setCurrent("river");
     setShowHeroRange(false);
     setShowVillainRange(false);
+    setSwapMode(null);
   };
 
   const back = () => {
@@ -385,11 +407,15 @@ export function StreetTrainer() {
   const ctxNow = ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s);
   const isDone = current === "river" && streetDec.river.hero !== null;
 
-  const presets = current === "flop" ? FLOP_PRESETS : EXTRA_PRESETS[current as Exclude<StreetName, "flop">];
-  const choice = current === "flop" ? flopChoice : extraChoice[current as Exclude<StreetName, "flop">];
-  const setChoice = current === "flop"
-    ? (p: BoardPreset) => setFlopChoice(p)
-    : (p: BoardPreset) => setExtraChoice((c) => ({ ...c, [current]: p }));
+  // Flop: escolhe o board inteiro. Turn/river: a carta JÁ vem pré-escolhida
+  // (combo) e aparece como "Carta: X (trocar)" — troca livre antes de decidir.
+  const flopPresetsVisible = current === "flop" && !streetDec.flop.hero;
+  const isPostFlop = current === "turn" || current === "river";
+  const postKey = current as Exclude<StreetName, "flop">;
+  const postPick = isPostFlop ? (extraChoice[postKey] ?? EXTRA_PRESETS[postKey][0]) : null;
+
+  const openRangeFor = (who: "hero" | "villain"): Record<string, number> =>
+    who === "villain" ? villainRange : {};
 
   return (
     <div className="train-view">
@@ -401,6 +427,20 @@ export function StreetTrainer() {
           </span>
         </div>
 
+        {/* Barra de progresso da rua */}
+        <div className="ss-progress">
+          {(["flop", "turn", "river"] as StreetName[]).map((st) => {
+            const done = streetDec[st].hero !== null;
+            const active = st === current;
+            return (
+              <div key={st} className={`ss-progress-step ${done ? "done" : ""} ${active ? "active" : ""}`}>
+                <span className="ss-progress-dot">{done ? "✓" : streetLabel(st).charAt(0)}</span>
+                <span className="ss-progress-label">{streetLabel(st)}</span>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Arena com a mesa e o board */}
         <div className="arena">
           <div className="arena-top">
@@ -408,7 +448,15 @@ export function StreetTrainer() {
           </div>
 
           <div className="duel spotlight">
-            <div className="duel-seat villain">
+            {/* Assento do vilão — TOCÁVEL: abre o range dele na hora */}
+            <div
+              className="duel-seat villain ss-tap-seat"
+              role="button"
+              tabIndex={0}
+              aria-label={t("street.tapVillain" as TransKey)}
+              onClick={() => { setShowVillainRange((v) => !v); setShowHeroRange(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowVillainRange((v) => !v); setShowHeroRange(false); } }}
+            >
               <div className="villain-av">
                 <span className="villain-emoji">🦈</span>
                 <span className="duel-pos vil">{villainPos}</span>
@@ -417,6 +465,7 @@ export function StreetTrainer() {
                 <CardBack small />
                 <CardBack small />
               </div>
+              <span className="ss-tap-hint">👆 {t("street.tapVillain" as TransKey)}</span>
             </div>
 
             <div className="duel-center">
@@ -434,7 +483,15 @@ export function StreetTrainer() {
               <div className="duel-vs">VS</div>
             </div>
 
-            <div className="duel-seat hero">
+            {/* Seu assento — TOCÁVEL: abre o seu range na hora */}
+            <div
+              className="duel-seat hero ss-tap-seat"
+              role="button"
+              tabIndex={0}
+              aria-label={t("street.tapHero" as TransKey)}
+              onClick={() => { setShowHeroRange((v) => !v); setShowVillainRange(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowHeroRange((v) => !v); setShowVillainRange(false); } }}
+            >
               <div className="duel-badge turn">{t("ultra.yourTurn")}</div>
               <div className="duel-cards big">
                 {hand.hero.map((c, i) => (
@@ -445,71 +502,109 @@ export function StreetTrainer() {
                 <span className="duel-pos hero">{heroPos}</span>
                 {t("ultra.you")} · {effBB}bb
               </div>
+              <span className="ss-tap-hint">👆 {t("street.tapHero" as TransKey)}</span>
             </div>
           </div>
         </div>
 
-        {/* Escolha do board (antes de decidir) */}
-        {!streetDec[current].hero ? (
-          <>
-            <div className="street-pick">
-              <span className="street-pick-label">🎲 {t("street.pickBoard" as TransKey, { street: streetLabel(current) })}</span>
-              <div className="street-pick-opts">
-                {presets.map((p) => (
-                  <button
-                    key={p.id}
-                    className={`btn size ${choice?.id === p.id ? "primary" : ""}`}
-                    onClick={() => setChoice(p)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {choice ? (
-              <div className="train-actions">
-                <button className="btn primary" onClick={() => decide("fold")}>FOLD</button>
-                <button className="btn primary" onClick={() => decide("check")}>CHECK</button>
-                <button className="btn primary" onClick={() => decide("call")}>CALL</button>
-                <button className="btn primary" onClick={() => decide("betSmall")}>APOSTA ½ POTE</button>
-                <button className="btn primary" onClick={() => decide("betBig")}>APOSTA ¾ POTE</button>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          // Decidiu: feedback + ranges
+        {/* Painel de range (aberto pelo toque no assento OU pelo botão) */}
+        {(showHeroRange || showVillainRange) ? (
           <div className="train-result">
             <div className="street-reaction">
-              🦈 {t("street.reacted" as TransKey, { action: t((`street.act.${streetDec[current].villain ?? "check"}`) as TransKey) })}
-            </div>
-
-            <div className="street-range-btns">
-              <button className="btn primary" onClick={() => { setShowHeroRange((v) => !v); setShowVillainRange(false); }}>
-                👀 {t("street.myRange" as TransKey)}
-              </button>
-              <button className="btn primary" onClick={() => { setShowVillainRange((v) => !v); setShowHeroRange(false); }}>
-                🔍 {t("street.villainRange" as TransKey)}
-              </button>
+              {showVillainRange && streetDec[current].villain
+                ? `🦈 ${t("street.reacted" as TransKey, { action: t((`street.act.${streetDec[current].villain}`) as TransKey) })}`
+                : showVillainRange
+                  ? "🦈 " + t("street.tapVillainOpen" as TransKey)
+                  : "👀 " + t("street.myRangeOpen" as TransKey)}
             </div>
 
             {showHeroRange ? (
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.myRangeTitle" as TransKey)}</div>
-                <StreetRangeGrid grid={heroRecommendedGrid(boardSoFar, heroPos, villainPos, effBB, false, ctxNow.potBB)} highlight={heroHandType!} />
-                <div className="rg-note">{t("street.myRangeNote" as TransKey)}</div>
+                <StreetRangeGrid grid={heroGrid} highlight={heroHandType!} cellNote={t("street.myRangeNote" as TransKey)} />
               </div>
             ) : null}
 
             {showVillainRange ? (
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.villainRangeTitle" as TransKey)}</div>
-                <VillainRangeGrid range={villainRange} />
-                <div className="rg-note">{t("street.villainRangeNote" as TransKey)}</div>
+                <VillainRangeGrid range={openRangeFor("villain")} cellNote={t("street.villainRangeNote" as TransKey)} />
               </div>
             ) : null}
+
+            {/* Botões de range continuam como redundância acessível */}
+            <div className="street-range-btns">
+              <button className={`btn ${showHeroRange ? "primary" : "ghost"}`} onClick={() => { setShowHeroRange((v) => !v); setShowVillainRange(false); }}>
+                👀 {t("street.myRange" as TransKey)}
+              </button>
+              <button className={`btn ${showVillainRange ? "primary" : "ghost"}`} onClick={() => { setShowVillainRange((v) => !v); setShowHeroRange(false); }}>
+                🔍 {t("street.villainRange" as TransKey)}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Flop: escolhe o board inteiro (combinado: o jogador escolhe o flop). */}
+        {flopPresetsVisible ? (
+          <div className="street-pick">
+            <span className="street-pick-label">🎲 {t("street.pickFlop" as TransKey)}</span>
+            <div className="street-pick-opts">
+              {FLOP_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  className={`btn size ${flopChoice?.id === p.id ? "primary" : ""}`}
+                  onClick={() => setFlopChoice(p)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Turn/river: carta pré-escolhida + troca compacta (não trava o fluxo). */}
+        {isPostFlop && !streetDec[current].hero ? (
+          <div className="street-card-pick">
+            <span className="street-card-pick-label">
+              🃏 {t("street.cardChosen" as TransKey, { street: streetLabel(current), card: postPick ? postPick.label.split(" ")[0] : "—" })}
+            </span>
+            {swapMode === postKey ? (
+              <div className="street-pick-opts">
+                {EXTRA_PRESETS[postKey].map((p) => (
+                  <button
+                    key={p.id}
+                    className={`btn size ${postPick?.id === p.id ? "primary" : ""}`}
+                    onClick={() => { setExtraChoice((c) => ({ ...c, [postKey]: p })); setSwapMode(null); }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button className="btn ghost ss-swap-btn" onClick={() => setSwapMode(postKey)}>
+                ⇄ {t("street.swapCard" as TransKey)}
+              </button>
+            )}
+          </div>
+        ) : null}
+
+        {/* Botões de ação da rua */}
+        {!streetDec[current].hero && (
+          <div className="train-actions">
+            <button className="btn primary" onClick={() => decide("fold")}>FOLD</button>
+            <button className="btn primary" onClick={() => decide("check")}>CHECK</button>
+            <button className="btn primary" onClick={() => decide("call")}>CALL</button>
+            <button className="btn primary" onClick={() => decide("betSmall")}>APOSTA ½ POTE</button>
+            <button className="btn primary" onClick={() => decide("betBig")}>APOSTA ¾ POTE</button>
           </div>
         )}
+
+        {/* Reação do vilão na rua atual */}
+        {streetDec[current].villain && !isDone ? (
+          <div className="street-reaction">
+            🦈 {t("street.reacted" as TransKey, { action: t((`street.act.${streetDec[current].villain}`) as TransKey) })}
+          </div>
+        ) : null}
 
         {/* Fim: showdown + timeline */}
         {isDone ? (
@@ -556,26 +651,50 @@ function cellHand(i: number, j: number): string {
   return RANKS_GRID[j] + RANKS_GRID[i] + "o";
 }
 
-/** Grade do range recomendado do herói (aposta=âmbar, check=azul, fold=cinza). */
-function StreetRangeGrid({ grid, highlight }: { grid: ReturnType<typeof heroRecommendedGrid>; highlight: string }) {
+/** Célula selecionada da grade (mini-card: mão + frequência). */
+function CellCard({ handType, freq, note }: { handType: string; freq: number | null; note: string | null }) {
+  return (
+    <div className="ss-cell-card">
+      <span className="ss-cell-card-hand">{handType}</span>
+      {freq !== null ? (
+        <span className="ss-cell-card-freq">
+          {note ? `${note} · ` : ""}{Math.round(freq * 100)}%
+        </span>
+      ) : (
+        note ? <span className="ss-cell-card-freq">{note}</span> : null
+      )}
+    </div>
+  );
+}
+
+/** Grade do range recomendado do herói (aposta=âmbar, check=azul, fold=cinza).
+ *  Células tocáveis: mostra a mão + categoria da célula. */
+function StreetRangeGrid({ grid, highlight, cellNote }: { grid: ReturnType<typeof heroRecommendedGrid>; highlight: string; cellNote?: string }) {
+  const [cell, setCell] = useState<string | null>(null);
   return (
     <div className="rg-grid spot-grid">
       {Array.from({ length: 13 }, (_, i) =>
         Array.from({ length: 13 }, (_, j) => {
           const hand = cellHand(i, j);
-          const cell = grid.find((c) => c.handType === hand);
-          const cat = cell?.category ?? "fold";
+          const c = grid.find((g) => g.handType === hand);
+          const cat = c?.category ?? "fold";
           let bg = "#191c13";
           let fg = "#5f6350";
           if (cat === "bet") { bg = "rgba(212,175,55,0.85)"; fg = "#12140c"; }
           else if (cat === "check") { bg = "rgba(76,175,125,0.65)"; fg = "#0d1f16"; }
           const isHl = highlight === hand;
+          const isSelected = cell === hand;
           return (
             <div
               key={`${i}-${j}`}
-              className={`rg-cell ${i === j ? "pair" : ""} ${isHl ? "hl" : ""}`}
+              className={`rg-cell ${i === j ? "pair" : ""} ${isHl ? "hl" : ""} ${isSelected ? "sel" : ""}`}
               style={{ background: bg, color: fg }}
+              role="button"
+              tabIndex={0}
+              aria-label={hand}
               title={hand}
+              onClick={() => setCell((v) => (v === hand ? null : hand))}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCell((v) => (v === hand ? null : hand)); } }}
             >
               {hand.replace("o", "").replace("s", "")}
               <span className="rg-suit">{hand.endsWith("s") ? "s" : hand.endsWith("o") ? "o" : ""}</span>
@@ -583,12 +702,27 @@ function StreetRangeGrid({ grid, highlight }: { grid: ReturnType<typeof heroReco
           );
         }),
       )}
+      {cell ? (
+        <CellCard
+          handType={cell}
+          freq={null}
+          note={(() => {
+            const c = grid.find((g) => g.handType === cell);
+            if (!c) return cellNote ?? null;
+            if (c.category === "bet") return c.topPair ? "tope de par+ · apostar" : c.draw ? "projeto · semi-bluff" : "apostar (valor)";
+            if (c.category === "check") return "check OK";
+            return "fold (fora do range)";
+          })()}
+        />
+      ) : null}
     </div>
   );
 }
 
-/** Grade do range do vilão: intensidade pela frequência (dourado=forte, azul=continua, cinza=saiu). */
-function VillainRangeGrid({ range }: { range: Record<string, number> }) {
+/** Grade do range do vilão: intensidade pela frequência (dourado=forte, azul=continua, cinza=saiu).
+ *  Células tocáveis: mostra a mão + % de continuar no range. */
+function VillainRangeGrid({ range, cellNote }: { range: Record<string, number>; cellNote?: string }) {
+  const [cell, setCell] = useState<string | null>(null);
   return (
     <div className="rg-grid spot-grid">
       {Array.from({ length: 13 }, (_, i) =>
@@ -600,12 +734,18 @@ function VillainRangeGrid({ range }: { range: Record<string, number> }) {
           let fg = "#5f6350";
           if (freq > 0.66) { bg = `rgba(212,175,55,${alpha})`; fg = "#12140c"; } // mãos fortes
           else if (freq > 0.25) { bg = `rgba(76,130,200,${alpha})`; fg = "#e6eaf2"; } // continua
+          const isSelected = cell === hand;
           return (
             <div
               key={`${i}-${j}`}
-              className={`rg-cell ${i === j ? "pair" : ""}`}
+              className={`rg-cell ${i === j ? "pair" : ""} ${isSelected ? "sel" : ""}`}
               style={{ background: bg, color: fg }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${hand} ${Math.round(freq * 100)}%`}
               title={`${hand} · ${Math.round(freq * 100)}%`}
+              onClick={() => setCell((v) => (v === hand ? null : hand))}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCell((v) => (v === hand ? null : hand)); } }}
             >
               {hand.replace("o", "").replace("s", "")}
               <span className="rg-suit">{hand.endsWith("s") ? "s" : hand.endsWith("o") ? "o" : ""}</span>
@@ -613,6 +753,9 @@ function VillainRangeGrid({ range }: { range: Record<string, number> }) {
           );
         }),
       )}
+      {cell ? (
+        <CellCard handType={cell} freq={range[cell] ?? 0} note={cellNote ?? null} />
+      ) : null}
     </div>
   );
 }
