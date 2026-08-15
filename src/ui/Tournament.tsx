@@ -23,7 +23,8 @@ import { CircuitPicker } from "./CircuitPicker";
 import { NicknamePrompt } from "./NicknamePrompt";
 import { getNickname, restoreNickname } from "../lib/nickname";
 import { computePoyPoints } from "../tournament/poyPoints";
-import { isBuyInUnlocked, unlockRequirement, loadEliteWins } from "../tournament/eliteUnlock";
+import { isBuyInUnlocked, unlockRequirement } from "../tournament/eliteUnlock";
+import { loadAllEliteWins } from "../lib/eliteSync";
 
 export type PlayMode = "livre" | "circuito";
 
@@ -65,8 +66,9 @@ export function TournamentSetup({
   );
   const [nickname, setNickname] = useState<string | null>(() => getNickname());
   const [askNickname, setAskNickname] = useState(false);
-  // Desbloqueios de elite ($1.000 / $10.300). Recarrega a cada montagem da tela.
-  const eliteWins = loadEliteWins();
+  // Desbloqueios de elite ($1.000 / $10.300). Recarrega a cada montagem da tela
+  // (união de localStorage + nuvem, para não perder a vitória em limpezas de cache).
+  const eliteWins = loadAllEliteWins();
   const unlocked = (v: number) => isBuyInUnlocked(v, eliteWins);
   /** Seleciona um buy-in; se estiver travado, mostra o requisito. */
   const pickBuyIn = (v: number) => {

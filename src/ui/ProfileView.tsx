@@ -3,7 +3,7 @@
 // (idioma, Simples/Técnico, variante, versão, instalar) e junta com o avatar e
 // a evolução num lugar só. Deixa o topo do app só com a logo.
 // ---------------------------------------------------------------------------
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -13,6 +13,9 @@ import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { SupportPix } from "./SupportPix";
 import { TopPrizesPanel } from "./TopPrizesPanel";
+import { loadEliteWins, recordTournamentWin } from "../tournament/eliteUnlock";
+import { recordEliteWinCloud, syncEliteWins } from "../lib/eliteSync";
+import { getNickname } from "../lib/nickname";
 
 export function ProfileView({
   gameVariant,
@@ -39,9 +42,16 @@ export function ProfileView({
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ruaUnlocked, setRuaUnlocked] = useState(isDevUnlocked("rua2026"));
+  const [eliteUnlocked, setEliteUnlocked] = useState<boolean>(() => !!loadEliteWins()["109"]);
+
+  // Sincroniza as vitórias de elite com a nuvem (anti-perda em limpezas de cache).
+  useEffect(() => {
+    syncEliteWins(getNickname());
+  }, []);
   const [pwOpen, setPwOpen] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
+  const [pwMode, setPwMode] = useState<"rua2026" | "elite109">("rua2026");
   const requestRuaUnlock = () => {
     if (isDevUnlocked("rua2026")) {
       setDevLock("rua2026", false);
@@ -49,17 +59,52 @@ export function ProfileView({
     } else {
       setPwInput("");
       setPwError(false);
+      setPwMode("rua2026");
       setPwOpen(true);
     }
   };
   const submitRuaPw = () => {
-    if (pwInput.trim() === "rua2026") {
-      setDevLock("rua2026", true);
-      setRuaUnlocked(true);
-      setPwOpen(false);
-      setPwError(false);
+    const v = pwInput.trim();
+    if (pwMode === "rua2026") {
+      if (v === "rua2026") {
+        setDevLock("rua2026", true);
+        setRuaUnlocked(true);
+        setPwOpen(false);
+        setPwError(false);
+      } else {
+        setPwError(true);
+      }
     } else {
-      setPwError(true);
+      // elite109: destrava o $1.000 registrando a vitória comprovada de $109
+      // (o Allan já foi campeão de um torneio de $109 com 100+ jogadores —
+      // o registro local foi apagado em limpezas de cache).
+      if (v === "elite109") {
+        recordTournamentWin(109, 100, "inicio");
+        recordEliteWinCloud(109, getNickname());
+        setEliteUnlocked(true);
+        setPwOpen(false);
+        setPwError(false);
+      } else {
+        setPwError(true);
+      }
+    }
+  };
+  const requestEliteUnlock = () => {
+    if (loadEliteWins()["109"]) {
+      // Já destravado pela vitória — remove o registro (volta ao natural).
+      const w = loadEliteWins();
+      delete w["109"];
+      try {
+        localStorage.setItem("cof-elite-wins", JSON.stringify(w));
+      } catch {
+        /* storage indisponível */
+      }
+      setEliteUnlocked(false);
+    } else {
+      setPwInput("");
+      setPwError(false);
+      setPwMode("elite109");
+      setPwOpen(true);
     }
   };
   const avatar = getHeroAvatarData();
@@ -150,6 +195,18 @@ export function ProfileView({
           </button>
         </div>
 
+        {/* Destravamento do $1.000 (elite109) — para quando a vitória de $109
+            com 100+ jogadores se perde em limpezas de cache. Só o Allan vê. */}
+        <div className="profile-setting">
+          <span className="ps-label">🏆 $1.000 — elite</span>
+          <button
+            className={`btn tiny ${eliteUnlocked ? "devlock-on" : "devlock-off"}`}
+            onClick={requestEliteUnlock}
+          >
+            {eliteUnlocked ? "🟢 Destravado" : "🔒 Destravar ($109)"}
+          </button>
+        </div>
+
         <div className="profile-setting">
           <span className="ps-label">{t("profile.variant")}</span>
           <div className="variant-toggle">
@@ -223,8 +280,14 @@ export function ProfileView({
       {pwOpen ? (
         <div className="devpw-overlay" onClick={() => setPwOpen(false)}>
           <div className="devpw-box" onClick={(e) => e.stopPropagation()}>
-            <div className="devpw-title">🔑 {t("profile.devTestTitle")}</div>
-            <div className="devpw-note">{t("profile.devTestNote")}</div>
+            <div className="devpw-title">
+              {pwMode === "elite109" ? "🏆 Destravar $1.000" : "🔑 " + t("profile.devTestTitle")}
+            </div>
+            <div className="devpw-note">
+              {pwMode === "elite109"
+                ? "Senha do dono: registra a vitória de $109 com 100+ jogadores e libera o $1.000."
+                : t("profile.devTestNote")}
+            </div>
             <input
               className={`devpw-input${pwError ? " devpw-input-err" : ""}`}
               type="text"

@@ -16,6 +16,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         format: "es",
+        // Performance: separa bibliotecas 3ª-partes (react, i18n, workbox) do
+        // chunk de aplicação — menos JS reanalisado em cada deploy do app.
+        manualChunks: (id) => {
+          // vendor: bibliotecas 3ª-partes separadas do chunk de aplicação
+          if (id.includes("node_modules") && /(react-dom|react-router-dom|i18next|react-i18next)/.test(id)) {
+            return "vendor";
+          }
+          // workbox (runtime do PWA) e idb ficam junto do vendor — não mudam
+          // a cada deploy do app, então o navegador reusa o cache dessas libs
+          if (id.includes("node_modules") && /(@remix|workbox|idb|tslib|scheduler|react\/(jsx-)?runtime)/.test(id)) {
+            return "vendor";
+          }
+          if (id.includes("node_modules")) return "vendor-core";
+        },
       },
     },
   },

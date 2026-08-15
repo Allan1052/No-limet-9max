@@ -23,6 +23,8 @@ import {
 } from "./progress";
 import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
 import { recordTournamentDecision } from "../train/decisionStats";
+import { syncEliteWins } from "../lib/eliteSync";
+import { getNickname } from "../lib/nickname";
 import {
   loadMissions,
   saveMissions,
@@ -136,6 +138,8 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const onTournamentEnd = useCallback(
     ({ result, inMoney }: { result: "campeao" | "eliminado"; inMoney: boolean }) => {
       fireMission({ type: "tournamentEnd", result, inMoney });
+      // Espelha as vitórias de elite na nuvem (anti-perda em limpezas de cache).
+      if (result === "campeao") syncEliteWins(getNickname());
     // XP: torneio terminado
     if (isXpUnlocked()) {
       const xpState = loadXpState();

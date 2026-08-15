@@ -163,9 +163,30 @@ describe("simulação massiva rua por rua", () => {
     expect(grid.length).toBe(169);
     for (const cell of grid) {
       expect(["bet", "check", "fold"]).toContain(cell.category);
-      expect(cell.freq).toBeGreaterThan(0);
+      expect(cell.freq).toBeGreaterThanOrEqual(0);
       expect(cell.freq).toBeLessThanOrEqual(1);
+      // fora da faixa RFI a célula fica cinza (fold), nunca apostável
+      if (cell.category === "fold") expect(cell.freq).toBeLessThan(0.55);
     }
+  });
+
+  it("heroRecommendedGrid respeita a faixa RFI da posição do herói", () => {
+    const board = [card("As"), card("8d"), card("6c")];
+    // UTG 20bb: faixa mais justa — 99 está DENTRO (abre 66+) e fica colorida;
+    // 72o nunca abre UTG e fica cinza (fold, freq 0).
+    const utg = heroRecommendedGrid(flopBoard(board), "UTG", "BTN", 20, false, 4.8);
+    const c99 = utg.find((c) => c.handType === "99");
+    const c72o = utg.find((c) => c.handType === "72o");
+    expect(c99?.category).not.toBe("fold");
+    expect(c99?.freq).toBeGreaterThan(0);
+    expect(c72o?.category).toBe("fold");
+    expect(c72o?.freq).toBe(0);
+    // BTN abre mais largo que UTG: mais células coloridas
+    const btn = heroRecommendedGrid(flopBoard(board), "BTN", "UTG", 20, false, 4.8);
+    const btnColored = btn.filter((c) => c.category !== "fold").length;
+    const utgColored = utg.filter((c) => c.category !== "fold").length;
+    expect(btnColored, "BTN abre mais largo que UTG (mesmo board 20bb)").toBeGreaterThan(utgColored);
+    expect(utgColored, "UTG 20bb não passa de ~35 mãos coloridas").toBeLessThanOrEqual(36);
   });
 
   it("o range do vilão ENCOLHE com fold e MUDA com call de forma coerente", () => {

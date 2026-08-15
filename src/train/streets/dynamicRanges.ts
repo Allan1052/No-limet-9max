@@ -448,14 +448,22 @@ export interface HeroGridCell {
 
 export function heroRecommendedGrid(
   board: BoardState,
-  _heroPosition: string,
+  heroPosition: string,
   _villainPosition: string,
-  _effBB: number,
+  effBB: number,
   _villainIsAggressive: boolean,
   _potBB: number
 ): HeroGridCell[] {
   const texture = analyzeBoard(board);
+  // Limite pedagógico: o herói só "vive" o range que a teoria manda abrir da
+  // posição dele. Fora da faixa RFI, a célula vira cinza (fold) — igual ao
+  // padrão de solver de rua por rua e ao print esperado do Allan (UTG ~15%).
+  const rfi = preflopOpenRange(heroPosition, effBB);
   return allHandTypes().map((ht) => {
+    if (!(ht in rfi)) {
+      // Fora do range de abertura da posição: nunca deveria estar lá.
+      return { handType: ht, category: "fold", freq: 0 };
+    }
     const hit = boardHit(ht, board);
     let category: string;
     let freq: number;
