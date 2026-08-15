@@ -653,6 +653,41 @@ body {
 .tips-modal .fb-item.ok .tag { background: rgba(201, 180, 88, 0.16); }
 .tips-modal .fb-item.imprecisa .tag { background: rgba(217, 140, 63, 0.16); }
 .tips-modal .fb-item.ruim .tag { background: rgba(209, 84, 79, 0.16); }
+/* ---- Comentário da mão pela banca dos pros (hand-specific) ---- */
+.tips-modal .hand-cmt {
+  background: #10130c;
+  border: 1px solid #2a2c22;
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-bottom: 10px;
+}
+.tips-modal .hand-cmt .hc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.tips-modal .hand-cmt .hc-hand {
+  font-weight: 800;
+  color: var(--gold);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+.tips-modal .hand-cmt .hc-pro {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.tips-modal .hand-cmt .hc-line {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
 .felt {
   position: absolute;
   inset: 6%;

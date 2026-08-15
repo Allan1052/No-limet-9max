@@ -147,6 +147,9 @@ export function HandHistoryPanel() {
                       items={[e.item]}
                       onClose={() => setOpenIdx(null)}
                       userSubscriptionLevel={"free" as UserSubscriptionLevel}
+                      /* Nota: o log histórico não guarda a mão nem o stack —
+                         o comentário personalizado aparece quando o item trouxer
+                         posição/stack no futuro; por enquanto o modal usa a ação. */
                     />
                   </div>
                 ) : null}

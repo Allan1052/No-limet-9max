@@ -617,6 +617,8 @@ export function DrillView() {
         heroHand={tipsItems.hand}
         board={[]}
         userSubscriptionLevel="free"
+        heroPosition={session?.spot?.heroPosition}
+        heroBB={session?.spot?.effectiveBB}
         onClose={() => {
           setTipsOpen(false);
           setTipsItems(null);

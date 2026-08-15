@@ -8,6 +8,7 @@ import { findBlockers } from "../bots/blockers";
 import { classifyBoard } from "../bots/boardTexture";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
+import { getHandCommentary } from "./handCommentary";
 
 type TipsMode = "free" | "technical";
 
@@ -19,6 +20,8 @@ export function HandTipsModal({
   heroHand = [],
   board = [],
   userSubscriptionLevel,
+  heroPosition,
+  heroBB,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
@@ -27,6 +30,10 @@ export function HandTipsModal({
   heroHand?: Card[];
   board?: Card[];
   userSubscriptionLevel: UserSubscriptionLevel;
+  /** Posição do herói no spot (ex.: UTG, BTN) — vem do replay/HandHistory */
+  heroPosition?: string;
+  /** Stack do herói em big blinds no momento da decisão */
+  heroBB?: number;
 }) {
   const { t } = useT();
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
@@ -53,6 +60,25 @@ export function HandTipsModal({
         : "tips.texWet"
     : "";
   const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
+
+  // Comentário PERSONALIZADO pela mão — banca dos 4 pros (Yuri, Negreanu,
+  // Hellmuth e Polk). Só aparece quando há exatamente 2 cartas de herói e
+  // há decisões avaliadas na rua atual.
+  const firstItem = displayItems.find((it) => it.rating) ?? displayItems[0];
+  const handCmt =
+    heroHand.length === 2 && firstItem
+      ? getHandCommentary(
+          {
+            heroHand,
+            heroAction: firstItem.heroAction,
+            position: heroPosition ?? (firstItem as any).position,
+            heroBB: heroBB ?? (firstItem as any).heroBB,
+            rating: firstItem.rating,
+            preflop: firstItem.street === "Pré-flop",
+          },
+          tipsMode,
+        )
+      : null;
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay tips-modal" onClick={(e) => e.stopPropagation()}>
@@ -79,6 +105,16 @@ export function HandTipsModal({
           </button>
         </div>
 
+        {/* Comentário da mão pela banca dos pros — específico da mão jogada */}
+        {handCmt ? (
+          <div className="hand-cmt">
+            <div className="hc-head">
+              <span className="hc-hand">🃏 {handCmt.handName}</span>
+              <span className="hc-pro">{handCmt.proLabel}</span>
+            </div>
+            <div className="hc-line">{handCmt.lines[0]}</div>
+          </div>
+        ) : null}
         <div className="summary">{summarize(displayItems, userSubscriptionLevel)}</div>
         {tecnico && texture ? (
           <div className="board-read">

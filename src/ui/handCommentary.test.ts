@@ -1,0 +1,181 @@
+// Testes do motor de comentário hand-specific (UI layer) — não toca no motor.
+import { describe, expect, it } from "vitest";
+import { makeCard } from "../engine/cards";
+import {
+  getHandCommentary,
+  handNamePretty,
+  pickPro,
+} from "./handCommentary";
+
+// Helpers: rank=suited helper
+const card = (rank: number, suit = 0) => makeCard(rank, suit);
+
+const hands = {
+  // AA: rank14, KK: 13, QQ: 12, JJ: 11, TT: 10, 99: 9, 88: 8, 22: 2
+  AA: [card(14, 0), card(14, 1)],
+  KK: [card(13, 0), card(13, 1)],
+  QQ: [card(12, 0), card(12, 1)],
+  JJ: [card(11, 0), card(11, 1)],
+  TT: [card(10, 0), card(10, 1)],
+  nines: [card(9, 0), card(9, 1)],
+  eights: [card(8, 0), card(8, 1)],
+  twos: [card(2, 0), card(2, 1)],
+  AKs: [card(14, 0), card(13, 0)],
+  AKo: [card(14, 0), card(13, 1)],
+  AQs: [card(14, 0), card(12, 0)],
+  AJo: [card(14, 0), card(11, 1)],
+  ATo: [card(14, 0), card(10, 1)],
+  A5s: [card(14, 0), card(5, 0)],
+  A7o: [card(14, 0), card(7, 1)],
+  KQo: [card(13, 0), card(12, 1)],
+  KJo: [card(13, 0), card(11, 1)],
+  QJo: [card(12, 0), card(11, 1)],
+  T9s: [card(10, 0), card(9, 0)],
+  nines8s: [card(9, 0), card(8, 0)],
+  six5s: [card(6, 0), card(5, 0)],
+  Q9s: [card(12, 0), card(9, 0)],
+  T8o: [card(10, 0), card(8, 1)],
+  eight3o: [card(8, 0), card(3, 1)],
+  seven2o: [card(7, 0), card(2, 1)],
+  nine2o: [card(9, 0), card(2, 1)],
+  four3o: [card(4, 0), card(3, 1)],
+};
+
+describe("handCommentary — classificação por mão", () => {
+  it("nomeia AA/KK/QQ como premium e comenta abertura", () => {
+    for (const hand of [hands.AA, hands.KK, hands.QQ]) {
+      const c = getHandCommentary(
+        { heroHand: hand, heroAction: "Raise", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+        "free",
+      );
+      expect(c).not.toBeNull();
+      expect(c!.lines[0]).toMatch(/mão mais forte|pede ação/i);
+    }
+  });
+
+  it("trash 83o de UTG: fold é a mensagem", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.eight3o, heroAction: "Fold", position: "UTG", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/fold|Nem em sonho|não joga/i);
+    expect(c!.handName).toMatch(/8/);
+  });
+
+  it("72o e 92o também são trash", () => {
+    for (const h of [hands.seven2o, hands.nine2o]) {
+      const c = getHandCommentary({ heroHand: h, heroAction: "Fold", position: "BTN", preflop: true }, "free");
+      expect(c).not.toBeNull();
+      expect(c!.lines[0]).toMatch(/fold|Não confunda|quase sempre/i);
+    }
+  });
+
+  it("AKsRaise de BTN: voz de arma", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.AKs, heroAction: "Raise", position: "BTN", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/arma|abre|domina/i);
+  });
+
+  it("JJ de UTG: hand-raiser", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.JJ, heroAction: "Raise", position: "UTG", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/com for|raise ou fold/i);
+  });
+
+  it("22 shove com 15bb: shove/fold", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.twos, heroAction: "All-in", position: "BTN", heroBB: 15, preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/shove/i);
+  });
+
+  it("T9s de BTN: suited connector abre com plano", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.T9s, heroAction: "Raise", position: "BTN", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/pós-flop bom|abre com plano/i);
+  });
+
+  it("T9s de UTG fold: fold sem culpa", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.T9s, heroAction: "Fold", position: "UTG", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/fold sem culpa|luxo|aceitável/i);
+  });
+
+  it("KQo de UTG fold profundo: fold limpo", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.KQo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/fold limpo|o range tem que ser nobre/i);
+  });
+
+  it("A5s de BTN: abre com backdoor", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.A5s, heroAction: "Raise", position: "BTN", preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/backdoor/i);
+  });
+
+  it("A7o off: fold quase sempre", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.A7o, heroAction: "Fold", position: "CO", preflop: true },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/quase sempre fold|Ás alto/i);
+  });
+
+  it("mão com <2 cartas: null", () => {
+    expect(getHandCommentary({ heroHand: [hands.AA[0]] }, "free")).toBeNull();
+    expect(getHandCommentary({ heroHand: [] }, "free")).toBeNull();
+  });
+
+  it("pós-flop 83o: fold rápido", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.eight3o, heroAction: "Fold", position: "BTN", preflop: false, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/pós-flop|desistir|sem Ás/i);
+  });
+});
+
+describe("handCommentary — voz dos pros", () => {
+  it("Simples acerto = Yuri", () => {
+    expect(pickPro("free", "boa")).toBe("yuri");
+    expect(pickPro("free", "ok")).toBe("yuri");
+  });
+  it("Simples erro = Negreanu", () => {
+    expect(pickPro("free", "ruim")).toBe("negreanu");
+    expect(pickPro("free", "imprecisa")).toBe("negreanu");
+  });
+  it("Técnico acerto = Hellmuth", () => {
+    expect(pickPro("technical", "boa")).toBe("hellmuth");
+  });
+  it("Técnico erro = Polk", () => {
+    expect(pickPro("technical", "ruim")).toBe("polk");
+    expect(pickPro("technical", "imprecisa")).toBe("polk");
+  });
+});
+
+describe("handCommentary — nome bonito da mão", () => {
+  it("AA: dois ases com naipes", () => {
+    expect(handNamePretty(hands.AA)).toBe("A♣ A♦");
+  });
+  it("AKo: com label", () => {
+    expect(handNamePretty(hands.AKo)).toBe("A♣ K♦ (AKo)");
+  });
+  it("T9s: com label suited", () => {
+    expect(handNamePretty(hands.T9s)).toBe("T♣ 9♣ (T9s)");
+  });
+});

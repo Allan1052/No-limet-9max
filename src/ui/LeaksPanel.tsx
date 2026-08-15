@@ -12,6 +12,16 @@ import { HandTipsModal } from "./HandTipsModal";
 import type { HandHistory } from "../app/replay";
 import type { FeedbackItem, Rating } from "../feedback/analyzer";
 import { detectLeaksFromPairs, type Leak, type LeakOccurrence } from "../feedback/leaks";
+import { heroBBBefore } from "./handDepth";
+
+/** Índice do evento no replay que corresponde ao FeedbackItem da mão. */
+function itemEventIndex(hand: HandHistory, item: FeedbackItem): number {
+  const target = item.street ?? "";
+  for (let i = 0; i < hand.events.length; i++) {
+    if (hand.events[i].street === target && hand.events[i].isHero) return i;
+  }
+  return hand.events.length;
+}
 
 const FAM_LABEL: Record<string, string> = {
   fold: "Fold",
@@ -126,6 +136,12 @@ export function LeaksPanel({
           heroHand={selOcc.hand?.holeCards?.[selOcc.hand.heroSeat] ?? []}
           board={selOcc.hand?.finalBoard ?? []}
           userSubscriptionLevel={"free" as never}
+          heroPosition={selOcc.hand?.heroPosition}
+          heroBB={
+            selOcc.hand
+              ? (heroBBBefore(selOcc.hand, itemEventIndex(selOcc.hand, selOcc.item)) ?? undefined)
+              : undefined
+          }
         />
       ) : null}
     </div>

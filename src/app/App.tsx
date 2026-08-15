@@ -53,6 +53,7 @@ import { SpotRangePopup } from "../ui/SpotRangePopup";
 import { handSpots } from "./handSpots";
 import { getParticipantSeats } from "./handParticipants";
 import { HandTipsModal } from "../ui/HandTipsModal";
+import { heroBBBefore } from "../ui/handDepth";
 import { MoneyRain } from "../ui/MoneyRain";
 import { TourneyMilestone } from "../ui/TourneyMilestone";
 import { ChallengeReceived } from "../ui/ChallengeReceived";
@@ -478,6 +479,12 @@ export function App() {
           heroHand={controller.lastHand?.holeCards[controller.heroSeat] ?? []}
           userSubscriptionLevel={effectiveLevel}
           board={controller.lastHand?.finalBoard ?? []}
+          heroPosition={controller.lastHand?.heroPosition}
+          heroBB={
+            controller.lastHand
+              ? (heroBBBefore(controller.lastHand, controller.lastHand.events.length) ?? undefined)
+              : undefined
+          }
           onClose={() => setTipsOpen(false)}
         />
       ) : null}
