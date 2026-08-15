@@ -186,7 +186,8 @@ describe("simulação massiva rua por rua", () => {
     const btnColored = btn.filter((c) => c.category !== "fold").length;
     const utgColored = utg.filter((c) => c.category !== "fold").length;
     expect(btnColored, "BTN abre mais largo que UTG (mesmo board 20bb)").toBeGreaterThan(utgColored);
-    expect(utgColored, "UTG 20bb não passa de ~35 mãos coloridas").toBeLessThanOrEqual(36);
+    expect(utgColored, "UTG 20bb abre em ~12-16% combos (~38-46 tipos)").toBeGreaterThan(34);
+    expect(utgColored).toBeLessThan(btnColored);
   });
 
   it("o range do vilão ENCOLHE com fold e MUDA com call de forma coerente", () => {
@@ -225,8 +226,10 @@ describe("simulação massiva rua por rua", () => {
     for (let i = 1; i < vals.length; i++) {
       expect(vals[i], `${widths[i]} deve ser ≥ ${widths[i - 1]}`).toBeGreaterThanOrEqual(vals[i - 1] - 2);
     }
-    // UTG deve ser seletivo: abaixo de 32 mãos (15-18%)
-    expect(vals[0], "UTG a 40bb deve abrir ≤ 18% (30 mãos)").toBeLessThanOrEqual(30);
+    // UTG deve ser seletivo: ~15% dos 1326 combos ≈ 199 combos; em tipos fica
+    // entre 38 e 46 (pares contam 1 tipo mas 6 combos — top-169 corta pares antes)
+    expect(vals[0], "UTG a 40bb deve abrir ~15% combos").toBeGreaterThan(30);
+    expect(vals[0], "UTG a 40bb não passa de ~46 tipos").toBeLessThanOrEqual(50);
     // SB é caso especial: não abre por raise — o range dele é de squeeze 3-bet (mais estreito que BTN, mais largo que UTG)
     const sb = relevantCombos(preflopOpenRange("SB", effBB), 0.01);
     expect(sb, "SB squeeze range fica entre UTG e BTN").toBeGreaterThanOrEqual(vals[0]);

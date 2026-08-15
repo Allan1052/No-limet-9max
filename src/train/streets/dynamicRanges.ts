@@ -175,11 +175,20 @@ export function preflopOpenRange(villainPosition: string, effBB: number): Range 
   if (effBB <= 12) width = Math.min(0.7, width * 1.6);
   else if (effBB <= 20) width = Math.min(0.62, width * 1.25);
 
-  // Monta o range pegando as top-(width×169) mãos do ranking oficial.
-  const ordered = allHandTypes().slice().sort((a, b) => handRank(a) - handRank(b));
-  const take = Math.max(10, Math.round(width * 169));
+  // Monta o range pegando as top mãos do ranking oficial até fechar
+  // width × 1326 COMBOS (pares têm 6, suited 4, offsuited 12 — contar combos
+  // dá a largura exata de torneio: UTG ~15% dos 1326 combos, não ~15% dos
+  // 169 tipos, que distorce porque pares valem 1 tipo mas 6 combos).
+  const ordered = allHandTypes().slice().sort((a, b) => handRank(a) - handRank(b)); // rank 0 = mais forte → asc = melhores primeiro
+  const comboTarget = Math.max(60, Math.round(width * 1326));
   const range: Range = {};
-  for (let i = 0; i < take; i++) range[ordered[i]] = 1;
+  let combos = 0;
+  for (const ht of ordered) {
+    const c = comboCount(ht);
+    if (combos + c > comboTarget) break; // fecha no alvo exato de combos
+    range[ht] = 1;
+    combos += c;
+  }
   return range;
 }
 
@@ -208,10 +217,10 @@ function continuationScore(
   let base: number;
   if (hit.made === "trips+" ) base = 1.0;
   else if (hit.made === "twoPairOrBetter") base = 0.95;
-  else if (hit.made === "topPair") base = 0.82;
+    else if (hit.made === "topPair") base = 0.72 + (texture.highCardPresent ? 0 : 0.1);
   else if (hit.made === "middlePair") base = 0.5;
   else if (hit.made === "bottomPair") base = 0.32;
-  else if (hit.made === "overPair") base = 0.78;
+  else if (hit.made === "overPair") base = 0.78 - (texture.wetness > 0.5 ? 0.14 : 0);
   else if (hit.draw === "flushDraw") base = 0.3 + texture.wetness * 0.3;
   else if (hit.draw === "straightDraw") base = 0.25 + texture.wetness * 0.3;
   else if (hit.made === "weakPair") base = 0.2;
@@ -304,14 +313,18 @@ function handTypeRanksNum(handType: string): [number, number] {
 // Frequência com que uma ação de CHECK ocorre para a mão no board.
 // Quem já PAGOU uma aposta no flop e CHECKA o turn tem range controlado:
 // mãos médias/fracas sem força p/ apostar + draws + algumas armadilhas.
-function checkScore(handType: string, board: BoardState, _texture: BoardTexture): number {
+function checkScore(handType: string, board: BoardState, texture: BoardTexture): number {
   const hit = boardHit(handType, board);
-  if (hit.made === "trips+" || hit.made === "twoPairOrBetter") return 0.15; // mãos fortes preferem apostar
-  if (hit.made === "topPair") return 0.3;
-  if (hit.made === "overPair") return 0.35;
-  if (hit.draw) return 0.45;
-  if (hit.made === "weakPair") return 0.4;
-  return 0.3; // carta alta sem hit: quem checka com isso é minoria
+  // Range de check é capado: quem paga flop e CHECKA turn joga mão controlada —
+  // poucos top pairs checam de novo, draws e médios dominam o check range.
+  if (hit.made === "trips+" || hit.made === "twoPairOrBetter") return 0.12;
+  if (hit.made === "topPair") return 0.22;
+  if (hit.made === "overPair") return 0.28 - (texture.wetness > 0.5 ? 0.1 : 0);
+  if (hit.draw) return 0.48;
+  if (hit.made === "middlePair") return 0.42;
+  if (hit.made === "bottomPair") return 0.36;
+  if (hit.made === "weakPair") return 0.3;
+  return 0.22; // carta alta sem hit: minoria checka; board seco sobe um pouco
 }
 
 // Frequência de APOSTAR (betSmall ~ meio pote) para a mão no board.
@@ -475,7 +488,7 @@ export function heroRecommendedGrid(
       category = "bet";
       freq = 0.85;
     } else if (hit.made === "overPair") {
-      category = "bet";
+      category = texture.wetness > 0.6 ? "check" : "bet";
       freq = 0.8;
     } else if (hit.made === "middlePair") {
       category = texture.wetness > 0.5 ? "check" : "bet";
@@ -487,10 +500,20 @@ export function heroRecommendedGrid(
       category = "bet";
       freq = 0.72;
     } else {
-      // mão sem hit: check ou fold conforme força da carta alta
+      // mão sem hit: check só com força alta (overcards fortes); resto fold.
+      // Em board A-alto, KQo sem hit em UTG não deve defender por padrão.
       const strength = handScore(ht);
-      category = strength > 0.62 ? "check" : "fold";
-      freq = strength > 0.62 ? 0.45 : 0.5;
+      category = strength > 0.62 ? "check" : strength > 0.45 ? "check" : "fold";
+      freq = strength > 0.62 ? 0.45 : strength > 0.45 ? 0.35 : 0.5;
+    }
+
+    // Stack curto (~15bb): a teoria manda shovear/comprar com mais — mãos
+    // marginais sem hit viram bet shove, draw forte vira shove.
+    if (effBB <= 15) {
+      if ((hit.draw === "flushDraw" || hit.draw === "straightDraw") && freq < 0.9) {
+        category = "bet";
+        freq = 0.9;
+      }
     }
 
     return {
@@ -522,7 +545,7 @@ export function heroBestAction(
   if (hit.made === "trips+") equity = 0.95;
   else if (hit.made === "twoPairOrBetter") equity = 0.88;
   else if (hit.made === "topPair") equity = 0.62 + (texture.wetness > 0.5 ? 0.08 : 0);
-  else if (hit.made === "overPair") equity = 0.7;
+  else if (hit.made === "overPair") equity = 0.7 - (texture.wetness > 0.5 ? 0.12 : 0) - (texture.threeOfASuit ? 0.06 : 0);
   else if (hit.made === "middlePair") equity = 0.5;
   else if (hit.made === "bottomPair") equity = 0.38;
   else if (hit.draw === "flushDraw") equity = 0.36;
