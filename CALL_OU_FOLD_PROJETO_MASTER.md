@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 15/08/2026 — dicas personalizadas por mão (banca dos 4 pros) no ar
+### Última atualização: 15/08/2026 — Rua por Rua calibrado (RFI por combos + grid pos-flop) no ar; Aprenda do Zero fase 1 PENDENTE
 
 ---
 
@@ -917,3 +917,32 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Mockup: `/home/ubuntu/grid_mockup.html` → PNG/PDF `/home/ubuntu/mockup_range_grid.png/.pdf`.
 - Análise do vídeo do Yuri: `/home/ubuntu/analise_video_yuri_martins.md` (mão 99 river all-in — solver CALL, explorativo FOLD).
 - Validação: tsc limpo · 457 testes · build OK · visual verificado no build local.
+
+---
+
+## 🛣️ RUA POR RUA — CALIBRAÇÃO COMPLETA DE RANGES (15/08/2026) — DEPLOYED
+
+**Pedido do Allan:** "UTG tem mão pra caramba, eu nunca abro todas essas mãos nessa posição" + "os ranges estão trocando tudo no river". Objetivo nota 100.
+
+### Erros encontrados e corrigidos
+
+1. **RFI contava tipos em vez de combos (ERRO RAIZ).** O range de abertura pegava N tipos do ranking (169 tipos) sem pesar que pares valem 6 combos e mãos offsuit 4. Correção: contar combos reais sobre 1.326. Resultado: UTG 20bb = 13,9% combos (184/1326, 41 tipos), BTN = ~42% combos — dentro do padrão pro (UTG ~15%, BTN ~42%).
+2. **Falso positivo durante a investigação:** suspeitei de ordenação invertida (sort ascendente/descendente), apliquei e REVERTI após confirmar a semântica real (`handRank` 0 = mais forte, em `src/ranges/handStrength.ts`). Lição registrada: nunca inferir semântica do motor sem ler o módulo real.
+3. **Grid pos-flop fora do padrão:** AA podia foldar em board seco; cartas altas sem hit (KQo) faziam check em UTG quando o padrão é fold. Correção: overpair/trips nunca fold; cartas altas sem hit com strength ≤0.45 → fold em UTG; overpair em board >0.6 wetness → check; stack ≤15bb com draw forte → shove freq .9.
+
+### Ajustes finos (calibração de pro, todos validados por sim em massa 70k spots)
+- continuationScore: top pair .82→.72 em board com A; overpair .78−.14 molhado.
+- checkScore capado: TP .30→.22, air .30→.22, OP −.1 molhado (range capado pós-flop).
+- heroBestAction: overpair equity .70−.12 wet−.06 three-suit.
+- Testes: expectativas por combos atualizadas em `streetSimTest.test.ts`; novo `rankSanity.test.ts` (ranking real top15 = AA,KK,QQ,JJ,TT,AKs... OK).
+
+### Qualidade (protocolo nota 100)
+- tsc limpo; **528 testes verdes**; build OK; deploy verificado ao vivo (bundle servido em calloufold.com.br); revisão visual da aba com grades abrindo (bet=âmbar, check=verde, fold=cinza, legenda ao lado, célula tocável com explicação ex.: "AA — tope de par+ · apostar").
+- **Motor intocado** (bots/ranges/game/engine/feedback/tournament) — apenas `src/train/streets/dynamicRanges.ts` (módulo novo isolado) e testes.
+- **Nota ao Allan (já entregue em PDF):** na visão de DEFESA contra aposta, a teoria manda defender quase todo o grid vs bet pequeno — poucas células cinzas nessa visão é correto, não bug.
+- PDF: `/home/ubuntu/relatorio_calibracao_rua_por_rua.pdf`.
+- Commit: 1fee4bb2 `fix(ranges): RFI por combos (UTG ~15%, BTN ~42%) + grid pos-flop no padrão pro`.
+- Crash "?route=suamao" no live = navegação direta sem spec (esperado); fluxo normal Train → Your Hand → Analisar → Rua por Rua funciona 100%.
+
+### PRÓXIMO (aprovado, nunca iniciado): Aprenda do Zero fase 1
+- 7 lições (mãos/combos, posição, ranges de abertura, apostas/pot odds, fold é ok, leitura de adversário, mini-torneio prático), cadeados progressivos (lição N destrava após acertar quiz da N−1), público para todos (não dev-unlock), localStorage, view nova `LearnTrailView`, acesso pelo hub de Treino. NÃO toca motor. Créditos do Allan pausados até 17/08 → só site/UI.
