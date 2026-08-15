@@ -1,0 +1,212 @@
+// ---------------------------------------------------------------------------
+// APRENDA DO ZERO — trilha de 7 lições para quem está começando no poker.
+//
+// Conceito aprovado pelo Allan (15/08/2026):
+//   - Trilha progressiva: a lição N só abre depois de a lição N−1 ser
+//     concluída com quiz aprovado (mínimo de 3 acertos em 5 perguntas).
+//   - Conteúdo curto, voz de amigo (sem jargão de pro), em PT-BR.
+//   - Tudo local (localStorage) — sem backend, sem dev-unlock: a trilha é
+//     pública para todos os jogadores, pois é o portal de entrada de
+//     novatos no app.
+//   - Regra de progresso: responder o quiz com ≥ 60% destrava a próxima.
+// ---------------------------------------------------------------------------
+
+export interface LearnLesson {
+  id: string;
+  title: string;
+  icon: string;
+  /** Corpo da lição: parágrafos curtos, voz de amigo, sem jargão pesado. */
+  body: string[];
+  /** Perguntas de verificação (5 por lição). */
+  quiz: { question: string; choices: string[]; answer: number }[];
+}
+
+export const LEARN_LESSONS: LearnLesson[] = [
+  {
+    id: "maos",
+    title: "As mãos do poker",
+    icon: "🃏",
+    body: [
+      "No Hold'em você recebe 2 cartas na mão e tenta formar a melhor combinação de 5 cartas usando o board (as 5 cartas da mesa) junto com as suas.",
+      "A hierarquia, da mais fraca à mais forte: carta alta, par, dois pares, trinca, sequência, flush (5 do mesmo naipe), full house, quadra, sequência de flush.",
+      "Exemplo prático: se o board tem um A e você tem um A na mão, você tem um par de ases — quanto maior o par, melhor. E se o board traz 5 cartas do mesmo naipe, quem tiver a carta mais alta desse naipe ganha.",
+      "Dica de ouro: não decore só o nome das mãos — decore o que BATE com o board. Par no board não é par na mão. Quem enxerga isso primeiro toma decisões melhores.",
+    ],
+    quiz: [
+      { question: "Você tem K♦ 9♠ e o board é K♣ 7♠ 2♥ 4♦ 9♣. O que você tem?", choices: ["Par de reis", "Dois pares (reis e noves)", "Sequência", "Carta alta"], answer: 1 },
+      { question: "Qual mão é mais forte?", choices: ["Flush", "Sequência", "Trinca", "Full house"], answer: 3 },
+      { question: "O board tem 5 cartas de copas e você tem A♥ na mão. O que isso significa?", choices: ["Você tem flush com a carta mais alta", "Você perdeu", "Você tem par de ases", "Nada — o flush não conta"], answer: 0 },
+      { question: "Você tem 5♦ 6♣ e o board é 4♥ 7♠ 8♣ 2♦ 9♠. O que você formou?", choices: ["Par", "Sequência de 4 a 8", "Sequência de 5 a 9", "Flush"], answer: 2 },
+      { question: "Quantas cartas compõem a melhor mão no Hold'em?", choices: ["2", "4", "5", "7"], answer: 2 },
+    ],
+  },
+  {
+    id: "posicao",
+    title: "Posição é poder",
+    icon: "🪑",
+    body: [
+      "No poker, a ordem em que você joga muda tudo. Quem age por último em cada rua (o botão, ou BTN) vê primeiro as decisões dos outros — e informação vale fichas.",
+      "Pense numa fila de caixa: quem está no fim da fila vê quanto cada pessoa pagou antes de decidir. Quem está no começo decide no escuro.",
+      "Na prática: do BTN você pode jogar mais mãos, porque age depois de todos nas rodadas seguintes. De UTG (primeiro a falar), jogue só mãos fortes — qualquer decisão errada sua será explorada pelos 8 jogadores que falam depois.",
+      "Regra para começar: posição inicial = mãos fortes; botão = mãos variadas. Se a dúvida apertar, foldar cedo dói menos do que foldar caro depois.",
+    ],
+    quiz: [
+      { question: "Qual posição age por último em todas as ruas pós-flop?", choices: ["UTG", "Small blind", "Botão (BTN)", "Cutoff"], answer: 2 },
+      { question: "Por que UTG deve jogar menos mãos que o BTN?", choices: ["Porque UTG aposta mais caro", "Porque todos os outros jogadores ainda vão falar depois", "Porque UTG tem menos fichas", "Não há diferença"], answer: 1 },
+      { question: "Você está no botão e ninguém aumentou antes. O que isso permite?", choices: ["Abrir com mais mãos", "Só abrir com AA", "Fazer all-in sempre", "Nada"], answer: 0 },
+      { question: "O que a posição oferece de vantagem?", choices: ["Cartas melhores", "Mais fichas", "Informação sobre as ações dos adversários", "Nenhuma"], answer: 2 },
+      { question: "De UTG com 7♦ 2♠, qual a melhor decisão na maioria dos casos?", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
+    ],
+  },
+  {
+    id: "ranges",
+    title: "Ranges de abertura",
+    icon: "📊",
+    body: [
+      "Range é o conjunto de mãos que um jogador pode ter numa situação. Ninguém joga com UMA mão só na cabeça — joga com um leque de possibilidades.",
+      "Na abertura sem aumento antes (RFI), profissionais seguem larguras por posição: UTG abre cerca de 15% das mãos (só as fortes: pares grandes, Ax forte, cartas altas do mesmo naipe), enquanto o botão abre cerca de 42% (mãos médias também entram).",
+      "Por quê? Porque de UTG ainda há 8 jogadores para falar — mão média vira dor de cabeça. No botão, só os blinds respondem, então dá para abrir mais.",
+      "No nosso app, a aba Rua por Rua mostra exatamente isso: toque na grade para ver quais mãos entram, call e aposta em cada posição. Treinar range de abertura é o treino mais importante de um iniciante.",
+    ],
+    quiz: [
+      { question: "O que é um 'range' no poker?", choices: ["A distância entre as fichas", "O conjunto de mãos possíveis numa situação", "O valor do pote", "A posição do jogador"], answer: 1 },
+      { question: "Aproximadamente quanto um profissional abre de UTG?", choices: ["15% das mãos", "42% das mãos", "Todas as mãos", "50% das mãos"], answer: 0 },
+      { question: "Por que o botão abre mais mãos que o UTG?", choices: ["O botão joga por último e só os blinds respondem", "O botão ganha mais fichas", "As cartas do botão são melhores", "Não há motivo"], answer: 0 },
+      { question: "Quais mãos fazem parte do range de UTG?", choices: ["Qualquer duas cartas", "Mãos fortes (pares grandes, Ax forte)", "Só conectores baixos", "Mãos do mesmo naipe apenas"], answer: 1 },
+      { question: "Onde no app você pode treinar ranges de abertura por posição?", choices: ["Ranking", "Rua por Rua", "Anatomia", "Perfil"], answer: 1 },
+    ],
+  },
+  {
+    id: "apostas",
+    title: "Apostas e valor do pote",
+    icon: "🪙",
+    body: [
+      "Cada aposta define um preço para você continuar na mão. A pergunta certa nunca é 'será que eu tenho a melhor mão?' — é 'o preço que estão me cobrando compensa?'",
+      "Exemplo real: pote de 100 fichas, adversário aposta 50. Você precisa pagar 50 para disputar 200 (100 do pote + 50 da aposta + suas 50 se pagar). Esse é o preço do call — 1 em cada 3 vezes que você ganhar já paga a conta.",
+      "Regra prática para novatos: contra aposta pequena (metade do pote ou menos), você pode pagar com mais mãos. Contra aposta grande (pote inteiro ou mais), só continue com mãos realmente fortes ou projetos com muitas cartas de saída (outs).",
+      "E lembre: foldar não é perder fichas — é GUARDAR fichas para chegar na final. Quem dobra demais para defender orgulho quebra no meio do torneio.",
+    ],
+    quiz: [
+      { question: "Pote de 100, adversário aposta 50. Quanto você precisa pagar para continuar?", choices: ["25", "50", "100", "150"], answer: 1 },
+      { question: "Se você paga 50 num pote que valerá 200, quantas vezes precisa ganhar para a conta fechar?", choices: ["1 em cada 2", "1 em cada 3", "1 em cada 5", "Sempre"], answer: 1 },
+      { question: "Contra uma aposta grande (pote inteiro), qual a postura correta com mão média?", choices: ["Pagar sempre", "Foldar na maioria dos casos", "Dar all-in", "Aumentar sempre"], answer: 1 },
+      { question: "O que significa 'guardar fichas para a final'?", choices: ["Não apostar nunca", "Foldar mãos ruins em vez de pagar caro", "Acumular fichas no início", "Jogar só no final"], answer: 1 },
+      { question: "O que a pergunta certa antes de pagar deve ser?", choices: ["'Será que ele está blefando?'", "'O preço compensa?', ou seja, quanto preciso ganhar para pagar a conta", "'Tenho sorte hoje?'", "'Qual o buy-in?'"], answer: 1 },
+    ],
+  },
+  {
+    id: "fold",
+    title: "Fold não é fraqueza",
+    icon: "🛡️",
+    body: [
+      "O fold é a decisão mais subestimada do poker — e a mais praticada pelos campeões. Nos torneios, você sobrevive dobrando fichas que NÃO valem o preço.",
+      "Matemática simples: no início do torneio cada aposta errada custa blind; no meio, custa metade do stack; no fim, custa o sonho. Foldar cedo é exatamente o que separa quem chega na final de quem 'quase' chegou.",
+      "Mãos de exemplo que pedem fold sem pensar: 7-2, 8-3, cartas baixas desconectadas de posições iniciais. Guardar essas fichas vale mais do que tentar 'ver o flop com qualquer coisa'.",
+      "O coach do app vai te dizer quando o fold é a linha principal — se ele disser isso de uma mão ruim, é padrão, não erro. Não espere aplauso por fazer o óbvio: espere resultado no final do torneio.",
+    ],
+    quiz: [
+      { question: "Por que o fold é tão importante em torneios?", choices: ["Porque é divertido", "Porque cada aposta errada custa fichas preciosas ao longo do torneio", "Porque acelera o jogo", "Não é importante"], answer: 1 },
+      { question: "Você está de UTG com 7♠ 2♣. Qual a decisão padrão?", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
+      { question: "Foldar uma mão ruim significa:", choices: ["Fraqueza", "Erro de leitura", "Guardar fichas para decisões melhores", "Desistir do torneio"], answer: 2 },
+      { question: "O que separa quem chega na final de quem 'quase' chegou?", choices: ["Sorte nas cartas", "Foldar cedo o que não merece fichas", "Jogar todas as mãos", "Apostar mais"], answer: 1 },
+      { question: "Quando o coach diz que o fold é 'a linha principal' de uma mão fraca, isso é:", choices: ["Um erro do coach", "O padrão correto — não espere aplauso pelo óbvio", "Motivo para pagar", "Sinal de blefe"], answer: 1 },
+    ],
+  },
+  {
+    id: "leitura",
+    title: "Lendo o adversário",
+    icon: "🔍",
+    body: [
+      "Cada ação do adversário encolhe o leque de mãos que ele pode ter. Quando alguém aumenta de UTG, o range dele é forte (pares grandes, Ax). Quando o botão aumenta, o range é largo — até cartas médias entram.",
+      "No pós-flop, a leitura continua: quem paga uma aposta num board com A no topo provavelmente tem algo com A ou uma mão que aguenta pressão. Quem aposta de novo no turn geralmente mostra força real.",
+      "Padrões ajudam: jogador que só aumenta com mãos enormes é previsível; jogador que aumenta com qualquer carta vai errar muitas vezes — espere ele exagerar e pague com mão forte.",
+      "No Rua por Rua do app, você toca no jogador para ver o range dele atualizado a cada ação — exatamente como os profissionais constroem a leitura rua a rua. Treine isso: adivinhar o range do vilão antes de decidir é o hábito que mais acelera evolução.",
+    ],
+    quiz: [
+      { question: "Um aumento de UTG geralmente indica:", choices: ["Range largo com qualquer mão", "Range forte (pares grandes, Ax)", "Um blefe garantido", "Nada específico"], answer: 1 },
+      { question: "Um aumento do botão indica:", choices: ["Só cartas premium", "Range largo, incluindo mãos médias", "Sempre blefe", "Sempre value"], answer: 1 },
+      { question: "O que cada ação do adversário faz com o range dele?", choices: ["Aumenta", "Encolhe (filtra as mãos possíveis)", "Não muda", "Zera"], answer: 1 },
+      { question: "Contra um jogador que só aumenta com mãos enormes, o que fazer?", choices: ["Pagar tudo", "Foldar sem pensar", "Aguardar mão forte e explorar a previsibilidade", "Blefar sempre"], answer: 2 },
+      { question: "Onde no app você treina leitura de range do vilão rua a rua?", choices: ["Ranking", "Rua por Rua", "Campanha", "Drill"], answer: 1 },
+    ],
+  },
+  {
+    id: "torneio",
+    title: "Sobrevivendo ao torneio",
+    icon: "🏆",
+    body: [
+      "Torneio tem 3 fases com estratégias diferentes. No início (stacks profundos), jogue sólido: mãos fortes, posições certas, fold sem culpa. É hora de observar, não de heroísmo.",
+      "No meio (blinds subindo), o jogo acelera: quem não rouba blinds morre aos poucos. Comece a abrir mais do botão e do cutoff, e defenda seus blinds com mais frequência.",
+      "No fim (stack curto, bolha chegando), vale a matemática do push-or-fold: com 10-15 blinds, a decisão vira 'dou all-in ou foldo?'. Mãos como qualquer par, Ax e cartas altas conectadas viram all-in de UTG com stack curto — esperar AA que não vem é morrer devagar.",
+      "O coach do app mostra o veredito considerando o estágio do torneio e seu stack em blinds. Jogue torneios de treino aqui no app (sem dinheiro real) até a bolha deixar de dar medo — depois é só repetir no circuito.",
+    ],
+    quiz: [
+      { question: "Qual a estratégia correta no início do torneio (stacks profundos)?", choices: ["All-in com qualquer mão", "Jogo sólido: mãos fortes e fold sem culpa", "Roubar blinds sem parar", "Pagar todos os aumentos"], answer: 1 },
+      { question: "O que acontece com quem não rouba blinds na fase média?", choices: ["Nada", "Morre aos poucos comendo os blinds", "Ganha mais", "Sobe no ranking"], answer: 1 },
+      { question: "Com 12 blinds, qual a natureza da decisão na maioria das mãos?", choices: ["Call ou fold", "Push ou fold (all-in ou desistir)", "Check ou call", "Fold sempre"], answer: 1 },
+      { question: "Quais mãos viram all-in de UTG com stack muito curto?", choices: ["Só AA", "Qualquer par, Ax e cartas altas conectadas", "Nenhuma", "Só flush draw"], answer: 1 },
+      { question: "O que o coach do app considera no veredito de um torneio?", choices: ["Só a mão", "O estágio do torneio e seu stack em blinds", "O buy-in", "A sorte do dia"], answer: 1 },
+    ],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Progresso — localStorage, chave por jogador (anônimo).
+// ---------------------------------------------------------------------------
+
+export interface LearnProgress {
+  /** lições com quiz aprovado */
+  cleared: string[];
+  /** acertos por lição (melhor tentativa) */
+  best: Record<string, number>;
+}
+
+const KEY = "cof-learn-v1";
+const PASS_SCORE = 3; // mínimo de 3 em 5 para aprovar
+
+export function loadLearn(): LearnProgress {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (Array.isArray(p.cleared)) return { cleared: p.cleared, best: p.best ?? {} };
+    }
+  } catch {
+    /* ignore */
+  }
+  return { cleared: [], best: {} };
+}
+
+export function saveLearn(p: LearnProgress): void {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(p));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Lição N destrava quando a N−1 está concluída (a primeira sempre aberta). */
+export function isLessonUnlocked(index: number, p: LearnProgress): boolean {
+  if (index <= 0) return true;
+  const prev = LEARN_LESSONS[index - 1];
+  return p.cleared.includes(prev.id);
+}
+
+/** Registra tentativa de quiz; devolve se aprovou e o progresso atualizado. */
+export function recordLesson(
+  p: LearnProgress,
+  lessonId: string,
+  correct: number,
+): { passed: boolean; progress: LearnProgress } {
+  const passed = correct >= PASS_SCORE;
+  const best = Math.max(p.best[lessonId] ?? 0, correct);
+  const cleared =
+    passed && !p.cleared.includes(lessonId)
+      ? [...p.cleared, lessonId]
+      : p.cleared;
+  return { passed, progress: { cleared, best: { ...p.best, [lessonId]: best } } };
+}
+
+export function learnStats(p: LearnProgress): { done: number; total: number } {
+  return { done: p.cleared.length, total: LEARN_LESSONS.length };
+}

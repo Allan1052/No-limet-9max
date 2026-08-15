@@ -5230,3 +5230,34 @@ body {
   font-size: 14px;
   color: var(--cream, #ece7d5);
 }
+
+/* APRENDA DO ZERO — trilha de lições (hub Estudar) */
+.learn-body { margin-top: 12px; }
+.learn-para {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.learn-question {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+.learn-choices { display: flex; flex-direction: column; gap: 8px; }
+.learn-choice {
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid #3a3d2e;
+  border-radius: 10px;
+  background: #1d2216;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.learn-choice:hover:not(:disabled) { border-color: var(--gold-dim); }
+.learn-choice.right { border-color: var(--good); background: #13221a; }
+.learn-choice.wrong { border-color: var(--bad); background: #2a1616; }

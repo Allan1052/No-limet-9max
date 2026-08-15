@@ -38,6 +38,7 @@ import {
   HandLab,
   CampaignView,
   TrainView,
+  LearnTrailView,
   ImportView,
   Leaderboard,
   AnatomiaTorneio,
@@ -315,6 +316,8 @@ export function App() {
         <Suspense><CampaignView /></Suspense>
       ) : view === "treino" ? (
         <Suspense><TrainView /></Suspense>
+      ) : view === "aprenda" ? (
+        <Suspense><LearnTrailView /></Suspense>
       ) : view === "ranking" ? (
         <Suspense><Leaderboard /></Suspense>
       ) : view === "anatomia" ? (

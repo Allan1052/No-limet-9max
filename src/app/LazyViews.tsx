@@ -11,6 +11,7 @@ export const DrillView = lazy(() => import("../ui/DrillView").then((m) => ({ def
 export const HandLab = lazy(() => import("../ui/HandLab").then((m) => ({ default: m.HandLab })));
 export const CampaignView = lazy(() => import("../ui/CampaignView").then((m) => ({ default: m.CampaignView })));
 export const TrainView = lazy(() => import("../ui/TrainView").then((m) => ({ default: m.TrainView })));
+export const LearnTrailView = lazy(() => import("../ui/LearnTrailView").then((m) => ({ default: m.LearnTrailView })));
 export const Leaderboard = lazy(() => import("../ui/Leaderboard").then((m) => ({ default: m.Leaderboard })));
 export const AnatomiaTorneio = lazy(() => import("../ui/AnatomiaTorneio").then((m) => ({ default: m.AnatomiaTorneio })));
 export const ProfileView = lazy(() => import("../ui/ProfileView").then((m) => ({ default: m.ProfileView })));
