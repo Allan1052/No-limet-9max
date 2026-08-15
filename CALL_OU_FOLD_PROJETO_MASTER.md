@@ -878,10 +878,24 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 **Entrega ao Allan:** badge "Atualizar" apareceu no teste local; instruções: fechar e reabrir o app (ou pull-to-refresh) p/ pegar a versão nova com o botão Atualizar.
 **MASTER atualizado com esta parte.**
 
+## ✅ SESSÃO 15/08 (parte 2) — 4 correções: nomes dos pros fora das dicas + range vilão vazio + stacks 10.000 + buy-in na mesa — no ar
+**Pedidos do Allan (print do celular):** (1) NÃO pode mostrar nomes de Yuri Martins/Negreanu/Hellmuth/Polk nas dicas; (2) range do vilão aparecia VAZIO (169 células cinzas) na Rua por Rua; (3) torneio de 10 mil fichas "caiu" pra 5 mil; (4) o buy-in do torneio de $1.000 ficou no HUD de cima — quer na mesa (topo ou baixo do feltro).
+**Diagnóstico do stack 5k:** quem mexeu foi o merge da Claude (`95416cc1`, 14/08, "stacks iguais no início") que trocou STAGES.inicio.avgBB de 200 → 100 (chegou à main). Restaurado a 200 = 10.000 fichas conforme promessa do site.
+**Entregue — commit `03adf658` (deploy GitHub Pages OK, verificado ao vivo):**
+- `src/ui/handCommentary.ts` + `HandTipsModal.tsx` + testes: **vozes anonimizada** — "Coach" (Simples) / "Coach (técnico)" (Técnico); mecânica de estilos por acerto/erro mantida, sem nomes reais.
+- `src/ui/StreetTrainer.tsx` + `theme.css` (.street-range-empty): quando o snapshot do vilão fica vazio/minúsculo (ele foldou), mostra bloco de aviso claro ("Ele desistiu da mão") em vez de grade cinza confusa.
+- `src/tournament/structure.ts`: STAGES.inicio.avgBB 100 → **200** (10.000 fichas); `structure.test.ts` atualizado (5000 → 10000); `src/train/stage.ts` dica 100bb → 200bb.
+- Buy-in movido: HUD de cima removido (`App.tsx`), chip dourado **🏆 $X acima do pote dentro do feltro** (`Board.tsx`/`Table.tsx`/`App.tsx` + `.tbl-buyin` em theme.css).
+- Validação: **522 testes passing, tsc limpo, build OK, visual nota 10 (dicas anônimas nos 2 modos, 100bb todos, buy-in na mesa, range vilão OK)** + deploy verificado ao vivo (bundle + screenshot com stacks 10.000 e chip 🏆 $11 no feltro).
+- **Motor intocado** (exceto structure.ts, onde a promessa do site exigia o valor correto).
+**CUIDADO git:** push do MASTER bloqueado por Push Protection (secret key do Supabase no arquivo) — secret removida do MASTER; recomendar Allan trocar a secret no painel da Supabase por precaução.
+**PDF do relatório:** `/home/ubuntu/relatorio_correcoes_15_08.pdf`
+**Pendentes:** (1) ranges do Rua por Rua ainda precisam de recalibração nota 100 (Allan insatisfeito); (2) Aprenda do Zero fase 1 (trail 7 lições) — aprovada, pendente; (3) créditos do Allan voltam 17/08 — até lá só site + UI polish.
+
 ## ✅ SESSÃO 15/08 — DICAS PERSONALIZADAS POR MÃO (coach dos 4 pros) — no ar
 **Pedido do Allan:** as dicas eram robóticas/padrão ("Boa mão. Decisões alinhadas com o padrão." saía até pra fold óbvio de 83o). Quer comentários específicos da mão jogada, como solvers fazem — e agora com a banca dos 4 melhores do mundo: **Yuri Martins, Negreanu, Hellmuth e Polk**.
 **Entregue — commit `b05e076a` (deploy GitHub Pages OK, verificado ao vivo: bundle contém os comentários):**
-- `src/ui/handCommentary.ts` (NOVO): motor de comentário por mão — classifica categoria (trash/premium pair/strong ace/medium pair/small pair/broadway fraco/suited connector/Ax suited/Ax fraco/mão média), considera posição (early/late), stack em bb, ação do herói (Fold/Call/Raise) e rating do motor. **2 tons por frase**: Simples (português de bar) = Yuri Martins se jogada certa / Negreanu se errada; Técnico (com números: equity, pot odds, EV) = Hellmuth se certa / Doug Polk se errada.
+- `src/ui/handCommentary.ts` (NOVO): motor de comentário por mão — classifica categoria (trash/premium pair/strong ace/medium pair/small pair/broadway fraco/suited connector/Ax suited/Ax fraco/mão média), considera posição (early/late), stack em bb, ação do herói (Fold/Call/Raise) e rating do motor. **2 tons por frase**: Simples (português de bar) = voz de Yuri Martins se jogada certa / Negreanu se errada; Técnico (com números: equity, pot odds, EV) = Hellmuth se certa / Doug Polk se errada. **ATENÇÃO: na sessão 15/08 parte 2 os nomes foram ANONIMIZADOS por ordem do Allan — agora é "Coach"/"Coach (técnico)" (ver sessão parte 2 acima).**
 - `src/ui/handDepth.ts` (NOVO): calcula stack do herói em bb a partir do handLog (só leitura de eventos).
 - `src/ui/HandTipsModal.tsx`: injeta bloco dourado no TOPO do modal com a mão + comentário assinado do pro (mantém lista de feedback existente abaixo).
 - Wiring: `App.tsx` (passa position/heroBB do lastHand), `LeaksPanel.tsx` (por ocorrência), `DrillView.tsx` (session.spot).
