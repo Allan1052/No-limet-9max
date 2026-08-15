@@ -742,6 +742,14 @@ body {
   transform: none;
   width: 100%;
 }
+.tbl-buyin {
+  display: inline-block;
+  color: #e6c454;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 2px #000;
+}
 .pot {
   color: var(--gold);
   font-weight: 700;
@@ -5187,6 +5195,18 @@ body {
     var(--blue, #4d8fe6) 4px 8px
   );
 }
+
+/* Aviso quando o range do vilão vira vazio (fold/linha que zerou) — nunca deixa
+   uma grade 100% cinza sem explicação. */
+.street-range-empty {
+  margin-top: 8px;
+  padding: 12px 12px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px dashed rgba(212, 175, 55, 0.35);
+  border-radius: 10px;
+}
+.street-range-empty-title { font-size: 14px; font-weight: 700; color: var(--gold-soft, #d4af37); }
+.street-range-empty-body { margin-top: 4px; font-size: 13px; line-height: 1.5; color: #c9c2ad; }
 
 /* DEV PW modal — senha p/ funcionalidades em teste (não trava o mobile, sem prompt nativo) */
 .devpw-overlay{position:fixed;inset:0;background:rgba(5,10,8,.82);display:flex;align-items:center;justify-content:center;z-index:9000;padding:24px}

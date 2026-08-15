@@ -66,6 +66,7 @@ export function PokerTable({
   updateReady = false,
   onUpdate,
   rangeSeats = [],
+  buyIn,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -78,6 +79,8 @@ export function PokerTable({
   onUpdate?: () => void;
   /** Assentos que têm range pra ver ao final da mão (ficam marcados). */
   rangeSeats?: number[];
+  /** Valor do torneio — aparece na mesa, junto ao pote. */
+  buyIn?: number;
 }) {
   const { t } = useT();
 
@@ -187,6 +190,7 @@ export function PokerTable({
           }
           bigBlind={table.bigBlind}
           inline
+          buyIn={buyIn}
         />
       </div>
 

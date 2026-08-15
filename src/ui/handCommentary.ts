@@ -6,14 +6,11 @@
 // NÃO muda nota, NÃO toca no motor — é puramente um reforço de leitura,
 // exibido no topo do modal de dicas (HandTipsModal).
 //
-// As 4 vozes (escolhidas a dedo pelo Allan, 15/08/2026):
-//   · Yuri Martins    — o professor brasileiro, didático; explica o porquê
-//   · Daniel Negreanu — o leitor de gente; fala de imagem e de leitura
-//   · Phil Hellmuth   — o matemático implacável; "não tem desculpa"
-//   · Doug Polk       — o analista explosivo; fala de EV, de exploração
+// Voz anônima, estilo solver — não cita nomes de jogadores reais
+// (por pedido do Allan, 15/08/2026).
 //
-// Modo Simples  → Yuri (jogada certa) / Negreanu (jogada errada)
-// Modo Técnico  → Hellmuth (jogada certa) / Polk (jogada errada)
+// Modo Simples  → Coach (jogada certa) / Coach (jogada errada)
+// Modo Técnico  → Coach (técnico) com números
 // ---------------------------------------------------------------------------
 import { rankOf, type Card } from "../engine/cards";
 
@@ -22,7 +19,7 @@ export type ProVoice = "yuri" | "negreanu" | "hellmuth" | "polk";
 export interface HandCommentary {
   handName: string; // ex. "A♠ K♥ (AKs)"
   pro: ProVoice;
-  proLabel: string; // ex. "Yuri Martins"
+  proLabel: string; // ex. "Coach" / "Coach (técnico)"
   lines: string[]; // 1 linha de comentário específico da mão
 }
 
@@ -442,10 +439,10 @@ function findCategory(c: HandShape): Category {
 // ---------------------------------------------------------------------------
 
 const PRO_LABEL: Record<ProVoice, string> = {
-  yuri: "Yuri Martins",
-  negreanu: "Daniel Negreanu",
-  hellmuth: "Phil Hellmuth",
-  polk: "Doug Polk",
+  yuri: "Coach",
+  negreanu: "Coach",
+  hellmuth: "Coach (técnico)",
+  polk: "Coach (técnico)",
 };
 
 /** Escolhe o pro pela combinação modo (Simples/Técnico) + rating. */

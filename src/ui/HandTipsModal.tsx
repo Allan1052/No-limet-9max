@@ -61,8 +61,8 @@ export function HandTipsModal({
     : "";
   const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
 
-  // Comentário PERSONALIZADO pela mão — banca dos 4 pros (Yuri, Negreanu,
-  // Hellmuth e Polk). Só aparece quando há exatamente 2 cartas de herói e
+  // Comentário PERSONALIZADO pela mão — voz anônima, estilo solver.
+  // Só aparece quando há exatamente 2 cartas de herói e
   // há decisões avaliadas na rua atual.
   const firstItem = displayItems.find((it) => it.rating) ?? displayItems[0];
   const handCmt =
@@ -105,7 +105,7 @@ export function HandTipsModal({
           </button>
         </div>
 
-        {/* Comentário da mão pela banca dos pros — específico da mão jogada */}
+        {/* Comentário da mão — específico da mão jogada (voz anônima) */}
         {handCmt ? (
           <div className="hand-cmt">
             <div className="hc-head">

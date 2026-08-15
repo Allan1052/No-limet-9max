@@ -150,19 +150,19 @@ describe("handCommentary — classificação por mão", () => {
   });
 });
 
-describe("handCommentary — voz dos pros", () => {
-  it("Simples acerto = Yuri", () => {
+describe("handCommentary — voz do Coach", () => {
+  it("Simples acerto = Coach", () => {
     expect(pickPro("free", "boa")).toBe("yuri");
     expect(pickPro("free", "ok")).toBe("yuri");
   });
-  it("Simples erro = Negreanu", () => {
+  it("Simples erro = Coach", () => {
     expect(pickPro("free", "ruim")).toBe("negreanu");
     expect(pickPro("free", "imprecisa")).toBe("negreanu");
   });
-  it("Técnico acerto = Hellmuth", () => {
+  it("Técnico acerto = Coach (técnico)", () => {
     expect(pickPro("technical", "boa")).toBe("hellmuth");
   });
-  it("Técnico erro = Polk", () => {
+  it("Técnico erro = Coach (técnico)", () => {
     expect(pickPro("technical", "ruim")).toBe("polk");
     expect(pickPro("technical", "imprecisa")).toBe("polk");
   });

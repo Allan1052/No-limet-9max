@@ -11,6 +11,7 @@ export function Board({
   chipPot,
   bigBlind,
   inline = false,
+  buyIn,
 }: {
   board: CardT[];
   pot: number;
@@ -21,11 +22,16 @@ export function Board({
   bigBlind: number;
   /** Quando true, flui dentro da coluna central (sem posicionamento absoluto). */
   inline?: boolean;
+  /** Valor do torneio — aparece discretamente junto ao pote, na mesa. */
+  buyIn?: number;
 }) {
   const { unit } = useSettings();
   const pile = chipPot ?? pot;
   return (
     <div className={`center ${inline ? "inline" : ""}`}>
+      {buyIn ? (
+        <div className="tbl-buyin">🏆 {"$" + Math.round(buyIn).toLocaleString("en-US")}</div>
+      ) : null}
       <div className="pot">Pote: {fmtAmount(pot, bigBlind, unit)}</div>
       {pile > 0 ? <ChipStack amount={pile} bigBlind={bigBlind} showLabel={false} className="pot-chips" /> : null}
       <div className="board">

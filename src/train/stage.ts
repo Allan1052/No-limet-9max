@@ -211,7 +211,7 @@ function technicalVoice(
 
 function stageTechnicalTalk(spec: HandLabSpec): string {
   if (spec.stage === "early") {
-    return "Início de torneio: stacks de 100bb+, implied odds altos — conectores e suited gain value real nos streets seguintes.";
+    return "Início de torneio: stacks de 200bb+, implied odds altos — conectores e suited gain value real nos streets seguintes.";
   }
   if (spec.stage === "late") {
     return "Fase final: o M está caindo, o custo de cegar cresce a cada órbita e o ICM começa a pesar — cada decisão vale mais fichas que no início.";

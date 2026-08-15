@@ -204,17 +204,23 @@ export function StreetTrainer() {
 
   const texture = useMemo(() => analyzeBoard(boardSoFar), [boardSoFar]);
 
-  // Range do vilão evolui conforme os passos já dados
+  // Range do vilão evolui conforme os passos já dados. Também captura a
+  // última ação do vilão para avisar quando o range desaparece (fold) —
+  // assim a tela nunca mostra uma grade 100% cinza sem explicação.
   const villainRange = useMemo(() => {
     const init = preflopOpenRange(villainPos, effBB);
     let prev = init;
+    let lastVillainAction: string | null = null;
     for (const step of steps) {
       if (step.villainAction) {
         prev = continueVillainRange(prev, step.villainAction as never, step.board, ctxFor(step, s)).range;
+        lastVillainAction = step.villainAction;
       }
     }
-    return prev;
+    return { range: prev, lastVillainAction };
   }, [steps, villainPos, effBB, s]);
+  const villainRangeIsV = villainRange.range;
+  const villainLastAction = villainRange.lastVillainAction;
 
   // Grade recomendada do herói (memo para não recalcular a cada render)
   const heroGrid = useMemo(
@@ -444,9 +450,6 @@ export function StreetTrainer() {
   const postKey = current as Exclude<StreetName, "flop">;
   const postPick = isPostFlop ? (extraChoice[postKey] ?? EXTRA_PRESETS[postKey][0]) : null;
 
-  const openRangeFor = (who: "hero" | "villain"): Record<string, number> =>
-    who === "villain" ? villainRange : {};
-
   return (
     <div className="train-view">
       <div className="panel">
@@ -568,7 +571,26 @@ export function StreetTrainer() {
             {showVillainRange ? (
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.villainRangeTitle" as TransKey)}</div>
-                <VillainRangeGrid range={openRangeFor("villain")} cellNote={t("street.villainRangeNote" as TransKey)} />
+                {Object.keys(villainRangeIsV).length === 0 ? (
+                  <div className="street-range-empty">
+                    <div className="street-range-empty-title">
+                      {villainLastAction === "fold"
+                        ? "Ele desistiu da mão"
+                        : villainLastAction
+                          ? "Range zerado pela linha dele"
+                          : "Nada por aqui ainda"}
+                    </div>
+                    <div className="street-range-empty-body">
+                      {villainLastAction === "fold"
+                        ? "Quando o vilão folda, o range dele some junto: ele abriu mão das fichas dessa rodada. Repare em que rua ele saiu — cada fold estreita o que ele poderia carregar até ali."
+                        : villainLastAction
+                          ? "A sequência de ações dele fez o range encolher a zero. Nesses spots o vilão ou está polarizado (muito forte ou blefe puro) ou já saiu da mão — a leitura certa é o pote, não a grade."
+                          : "Antes de qualquer ação, o vilão carrega o range de abertura da posição dele. Quando ele agir (check, aposta, fold), o range atualiza sozinho — toque nele de novo para ver."}
+                    </div>
+                  </div>
+                ) : (
+                  <VillainRangeGrid range={villainRangeIsV} cellNote={t("street.villainRangeNote" as TransKey)} />
+                )}
                 <RangeLegend mode="villain" />
               </div>
             ) : null}

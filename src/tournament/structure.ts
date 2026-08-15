@@ -80,7 +80,7 @@ export interface StageInfo {
 }
 
 export const STAGES: Record<Stage, StageInfo> = {
-  inicio: { id: "inicio", label: "Início", levelIndex: 0, avgBB: 100, spread: 0, icm: "none" },
+  inicio: { id: "inicio", label: "Início", levelIndex: 0, avgBB: 200, spread: 0, icm: "none" },
   meio: { id: "meio", label: "Meio", levelIndex: 2, avgBB: 45, spread: 0.3, icm: "none" },
   bolha: { id: "bolha", label: "Bolha", levelIndex: 4, avgBB: 22, spread: 0.5, icm: "bubble" },
   mesa_final: { id: "mesa_final", label: "Mesa final", levelIndex: 5, avgBB: 20, spread: 0.62, icm: "final" },
@@ -91,8 +91,8 @@ export function prizePool(buyIn: number, entrants: number): number {
   return buyIn * Math.max(1, Math.floor(entrants));
 }
 
-// Stack inicial (em fichas) de cada jogador no começo do torneio: 100bb no
-// nível 1 (bb 50) = 5.000 fichas. As fichas são CONSERVADAS, então o total em
+// Stack inicial (em fichas) de cada jogador no começo do torneio: 200bb no
+// nível 1 (bb 50) = 10.000 fichas. As fichas são CONSERVADAS, então o total em
 // jogo é constante = inscritos × stack inicial, em qualquer fase.
 export const TOURNEY_STARTING_STACK = STAGES.inicio.avgBB * BLIND_LEVELS[0].bb;
 

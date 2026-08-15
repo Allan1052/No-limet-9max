@@ -95,7 +95,7 @@ describe("stacks desiguais", () => {
   });
 });
 
-describe("início do torneio: todos começam IGUAIS com 5.000 fichas", () => {
+describe("início do torneio: todos começam IGUAIS com 10.000 fichas", () => {
   it("spread 0 no Início → stacks idênticos", () => {
     const rng = seededRng(11);
     const level = BLIND_LEVELS[STAGES.inicio.levelIndex];
@@ -103,7 +103,7 @@ describe("início do torneio: todos começam IGUAIS com 5.000 fichas", () => {
     const stacks = unevenStacks(avg, 9, STAGES.inicio.spread, rng, level.bb * 3);
     // Todos exatamente iguais.
     expect(new Set(stacks).size).toBe(1);
-    // E o valor é 5.000 fichas (avgBB 100 × bb 50).
-    expect(stacks[0]).toBe(5000);
+    // E o valor é 10.000 fichas (avgBB 200 × bb 50).
+    expect(stacks[0]).toBe(10000);
   });
 });
