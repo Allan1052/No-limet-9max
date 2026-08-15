@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CardView, CardBack } from "./Card";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
-import { POSITIONS, comboToHandType, type Position } from "../ranges/types";
+import { comboToHandType, type Position } from "../ranges/types";
 import { seededRng, makeCard, type Card } from "../engine/cards";
 import { handRank } from "../ranges/handStrength";
 import {
@@ -254,14 +254,12 @@ export function StreetTrainer() {
         return null;
       }
     };
+    // ⚠ O spec NÃO é consumido aqui: o jogador pode fechar/reabrir a tela e o
+    // spot continua salvo. Ele só é apagado ao começar o treino (start()).
     const existing = readSpec();
-    if (existing) {
-      localStorage.removeItem("cof-sua-mao-spec");
-      setPrefill(existing);
-    }
+    if (existing) setPrefill(existing);
     const onOpenStreet = () => {
       const spec = readSpec();
-      localStorage.removeItem("cof-sua-mao-spec");
       if (spec) setPrefill(spec);
     };
     window.addEventListener("cof-open-street", onOpenStreet);
@@ -309,6 +307,9 @@ export function StreetTrainer() {
   }, [prefill]);
 
   const start = () => {
+    // O spec da Sua Mão é consumido só agora, ao começar o treino — assim o
+    // spot sobrevive a fechadas/reabertas da tela.
+    localStorage.removeItem("cof-sua-mao-spec");
     const rng = seededRng(Math.floor(Math.random() * 1e9));
     // Mão do herói: prefere mãos médias/fortes (mais divertidas pra treinar)
     const heroIdx = 4 + Math.floor(rng() * 24); // top 4..28 do ranking
@@ -342,13 +343,6 @@ export function StreetTrainer() {
     setStreetDec({ flop: { hero: null, villain: null }, turn: { hero: null, villain: null }, river: { hero: null, villain: null } });
     setScore(0);
     setStreetScoreTotal(0);
-  };
-
-  const reset = () => {
-    setHand(null);
-    setSteps([]);
-    setShowHeroRange(false);
-    setShowVillainRange(false);
   };
 
 
@@ -407,63 +401,32 @@ export function StreetTrainer() {
   };
 
   const back = () => {
-    reset();
+    // Volta para a aba "Sua Mão" SEM zerar o spot — o spec fica salvo no
+    // localStorage (cof-sua-mao-spec) e a sessão reaparece intacta ao
+    // tocar de novo em "Treinar rua por rua". (Decisão do Allan, 15/08.)
+    window.dispatchEvent(new CustomEvent("nav-to", { detail: "suamao" }));
   };
 
   const streetLabel = (st: StreetName) => (st === "flop" ? "FLOP" : st === "turn" ? "TURN" : "RIVER");
 
   // ---------- Tela de configuração ----------
+  // ⚠ Porta de entrada única (decisão do Allan, 15/08): o Rua por Rua SEMPRE
+  // começa na aba "Sua Mão" (HandLab), que carrega a mão real, a posição e o
+  // stack do spot. A tela de setup solto (que zerava tudo ao fechar) foi
+  // substituída por esta porta acolhedora. O spec fica salvo no localStorage
+  // até o jogador começar o treino — pode fechar e reabrir sem perder.
   if (!hand) {
     return (
       <div className="train-view">
         <div className="panel ultra-panel">
-          <div className="ultra-badge">🛣️ {t("street.badge" as TransKey)}</div>
-          <h3>{t("street.title" as TransKey)}</h3>
-          <p className="ultra-sub">{t("street.subtitle" as TransKey)}</p>
-
-          <label className="ultra-field">
-            <span>{t("ultra.heroPos")}</span>
-            <select value={heroPos} onChange={(e) => setHeroPos(e.target.value as Position)}>
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="ultra-field">
-            <span>{t("ultra.villainPos")}</span>
-            <select value={villainPos} onChange={(e) => setVillainPos(e.target.value as Position)}>
-              {POSITIONS.filter((p) => p !== "BB").map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </label>
-
-          <div className="ultra-field">
-            <span>{t("street.effStack" as TransKey, { bb: effBB })}</span>
-            <div className="ultra-stacks">
-              {[10, 20, 40, 60, 100].map((v) => (
-                <button key={v} className={`btn size ${effBB === v ? "primary" : ""}`} onClick={() => setEffBB(v)}>
-                  {v}bb
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {isDevUnlocked("rua2026") ? (
-            <label className="ultra-field study-toggle-label">
-              <span>{t("street.studyMode" as TransKey)}</span>
-              <button
-                className={`btn tiny ${studyMode ? "devlock-on" : "devlock-off"}`}
-                onClick={() => setStudyMode((v) => !v)}
-              >
-                🎬 {studyMode ? t("street.studyOn" as TransKey) : t("street.studyOff" as TransKey)}
-              </button>
-            </label>
-          ) : null}
-
-          <button className="btn primary ultra-start" onClick={start}>
-            {t("street.start" as TransKey)}
+          <div className="ultra-badge">🛣️ {t("street.gate.title" as TransKey)}</div>
+          <h3>{t("street.gate.title" as TransKey)}</h3>
+          <p className="ultra-sub">{t("street.gate.body" as TransKey)}</p>
+          <button
+            className="btn primary ultra-start"
+            onClick={() => window.dispatchEvent(new CustomEvent("nav-to", { detail: "suamao" }))}
+          >
+            {t("street.gate.btn" as TransKey)}
           </button>
         </div>
       </div>

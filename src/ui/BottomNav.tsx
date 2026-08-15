@@ -33,7 +33,10 @@ const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar", "drill"];
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
 export const HUBS: Hub[] = [
   { id: "jogar", icon: "🃏", labelKey: "nav.play", views: ["play", "torneio"] },
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "street", "drill", "suamao", "campanha"] },
+  // ⚠ "street" (Rua por Rua) foi REMOVIDO da navegação (decisão do Allan, 15/08):
+  // o treino sempre começa na aba "Sua Mão", que carrega a mão, a posição e o
+  // stack reais do spot. O acesso solto pela sub-nav "zerava" o treino.
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "icm", "importar"] },
   { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
   { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
