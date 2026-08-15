@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 15/08/2026 — Rua por Rua calibrado (RFI por combos + grid pos-flop) no ar; Aprenda do Zero fase 1 PENDENTE
+### Última atualização: 15/08/2026 — Rua por Rua calibrado no ar + Aprenda do Zero fase 1 implementada e no ar
 
 ---
 
@@ -944,5 +944,12 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Commit: 1fee4bb2 `fix(ranges): RFI por combos (UTG ~15%, BTN ~42%) + grid pos-flop no padrão pro`.
 - Crash "?route=suamao" no live = navegação direta sem spec (esperado); fluxo normal Train → Your Hand → Analisar → Rua por Rua funciona 100%.
 
-### PRÓXIMO (aprovado, nunca iniciado): Aprenda do Zero fase 1
-- 7 lições (mãos/combos, posição, ranges de abertura, apostas/pot odds, fold é ok, leitura de adversário, mini-torneio prático), cadeados progressivos (lição N destrava após acertar quiz da N−1), público para todos (não dev-unlock), localStorage, view nova `LearnTrailView`, acesso pelo hub de Treino. NÃO toca motor. Créditos do Allan pausados até 17/08 → só site/UI.
+### ✅ APRENDA DO ZERO FASE 1 — IMPLEMENTADA E NO AR (15/08/2026, sessão atual)
+- Commit `624a75d0` `feat(aprenda): trilha Aprenda do Zero — 7 lições com travas progressivas e quiz`. Testado ao vivo: quiz da lição 1 responde, registra RECORDE (ex.: 4/5), lição 2 destrava automaticamente; progresso "X/7 concluídas" com barra dourada.
+- Conteúdo: `src/train/learn.ts` — 7 lições (as mãos do poker · posição · ranges de abertura · apostas e valor do pote · fold não é fraqueza · lendo o adversário · sobrevivendo ao torneio), cada uma com leitura curta + "dica de ouro" + quiz de 5 perguntas (3 para passar).
+- Travas progressivas: lição N só destrava quando o quiz da N−1 é aprovado; melhor resultado fica como RECORDE (pode refazer para melhorar); tudo em localStorage, público para todos (sem dev-unlock).
+- UI: `src/ui/LearnTrailView.tsx` + CSS `.learn-*` no theme.css; view "aprenda" registrada no App.tsx/LazyViews e no BottomNav como avançada do hub Estudar (atrás do ⋯), i18n pt/es/en.
+- Motor intocado (bots/ranges/game/engine/feedback/tournament); só 3 arquivos novos + wiring de UI.
+- Qualidade: tsc limpo; **536 testes verdes** (8 novos do learn.test.ts); build OK; deploy verificado ao vivo (index-BpdQ2RaA.js importa LearnTrailView-Dm50jP1D.js); revisão visual completa local.
+- Pendências conhecidas: lições 2-7 aprovadas só com respostas corretas no teste manual; conteúdo textual das lições 2-7 é v1 (Allan pode pedir ajustes de tom depois).
+
