@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useGame } from "./useGame";
-import { updateAvailable, applyUpdate, onUpdateAvailable } from "./pwaUpdate";
+import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { Replayer } from "../ui/Replayer";
@@ -248,6 +248,32 @@ export function App() {
   // fazer perder algo digitado em outra aba (ex.: colar mãos no Importar).
   const [updateReady, setUpdateReady] = useState(updateAvailable());
   useEffect(() => onUpdateAvailable(() => setUpdateReady(true)), []);
+
+  // Botão "Atualizar" SEMPRE disponível: verifica em silêncio se o servidor já
+  // está servindo versão nova (a cada 10 min + quando o app volta do segundo
+  // plano). Assim o banner/botão aparece mesmo sem o SW avisar. (16/08)
+  useEffect(() => {
+    // Checagem inicial 15s após o splash (não atrapalha a abertura)
+    const warmup = setTimeout(() => {
+      checkForUpdate().catch(() => undefined);
+    }, 15000);
+    // Quando o app volta do segundo plano
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        checkForUpdate().catch(() => undefined);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    // Checagem periódica a cada 10 min
+    const interval = setInterval(() => {
+      checkForUpdate().catch(() => undefined);
+    }, 10 * 60 * 1000);
+    return () => {
+      clearTimeout(warmup);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
   useEffect(() => {
     if (!updateReady) return;
     if (view !== "play" || !handOver) return; // só recarrega sozinho entre mãos

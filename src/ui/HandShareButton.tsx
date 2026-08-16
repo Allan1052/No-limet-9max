@@ -188,6 +188,9 @@ export function HandShareButton({
 // ---------------------------------------------------------------------------
 export function CaptionPanel({ data }: { data: HandShareData }) {
   const [copied, setCopied] = useState(false);
+  // Colapsível (pedido do Allan 16/08): só a linha de copiar visível;
+  // o texto da legenda aparece ao tocar, sem ocupar espaço.
+  const [open, setOpen] = useState(false);
   const caption = buildCaption({
     heroAction: data.heroAction,
     position: data.position,
@@ -246,18 +249,35 @@ export function CaptionPanel({ data }: { data: HandShareData }) {
           {copied ? "✓ Copiada!" : "📋 Copiar"}
         </button>
       </div>
-      <pre
+      {!open ? null : (
+        <pre
+          style={{
+            color: "#f5f0e1",
+            fontSize: 13,
+            lineHeight: 1.45,
+            margin: 0,
+            whiteSpace: "pre-wrap",
+            fontFamily: "inherit",
+          }}
+        >
+          {caption}
+        </pre>
+      )}
+      <button
+        onClick={() => setOpen((v) => !v)}
         style={{
-          color: "#f5f0e1",
+          marginTop: 8,
+          background: "none",
+          border: "none",
+          color: "#d4af37",
+          fontWeight: 700,
           fontSize: 13,
-          lineHeight: 1.45,
-          margin: 0,
-          whiteSpace: "pre-wrap",
-          fontFamily: "inherit",
+          cursor: "pointer",
+          padding: 0,
         }}
       >
-        {caption}
-      </pre>
+        {open ? "▲ Ocultar legenda" : "▼ Ver legenda"}
+      </button>
     </div>
   );
 }
