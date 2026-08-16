@@ -186,7 +186,11 @@ export const DRILL_PRESETS: DrillPreset[] = [
 export function generateDrillHand(spot: DrillSpotConfig, rng: () => number = Math.random): DrillHand {
   const deck = shuffle(fullDeck(), rng);
   const hand: Card[] = [deck[0], deck[1]];
+  return buildDrillHand(spot, hand);
+}
 
+/** Monta o DrillHand com a mão já decidida (evita duplicar lógica). */
+function buildDrillHand(spot: DrillSpotConfig, hand: Card[]): DrillHand {
   const ctx: PreflopContext = {
     heroPosition: spot.heroPosition,
     hand,
@@ -213,20 +217,20 @@ export function generateDrillHand(spot: DrillSpotConfig, rng: () => number = Mat
   advice.reason = d.reason;
   advice.mix = d.mix;
 
-  return {
-    hand,
-    spot,
-    advice,
-  };
+  return { hand, spot, advice };
 }
 
 /** Cria uma sessão de drill completa (gera todas as mãos). */
 export function createDrillSession(presetId: string, handCount = 30, rng = Math.random): DrillSession {
   const preset = DRILL_PRESETS.find((p) => p.id === presetId) ?? DRILL_PRESETS[0];
   const spot = preset.build(rng);
+
+  // Baralho ÚNICO por sessão: consome 2 cartas por mão — mãos nunca se
+  // repetem dentro da sessão, como num torneio de verdade.
+  const deck = shuffle(fullDeck(), rng);
   const hands: DrillHand[] = [];
   for (let i = 0; i < handCount; i++) {
-    hands.push(generateDrillHand(spot, rng));
+    hands.push(buildDrillHand(spot, [deck[i * 2], deck[i * 2 + 1]]));
   }
   return {
     spot,

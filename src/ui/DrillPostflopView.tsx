@@ -333,7 +333,7 @@ export function DrillPostflopView() {
       <div style={styles.container}>
         <h2 style={styles.title}>🌊 Drill Pós-Flop</h2>
         <p style={styles.subtitle}>
-          Treine spots pós-flop até dominar. 30 mãos seguidas, mesmo board.
+          Treine spots pós-flop até dominar. 30 mãos seguidas, boards e mãos variados.
         </p>
         <div>
           {POSTFLOP_DRILL_SPOTS.map((spot) => (
@@ -386,7 +386,7 @@ export function DrillPostflopView() {
             <div style={styles.errorsList}>
               {session.hands.filter((h) => !h.correct).map((h, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{h.hand.map((c) => cardToStringHelper(c)).join(" ")}</span>
+                  <span>{h.hand.map((c) => cardToStringHelper(c)).join(" ")} · {h.board.map((c) => cardToStringHelper(c)).join(" ")}</span>
                   <span>Você: {h.heroChoice} · Certo: {h.bestAction}</span>
                 </div>
               ))}
@@ -454,9 +454,9 @@ export function DrillPostflopView() {
             Pote: {session.spot.potBB}bb · Vilão bet: {session.spot.villainBetBB > 0 ? `${session.spot.villainBetBB}bb` : "passou"}
           </p>
         </div>
-        {/* Board */}
+        {/* Board da mão corrente (o board rotaciona a cada mão) */}
         <div style={styles.boardRow}>
-          {session.spot.board.map((card, i) => (
+          {currentHand.board.map((card, i) => (
             <div key={i} style={styles.boardCard}>
               {cardToStringHelper(card)}
             </div>

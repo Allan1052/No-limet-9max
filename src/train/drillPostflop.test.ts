@@ -22,14 +22,40 @@ describe("Drill Pós-Flop", () => {
     expect(["fold", "check", "call", "bet", "raise"]).toContain(hand.bestAction);
   });
 
-  it("não gera cartas duplicadas com o board", () => {
+  it("não gera cartas duplicadas com o board (nem entre si)", () => {
     const spot = POSTFLOP_DRILL_SPOTS[0];
     for (let i = 0; i < 50; i++) {
       const hand = generatePostflopDrillHand(spot, Math.random);
       for (const card of hand.hand) {
-        expect(spot.board.includes(card)).toBe(false);
+        expect(hand.board.includes(card)).toBe(false);
       }
       expect(hand.hand[0]).not.toBe(hand.hand[1]);
+    }
+  });
+
+  it("sessão não repete boards nem mãos", () => {
+    for (const spot of POSTFLOP_DRILL_SPOTS) {
+      const session = createPostflopDrillSession(spot.id, 30, Math.random);
+      const boardsSeen = new Set(session.hands.map((h) => h.board.map((c) => c).sort().join(",")));
+      const handsSeen = new Set(session.hands.map((h) => h.hand.slice().sort((a, b) => a - b).join(",")));
+      // variação real: os pools têm 10 boards → vários boards distintos
+      expect(boardsSeen.size).toBeGreaterThan(3);
+      // cada uma das 30 mãos é única na sessão (como num torneio de verdade)
+      expect(handsSeen.size).toBe(30);
+    }
+  });
+
+  it("top pair / monarca: kicker nunca supera o rank alto do board", () => {
+    for (const spot of POSTFLOP_DRILL_SPOTS.filter((s) => s.id === "top_pair" || s.id === "monster_dry")) {
+      for (let seed = 0; seed < 300; seed++) {
+        const h = generatePostflopDrillHand(spot, mulberry32(seed * 31 + 7));
+        const [c1, c2] = h.hand;
+        const top = Math.max(...h.board.map((c) => rankOf(c)));
+        // se c1==c2 (trinca), ignora; senão o kicker menor é < top
+        if (rankOf(c1) !== rankOf(c2)) {
+          expect(Math.min(rankOf(c1), rankOf(c2))).toBeLessThan(top);
+        }
+      }
     }
   });
 
@@ -70,27 +96,30 @@ describe("Drill Pós-Flop", () => {
         it(`${spot.id} [seed ${seed}]`, () => {
           switch (spot.id) {
             case "flush_draw":
-              // 2 cartas do mesmo naipe do flush draw do board (copas)
+              // 2 cartas do mesmo naipe do flush draw do board GERADO
               expect(suitOf(c1)).toBe(suitOf(c2));
-              expect(boardSuits(spot).includes(suitOf(c1))).toBe(true);
+              expect(h.board.map((c) => suitOf(c)).includes(suitOf(c1))).toBe(true);
               break;
             case "top_pair": {
-              const top = Math.max(...boardRanks(spot));
+              const top = Math.max(...h.board.map((c) => rankOf(c)));
               const hasTop = rankOf(c1) === top || rankOf(c2) === top;
               expect(hasTop).toBe(true);
+              // kicker menor que o top (garante que o par é do top do board)
+              expect(Math.min(rankOf(c1), rankOf(c2))).toBeLessThan(top);
               break;
             }
             case "overpair": {
-              const maxBoard = Math.max(...boardRanks(spot));
+              const maxBoard = Math.max(...h.board.map((c) => rankOf(c)));
               expect(rankOf(c1)).toBeGreaterThan(maxBoard);
               expect(rankOf(c2)).toBeGreaterThan(maxBoard);
               expect(rankOf(c1)).toBe(rankOf(c2)); // par
               break;
             }
             case "monster_dry": {
-              const boardSet = new Set(boardRanks(spot));
+              const boardSet = new Set(h.board.map((c) => rankOf(c)));
               const isSetTrip = boardSet.has(rankOf(c1)) && rankOf(c1) === rankOf(c2);
-              const isMonarch = rankOf(c1) === 14 || rankOf(c2) === 14;
+              const top = Math.max(...h.board.map((c) => rankOf(c)));
+              const isMonarch = (rankOf(c1) === top || rankOf(c2) === top) && rankOf(c1) === rankOf(c2);
               expect(isSetTrip || isMonarch).toBe(true);
               break;
             }
@@ -104,8 +133,7 @@ describe("Drill Pós-Flop", () => {
             }
             case "straight_draw": {
               // OESD real: 4 ranks consecutivos presentes + outs nas DUAS pontas.
-              // Board 8-7-2 com hero: T9 → 7,8,9,T + outs 6 e J (OESD).
-              const all = [...new Set([...boardRanks(spot), rankOf(c1), rankOf(c2)])];
+              const all = [...new Set([...h.board.map((c) => rankOf(c)), rankOf(c1), rankOf(c2)])];
               let hasOesd = false;
               for (let lo = 2; lo <= 11 && !hasOesd; lo++) {
                 const window = [lo, lo + 1, lo + 2, lo + 3, lo + 4];
@@ -147,10 +175,4 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-function boardRanks(spot: { board: number[] }): number[] {
-  return spot.board.map((c) => rankOf(c));
-}
 
-function boardSuits(spot: { board: number[] }): number[] {
-  return spot.board.map((c) => suitOf(c));
-}
