@@ -28,6 +28,17 @@ const COLOR_BLACK_SUIT = "#1a1a1a";
 
 export type ShareCardMode = "simples" | "tecnico";
 
+/** Tipo de card: "decisao" = card da mão/decisão (padrão, simétrico ao modo
+ *  simples/técnico); "historico" = card com o histórico completo da mão, rua por
+ *  rua, com os valores apostados — feito para postar em carrossel no Instagram. */
+export type ShareCardType = "decisao" | "historico";
+
+export interface ShareCardOptions {
+  mode?: ShareCardMode;
+  cardType?: ShareCardType;
+}
+
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -214,6 +225,21 @@ function drawLogoImage(ctx: CanvasRenderingContext2D, cx: number, cy: number, si
   });
 }
 
+/** Uma ação registrada no histórico completo da mão (pré-flop → river),
+ *  usada no card de histórico (modo "historico"). */
+export interface ActionLogEntry {
+  /** Quem agiu — "Você" para o herói, ou o nome do vilão. */
+  who: string;
+  /** Rótulo da ação com valor (ex.: "Raise 115", "Call 50", "Check", "All-in"). */
+  action: string;
+  /** Rua da ação (ex.: "Pré-Flop", "Flop", "Turn", "River"). */
+  street: string;
+  /** Se a ação foi do herói (destaca em dourado no card). */
+  isHero: boolean;
+  /** Se a ação foi o ótimo recomendado — só calculado para ações do herói. */
+  correct?: boolean;
+}
+
 export interface HandShareData {
   /** Cartas do herói (2 cartas). */
   heroCards: Card[];
@@ -251,6 +277,12 @@ export interface HandShareData {
    *  ação e se foi correta. Quando tem 2+, o card mostra a mão inteira em vez de
    *  só a última decisão. */
   decisions?: { street: string; action: string; correct: boolean }[];
+  /** HISTÓRICO COMPLETO da mão: todas as ações de todos os jogadores, com valor
+   *  apostado (ex.: "Vilão Raise 115 → Você Call"). Quando presente e com 3+ ações,
+   *  o card do histórico completo usa estas linhas — street por street. */
+  actionLog?: ActionLogEntry[];
+  /** Buy-in em dólares, para o rodapé do card de histórico. */
+  buyIn?: number;
 }
 
 /**
@@ -436,7 +468,17 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
  * Gera o Hand Share Card como PNG (1080×1080) e devolve um Blob.
  * @param mode "simples" = sem jargão técnico; "tecnico" = com equity/potOdds/evBB
  */
-export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode = "simples"): Promise<Blob | null> {
+export async function drawHandShareCard(
+  data: HandShareData,
+  mode: ShareCardMode = "simples",
+  cardType: ShareCardType = "decisao",
+): Promise<Blob | null> {
+  if (cardType === "historico") return drawHistoryCard(data);
+  return drawDecisionCard(data, mode);
+}
+
+// ── Card da DECISÃO (layout atual: mão + board + timeline/chip + tip) ────────
+async function drawDecisionCard(data: HandShareData, mode: ShareCardMode): Promise<Blob | null> {
   const S = 1080;
   const canvas = document.createElement("canvas");
   canvas.width = S;
@@ -630,6 +672,245 @@ export async function drawHandShareCard(data: HandShareData, mode: ShareCardMode
   // ── RODAPÉ — garante folga do bloco da dica e fica sempre visível ──
   const footerY = Math.max(S - 52, tipBoxTop + tipBoxH + 40);
   // Linha dourada fina acima do rodapé (fecha o card).
+  ctx.strokeStyle = "rgba(212,175,55,0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(200, footerY - 26);
+  ctx.lineTo(S - 200, footerY - 26);
+  ctx.stroke();
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "600 22px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
+
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+}
+
+/**
+ * CARD DO HISTÓRICO COMPLETO DA MÃO — rua por rua, com valores apostados.
+ * Layout: topo padrão (logo + título + torneio), cartas do herói + board, e em
+ * vez do chip/dica, um bloco com TODAS as ações da mão (pré-flop → river),
+ * herói destacado em dourado. Fechado com o resultado da mão, se houver.
+ * Feito para compor o carrossel do Instagram junto com o card da decisão.
+ */
+async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
+  const S = 1080;
+  const log = data.actionLog ?? [];
+  if (log.length === 0) return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // ── Fundo (mesmo feltro do card da decisão) ──
+  const bgGrad = ctx.createRadialGradient(S / 2, S * 0.4, S * 0.1, S / 2, S * 0.5, S * 0.8);
+  bgGrad.addColorStop(0, COLOR_BG_FELT);
+  bgGrad.addColorStop(1, COLOR_BG_DARK);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, S, S);
+
+  ctx.globalAlpha = 0.03;
+  for (let i = 0; i < 200; i++) {
+    const px = Math.random() * S;
+    const py = Math.random() * S;
+    ctx.fillStyle = Math.random() > 0.5 ? "#fff" : "#000";
+    ctx.fillRect(px, py, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  const vig = ctx.createRadialGradient(S / 2, S / 2, S * 0.34, S / 2, S / 2, S * 0.72);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,0.4)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, S, S);
+
+  // ── Linha dourada superior ──
+  ctx.strokeStyle = "rgba(212,175,55,0.5)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(S - 60, 20);
+  ctx.stroke();
+
+  // ── TOPO ──
+  await drawLogoImage(ctx, S / 2, 85, 88);
+  ctx.fillStyle = COLOR_GOLD;
+  ctx.font = "bold 48px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("CALL OU FOLD", S / 2, 178);
+
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 26px Georgia, serif";
+  ctx.fillText(data.tournamentInfo, S / 2, 220);
+
+  // Chip "HISTÓRICO DA MÃO" — identifica o card do carrossel (2ª imagem)
+  ctx.fillStyle = "rgba(212,175,55,0.14)";
+  ctx.strokeStyle = "rgba(212,175,55,0.55)";
+  ctx.lineWidth = 1.5;
+  const chipY = 258;
+  const chipH = 40;
+  ctx.font = "bold 22px Georgia, serif";
+  const chipLabel = "HISTÓRICO DA MÃO — AÇÃO COMPLETA";
+  const chipW = Math.min(S - 140, ctx.measureText(chipLabel).width + 48);
+  roundRect(ctx, (S - chipW) / 2, chipY - chipH / 2, chipW, chipH, chipH / 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.textBaseline = "middle";
+  ctx.fillText(chipLabel, S / 2, chipY + 1);
+
+  // ── CARTAS DO HERÓI + BOARD (compactas, como protagonistas) ──
+  const hasBoard = data.board.length > 0;
+  const cardW = hasBoard ? 118 : 164;
+  const cardH = hasBoard ? 162 : 226;
+  const gap = hasBoard ? 20 : 28;
+  const cardsTotalW = cardW * 2 + gap;
+  const cardsX = (S - cardsTotalW) / 2;
+  const cardsY = 318;
+
+  const glowCx = S / 2;
+  const glowCy = cardsY + cardH / 2;
+  const glow = ctx.createRadialGradient(glowCx, glowCy, 24, glowCx, glowCy, cardsTotalW * 0.7);
+  glow.addColorStop(0, "rgba(230,196,84,0.18)");
+  glow.addColorStop(1, "rgba(230,196,84,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(glowCx - cardsTotalW, glowCy - cardH, cardsTotalW * 2, cardH * 2);
+
+  if (data.heroCards.length >= 1) drawCardOnCanvas(ctx, data.heroCards[0], cardsX, cardsY, cardW, cardH);
+  if (data.heroCards.length >= 2) drawCardOnCanvas(ctx, data.heroCards[1], cardsX + cardW + gap, cardsY, cardW, cardH);
+
+  let bottomY = cardsY + cardH;
+  if (hasBoard) {
+    const bCardW = 80;
+    const bCardH = 112;
+    const bGap = 9;
+    const bTotalW = data.board.length * bCardW + (data.board.length - 1) * bGap;
+    const bX = (S - bTotalW) / 2;
+    const bY = cardsY + cardH + 12;
+    for (let i = 0; i < data.board.length; i++) {
+      drawCardOnCanvas(ctx, data.board[i], bX + i * (bCardW + bGap), bY, bCardW, bCardH);
+    }
+    bottomY = bY + bCardH;
+  }
+
+  // ── POSIÇÃO + STACK ──
+  const posStackY = bottomY + 36;
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 26px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
+
+  // ── HISTÓRICO: agrupado por rua, cada ação com valor ──
+  const order = ["Pré-Flop", "Flop", "Turn", "River"];
+  const streetGroups = new Map<string, ActionLogEntry[]>();
+  for (const entry of log) {
+    if (!streetGroups.has(entry.street)) streetGroups.set(entry.street, []);
+    streetGroups.get(entry.street)!.push(entry);
+  }
+
+  const blockTop = posStackY + 30;
+  const blockPadX = 46;
+  const blockPadY = 18;
+  const lineH = 30; // altura por linha de ação
+  const streetGap = 14; // respiro entre ruas
+  const streetHeaderH = 24; // linha do nome da rua
+
+  // calcula altura total do bloco
+  let blockH = blockPadY * 2;
+  const groupOrder = order.filter((st) => streetGroups.has(st));
+  for (let gi = 0; gi < groupOrder.length; gi++) {
+    const entries = streetGroups.get(groupOrder[gi])!;
+    blockH += streetHeaderH;
+    for (let i = 0; i < entries.length; i++) {
+      blockH += lineH;
+      if (i < entries.length - 1) blockH += 4; // respiro entre ações
+    }
+    if (gi < groupOrder.length - 1) blockH += streetGap;
+  }
+  // cabe o resultado da mão no fim
+  const resultLabel = data.tournamentResult ? `Resultado: ${data.tournamentResult}` : "";
+  if (resultLabel) blockH += 34;
+
+  const blockMaxH = S - blockTop - 150; // folga para o rodapé
+  // se estourar, reduz levemente a altura por linha
+  let effLineH = lineH;
+  if (blockH > blockMaxH) {
+    effLineH = Math.max(22, lineH - Math.ceil((blockH - blockMaxH) / Math.max(1, log.length)));
+    blockH = blockTop; // recalcula abaixo com effLineH
+  }
+
+  // caixa translúcida do histórico
+  ctx.fillStyle = "rgba(0,0,0,0.32)";
+  roundRect(ctx, blockPadX, blockTop, S - blockPadX * 2, Math.min(blockH, blockMaxH), 12);
+  ctx.fill();
+
+  let ry = blockTop + blockPadY;
+  ctx.font = `600 20px Georgia, serif`;
+  for (let gi = 0; gi < groupOrder.length; gi++) {
+    const street = groupOrder[gi];
+    const entries = streetGroups.get(street)!;
+
+    // nome da rua em dourado
+    ctx.fillStyle = COLOR_GOLD_BRIGHT;
+    ctx.font = "bold 20px Georgia, serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(street.toUpperCase(), blockPadX + 20, ry + streetHeaderH / 2);
+    ry += streetHeaderH;
+
+    // ações da rua
+    for (const entry of entries) {
+      const whoColor = entry.isHero ? COLOR_GOLD_BRIGHT : COLOR_CREAM;
+      const actionColor = entry.isHero ? COLOR_CREAM : COLOR_CREAM_DIM;
+      const fontSize = "19px";
+      ctx.font = `bold ${fontSize} Georgia, serif`;
+      const whoTxt = entry.who;
+      const wWho = ctx.measureText(whoTxt).width;
+      ctx.font = `600 ${fontSize} Georgia, serif`;
+      const actionTxt = ` ${entry.action}`;
+      const wAct = ctx.measureText(actionTxt).width;
+      const mark = entry.correct === false ? " ✗" : entry.correct === true ? " ✓" : "";
+      ctx.font = `bold ${fontSize} Georgia, serif`;
+      const wMark = ctx.measureText(mark).width;
+
+      let x = blockPadX + 20;
+      // marca ✓/✗ à esquerda (só para ações do herói decididas)
+      if (mark) {
+        ctx.fillStyle = entry.correct ? "#5fb96a" : "#e07b6b";
+        ctx.fillText(mark, x, ry + effLineH / 2);
+        x += wMark + 6;
+      }
+      ctx.fillStyle = whoColor;
+      ctx.font = `bold ${fontSize} Georgia, serif`;
+      ctx.fillText(whoTxt, x, ry + effLineH / 2);
+      x += wWho;
+      ctx.fillStyle = actionColor;
+      ctx.font = `600 ${fontSize} Georgia, serif`;
+      ctx.fillText(actionTxt, x, ry + effLineH / 2);
+      x += wAct;
+      ry += effLineH + (mark ? 4 : 0);
+    }
+    if (gi < groupOrder.length - 1) {
+      ry += streetGap;
+    }
+  }
+
+  // resultado da mão (se houver)
+  if (resultLabel) {
+    ry += 8;
+    ctx.fillStyle = COLOR_GOLD_BRIGHT;
+    ctx.font = "bold 21px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText(resultLabel, S / 2, ry);
+    ry += 34;
+  }
+
+  // ── RODAPÉ ──
+  const footerY = S - 52;
   ctx.strokeStyle = "rgba(212,175,55,0.35)";
   ctx.lineWidth = 1;
   ctx.beginPath();

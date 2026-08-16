@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 import { useCallback } from "react";
 import { HandShareButton } from "./HandShareButton";
-import type { HandShareData } from "../app/handShareCard";
+import type { ActionLogEntry, HandShareData } from "../app/handShareCard";
 import type { HandHistory } from "../app/replay";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { MODULES, buildScenario } from "../train/scenarios";
@@ -44,6 +44,20 @@ export function HandActions({
       correct: it.rating === "boa" || it.rating === "ok",
     }));
 
+    // HISTÓRICO COMPLETO da mão (para o card "histórico" do carrossel): todas as
+    // ações de todos os jogadores, rua por rua, com os valores apostados. A
+    // correção (✓/✗) aplica-se só às ações do herói, usando a avaliação do
+    // feedback daquela rua.
+    const streetCorrect = new Map<string, boolean>();
+    for (const it of feedback) streetCorrect.set(it.street, it.rating === "boa" || it.rating === "ok");
+    const actionLog: ActionLogEntry[] = hand.events.map((ev) => ({
+      who: ev.isHero ? "Você" : ev.name,
+      action: ev.actionLabel,
+      street: ev.street,
+      isHero: ev.isHero,
+      correct: ev.isHero ? streetCorrect.get(ev.street) : undefined,
+    }));
+
     return {
       heroCards,
       board: hand.finalBoard,
@@ -61,6 +75,7 @@ export function HandActions({
       potOdds: lastItem.potOdds,
       evBB: lastItem.evBB,
       decisions,
+      actionLog,
     };
   })();
 

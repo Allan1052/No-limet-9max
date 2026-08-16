@@ -11,6 +11,21 @@ import { drawHandShareCard, type HandShareData, type ShareCardMode } from "../ap
 import { shareSpot } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 
+/** Baixa um blob como PNG — usado para o carrossel (2 imagens prontas para o
+ *  Instagram). O Web Share API com múltiplos arquivos só funciona no Android;
+ *  o download funciona em qualquer dispositivo. */
+async function downloadBlob(blob: Blob, filename: string): Promise<void> {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 const SHARE_TEXT = "Essa mão eu joguei no Call ou Fold — simulador grátis de poker. 🃏\nSem dinheiro real. Só estudo.";
 const SHARE_URL = "https://calloufold.com.br";
 const DISCLAIMER = "App de estudo. Sem apostas nem dinheiro real.";
@@ -55,6 +70,30 @@ export function HandShareButton({
     }
   };
 
+  // CARROSSEL (2 cards): card da decisão + card do histórico completo, prontos
+  // para postar como carrossel no Instagram. Baixa os 2 PNGs sequencialmente.
+  const handleCarousel = async () => {
+    if (generating || !data.actionLog || data.actionLog.length < 3) return;
+    setGenerating(true);
+    try {
+      const card1 = await drawHandShareCard(data, "simples", "decisao");
+      const card2 = await drawHandShareCard(data, "simples", "historico");
+      if (card1) await downloadBlob(card1, "card_1_desafio.png");
+      if (card2) await downloadBlob(card2, "card_2_historico.png");
+      setDone(true);
+      setTimeout(() => setDone(false), 3000);
+      if (isXpUnlocked()) {
+        const xpState = loadXpState();
+        const xpResult = processXpEvent(xpState, { type: "shareHand" });
+        saveXpState(xpResult.state);
+      }
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const showCarousel = showToggle && !!data.actionLog && data.actionLog.length >= 3;
+
   if (showToggle) {
     return (
       <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
@@ -74,6 +113,16 @@ export function HandShareButton({
         >
           {generating ? "Gerando…" : done ? "✓ Compartilhado!" : "📐 Técnico"}
         </button>
+        {showCarousel ? (
+          <button
+            className={className}
+            disabled={generating}
+            onClick={handleCarousel}
+            title="Baixa 2 cards (decisão + histórico completo) para postar em carrossel no Instagram"
+          >
+            {generating ? "Gerando…" : done ? "✓ Baixado!" : "🖼️ Carrossel (2 cards)"}
+          </button>
+        ) : null}
       </div>
     );
   }
