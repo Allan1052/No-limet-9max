@@ -804,7 +804,9 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.textAlign = "center";
   ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
 
-  // ── HISTÓRICO: agrupado por rua, cada ação com valor ──
+  // ── HISTÓRICO: agrupado por rua, cada ação com valor. LAYOUT EM 2 COLUNAS
+  // (Pré-Flop+Flop à esquerda | Turn+River à direita) para que mãos longas
+  // nunca invadam o rodapé. ──
   const order = ["Pré-Flop", "Flop", "Turn", "River"];
   const streetGroups = new Map<string, ActionLogEntry[]>();
   for (const entry of log) {
@@ -812,102 +814,128 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
     streetGroups.get(entry.street)!.push(entry);
   }
 
-  const blockTop = posStackY + 30;
-  const blockPadX = 46;
-  const blockPadY = 18;
-  const lineH = 30; // altura por linha de ação
-  const streetGap = 14; // respiro entre ruas
-  const streetHeaderH = 24; // linha do nome da rua
+  const blockTop = posStackY + 28;
+  const blockPadX = 36;
+  const blockPadY = 16;
+  const lineH = 28; // altura por linha de ação
+  const streetGap = 12; // respiro entre ruas
+  const streetHeaderH = 22; // linha do nome da rua
+  const colGap = 20; // espaço entre as duas colunas
 
-  // calcula altura total do bloco
-  let blockH = blockPadY * 2;
-  const groupOrder = order.filter((st) => streetGroups.has(st));
-  for (let gi = 0; gi < groupOrder.length; gi++) {
-    const entries = streetGroups.get(groupOrder[gi])!;
-    blockH += streetHeaderH;
-    for (let i = 0; i < entries.length; i++) {
-      blockH += lineH;
-      if (i < entries.length - 1) blockH += 4; // respiro entre ações
+  // divide as ruas em 2 colunas: esquerda = primeiro meio, direita = segundo
+  // meio (garante a ordem temporal: esquerda = começo da mão)
+  const visibleStreets = order.filter((st) => streetGroups.has(st));
+  const mid = Math.ceil(visibleStreets.length / 2);
+  const leftStreets = visibleStreets.slice(0, mid);
+  const rightStreets = visibleStreets.slice(mid);
+
+  // altura de cada coluna (cabeçalhos + linhas + respiro)
+  const colHeight = (streets: string[]): number => {
+    let h = blockPadY * 2;
+    for (let i = 0; i < streets.length; i++) {
+      const entries = streetGroups.get(streets[i])!;
+      h += streetHeaderH;
+      for (let j = 0; j < entries.length; j++) {
+        const mark = entries[j].correct !== undefined ? 4 : 0;
+        h += lineH + mark;
+      }
+      if (i < streets.length - 1) h += streetGap;
     }
-    if (gi < groupOrder.length - 1) blockH += streetGap;
-  }
-  // cabe o resultado da mão no fim
+    return h;
+  };
+  const leftH = colHeight(leftStreets);
+  const rightH = colHeight(rightStreets);
+
+  // o resultado fecha a coluna mais baixa; o bloco ocupa a maior das duas
   const resultLabel = data.tournamentResult ? `Resultado: ${data.tournamentResult}` : "";
-  if (resultLabel) blockH += 34;
+  const resultLineH = resultLabel ? 32 : 0;
+  const blockH = Math.max(leftH + (leftStreets.length === 0 ? 0 : resultLineH), rightH + (rightStreets.length === 0 ? 0 : resultLineH));
+  const blockMaxH = S - blockTop - 140; // folga para o rodapé
 
-  const blockMaxH = S - blockTop - 150; // folga para o rodapé
-  // se estourar, reduz levemente a altura por linha
-  let effLineH = lineH;
-  if (blockH > blockMaxH) {
-    effLineH = Math.max(22, lineH - Math.ceil((blockH - blockMaxH) / Math.max(1, log.length)));
-    blockH = blockTop; // recalcula abaixo com effLineH
-  }
+  // se a coluna esquerda + resultado estourar, encurta as linhas (raro: máximo
+  // ~10 ações na coluna esquerda cabe em ~400px)
+  const fitLeft = leftStreets.length > 0 && leftH + resultLineH > blockMaxH;
+  const effLineH = fitLeft ? Math.max(22, lineH - 4) : lineH;
 
-  // caixa translúcida do histórico
+  // caixa translúcida do histórico (largura total, altura controlada)
+  const colW = S - blockPadX * 2;
   ctx.fillStyle = "rgba(0,0,0,0.32)";
-  roundRect(ctx, blockPadX, blockTop, S - blockPadX * 2, Math.min(blockH, blockMaxH), 12);
+  roundRect(ctx, blockPadX, blockTop, colW, Math.min(blockH, blockMaxH), 12);
   ctx.fill();
 
-  let ry = blockTop + blockPadY;
-  ctx.font = `600 20px Georgia, serif`;
-  for (let gi = 0; gi < groupOrder.length; gi++) {
-    const street = groupOrder[gi];
-    const entries = streetGroups.get(street)!;
+  // desenha uma coluna de ruas
+  const drawColumn = (streets: string[], cx: number, isLeft: boolean) => {
+    let ry = blockTop + blockPadY;
+    for (let i = 0; i < streets.length; i++) {
+      const street = streets[i];
+      const entries = streetGroups.get(street)!;
 
-    // nome da rua em dourado
-    ctx.fillStyle = COLOR_GOLD_BRIGHT;
-    ctx.font = "bold 20px Georgia, serif";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(street.toUpperCase(), blockPadX + 20, ry + streetHeaderH / 2);
-    ry += streetHeaderH;
+      // nome da rua em dourado
+      ctx.fillStyle = COLOR_GOLD_BRIGHT;
+      ctx.font = "bold 20px Georgia, serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(street.toUpperCase(), cx + 16, ry + streetHeaderH / 2);
+      ry += streetHeaderH;
 
-    // ações da rua
-    for (const entry of entries) {
-      const whoColor = entry.isHero ? COLOR_GOLD_BRIGHT : COLOR_CREAM;
-      const actionColor = entry.isHero ? COLOR_CREAM : COLOR_CREAM_DIM;
-      const fontSize = "19px";
-      ctx.font = `bold ${fontSize} Georgia, serif`;
-      const whoTxt = entry.who;
-      const wWho = ctx.measureText(whoTxt).width;
-      ctx.font = `600 ${fontSize} Georgia, serif`;
-      const actionTxt = ` ${entry.action}`;
-      const wAct = ctx.measureText(actionTxt).width;
-      const mark = entry.correct === false ? " ✗" : entry.correct === true ? " ✓" : "";
-      ctx.font = `bold ${fontSize} Georgia, serif`;
-      const wMark = ctx.measureText(mark).width;
+      // ações da rua
+      for (const entry of entries) {
+        const whoColor = entry.isHero ? COLOR_GOLD_BRIGHT : COLOR_CREAM;
+        const actionColor = entry.isHero ? COLOR_CREAM : COLOR_CREAM_DIM;
+        const fontSize = "19px";
+        ctx.font = `bold ${fontSize} Georgia, serif`;
+        const whoTxt = entry.who;
+        const wWho = ctx.measureText(whoTxt).width;
+        ctx.font = `600 ${fontSize} Georgia, serif`;
+        const actionTxt = ` ${entry.action}`;
+        const wAct = ctx.measureText(actionTxt).width;
+        const mark = entry.correct === false ? " ✗" : entry.correct === true ? " ✓" : "";
+        ctx.font = `bold ${fontSize} Georgia, serif`;
+        const wMark = ctx.measureText(mark).width;
 
-      let x = blockPadX + 20;
-      // marca ✓/✗ à esquerda (só para ações do herói decididas)
-      if (mark) {
-        ctx.fillStyle = entry.correct ? "#5fb96a" : "#e07b6b";
-        ctx.fillText(mark, x, ry + effLineH / 2);
-        x += wMark + 6;
+        let x = cx + 16;
+        // marca ✓/✗ à esquerda (só para ações do herói decididas)
+        if (mark) {
+          ctx.fillStyle = entry.correct ? "#5fb96a" : "#e07b6b";
+          ctx.fillText(mark, x, ry + effLineH / 2);
+          x += wMark + 6;
+        }
+        ctx.fillStyle = whoColor;
+        ctx.font = `bold ${fontSize} Georgia, serif`;
+        ctx.fillText(whoTxt, x, ry + effLineH / 2);
+        x += wWho;
+        ctx.fillStyle = actionColor;
+        ctx.font = `600 ${fontSize} Georgia, serif`;
+        ctx.fillText(actionTxt, x, ry + effLineH / 2);
+        x += wAct;
+        ry += effLineH + (mark ? 4 : 0);
       }
-      ctx.fillStyle = whoColor;
-      ctx.font = `bold ${fontSize} Georgia, serif`;
-      ctx.fillText(whoTxt, x, ry + effLineH / 2);
-      x += wWho;
-      ctx.fillStyle = actionColor;
-      ctx.font = `600 ${fontSize} Georgia, serif`;
-      ctx.fillText(actionTxt, x, ry + effLineH / 2);
-      x += wAct;
-      ry += effLineH + (mark ? 4 : 0);
+      if (i < streets.length - 1) ry += streetGap;
     }
-    if (gi < groupOrder.length - 1) {
-      ry += streetGap;
-    }
-  }
 
-  // resultado da mão (se houver)
-  if (resultLabel) {
-    ry += 8;
-    ctx.fillStyle = COLOR_GOLD_BRIGHT;
-    ctx.font = "bold 21px Georgia, serif";
-    ctx.textAlign = "center";
-    ctx.fillText(resultLabel, S / 2, ry);
-    ry += 34;
-  }
+    // resultado da mão, fechado na coluna esquerda (começo da mão) se existir
+    if (resultLabel && isLeft && streets.length > 0) {
+      ry += 8;
+      const maxY = blockTop + Math.min(blockH, blockMaxH) - 16;
+      const textY = Math.min(ry, maxY);
+      ctx.fillStyle = COLOR_GOLD_BRIGHT;
+      ctx.font = "bold 21px Georgia, serif";
+      ctx.textAlign = "left";
+      ctx.fillText(resultLabel, cx + 16, textY);
+    }
+  };
+
+  const leftX = blockPadX;
+  const rightX = blockPadX + colW / 2 + colGap / 2;
+  // divisor vertical sutil entre as colunas
+  ctx.strokeStyle = "rgba(212,175,55,0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(S / 2, blockTop + 18);
+  ctx.lineTo(S / 2, blockTop + Math.min(blockH, blockMaxH) - 18);
+  ctx.stroke();
+  drawColumn(leftStreets, leftX, true);
+  drawColumn(rightStreets, rightX, false);
 
   // ── RODAPÉ ──
   const footerY = S - 52;
