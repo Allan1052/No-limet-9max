@@ -1078,3 +1078,13 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
   2. `src/ui/StreetTrainer.tsx` `ctxFor` reescrito: `facedBetBB` agora captura a aposta do herói na rua corrente quando o vilão responde (antes call do vilão chegava com faced=0).
 - Validação: `scripts/sim_calibracao.ts` — 1.000 sementes × 10 texturas × 3 posições × 5 ações (~150.000 spots): check seco 2.6-9.8%, call ½ seco 5-11.3%, bet ½ 5.7-13.3%, call molhado/flush 9.9-16.1% — todos no alvo com composição correta.
 - Suíte completa 3.560 testes passando + preview local conferido. Commit `e27c91c5`. Deploy verificado ao vivo: index-DFFeukID.js, StreetTrainer-BiXiO4_k.js (200), CSS com cores padrão (md5 idêntico ao local). Grade do range do vilão agora mostra poucas células acesas no flop seco, sets/AA/Ax no topo.
+
+### 🎯 DRILL COM VARIEDADE REAL (reclamação do Allan 16/08: "30 jogadas, mesmo flop, par de rei 10x, trinca com par na mão")
+- Causas-raiz corrigidas (commit `ac5a5ac2`):
+  1. `src/train/drillPostflop.ts`: pool de boards por spot (FLUSH_DRAW_BOARDS etc., embaralhados); `createPostflopDrillSession` garante mãos e boards ÚNICOS na sessão (handKey com ranks+naipes, retry 200, troca de board em escassez); títulos × mãos continuam consistentes (500 amostras/spot).
+  2. `src/train/drill.ts` (pré-flop): deck único por sessão — mãos nunca repetem nas 30 jogadas.
+  3. `src/ui/DrillPostflopView.tsx`: board renderizado = board da mão corrente (antes era o board fixo do spot — a UI nem mostrava o board novo); tela de erros do resultado agora mostra board + mão.
+- Bug crítico achado e corrigido: handKey só com ranks esgotava o pool (ex.: overpair 8 ranks) — incluí naipes.
+- Testes: suíte completa 3.562 passando; suíte isolada do drill 3.009/3.009.
+- Deploy: workflow GREEN (run 31952462665), index.html live aponta index-DuqdOpRN.js, bundle existe (HTTP 200, last-modified 14:22 UTC). Edge do Pages lento p/ downloads grandes (retry resolve).
+- Allan deve testar uma sessão completa de 30 no celular para validação final.
