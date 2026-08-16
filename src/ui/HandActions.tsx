@@ -4,7 +4,7 @@
 // em vez de escondido no último passo da revisão.
 // ---------------------------------------------------------------------------
 import { useCallback } from "react";
-import { HandShareButton } from "./HandShareButton";
+import { CaptionPanel, HandShareButton } from "./HandShareButton";
 import type { ActionLogEntry, HandShareData } from "../app/handShareCard";
 import type { HandHistory } from "../app/replay";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -96,7 +96,10 @@ export function HandActions({
   return (
     <>
       {shareData ? (
-        <HandShareButton data={shareData} label="📤 Compartilhar mão" className="btn primary" />
+        <>
+          <HandShareButton data={shareData} label="📤 Compartilhar mão" className="btn primary" />
+          <CaptionPanel data={shareData} />
+        </>
       ) : null}
       <button className="btn" onClick={onChallenge}>
         🤝 Desafiar amigo

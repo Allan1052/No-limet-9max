@@ -10,6 +10,7 @@ import { useState } from "react";
 import { drawHandShareCard, type HandShareData, type ShareCardMode } from "../app/handShareCard";
 import { shareSpot } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
+import { buildCaption } from "../app/captionSuggestions";
 
 /** Baixa um blob como PNG — usado para o carrossel (2 imagens prontas para o
  *  Instagram). O Web Share API com múltiplos arquivos só funciona no Android;
@@ -94,6 +95,38 @@ export function HandShareButton({
 
   const showCarousel = showToggle && !!data.actionLog && data.actionLog.length >= 3;
 
+  // LEGENDA PRONTA: caption gerada com os dados da mão + botão copiar, pra
+  // postar direto no Instagram sem escrever nada.
+  const caption = buildCaption({
+    heroAction: data.heroAction,
+    position: data.position,
+    stackBB: data.stackBB,
+    street: data.street,
+    tournamentResult: data.tournamentResult,
+    actionLog: data.actionLog,
+  });
+
+  const handleCopyCaption = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(caption);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = caption;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      setDone(true);
+      setTimeout(() => setDone(false), 3000);
+    } catch {
+      // ignorar — o usuário pode copiar manualmente do painel
+    }
+  };
+
+  const showCaption = !!caption;
+
   if (showToggle) {
     return (
       <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
@@ -123,6 +156,16 @@ export function HandShareButton({
             {generating ? "Gerando…" : done ? "✓ Baixado!" : "🖼️ Carrossel (2 cards)"}
           </button>
         ) : null}
+        {showCaption ? (
+          <button
+            className={className}
+            disabled={generating}
+            onClick={handleCopyCaption}
+            title="Copia a legenda pronta para colar direto no post do Instagram"
+          >
+            {done ? "✓ Copiada!" : "📝 Copiar legenda"}
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -136,5 +179,85 @@ export function HandShareButton({
     >
       {generating ? "Gerando…" : done ? "✓ Compartilhado!" : label}
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Painel da legenda pronta — aparece quando o dev-unlock do card está ativo.
+// Mostra a legenda gerada para a mão e o botão de copiar, tudo na mesma tela.
+// ---------------------------------------------------------------------------
+export function CaptionPanel({ data }: { data: HandShareData }) {
+  const [copied, setCopied] = useState(false);
+  const caption = buildCaption({
+    heroAction: data.heroAction,
+    position: data.position,
+    stackBB: data.stackBB,
+    street: data.street,
+    tournamentResult: data.tournamentResult,
+    actionLog: data.actionLog,
+  });
+
+  const copy = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(caption);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = caption;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // ignorar
+    }
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        background: "rgba(0,0,0,0.28)",
+        border: "1px solid rgba(212,175,55,0.35)",
+        borderRadius: 12,
+        padding: "12px 14px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <span style={{ color: "#d4af37", fontWeight: 700, fontSize: 14 }}>
+          📝 Legenda pronta pro Instagram
+        </span>
+        <button
+          className="btn"
+          onClick={copy}
+          style={{ fontSize: 13, padding: "6px 12px" }}
+        >
+          {copied ? "✓ Copiada!" : "📋 Copiar"}
+        </button>
+      </div>
+      <pre
+        style={{
+          color: "#f5f0e1",
+          fontSize: 13,
+          lineHeight: 1.45,
+          margin: 0,
+          whiteSpace: "pre-wrap",
+          fontFamily: "inherit",
+        }}
+      >
+        {caption}
+      </pre>
+    </div>
   );
 }
