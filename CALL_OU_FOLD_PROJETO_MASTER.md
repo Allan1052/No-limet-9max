@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 15/08/2026 — Rua por Rua calibrado no ar + Aprenda do Zero fase 1 implementada e no ar
+### Última atualização: 16/08/2026 — Estudo de Mesa Final no ar + auditoria visual completa + landing atualizada
 
 ---
 
@@ -988,4 +988,31 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 
 **Pendências conhecidas:** (1) ranges do Rua por Rua ainda precisam de recalibração nota 100; (2) Aprenda do Zero lições 2-7 v1 (tom); (3) créditos do Allan voltam 17/08 — até lá só site + UI polish; (4) MASTER não pode receber a secret do Supabase (push protection); (5) bluff_catcher bug em achievements.ts (~374-377) — Claude cuida; (6) RLS sem DELETE/UPDATE intencional (anti-cheat).
 
-*Documento atualizado em 16/08/2026 — sessões do dia concluídas: Carrossel + legenda pronta no ar + engajamento Instagram 10/10.*
+*Documento atualizado em 16/08/2026 — sessões do dia concluídas: Carrossel + legenda pronta no ar + engajamento Instagram 10/10 + Estudo de Mesa Final no ar + auditoria visual completa.*
+
+---
+
+## ✅ SESSÃO 16/08 (NOITE) — Estudo de Mesa Final + Auto-update + Clipes de vídeo + Auditoria visual — TUDO NO AR
+
+**Commits:** `f3d891f2` (Estudo de Mesa Final), `4b33e0f4` (aprenda do zero/landing parcial), `7735f403` (auditoria visual + landing final). **Deploy final verificado ao vivo** em `assets/index-B-4tuSjz.js` · Actions GREEN · tsc limpo · **559 testes verdes** (1 skipped).
+
+### 🎯 ESTUDO DE MESA FINAL (commit f3d891f2) — NOVO MODO DE TREINO NO AR
+- `src/train/ftSession.ts` (NOVO): lógica pura da FT — 9 jogadores, stacks realistas 15–25bb, payouts ICM, coach com dica contextual. Acessível pelo chip `⋯` do hub Treinar → "Mesa Final".
+- `src/ui/FinalTableTrainer.tsx` (NOVO): setup (presets 9-max/curta/folgada/heads-up, sliders de stack/jogadores/variedade, pressão ICM baixa/média/alta, prévia da mesa com payouts $) → sessão de jogo (PokerTable + Controls + HandActions + HandTipsModal) → resumo do torneio.
+- **Padrões críticos do modo (NÃO REMOVER):** (1) `onAction={(a) => { controller.heroAct(a); setTick(v => v+1); }}` — o `setTick` é ESSENCIAL para re-renderizar após ação do herói e re-executar o loop de bots (sem ele o jogo congela); (2) bind resolvido com arrow wrapper. `ftSession.test.ts` cobre a lógica.
+- i18n: chaves `ft.*` em pt/en/es; CSS `.ft-*` em theme.css; rota lazy `ft` em LazyViews/App.
+- **Motor intocado** (só app/FT/traduções/CSS).
+
+### ⚡ AUTO-UPDATE DETECTION (commit anterior 4b33e0f4) — NO AR
+- `src/app/pwaUpdate.ts` + `pwaUpdateCheck.test.ts`: `checkForUpdate()` roda 15s após abrir, em cada mudança de visibilidade e a cada 10 min — resolve a reclamação "não apareceu a mensagem de atualizar".
+
+### 🎥 CLIPES DO TORNEIO 1K — PADRÃO NOVO DE VÍDEO
+- 3 clipes limpos (corte de status bar + nav bar do celular — padrão definitivo para TODOS os vídeos futuros): `torneio_1k_clipe_1_itm_limpo.mp4` (17s), `torneio_1k_clipe_2_mesa_final_limpo.mp4` (25s), `torneio_1k_clipe_3_ultima_mao_limpo.mp4` (17s) — em `/home/ubuntu/clipe_ft_1k/`.
+- `analise_torneio_1k_mesa_final.pdf` (análise da FT com propostas de melhoria) + `legendas_reels_ft1k.md` (2 legendas de reels) entregues.
+
+### 🔍 AUDITÓRIA VISUAL COMPLETA (commit 7735f403) + LANDING ATUALIZADA — NO AR
+- Auditadas 11 telas: Landing, Aprenda, Treinar, Jogar (torneio), Drill (hub+execução), Monte sua mão/Rua por Rua, Study (Anatomia, Ranges, Aprenda do Zero), ICM, Ranking, Perfil, FT (setup+sessão). FT validado em execução real (herói foldou → bots resolveram → loop continua: fix do setTick confirmado).
+- Landing (`public/site/index.html`): grid agora com **14 features** (Aprenda do Zero, Estudo de Mesa Final, Drill 30/30, Rua por Rua em destaque, badges "disponível agora") · "liberado no lançamento" → "disponível".
+- Falsos positivos descartados: truncamento NEW HAND (artefato de anotação), UI em inglês no preview (navegador do sandbox é en-US — i18n correto), sobreposição Effective stack (gap OK).
+
+**Próximo passo quando o Allan acordar:** relatório PDF "o que falta pra nota 10" (roadmap priorizado curto/médio/longo prazo — incluindo ranges do Rua por Rua nota 100, lições 2-7 do Aprenda do Zero, top 10 premiações no Perfil).
