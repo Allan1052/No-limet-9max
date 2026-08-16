@@ -43,6 +43,7 @@ import {
   Leaderboard,
   AnatomiaTorneio,
   ProfileView,
+  FinalTableTrainer,
 } from "./LazyViews";
 import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
 import { ProgressPanel } from "../ui/ProgressPanel";
@@ -336,6 +337,8 @@ export function App() {
         <Suspense><StreetTrainer /></Suspense>
       ) : view === "drill" ? (
         <Suspense><DrillView /></Suspense>
+      ) : view === "ft" ? (
+        <Suspense><FinalTableTrainer /></Suspense>
       ) : view === "suamao" ? (
         <Suspense><HandLab /></Suspense>
       ) : view === "campanha" ? (

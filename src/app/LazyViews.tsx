@@ -20,6 +20,7 @@ export const MissionsPanel = lazy(() => import("../ui/MissionsPanel").then((m) =
 export const RangeGrid = lazy(() => import("../ui/RangeGrid").then((m) => ({ default: m.RangeGrid })));
 export const TournamentSetup = lazy(() => import("../ui/Tournament").then((m) => ({ default: m.TournamentSetup })));
 export const AchievementsPanel = lazy(() => import("../ui/AchievementsPanel").then((m) => ({ default: m.AchievementsPanel })));
+export const FinalTableTrainer = lazy(() => import("../ui/FinalTableTrainer").then((m) => ({ default: m.FinalTableTrainer })));
 
 // Helper para assinar componentes lazy como ComponentType esperado pelos ternários
 export function asLazy<C>(component: ComponentType<C>): ComponentType<C> {

@@ -119,6 +119,12 @@ export interface TournamentConfig {
   mode?: "livre" | "circuito";
   /** Etapa do circuito (1 a 10), quando mode === "circuito". */
   circuitStage?: number;
+  /**
+   * POLISH UI (Estudo de Mesa Final): sobrescreve o stack do herói em fichas
+   * quando fornecido — para treinar FT com stack escolhido, sem afetar o fluxo
+   * normal (o estágio segue gerando stacks desiguais para todos). 
+   */
+  heroStackOverride?: number;
 }
 
 export interface TournamentState {
@@ -341,6 +347,10 @@ export class GameController {
     const avgChips = stageInfo.avgBB * level.bb;
     const stacks = unevenStacks(avgChips, this.seatDefs.length, stageInfo.spread, this.rng, level.bb * 3);
     const seats = this.seatDefs.map((s, i) => ({ ...s, stack: stacks[i] }));
+    // Estudo de Mesa Final: stack do herói escolhido pelo jogador (polish UI).
+    if (typeof cfg.heroStackOverride === "number" && cfg.heroStackOverride > 0) {
+      seats[0].stack = Math.max(level.bb * 3, Math.round(cfg.heroStackOverride / 25) * 25);
+    }
 
     // A variant do torneio vem do cfg (se fornecido), senão mantém a atual.
     const newVariant = cfg.variant ?? this.table.variant ?? "holdem";
@@ -827,9 +837,9 @@ export class GameController {
     if (this.heroActing) return;
     this.heroActing = true;
     try {
-    this.applyHeroAction(action);
+      this.applyHeroAction(action);
     } finally {
-    this.heroActing = false;
+      this.heroActing = false;
     }
   }
 

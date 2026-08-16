@@ -24,12 +24,13 @@ export type AppView =
   | "anatomia"
   | "perfil"
   | "drill"
-  | "street";
+  | "street"
+  | "ft";
 
 type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
 
 // Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
-const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar", "drill"];
+const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar", "drill", "ft"];
 
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
 export const HUBS: Hub[] = [
@@ -37,7 +38,7 @@ export const HUBS: Hub[] = [
   // ⚠ "street" (Rua por Rua) foi REMOVIDO da navegação (decisão do Allan, 15/08):
   // o treino sempre começa na aba "Sua Mão", que carrega a mão, a posição e o
   // stack reais do spot. O acesso solto pela sub-nav "zerava" o treino.
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha"] },
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha", "ft"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "aprenda", "icm", "importar"] },
   { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
   { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
@@ -51,6 +52,7 @@ const SUB_LABEL: Record<AppView, TransKey> = {
   ultra: "nav.sub.ultra",
   drill: "nav.sub.drill",
   street: "nav.sub.street",
+  ft: "nav.sub.ft",
   suamao: "nav.sub.suamao",
   campanha: "nav.sub.campanha",
   aprenda: "nav.sub.aprenda",
