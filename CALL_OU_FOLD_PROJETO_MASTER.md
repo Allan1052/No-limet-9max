@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 16/08/2026 — Estudo de Mesa Final no ar + auditoria visual completa + landing atualizada
+### Última atualização: 16/08/2026 — Estudo de Mesa Final no ar + auditoria visual completa + landing atualizada + Banner do Vilão no Rua por Rua
 
 ---
 
@@ -1016,3 +1016,19 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Falsos positivos descartados: truncamento NEW HAND (artefato de anotação), UI em inglês no preview (navegador do sandbox é en-US — i18n correto), sobreposição Effective stack (gap OK).
 
 **Próximo passo quando o Allan acordar:** relatório PDF "o que falta pra nota 10" (roadmap priorizado curto/médio/longo prazo — incluindo ranges do Rua por Rua nota 100, lições 2-7 do Aprenda do Zero, top 10 premiações no Perfil).
+
+## Sessão 16/08 (tarde) — Verificação das pendências + Banner do Vilão no Rua por Rua — NO AR
+
+### ✅ RELATÓRIO NOTA 10 RE-VERIFICADO (cobrança do Allan: "checa antes de falar que é pendência")
+- Comentário de mão específica: **JÁ ENTREGUE** (módulo `handCommentary.ts` presente no bundle live; dica cita a mão e a posição).
+- Rua por Rua com range do vilão: **JÁ ENTREGUE** (grid com legenda de cores, 6 boards prontos, timeline final "você X, vilão Y" por rua — testado com 99 UTG vs CO: flop/turn/river completos).
+- Pendências verdadeiras consolidadas em `/home/ubuntu/relatorio_nota10_16_08_v3.pdf`: (1) UX do Rua por Rua — vilão age "invisível", (2) larguras dos ranges pós-flop, (3) dicas por tipo de mão, (4) velocidade de abertura/PWA, (5) Aprenda do Zero lições 2-7.
+
+### 🦈 BANNER DO VILÃO + RANGE ENCOLHENDO (item 1 da pendência — commits b7e112a0 + 1dc596b4)
+- `src/ui/StreetTrainer.tsx`: banner dourado `.villain-shrink-banner` aparece após a ação do vilão — "Vilão pagou — o range dele foi de 30% para 19%" + narração dinâmica (por que encolheu). Linha "Range dele: X% → Y%" acima da grid. Células do grid que SAÍRAM do range marcadas com ✗ (classe `.cell-discarded`). Timeline final destaca a linha do vilão.
+- `src/i18n/translations.ts`: chaves `street.villainBanner` + `street.act.{fold,check,call,bet,raise}` em PT/EN/ES (typo inicial `vilainBanner` corrigido no fix 1dc596b4 — Allan viu o erro no teste, corrigido antes do deploy).
+- `src/ui/theme.css`: classes `.villain-shrink-banner`, `.range-delta`, `.cell-discarded`, `.tl-villain`.
+- **Correção de cores (pedido do Allan nesta sessão):** grade do HERÓI no Rua por Rua pintava check em VERDE → corrigido para AZUL (padrão aprovado: cinza=fold, azul=call, âmbar=raise, vermelho=3-bet, dourado=all-in). Outras grades (Ultra/Drill) já estavam no padrão.
+- Verificação live: chunk StreetTrainer-Cpw5oFmH.js + main index-CW-MqoV-.js contêm "Vilão {action} — o range dele foi de {from}% para {to}%". 559 testes, tsc limpo.
+
+**Teste visual (16/08):** mão 99 UTG vs CO meio do torneio → flop A♠8♦6♣ seco → vilão checou → banner com narração OK (range ~7%) → turn caiu automático. Observação registrada: conferir se o banner cobre todos os tipos de reação do vilão (check, pagou, apostou, raise) antes de anunciar ao Allan.
