@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import { useT } from "../i18n";
+import { isDevUnlocked } from "../lib/devLock";
 import type { TransKey } from "../i18n/translations";
 
 export type AppView =
@@ -110,11 +111,18 @@ export function HubSubNav({
   const { t } = useT();
   const hub = hubForView(view);
 
-  // Separa views principais (visíveis) das avançadas (escondidas atrás de "Mais")
-  const primaryViews = hub.views.filter((v) => !ADVANCED_VIEWS.includes(v));
-  const advancedViews = hub.views.filter((v) => ADVANCED_VIEWS.includes(v));
+  // Allan (16/08): Drill (e Rua por Rua) ficam atrás da senha de teste (rua2026).
+  // Com a senha destravada no Perfil, os chips aparecem; caso contrário, ficam
+  // invisíveis para o público.
+  const testUnlocked = isDevUnlocked("rua2026");
+  const hiddenViews: AppView[] = testUnlocked ? [] : ["drill", "street"];
+  const hubViews = hub.views.filter((v) => !hiddenViews.includes(v));
 
-  if (hub.views.length < 2) return null; // destino sem irmãos: sem sub-nav
+  // Separa views principais (visíveis) das avançadas (escondidas atrás de "Mais")
+  const primaryViews = hubViews.filter((v) => !ADVANCED_VIEWS.includes(v));
+  const advancedViews = hubViews.filter((v) => ADVANCED_VIEWS.includes(v));
+
+  if (hubViews.length < 2) return null; // destino sem irmãos: sem sub-nav
   return (
     <div className="hub-subnav">
       <div className="hub-chips">

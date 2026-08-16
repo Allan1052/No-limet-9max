@@ -314,7 +314,7 @@ export function DrillPostflopView() {
       } else {
         setSession({ ...session });
       }
-    }, 1500);
+    }, 2500);
   }, [session, showingFeedback]);
 
   // Voltar

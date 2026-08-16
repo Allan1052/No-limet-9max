@@ -35,13 +35,24 @@ describe("Drill Pós-Flop", () => {
 
   it("sessão não repete boards nem mãos", () => {
     for (const spot of POSTFLOP_DRILL_SPOTS) {
-      const session = createPostflopDrillSession(spot.id, 30, Math.random);
+      // handCount dinâmico do spot (spots de par usam 15 — o rank do par não
+      // pode repetir, e boards com topo alto teriam poucos ranks disponíveis)
+      const session = createPostflopDrillSession(spot.id, spot.handCount, Math.random);
       const boardsSeen = new Set(session.hands.map((h) => h.board.map((c) => c).sort().join(",")));
       const handsSeen = new Set(session.hands.map((h) => h.hand.slice().sort((a, b) => a - b).join(",")));
-      // variação real: os pools têm 10 boards → vários boards distintos
+      // variação real: os pools têm 30 boards → vários boards distintos
       expect(boardsSeen.size).toBeGreaterThan(3);
-      // cada uma das 30 mãos é única na sessão (como num torneio de verdade)
-      expect(handsSeen.size).toBe(30);
+      // cada mão é única na sessão (como num torneio de verdade)
+      expect(handsSeen.size).toBe(spot.handCount);
+      // Allan (16/08): nos spots de par, o MESMO RANK de par nunca repete —
+      // QQ♠♣ e QQ♥♦ são o mesmo "par de damas" para o jogador.
+      const isPairSpot = ["overpair", "monster_dry", "top_pair"].includes(spot.id);
+      if (isPairSpot) {
+        const pairRanks = session.hands
+          .filter((h) => rankOf(h.hand[0]) === rankOf(h.hand[1]))
+          .map((h) => rankOf(h.hand[0]));
+        expect(new Set(pairRanks).size).toBe(pairRanks.length);
+      }
     }
   });
 

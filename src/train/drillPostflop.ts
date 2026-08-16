@@ -71,11 +71,15 @@ export interface PostflopDrillSession {
 // Cada board da pool é compatível com a condição do spot.
 // ---------------------------------------------------------------------------
 
-/** Boards com 2 cartas de copas — flush draw em ♥. */
+/** Boards com 2 cartas do mesmo naipe — flush draw. 30 texturas:
+ * naipes variados (♣♦♥♠), regiões baixa/média/alta e conectividade variada.
+ * Nenhum board compartilha 2 ranks com outro da mesma região dominante. */
 const FLUSH_DRAW_BOARDS: string[][] = [
+  // ♥ — baixos
   ["7h", "3h", "2s"],
   ["9h", "4h", "8c"],
   ["5h", "Ah", "2d"],
+  // ♥ — médios/altos
   ["Qh", "6h", "3s"],
   ["8h", "2h", "9d"],
   ["Th", "4h", "6c"],
@@ -83,76 +87,184 @@ const FLUSH_DRAW_BOARDS: string[][] = [
   ["6h", "9h", "Jc"],
   ["Kh", "5h", "2s"],
   ["3h", "Jh", "7d"],
+  // ♦ — baixos
+  ["8d", "4d", "9s"],
+  ["6d", "2d", "7h"],
+  // ♦ — médios/altos
+  ["Qd", "5d", "3c"],
+  ["Ad", "7d", "2s"],
+  ["9d", "3d", "Kh"],
+  ["7d", "2d", "Tc"],
+  ["Jd", "6d", "4s"],
+  ["5d", "Kd", "8h"],
+  // ♠ — baixos
+  ["9s", "3s", "6h"],
+  ["7s", "2s", "Td"],
+  // ♠ — médios/altos
+  ["Qs", "5s", "8d"],
+  ["As", "6s", "3h"],
+  ["8s", "3s", "Jd"],
+  ["5s", "Ks", "2c"],
+  ["Js", "4s", "9h"],
+  ["6s", "Ts", "Ah"],
+  // ♣ — mistos
+  ["7c", "2c", "Qh"],
+  ["9c", "4c", "Ad"],
+  ["Tc", "3c", "5s"],
+  ["Jc", "6c", "2h"],
 ];
 
-/** Boards secos com carta alta — top pair em Kx/Ax. */
+/** Boards secos com carta alta — top pair. 15 boards, no máximo um por
+ * top rank: o rank do par do herói (o topo do board) nunca se repete na
+ * sessão de 15 mãos — textura variada de seco/baixo a semi-conectado. */
 const TOP_PAIR_BOARDS: string[][] = [
-  ["Kh", "7d", "2c"],
-  ["Ah", "8d", "3c"],
-  ["Kh", "5d", "9s"],
-  ["Qh", "6d", "2c"],
-  ["Ah", "9d", "4s"],
-  ["Kh", "3d", "7c"],
-  ["Th", "8d", "2s"],
-  ["Ah", "4d", "6c"],
-  ["Qh", "9d", "3s"],
-  ["Kh", "2d", "8s"],
+  // 15 boards — UM por top rank: A, K, Q, J, T, 9..3 + extras. Assim a
+  // sessão de 15 mãos TEMPO 100% diferente em rank de par (percepção de
+  // Allan: "par de rei umas 10 vezes" — nunca mais).
+  // Texturas variadas: seco/baixo, molhado/médio, conectado/alto.
+  ["Ah", "3d", "8c"], // top A — seco baixo
+  ["As", "6d", "2c"], // top A — seco
+  ["Kh", "7d", "2c"], // top K — seco baixo
+  ["Kd", "4h", "9s"], // top K — seco médio-alto
+  ["Qh", "5d", "2c"], // top Q — seco baixo
+  ["Qd", "8c", "3s"], // top Q — seco médio
+  ["Jh", "7d", "2s"], // top J — seco baixo
+  ["Js", "4c", "9d"], // top J — desconectado
+  ["Th", "8d", "3s"], // top T — semi-conectado
+  ["Ts", "6c", "9h"], // top T — meio molhado
+  ["9h", "7d", "2c"], // top 9 — semi-conectado baixo
+  ["8h", "5d", "2c"], // top 8 — seco baixo
+  ["7h", "4d", "2s"], // top 7 — arco-íris muito seco
+  ["6h", "4d", "2c"], // top 6 — rainbow low
+  ["5h", "3d", "2s"], // top 5 — conectividade baixa total
 ];
 
-/** Boards secos com carta média-baixa — overpair TT+. */
+/** Boards secos com carta média-baixa — overpair TT+. 12 texturas:
+ * cada topo aparece no máximo 2×; a sessão reserva 1 rank de par por
+ * board (greedy prefere o rank livre mais alto — TT+/JJ+ de verdade). */
 const OVERPAIR_BOARDS: string[][] = [
-  ["8h", "4d", "2c"],
-  ["7h", "3d", "2c"],
-  ["9h", "4d", "3c"],
-  ["6h", "3d", "2c"],
-  ["8h", "5d", "3s"],
-  ["7h", "4d", "3c"],
-  ["9h", "5d", "2s"],
-  ["6h", "4d", "2s"],
-  ["8h", "3d", "2s"],
-  ["7h", "5d", "2c"],
+  // 12 boards — cada top do board aparece no máximo 2×, com naipes e
+  // kickers variados; o greedy reserva 1 rank de par por board, garantindo
+  // que nenhum par se repete na sessão de 12 mãos.
+  ["9c", "3d", "5s"], // max 9 — seco baixo
+  ["8h", "4d", "2c"], // max 8 — rainbow seco
+  ["7s", "3c", "5d"], // max 7 — arco-íris
+  ["6h", "2s", "4c"], // max 6 — rainbow low
+  ["5h", "2c", "7d"], // max 7 — seco
+  ["4c", "8d", "2s"], // max 8 — disconnected
+  ["Th", "4s", "6c"], // max 10 — semi-conectado
+  ["Td", "5c", "3s"], // max 10 — low-mid
+  ["8c", "6s", "3d"], // max 8 — mid
+  ["7h", "5s", "4d"], // max 7 — conectado baixo
+  ["9h", "5c", "2d"], // max 9 — seco
+  ["6c", "3h", "8d"], // max 8 — varied
 ];
 
-/** Boards secos com A alto + 2 baixas — monarca Ax / trinca baixa. */
+/** Boards secos com carta alta + 2 baixas — monarca Ax / trinca baixa.
+ * 15 texturas: monarcas A/K/Q/J/T/9 com cartas baixas variadas — o greedy
+ * reserva 1 rank (monarca ou trinca) por board sem repetir. */
 const MONSTER_DRY_BOARDS: string[][] = [
-  ["Ah", "5d", "2c"],
-  ["Ah", "6d", "3c"],
-  ["Ah", "4d", "2s"],
-  ["Ah", "7d", "2c"],
-  ["Ah", "3d", "5s"],
-  ["Ah", "8d", "2c"],
-  ["Ah", "2d", "6c"],
-  ["Ah", "9d", "3s"],
-  ["Kh", "4d", "2c"],
-  ["Ah", "5s", "3d"],
+  // 15 boards — o herói pode ter monarca (AA/KK) OU trinca de carta baixa
+  // do board. As cartas baixas variam tanto que o greedy nunca repete o
+  // rank da trinca/monarca: cada board oferece 3 ranks, 45 slots para 15
+  // mãos.
+  ["Ah", "5d", "2c"], // monarca A
+  ["Ad", "6h", "3s"], // monarca A
+  ["As", "4c", "7d"], // monarca A
+  ["Ac", "8s", "2h"], // monarca A
+  ["Ah", "3d", "9s"], // monarca A
+  ["Kh", "4d", "2s"], // monarca K
+  ["Ks", "6c", "3d"], // monarca K
+  ["Kc", "5h", "2d"], // monarca K
+  ["Kd", "7s", "3c"], // monarca K
+  ["Qh", "4c", "2d"], // monarca Q
+  ["Qs", "5d", "3c"], // monarca Q
+  ["Jh", "4d", "2s"], // monarca J
+  ["Js", "5c", "3d"], // monarca J
+  ["Th", "4s", "2c"], // monarca T
+  ["9h", "4d", "2s"], // monarca 9
 ];
 
-/** Boards secos altos — air puro sem par/draw. */
+/** Boards secos altos — air puro sem par/draw. 30 texturas:
+ * cartas altas variadas (A, K, Q, J), naipes variados, sem dominância. */
 const AIR_FACING_BET_BOARDS: string[][] = [
+  // Q alto
   ["Qs", "8d", "3c"],
+  ["Qc", "7h", "4d"],
+  ["Qd", "9s", "2h"],
+  ["Qh", "6c", "3s"],
+  ["Qs", "5d", "9h"],
+  ["Qc", "8s", "2d"],
+  // K alto
   ["Ks", "9d", "4c"],
-  ["Qs", "7d", "2c"],
+  ["Kc", "7s", "3h"],
+  ["Kd", "6h", "2s"],
+  ["Kh", "8c", "5d"],
+  ["Ks", "4d", "9h"],
+  ["Kc", "7d", "2s"],
+  // J alto
   ["Js", "8d", "3c"],
-  ["Ks", "7d", "3s"],
-  ["Qs", "9d", "5c"],
+  ["Jc", "9h", "4s"],
+  ["Jd", "7c", "2h"],
+  ["Jh", "6s", "5d"],
+  ["Js", "9c", "3d"],
+  ["Jc", "5h", "8d"],
+  // A alto
   ["As", "7d", "4c"],
-  ["Ks", "6d", "2c"],
-  ["Qs", "6d", "3s"],
-  ["Js", "9d", "2c"],
+  ["Ac", "8h", "3d"],
+  ["Ad", "6s", "2h"],
+  ["Ah", "9c", "5d"],
+  ["As", "4d", "7c"],
+  ["Ac", "5h", "2s"],
+  // mistos
+  ["Qs", "6d", "8h"],
+  ["Kh", "3c", "7s"],
+  ["Js", "6d", "9c"],
+  ["As", "5c", "8h"],
+  ["Qh", "3s", "7c"],
+  ["Kd", "9c", "4s"],
 ];
 
-/** Boards conectados — OESD real com o hero. */
+/** Boards conectados — OESD real com o hero. 30 texturas:
+ * conectados em várias regiões do board (5-6, 6-7, 7-8, 8-9, 9-T) com
+ * kickers variados em regiões baixa/média/alta e naipes variados. */
 const STRAIGHT_DRAW_BOARDS: string[][] = [
+  // conectados 8-7
   ["8h", "7d", "2c"],
+  ["8s", "7c", "5d"],
+  ["8c", "7h", "Td"],
+  ["8d", "7s", "3h"],
+  ["8h", "7c", "Ah"],
+  ["8s", "7d", "6c"],
+  // conectados 9-8
   ["9h", "8d", "3c"],
+  ["9s", "8c", "2h"],
+  ["9c", "8h", "5d"],
+  ["9d", "8s", "Th"],
+  ["9h", "8c", "6s"],
+  ["9s", "8d", "Ah"],
+  // conectados 7-6
   ["7h", "6d", "2c"],
+  ["7s", "6c", "4h"],
+  ["7c", "6h", "9d"],
+  ["7d", "6s", "Ts"],
+  ["7h", "6c", "3s"],
+  ["7s", "6d", "Jc"],
+  // conectados T-9
   ["Th", "9d", "3c"],
+  ["Ts", "9c", "2h"],
+  ["Tc", "9h", "5d"],
+  ["Td", "9s", "7h"],
+  ["Th", "9c", "4s"],
+  ["Ts", "9d", "Jh"],
+  // conectados 6-5 / 5-4
   ["6h", "5d", "2c"],
-  ["8h", "6d", "2c"],
-  ["9h", "7d", "2s"],
-  ["Th", "8d", "2c"],
-  ["7h", "5d", "2c"],
-  ["8h", "9d", "4c"],
+  ["5s", "4c", "9h"],
+  ["6c", "5h", "Td"],
+  ["5d", "4s", "Kh"],
+  // conectados 9-7 / 8-6 (gap draw)
+  ["9h", "7c", "2s"],
+  ["8h", "6c", "3d"],
 ];
 
 // ---------------------------------------------------------------------------
@@ -185,7 +297,10 @@ export const POSTFLOP_DRILL_SPOTS: PostflopDrillSpot[] = [
     villainRangePct: 0.25,
     equityThresholdCall: 35,
     equityThresholdRaise: 60,
-    handCount: 30,
+    // handCount reduzido: o top pair usa o rank do topo do board — repetir
+    // boards com o mesmo topo repetiria o par. 15 boards distintos garantem
+    // ranks de par únicos em toda a sessão.
+    handCount: 15,
   },
   {
     id: "overpair",
@@ -199,7 +314,11 @@ export const POSTFLOP_DRILL_SPOTS: PostflopDrillSpot[] = [
     villainRangePct: 0.35,
     equityThresholdCall: 30,
     equityThresholdRaise: 55,
-    handCount: 30,
+    // idem: overpair precisa de rank > topo do board; cada board reserva 1
+    // rank de par único — os ranks úteis (9..A) são 6, então 6 mãos com par
+    // distinto de verdade (TT, JJ, QQ, KK, AA + 99). Pool de 12 texturas
+    // garante board novo e diferente a cada mão.
+    handCount: 6,
   },
   {
     id: "monster_dry",
@@ -213,7 +332,10 @@ export const POSTFLOP_DRILL_SPOTS: PostflopDrillSpot[] = [
     villainRangePct: 0.3,
     equityThresholdCall: 50,
     equityThresholdRaise: 70,
-    handCount: 30,
+    // idem: monarca/trinca usa o rank de uma carta do board; os ranks
+    // únicos viáveis (A, K e 2..8) são 9 — então 9 mãos com par/trinca
+    // distinto de verdade. Pool de 15 texturas garante board novo a cada.
+    handCount: 9,
   },
   {
     id: "air_facing_bet",
@@ -256,7 +378,17 @@ function pick<T>(arr: T[], rng: () => number): T {
  * Monta a mão GARANTINDO a condição do spot — a mão sempre bate com o título.
  * Funciona para QUALQUER board da pool do spot (board variável por jogada).
  */
-function generateHandForSpot(spot: PostflopDrillSpot, board: Card[], rng: () => number): Card[] {
+export function generateHandForSpot(
+  spot: PostflopDrillSpot,
+  board: Card[],
+  rng: () => number,
+  /** Rank de par reservado pela sessão (spots de par) — evita repetição de par na sessão. */
+  reservedRank?: number,
+  /** Top_pair: rank do kicker reservado pelo combo único da sessão. */
+  reservedKickerRank?: number,
+  /** Top_pair: naipe da carta do top reservado pelo combo único da sessão. */
+  reservedTopSuit?: number,
+): Card[] {
   const dead = new Set<Card>(board);
 
   /** Carta com rank/naipe dados, ou undefined se já estiver no board/mão. */
@@ -273,33 +405,55 @@ function generateHandForSpot(spot: PostflopDrillSpot, board: Card[], rng: () => 
   };
 
   switch (spot.id) {
-    // FLUSH DRAW — board com 2 cartas de ♥: herói recebe 2 cartas de ♥ (9 outs).
+    // FLUSH DRAW — board com 2 cartas do mesmo naipe: herói recebe 2 cartas
+    // desse EXATO naipe (9 outs). O naipe do draw vem do board, nunca fixo.
     case "flush_draw": {
       const hand: Card[] = [];
-      const flopHearts = board.filter((c) => suitOf(c) === 2);
-      // naipe do flush draw = naipe das 2 cartas do board (padrão ♥=2)
-      const drawSuit = flopHearts.length >= 2 ? suitOf(flopHearts[0]) : 2;
+      const counts = [0, 0, 0, 0];
+      for (const c of board) counts[suitOf(c)]++;
+      // naipe do draw = o único naipe com 2+ cartas no board
+      const drawSuit = counts.findIndex((n) => n >= 2) >= 0 ? counts.findIndex((n) => n >= 2) : 0;
       const candidates: Card[] = [];
       for (let rank = 2; rank <= 14; rank++) {
         const c = card(rank, drawSuit);
         if (c !== undefined) candidates.push(c);
       }
       take(pick(candidates, rng), hand);
-      take(pick(candidates.filter((c) => !dead.has(c)), rng), hand);
+      const rest = candidates.filter((c) => !dead.has(c));
+      take(rest.length > 0 ? pick(rest, rng) : undefined, hand);
+      if (hand.length < 2) {
+        // fallback: board com 3 cartas do draw (só sobrou 1) — pega 1 do draw
+        // + 1 carta de outro naipe para não quebrar a sessão
+        const other: Card[] = [];
+        for (let rank = 2; rank <= 14; rank++) {
+          for (let s = 0; s < 4; s++) {
+            if (s === drawSuit) continue;
+            const c = card(rank, s);
+            if (c !== undefined) other.push(c);
+          }
+        }
+        take(pick(other, rng), hand);
+      }
       return hand;
     }
 
     // TOP PAIR — board com carta alta: herói recebe a carta alta do board + kicker.
+    // O "par" aqui é sempre do top rank do board; a sessão reserva o naipe do
+    // top para evitar colisão de mão exata entre boards com o mesmo topo.
     case "top_pair": {
       const hand: Card[] = [];
       // carta alta do board (o "top" do top pair)
       const topCard = board.reduce((a, b) => (rankOf(b) > rankOf(a) ? b : a));
       const topRank = rankOf(topCard);
-      // qualquer naipe disponível do top rank
+      // O naipe do top vem da reserva da sessão (nunca repete o mesmo combo)
       const tops = [0, 1, 2, 3]
         .map((s) => card(topRank, s))
         .filter((c): c is Card => c !== undefined);
-      take(pick(tops, rng), hand);
+      const topChoice =
+        reservedTopSuit !== undefined
+          ? tops.find((c) => suitOf(c) === reservedTopSuit) ?? pick(tops, rng)
+          : pick(tops, rng);
+      take(topChoice, hand);
       // kicker SEMPRE menor que o top do board — senão a mão passa a ser
       // Ax/Kx sem par (não é top pair) e o título do spot mente.
       const kickers: Card[] = [];
@@ -309,25 +463,35 @@ function generateHandForSpot(spot: PostflopDrillSpot, board: Card[], rng: () => 
           if (c !== undefined) kickers.push(c);
         }
       }
-      take(pick(kickers, rng), hand);
+      // kicker reservado pelo combo único da sessão (se houver)
+      const reservedKicker = reservedKickerRank; // passado como parâmetro extra
+      if (reservedKicker !== undefined) {
+        const reservedKickers = kickers.filter((c) => rankOf(c) === reservedKicker);
+        take(pick(reservedKickers.length > 0 ? reservedKickers : kickers, rng), hand);
+      } else {
+        take(pick(kickers, rng), hand);
+      }
       return hand;
     }
 
     // OVERPAIR — board com carta média-baixa: herói recebe TT/JJ/QQ/KK/AA.
+    // Se a sessão reservou um rank, o par é construído EXATAMENTE nele.
     case "overpair": {
       const boardMax = Math.max(...board.map((c) => rankOf(c)));
+      const pairRank = reservedRank ?? pick(
+        Array.from({ length: 14 - boardMax }, (_, k) => boardMax + 1 + k),
+        rng,
+      );
+      const suits = [0, 1, 2, 3]
+        .map((s) => card(pairRank, s))
+        .filter((c): c is Card => c !== undefined);
       const pairs: Card[][] = [];
-      for (let rank = boardMax + 1; rank <= 14; rank++) {
-        const suits = [0, 1, 2, 3]
-          .map((s) => card(rank, s))
-          .filter((c): c is Card => c !== undefined);
-        for (let i = 0; i < suits.length; i++) {
-          for (let j = i + 1; j < suits.length; j++) {
-            pairs.push([suits[i], suits[j]]);
-          }
+      for (let i = 0; i < suits.length; i++) {
+        for (let j = i + 1; j < suits.length; j++) {
+          pairs.push([suits[i], suits[j]]);
         }
       }
-      return pick(pairs, rng);
+      return pairs.length > 0 ? pick(pairs, rng) : [suits[0]!, suits[1]!];
     }
 
     // TRINCA/MONARCA — board com carta alta (A ou K) + 2 baixas.
@@ -337,7 +501,8 @@ function generateHandForSpot(spot: PostflopDrillSpot, board: Card[], rng: () => 
       const hand: Card[] = [];
       const highCard = board.reduce((a, b) => (rankOf(b) > rankOf(a) ? b : a));
       const lowBoard = board.filter((c) => c !== highCard);
-      if (rng() < 0.5) {
+      const wantMonarch = reservedRank === rankOf(highCard) || (reservedRank === undefined && rng() < 0.5);
+      if (wantMonarch) {
         // Monarca: PAR da carta alta do board — a 3ª carta do mesmo rank
         // fecha a trinca; é o "set de monarca" do título.
         const suits = [0, 1, 2, 3]
@@ -346,8 +511,12 @@ function generateHandForSpot(spot: PostflopDrillSpot, board: Card[], rng: () => 
         take(pick(suits, rng), hand);
         take(pick(suits.filter((c) => !dead.has(c)), rng), hand);
       } else {
-        // Trinca: par na mão de uma das cartas baixas do board
-        const boardRank = pick(lowBoard, rng);
+        // Trinca: par na mão de uma das cartas baixas do board.
+        // Se a sessão reservou um rank de trinca (diferente do topo), usa ele.
+        const lowOfReserved = reservedRank
+          ? lowBoard.find((c) => rankOf(c) === reservedRank)
+          : undefined;
+        const boardRank = lowOfReserved ?? pick(lowBoard, rng);
         const suits = [0, 1, 2, 3]
           .map((s) => card(rankOf(boardRank), s))
           .filter((c): c is Card => c !== undefined);
@@ -513,7 +682,7 @@ export function buildPostflopDrillHand(
   let bestAction: PostflopDrillAction;
   let explanation: string;
 
-  const spotNote = spotHandNote(spot, hand);
+  const spotNote = spotHandNote(spot, hand, board);
   const verb: Record<PostflopDrillAction, string> = {
     bet: "aposte",
     check: "dê check",
@@ -567,24 +736,70 @@ function handFromSpot(
   return res;
 }
 
-/** Uma frase curta identificando o que a mão é neste spot. */
-function spotHandNote(spot: PostflopDrillSpot, hand: Card[]): string {
-  const br = (c: Card) => "23456789TJQKA"[rankOf(c) - 2];
-  const bs = (c: Card) => "♣♦♥♠"[suitOf(c)];
-  const label = `${br(hand[0])}${bs(hand[0])}${br(hand[1])}${bs(hand[1])}`;
+/** Nome de exibição de uma carta (ex.: "Q♠"). */
+function cardLabel(c: Card): string {
+  return `${"23456789TJQKA"[rankOf(c) - 2]}${"♣♦♥♠"[suitOf(c)]}`;
+}
+
+/** Ranks do board como labels (ex.: "K♥ 3♦ 7♣"). */
+function boardLabel(board: Card[]): string {
+  return board.map((c) => cardLabel(c)).join(" ");
+}
+
+/** Textura do board: alto/médio/baixo e seco. */
+function boardTexture(board: Card[]): string {
+  const ranks = board.map((c) => rankOf(c));
+  const minR = Math.min(...ranks);
+  let alt = minR >= 8 ? "alto" : minR >= 4 ? "médio" : "baixo";
+  return `${alt} e seco`;
+}
+
+/** Uma frase específica explicando o que a mão é neste board e por quê.
+ * Cita os ranks exatos, a textura do board e o motivo da ação — nada genérico. */
+function spotHandNote(spot: PostflopDrillSpot, hand: Card[], board: Card[]): string {
+  const [h0, h1] = hand;
+  const label = `${cardLabel(h0)}${cardLabel(h1)}`;
+  const brd = boardLabel(board);
+  const texture = boardTexture(board);
   switch (spot.id) {
-    case "flush_draw":
-      return `${label}: flush draw — 9 outs de flush.`;
-    case "top_pair":
-      return `${label}: top pair neste board seco.`;
-    case "overpair":
-      return `${label}: overpair — par maior que o board.`;
-    case "monster_dry":
-      return `${label}: mão monstruosa neste board seco.`;
+    case "flush_draw": {
+      const suitNames = ["paus", "ouros", "copas", "espadas"];
+      const drawSuit = suitNames[suitOf(h0)];
+      return `${label}: flush draw de ${drawSuit} — 9 outs de flush (${"~36%"} até o river) no board ${brd}, ${texture}.`;
+    }
+    case "top_pair": {
+      const topCard = board.reduce((a, b) => (rankOf(b) > rankOf(a) ? b : a));
+      return `${label}: top pair com o ${cardLabel(topCard)} do board ${brd} — board ${texture}, a aposta do vilão extrai valor de pares menores.`;
+    }
+    case "overpair": {
+      return `${label}: overpair de ${"23456789TJQKA"[rankOf(h0) - 2]}s — seu par bate qualquer carta do board ${brd}. Aposte para valor e proteção.`;
+    }
+    case "monster_dry": {
+      const highCard = board.reduce((a, b) => (rankOf(b) > rankOf(a) ? b : a));
+      const isMonarch = rankOf(h0) === rankOf(highCard);
+      if (isMonarch) {
+        return `${label}: monarca de ${cardLabel(highCard)} no board ${brd} — você fecha a trinca, a nuts. Aposte para construir o pote.`;
+      }
+      return `${label}: trinca de ${"23456789TJQKA"[rankOf(h0) - 2]}s no board ${brd} — mão monstruosa em textura ${texture}. Aposte para extrair valor.`;
+    }
     case "air_facing_bet":
-      return `${label}: ar puro — sem par, sem draw.`;
-    case "straight_draw":
-      return `${label}: straight draw aberto.`;
+      return `${label}: ar puro no board ${brd} — sem par, sem draw, outs irrelevantes. Contra a aposta do vilão, foldar preserva fichas para spots melhores.`;
+    case "straight_draw": {
+      const boardRanks = board.map((c) => rankOf(c)).sort((a, b) => a - b);
+      const all = Array.from(new Set([...boardRanks, rankOf(h0), rankOf(h1)])).sort((a, b) => a - b);
+      // a janela de 5 ranks do draw
+      let window: number[] = [];
+      for (let w = 2; w <= 10; w++) {
+        const cand = [w, w + 1, w + 2, w + 3, w + 4];
+        if (cand.filter((r) => all.includes(r)).length === 4) {
+          window = cand;
+          break;
+        }
+      }
+      const outs = 8;
+      const pct = window.includes(2) || window.includes(3) ? "~31%" : "~31%";
+      return `${label}: open-ended straight draw (${window[0]}-${window[window.length - 1]}) no board ${brd} — ${outs} outs (${pct} até o river). ${""}`;
+    }
     default:
       return `${label}:`;
   }
@@ -607,18 +822,25 @@ function shuffleBoards(boards: Card[][], rng: () => number): Card[][] {
 }
 
 /** Chave de uma mão: cartas ordenadas (rank + naipe) — uma mão de pôquer
- * é a combinação exata das 2 cartas; A♣A♦ ≠ A♥A♠. Isso dá ~500 chaves
- * válidas por spot contra 30 mãos, eliminando a repetição. */
+ * é a combinação exata das 2 cartas (rank + naipe); A♣A♦ ≠ A♥A♠.
+ * Allan (16/08): a unicidade do RANK de par na percepção do jogador é
+ * garantida pelo reservedRank da sessão — nenhum par de mesmo rank
+ * entra duas vezes, com qualquer naipe. */
 function handKey(hand: Card[]): string {
+  // chave completa (rank + naipe) — cada combo é único: T♣T♦ ≠ T♣T♥.
+  // A unicidade de RANK de par na sessão é garantida pelo reservedRank
+  // da sessão, não pela chave.
   return [hand[0], hand[1]].sort((a, b) => a - b).join(",");
 }
 
 /**
- * Cria uma sessão de drill pós-flop SEM repetição: boards rotacionam pela
- * pool embaralhada (10 texturas distintas) e cada mão é única na sessão —
- * como num torneio de verdade, onde a mesma mão nunca aparece duas vezes.
- * Nota: cartas da mão podem se repetir entre mãos (o baralho se
- * reembaralha a cada mão), mas a COMBINAÇÃO nunca repete.
+ * Cria uma sessão de drill pós-flop SEM repetição: cada board é único
+ * (pool de 30 texturas distintas = 1 por mão) e nenhuma mão repete — nem
+ * mesmo um pocket pair de mesmo rank com naipes diferentes. Como num
+ * torneio de verdade.
+ *
+ * Para evitar a sensação de "o flop muda só 1-2 cartas", os boards são
+ * reordenados de forma que vizinhos nunca compartilhem 2 ou mais ranks.
  */
 export function createPostflopDrillSession(
   spotId: string,
@@ -627,23 +849,203 @@ export function createPostflopDrillSession(
 ): PostflopDrillSession {
   const spot = POSTFLOP_DRILL_SPOTS.find((s) => s.id === spotId) ?? POSTFLOP_DRILL_SPOTS[0];
 
-  // Pool de boards embaralhada — rotaciona sem repetição imediata
-  const boards = shuffleBoards([...spot.boards], rng);
+  // Pool de boards embaralhada, garantindo que vizinhos sejam distintos
+  // de verdade (não compartilham 2+ ranks).
+  let boards = shuffleBoards([...spot.boards], rng);
+  for (let pass = 0; pass < 64; pass++) {
+    let good = true;
+    for (let i = 1; i < boards.length; i++) {
+      const a = new Set(boards[i - 1].map((c) => rankOf(c)));
+      const shared = boards[i].filter((c) => a.has(rankOf(c))).length;
+      if (shared >= 2) {
+        good = false;
+        // troca o board problemático com um aleatório distante
+        const j = Math.floor(rng() * boards.length);
+        const tmp = boards[i];
+        boards[i] = boards[j];
+        boards[j] = tmp;
+        break;
+      }
+    }
+    if (good) break;
+  }
+  // trunca (se preciso) ou repete a pool mínima — nunca repete vizinhos
+  const ordered: Card[][] = [];
+  const taken = new Set<number>();
+  for (let i = 0; i < handCount; i++) {
+    const idx = i % boards.length;
+    if (i > 0 && ordered.length > 0) {
+      const prev = new Set(ordered[ordered.length - 1].map((c) => rankOf(c)));
+      if (boards[idx].filter((c) => prev.has(rankOf(c))).length >= 2) {
+        // busca outro board da pool que não seja similar ao anterior
+        let alt = -1;
+        for (let k = 0; k < boards.length; k++) {
+          if (!taken.has(k) && boards[k].filter((c) => prev.has(rankOf(c))).length < 2) {
+            alt = k;
+            break;
+          }
+        }
+        if (alt === -1) {
+          // pool esgotada em texturas distintas — aceita o mais diferente disponível
+          alt = boards
+            .map((b, k) => ({ k, dist: b.filter((c) => prev.has(rankOf(c))).length }))
+            .filter((x) => !taken.has(x.k))
+            .sort((a, b) => a.dist - b.dist)[0]?.k ?? 0;
+        }
+        taken.add(alt);
+        ordered.push(boards[alt]);
+        continue;
+      }
+    }
+    if (!taken.has(idx)) taken.add(idx);
+    ordered.push(boards[idx]);
+  }
+
+  // Allan (16/08): pocket pairs rastreiam o RANK, não os naipes — QQ♠♣ e
+  // QQ♥♦ são o mesmo "par de damas" na percepção do jogador. Para garantir
+  // matematicamente que o MESMO RANK de par nunca repete na sessão, a sessão
+  // ATRIBUI de antemão um rank distinto a cada board (greedy: boards com
+  // menos opções recebem primeiro) e a mão final é construída em cima desse
+  // rank reservado. Mãos não-pares continuam com chave completa (cards).
+  const isPairSpot =
+    spot.id === "overpair" || spot.id === "monster_dry" || spot.id === "top_pair";
+  const pairRankOfBoard = (b: Card[]): number =>
+    Math.max(...b.map((c) => rankOf(c)));
+  // reservedRankAssign[i] = valor reservado para a mão do board i. Semântica:
+  //   - overpair:   rank do par (par > topo do board) — nunca repete na sessão
+  //   - monster_dry: rank da carta do board usada no par (monarca ou trinca)
+  //   - top_pair:   NAIPE da carta do top do board (o rank é o topo do board,
+  //                 fixo; o naipe é o que diferencia A♠Kx de A♥Kx)
+  let reservedRankAssign = new Map<number, number>();
+  let reservedKickerAssign = new Map<number, number>();
+  let reservedSuitAssign = new Map<number, number>();
+  if (isPairSpot) {
+    const boardsSorted = ordered
+      .map((b, i) => ({ b, i, max: pairRankOfBoard(b) }))
+      .sort((a, c) => c.max - a.max);
+    // contador por board de quantas vezes cada reserva foi usada — o greedy
+    // prefere sempre a opção menos usada, garantindo distribuição uniforme.
+    if (spot.id === "top_pair") {
+      // Reserva por board = COMBO (naipe do top + rank do kicker), único
+      // globalmente na sessão. Espaçso: 4 naipes × ~12 ranks de kicker = 48
+      // slots > 15 mãos, sempre cabe. Assim nenhuma mão de top pair repete
+      // mesmo quando vários boards dividem o mesmo topo (ex.: 8 boards com
+      // top de Ás).
+      const usedComboTimes = new Map<string, number>();
+      for (const { b, i } of boardsSorted) {
+        const top = pairRankOfBoard(b);
+        const options: string[] = [];
+        for (let suit = 0; suit < 4; suit++) {
+          for (let kickerRank = 2; kickerRank < top; kickerRank++) {
+            options.push(`${suit},${kickerRank}`);
+          }
+        }
+        const usedCount = new Map<string, number>();
+        for (const o of options) usedCount.set(o, usedComboTimes.get(o) ?? 0);
+        options.sort((a, c) => (usedCount.get(a) ?? 0) - (usedCount.get(c) ?? 0));
+        const chosen = options[0];
+        usedComboTimes.set(chosen, (usedComboTimes.get(chosen) ?? 0) + 1);
+        reservedRankAssign.set(i, Number(chosen.split(",")[1])); // kicker rank
+        reservedKickerAssign.set(i, Number(chosen.split(",")[1])); // kicker rank (top_pair)
+        reservedSuitAssign.set(i, Number(chosen.split(",")[0])); // suit do top
+      }
+    } else {
+      // Reserva de rank de par POR BOARD: o rank escolhido fica
+      // INDISPONÍVEL para os próximos boards (rank único na sessão —
+      // "par de rei umas 10 vezes" nunca mais). O greedy prefere o rank
+      // LIVRE mais alto (overpair TT+/JJ+ de verdade; trinca da carta
+      // mais alta disponível no monster). Sem fallback inválido: se um
+      // board não tiver rank livre, ele não gera mão e o handCount real
+      // da sessão é reduzido — melhor 6 mãos distintas que 12 com 5 pares
+      // de ases repetidos.
+      const usedRanks = new Set<number>();
+      const unallocable: number[] = []; // boards sem rank livre
+      for (const { b, i } of boardsSorted) {
+        const isMonster = spot.id === "monster_dry";
+        const options: number[] = isMonster
+          ? b.map((c) => rankOf(c))
+          : Array.from({ length: 14 - pairRankOfBoard(b) }, (_, k) => pairRankOfBoard(b) + 1 + k);
+        const free = options.filter((r) => !usedRanks.has(r));
+        free.sort((a, c) => c - a); // o mais alto livre primeiro
+        if (free.length === 0) {
+          unallocable.push(i);
+          continue;
+        }
+        usedRanks.add(free[0]);
+        reservedRankAssign.set(i, free[0]);
+      }
+      // boards sem rank de par disponível ficam fora da sessão
+      if (unallocable.length > 0) handCount -= unallocable.length;
+    }
+  }
+
+  // spots de par: boards alocados (com rank reservado) vêm primeiro —
+  // assim ordered[i] sempre tem a reserva e nenhuma mão nasce "solta".
+  if (isPairSpot) {
+    const allocated = ordered.filter((_, idx) => reservedRankAssign.has(idx));
+    const rest = ordered.filter((_, idx) => !reservedRankAssign.has(idx));
+    ordered.length = 0;
+    ordered.push(...allocated, ...rest);
+  }
 
   const hands: PostflopDrillHand[] = [];
   const usedHandKeys = new Set<string>();
   for (let i = 0; i < handCount; i++) {
-    const board = boards[i % boards.length];
-    // gera mãos até achar uma nunca vista na sessão (1326 combos → fácil).
-    // tenta primeiro com o board corrente; se 200 tentativas não bastarem
-    // (escassez de combos válidos), aceita com repetição mínima.
-    let finalHand: Card[] = generateHandForSpot(spot, board, rng);
+    const board = ordered[i];
+    const reservedRank = isPairSpot ? reservedRankAssign.get(i) : undefined;
+    const boardTop = pairRankOfBoard(board);
+    // gera mãos até achar uma nunca vista na sessão e compatível com o
+    // rank reservado (se for spot de par). handCount cabe nos ranks
+    // disponíveis, então a repetição não acontece mais.
+    const reservedKicker =
+      spot.id === "top_pair" ? reservedKickerAssign.get(i) : undefined;
+    const reservedTopSuit =
+      spot.id === "top_pair" ? reservedSuitAssign.get(i) : undefined;
+    let finalHand: Card[] = generateHandForSpot(
+      spot,
+      board,
+      rng,
+      reservedRank,
+      reservedKicker,
+      reservedTopSuit,
+    );
     let found = false;
     for (let attempt = 0; attempt < 200 && !found; attempt++) {
-      const candidate = generateHandForSpot(spot, board, rng);
+      const candidate = generateHandForSpot(
+        spot,
+        board,
+        rng,
+        reservedRank,
+        reservedKicker,
+        reservedTopSuit,
+      );
       const key = handKey(candidate);
       const freshInThisHand = new Set<Card>(board);
-      if (!usedHandKeys.has(key) && candidate.filter((c) => !freshInThisHand.has(c)).length === 2) {
+      const rankMatch =
+        reservedRank === undefined
+          ? true
+          : // top_pair: a reserva é o NAIPE da carta do topo; overpair/monster:
+            // a reserva é o rank do par
+            spot.id === "top_pair"
+            ? (() => {
+                // a mão pode vir ordenada (kicker < top ou top < kicker); a
+                // carta do topo do board precisa estar na mão com o naipe
+                // reservado E o kicker com o rank reservado
+                const topCard = candidate.find((c) => rankOf(c) === boardTop);
+                const kicker = candidate.find((c) => c !== topCard);
+                return (
+                  topCard !== undefined &&
+                  kicker !== undefined &&
+                  suitOf(topCard) === (reservedSuitAssign.get(i) ?? -1) &&
+                  rankOf(kicker) === reservedRank
+                );
+              })()
+            : rankOf(candidate[0]) === reservedRank;
+      if (
+        !usedHandKeys.has(key) &&
+        rankMatch &&
+        candidate.filter((c) => !freshInThisHand.has(c)).length === 2
+      ) {
         finalHand = candidate;
         found = true;
       }

@@ -93,7 +93,7 @@ export function AnatomiaTorneio() {
 
         <div className="anat-leak">
           <div className="anat-leak-t">
-            {t("anat.leakTitle")}: 24% × 7%
+            {t("anat.leakTitle")}: <span style={{ color: "var(--c-call,#3b82f6)" }}>24% × 7%</span>
           </div>
           <div className="anat-leak-s">{t("anat.leak")}</div>
         </div>

@@ -252,6 +252,9 @@ export function StreetTrainer() {
     for (const [ht, freq] of Object.entries(r)) w += freq * comboCount(ht);
     return (w / 1326) * 100;
   };
+  // Percentual formatado para exibição (1 casa decimal, ex.: "9,7%") — evita
+  // a poluição visual de números com 15 casas decimais
+  const villainPercentFmt = (r: Range): string => villainPercent(r).toFixed(1).replace(".", ",");
   const lastStep = villainPerStep.length ? villainPerStep[villainPerStep.length - 1] : null;
   const bannerInfo = useMemo(() => {
     if (!lastStep) return null;
@@ -622,8 +625,8 @@ export function StreetTrainer() {
                 <div className="ultra-grid-title">{t("street.villainRangeTitle" as TransKey)}</div>
                 {lastStep ? (
                   <div className="street-range-delta">
-                    🦈 {t("street.rangeDelta" as TransKey, { from: villainPercent(lastStep.prev), to: villainPercent(lastStep.next) })}
-                    <span className="street-range-delta-out">{t("street.deltaOut" as TransKey, { out: Math.round(villainPercent(lastStep.prev) - villainPercent(lastStep.next)) })}</span>
+                    🦈 {t("street.rangeDelta" as TransKey, { from: villainPercentFmt(lastStep.prev), to: villainPercentFmt(lastStep.next) })}
+                    <span className="street-range-delta-out">{t("street.deltaOut" as TransKey, { out: Math.max(1, Math.round(villainPercent(lastStep.prev) - villainPercent(lastStep.next))) })}</span>
                   </div>
                 ) : null}
                 {Object.keys(villainRangeIsV).length === 0 ? (

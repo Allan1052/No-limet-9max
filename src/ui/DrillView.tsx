@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 import { TrainingShareButton } from './TrainingShareButton';
 import { useState, useCallback } from "react";
-import { CardView } from "./Card";
+import { CardView, cardLabel } from "./Card";
 import { actionLabel, gradeDecision, type FeedbackContext } from "../feedback/analyzer";
 import { cardsFromString } from "../engine/cards";
 import { HandTipsModal } from "./HandTipsModal";
@@ -559,6 +559,8 @@ export function DrillView() {
 
     const feedbackColor = (feedback?.rating === "boa" || feedback?.rating === "ok") ? '#5cbe8d' : '#e0645f';
     const feedbackEmoji = feedback?.rating === "boa" ? "✅" : feedback?.rating === "ok" ? "👍" : feedback?.rating === "imprecisa" ? "⚠️" : "❌";
+    // Linha específica da mão: cita as cartas e o contexto — nunca genérica
+    const handText = currentHand.hand.map((c) => cardLabel(c)).join("") + (session.spot.effectiveBB ? ` (${session.spot.effectiveBB}bb)` : "");
 
     return (
       <div style={{ ...styles.container, display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
@@ -587,7 +589,7 @@ export function DrillView() {
               {feedbackEmoji} {feedback.rating === "boa" ? "Boa!" : feedback.rating === "ok" ? "Ok" : feedback.rating === "imprecisa" ? "Imprecisa" : "Errada"}
             </p>
             <p style={styles.feedbackAdvice}>Certo: {feedback.advice}</p>
-            <p style={styles.feedbackText}>{feedback.text}</p>
+            <p style={styles.feedbackText}>{handText} — {feedback.text}</p>
           </div>
         )}
         {/* Botões de ação */}

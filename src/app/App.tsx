@@ -63,11 +63,27 @@ import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
+import { isDevUnlocked } from "../lib/devLock";
 import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
 import { addTournamentResult } from "./resultsLog";
 import { appendHandLog } from "./handHistoryLog";
 import "../ui/theme.css";
+
+// Placeholder discreto para funcionalidades travadas atrás da senha de
+// teste (rua2026). Mostra uma mensagem neutra e devolve o usuário ao Treino.
+function DevLockedPlaceholder({ onGo }: { onGo: () => void }) {
+  return (
+    <div className="play" style={{ textAlign: "center", padding: "48px 20px" }}>
+      <p style={{ color: "var(--muted, #9aa39e)", fontSize: 15, marginBottom: 16 }}>
+        🔒 Funcionalidade em teste — indisponível no momento.
+      </p>
+      <button className="btn primary" onClick={onGo}>
+        Voltar ao Treino
+      </button>
+    </div>
+  );
+}
 
 export function App() {
   const { t: tr } = useT();
@@ -334,9 +350,17 @@ export function App() {
       ) : view === "ultra" ? (
         <Suspense><UltraTrainer /></Suspense>
       ) : view === "street" ? (
-        <Suspense><StreetTrainer /></Suspense>
+        isDevUnlocked("rua2026") ? (
+          <Suspense><StreetTrainer /></Suspense>
+        ) : (
+          <DevLockedPlaceholder onGo={() => setView("treino")} />
+        )
       ) : view === "drill" ? (
-        <Suspense><DrillView /></Suspense>
+        isDevUnlocked("rua2026") ? (
+          <Suspense><DrillView /></Suspense>
+        ) : (
+          <DevLockedPlaceholder onGo={() => setView("treino")} />
+        )
       ) : view === "ft" ? (
         <Suspense><FinalTableTrainer /></Suspense>
       ) : view === "suamao" ? (

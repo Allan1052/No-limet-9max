@@ -1,1 +1,0 @@
-const c="cof-devlock-";function t(e){return c+e}function r(e){return localStorage.getItem(t(e))==="true"}function l(e,o){o?localStorage.setItem(t(e),"true"):localStorage.removeItem(t(e))}export{r as i,l as s};
