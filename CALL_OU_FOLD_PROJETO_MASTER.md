@@ -1088,3 +1088,12 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Testes: suíte completa 3.562 passando; suíte isolada do drill 3.009/3.009.
 - Deploy: workflow GREEN (run 31952462665), index.html live aponta index-DuqdOpRN.js, bundle existe (HTTP 200, last-modified 14:22 UTC). Edge do Pages lento p/ downloads grandes (retry resolve).
 - Allan deve testar uma sessão completa de 30 no celular para validação final.
+
+### 🎯 SESSÃO 16/08 NOITE — deploy cdb33d7 + diagnóstico ranking Elite
+- **Drill variedade (corrigido de vez)**: `src/train/drillPostflop.ts` reescrito — handKey com rank+naipe, anti-repetição de rank de par (reservedRank/reservedSuit greedy), pools de boards variados por spot, handCount dinâmico por spot (15 para pares), 3.009 testes do drill + 3.562 no total passando. Feedback cita mão específica (DrillView) e timeout 2,5s.
+- **Bloqueio dev**: rotas/aba "drill" e "street" invisíveis sem `isDevUnlocked("rua2026")` (App.tsx DevLockedPlaceholder + BottomNav.tsx).
+- **Anatomia cores padrão** (theme.css): fold cinza, call azul, raise âmbar.
+- **StreetTrainer**: % com 1 casa decimal. **TournamentSummary**: fora do ITM mostra pontos e posições do corte. **ranking.ts**: paidPlaces no tipo.
+- **RANKING ELITE — CAUSA RAIZ ENCONTRADA**: banco `tournament_scores` tem CHECK `tournament_scores_tier_check` sem o valor 'elite' → todo INSERT elite rejeitado (23514) → aba Elite vazia para TODOS. App (produção) já tem tier elite no código. Allan deve rodar SQL no dashboard (service_role ignora RLS): alterar constraint + UPDATE do row 1K dele (player_key 3cd4bfe250...27b0, buy_in 1000) para elite. SQL: /home/ubuntu/sql_correcao_ranking_elite.sql. RLS anon continua INSERT-only (anti-cheat) — NÃO adicionar UPDATE/DELETE.
+- Deploy verificado: bundle prod = local (390.646 bytes, rua2026 presente), workflow verde, commit cdb33d7.
+- NÃO FEITO (fila próxima): startup instantâneo (landing-hero + splash não-bloqueante); bluff_catcher segue com Claude.
