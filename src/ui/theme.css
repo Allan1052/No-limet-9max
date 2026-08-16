@@ -1727,6 +1727,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
    ------------------------------------------------------------------------- */
 /* Novo layout dos controles: linhas separadas */
 .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.action-row .btn { white-space: nowrap; }
 .pct-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .slider-row { display: flex; align-items: center; gap: 8px; flex: 1 1 100%; width: 100%; }
 .slider-row input[type="range"] { flex: 1; accent-color: var(--gold); }
