@@ -1032,3 +1032,41 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Verificação live: chunk StreetTrainer-Cpw5oFmH.js + main index-CW-MqoV-.js contêm "Vilão {action} — o range dele foi de {from}% para {to}%". 559 testes, tsc limpo.
 
 **Teste visual (16/08):** mão 99 UTG vs CO meio do torneio → flop A♠8♦6♣ seco → vilão checou → banner com narração OK (range ~7%) → turn caiu automático. Observação registrada: conferir se o banner cobre todos os tipos de reação do vilão (check, pagou, apostou, raise) antes de anunciar ao Allan.
+
+---
+
+## ✅ SESSÃO 16/08 — 4 FIXES DO ALLAN (ranking $1.000, drills inconsistentes, cores Anatomia, painel Sua Evolução) — NO AR
+
+**Commit:** `3ac5feda` · **Deploy verificado ao vivo** em `assets/index-DyLWIPE4.js` + chunks Anat/B_6uFZzr e DrillView-B-8uSvoX · CSS `index-By-HOful.css` · Actions GREEN · tsc limpo · **3560 testes verdes** (1 skipped).
+
+### 🏆 A. FAIXA ELITE $1.000 NO RANKING
+- `src/tournament/poyPoints.ts`: `tierForBuyIn` agora retorna `"elite"` para buy-in ≥ $1.000 (antes mapeava $1.000 para "alta", junto do $109).
+- `src/ui/Leaderboard.tsx`: tipo `Tier` + array `TIERS` com `{ id: "elite", label: "Elite", buyin: "$1.000+" }` — 5 faixas (micro/baixa/média/alta/elite).
+- `src/tournament/circuit.ts`: `tierLabel` cobre elite; `src/train/decisionStats.ts`: `Tier`/`buyInTier`/bucket; seletor de faixa da Anatomia agora mostra 5 faixas; traduções `raiox.tier.elite` em PT/EN/ES. Sem migração de banco (Supabase aceita qualquer tier).
+
+### 🎯 B. DRILLS PÓS-FLOP CONSISTENTES COM O TÍTULO (CRÍTICO — reclamado pelo Allan: título "Overpair" dava mão que não era overpair)
+- `src/train/drillPostflop.ts` reescrito: nova função `generateHandForSpot()` garante que a mão sorteada satisfaz a condição do spot:
+  - `flush_draw` → 2 cartas do herói compartilham naipe com 2 cartas do board;
+  - `overpair` → ambos os ranks > maior carta do board;
+  - `monster_dry` → trinca (1 carta igual ao board) ou two pair;
+  - `top_pair` → 1 carta igual ao maior rank do board;
+  - `straight_draw` → OESD real com o board (combos validados: T9/96/65 com board 8-7);
+  - `air_facing_bet` → sem par e sem draw (2 cartas baixas desconexas).
+- `src/ui/DrillPostflopView.tsx`: removida linha duplicada de equity/pot odds no feedback (explicação aparecia 2×).
+- `drillPostflop.test.ts`: testes de consistência título×mão com 500 amostras por spot + teste da explicação sem duplicação.
+
+### 🎨 C. CORES DA ANATOMIA NO PADRÃO APROVADO
+- `src/ui/theme.css`: `.an-fill.fold #6b7280/#9ca3af` (cinza), `.call #3b82f6` (azul), `.raise #f59e0b` (âmbar), 3-bet #ef4444 (vermelho), all-in #eab308 (dourado) — padrão aprovado: cinza=fold, azul=call, âmbar=raise, vermelho=3-bet, dourado=all-in.
+- Variáveis `--c-fold/--c-call/--c-raise/--c-3bet/--c-allin` criadas no `:root` para padronização futura.
+
+### 📈 D. PAINEL "SUA EVOLUÇÃO" REDESIGNADO (reclamação: "Piloto, 95% boas, emojis — não entendo nada")
+- `src/ui/ProgressPanel.tsx` reescrito: barra **VPIP** com zona saudável (20–30%) pintada em verde e marcador dourado; anel de **precisão** all-time + this week + trend (pontos % vs histórico) + total de decisões; **gráfico semanal de precisão** (últimas 8 semanas, mín. 5 decisões p/ contar, semana corrente destacada em dourado); bloco **"Lendo seu jogo"** com forças (tags verdes) e pontos a trabalhar (tags âmbar) baseado em VPIP fora de faixa, tendência, calls ruins etc.
+- `src/app/progress.ts`: novo campo `weeksCounts` no `ProgressSummary` (taxa de boas decisões por semana ISO) alimentado por `discipline[].totalDecisions`.
+- CSS `.pp-*` (barra VPIP, anel, gráfico `.pp-sw*`, tags) em theme.css; chaves `progress.*` novas em PT/ES/EN.
+- Validação visual local com dados injetados: anel 88px centralizado + 3 métricas em linha, sem sobreposição no modal estreito.
+
+**Regra de qualidade cumprida:** tsc + 3560 testes + build + revisão visual + deploy verificado ao vivo ANTES de avisar o Allan.
+
+**Testes visuais (16/08):** painel Sua Evolução com dados de teste (VPIP 27% na faixa, precisão 93% all-time/82% semana, trend -11, gráfico W26–W33 com W33 dourada, tags de força/fraqueza) — nota 10.
+
+*Documento atualizado em 16/08/2026 — noite: 4 fixes do Allan no ar.*
