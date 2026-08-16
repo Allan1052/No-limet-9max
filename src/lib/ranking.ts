@@ -206,6 +206,8 @@ export interface TournamentSubmitResult {
   stageCleared?: boolean;
   /** O circuito da faixa foi completado com este resultado? */
   circuitComplete?: boolean;
+  /** Posições pagas (ITM) do campo deste torneio, p/ mensagem de encorajamento. */
+  paidPlaces?: number;
   error?: string;
 }
 
@@ -251,6 +253,7 @@ export async function submitTournamentResult(
       reason: poy.reason,
       points: 0,
       wouldBeWorth,
+      paidPlaces: poy.paidPlaces,
     };
   }
 

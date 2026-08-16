@@ -180,10 +180,22 @@ export function TournamentSummary({
               </>
             ) : ranking?.reason === "no_cash" ? (
               <div className="rank-none">
-                Fora do dinheiro — sem pontos nesta. Como na WSOP, só pontua quem
-                chega ao dinheiro.
+                Fora do dinheiro — sem pontos nesta. Como na WSOP, só pontua quem{' '}
+                chega ao ITM{' '}
+                {ranking.paidPlaces != null
+                  ? `(posições ${a(1)}–${a(ranking.paidPlaces)} nesta mesa)`
+                  : "nesta mesa"}
+                .{' '}
+                {ranking.wouldBeWorth > 0 ? (
+                  <span className="rank-wouldbe">
+                    Este resultado valeria {pts(ranking.wouldBeWorth)} pontos — faltou
+                    um pouco pro pódio.
+                  </span>
+                ) : (
+                  <span className="rank-wouldbe">Faltou um pouco pro pódio.</span>
+                )}
                 <div className="rank-none-sub">
-                  A etapa continua na sua lista. Tente de novo.
+                  A etapa continua na sua lista. Na próxima, o ITM é seu.
                 </div>
               </div>
             ) : ranking && !ranking.success ? (
