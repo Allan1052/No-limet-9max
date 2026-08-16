@@ -160,19 +160,32 @@ export function StreetTrainer() {
     const openBB = 2.3;
     const potAfterOpen = 1.5 + openBB;
     const stepIdx = ["flop", "turn", "river"].indexOf(step.street);
-    // Pote cresce ~metade por street apostada; faced: betSmall=0.5×potPrev, betBig=0.75×potPrev
+    // Pote cresce por street apostada; faced = a aposta que o VILÃO está
+    // enfrentando para tomar a ação deste step (aposta do herói na rua
+    // corrente, quando o vilão está respondendo; aposta do vilão se ele
+    // abriu a ação na rua).
     let pot = potAfterOpen;
     let faced = 0;
     for (let i = 0; i <= stepIdx; i++) {
       const st = steps[i];
       if (!st) break;
-      if (st.villainAction === "betSmall") faced = Math.round(pot * 0.5 * 10) / 10;
-      else if (st.villainAction === "betBig") faced = Math.round(pot * 0.75 * 10) / 10;
-      else faced = 0;
-      if (st.heroAction === "call") pot = Math.round((pot + faced) * 10) / 10;
-      else if (st.heroAction === "betSmall") pot = Math.round((pot + pot * 0.5) * 10) / 10;
-      else if (st.heroAction === "betBig") pot = Math.round((pot + pot * 0.75) * 10) / 10;
-      faced = 0;
+      const heroBet = st.heroAction === "betSmall" ? 0.5 : st.heroAction === "betBig" ? 0.75 : 0;
+      const villainBet = st.villainAction === "betSmall" ? 0.5 : st.villainAction === "betBig" ? 0.75 : 0;
+      if (i < stepIdx) {
+        // ruas anteriores: a ação de quem apostou vira dinheiro no pote
+        if (heroBet) pot = Math.round((pot + pot * heroBet) * 10) / 10;
+        if (villainBet) pot = Math.round((pot + pot * villainBet) * 10) / 10;
+        if (st.heroAction === "call" || st.villainAction === "call") {
+          const bet = Math.max(heroBet, villainBet);
+          if (bet) pot = Math.round((pot + pot * bet) * 10) / 10;
+        }
+        faced = 0;
+      } else {
+        // rua corrente: quem apostou ANTES do vilão deixa aposta na mesa
+        if (heroBet) faced = Math.round(pot * heroBet * 10) / 10;
+        else if (villainBet) faced = Math.round(pot * villainBet * 10) / 10;
+        else faced = 0;
+      }
     }
     return {
       heroPosition: spec.heroPosition,

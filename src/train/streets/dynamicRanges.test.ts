@@ -149,10 +149,12 @@ describe("continueVillainRange (atualização após ação)", () => {
     const afterCheck = continueVillainRange(afterCall.range, "check", turn, dryCtx());
     expect(afterCheck.percent).toBeGreaterThan(0);
     expect(afterCheck.percent).toBeLessThan(afterCall.percent);
-    // mãos fortes (88 = trips) dominam o topo do range após check
+    // mãos fortes (88 = trips) permanecem no range após check, enquanto
+    // a cauda fraca de air (83o) sai pelo corte de freq marginal.
     const freq88 = afterCheck.range["88"] ?? 0;
-    const freqKQo = afterCheck.range["KQo"] ?? 0;
-    expect(freq88).toBeGreaterThan(freqKQo);
+    const freq83o = afterCheck.range["83o"] ?? 0;
+    expect(freq88).toBeGreaterThan(0);
+    expect(freq83o).toBe(0);
   });
 
   it("bet forte encolhe o range mais que bet pequeno", () => {

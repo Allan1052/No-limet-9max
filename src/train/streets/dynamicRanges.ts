@@ -209,33 +209,39 @@ function continuationScore(
   const strength = handScore(handType); // equity vs random como proxy de força
 
   // Preço da aposta: potOdds efetivo modera mãos marginais.
-  const cheap = facedBetBB <= 0 ? 1 : facedBetBB <= potBB * 0.5 ? 0.55 : facedBetBB <= potBB ? 0.25 : 0.05;
+  // Calibrado p/ torneio recreativo: paga quem tem hit/projeto e preço justo.
+  // price = fração do pote que a aposta representa no total (bet / (pot + bet)).
+  // Quanto maior o preço, menor a chance de uma mão marginal continuar.
+  const price = facedBetBB <= 0 ? 0 : facedBetBB / (potBB + facedBetBB);
+  const priceMult = facedBetBB <= 0 ? 1 : Math.max(0.05, 1 - price * 1.05);
 
   // ---- Componente base: força da mão no board ----
-  // Calibrado p/ torneio real: quem paga aposta cara raramente é com bottom
-  // pair fraco ou carta alta. A força cresce com o preço pago.
+  // Calibrado p/ torneio recreativo: quem paga aposta cara raramente é com
+  // bottom pair fraco ou carta alta. Draws recebem bônus de textura.
   let base: number;
-  if (hit.made === "trips+" ) base = 1.0;
-  else if (hit.made === "twoPairOrBetter") base = 0.95;
-    else if (hit.made === "topPair") base = 0.72 + (texture.highCardPresent ? 0 : 0.1);
-  else if (hit.made === "middlePair") base = 0.5;
-  else if (hit.made === "bottomPair") base = 0.32;
+  if (hit.made === "trips+") base = 1.0;
+  else if (hit.made === "twoPairOrBetter") base = 0.92;
+  else if (hit.made === "topPair") base = 0.78 + (texture.highCardPresent ? 0 : 0.06);
+  else if (hit.made === "middlePair") base = 0.42;
+  else if (hit.made === "bottomPair") base = 0.24;
   else if (hit.made === "overPair") base = 0.78 - (texture.wetness > 0.5 ? 0.14 : 0);
-  else if (hit.draw === "flushDraw") base = 0.3 + texture.wetness * 0.3;
-  else if (hit.draw === "straightDraw") base = 0.25 + texture.wetness * 0.3;
-  else if (hit.made === "weakPair") base = 0.2;
-  else base = 0.02 + strength * 0.12; // mão de carta alta sem hit (float raro)
+  else if (hit.draw === "flushDraw") base = 0.30 + texture.wetness * 0.32;
+  else if (hit.draw === "straightDraw") base = 0.25 + texture.wetness * 0.30;
+  else if (hit.made === "weakPair") base = 0.14;
+  else base = 0.015 + strength * 0.08; // mão de carta alta sem hit (float raro)
 
   // ---- Correção por textura: no board molhado, draws sobem, pares fracos caem ----
   if (texture.threeOfASuit && hit.draw === "flushDraw") base = Math.min(1, base + 0.25);
   if (texture.straightDrawFriendly && hit.draw === "straightDraw") base = Math.min(1, base + 0.15);
-  if (texture.wetness > 0.5 && hit.made === "bottomPair") base *= 0.8;
-  if (texture.wetness > 0.6 && hit.made === "middlePair" && !hit.draw) base *= 0.88;
+  if (texture.wetness > 0.5 && hit.made === "bottomPair") base *= 0.7;
+  if (texture.wetness > 0.6 && hit.made === "middlePair" && !hit.draw) base *= 0.85;
 
   // ---- Correção por preço: aposta cara expulsa floats e mãos fracas ----
-  base *= cheap + (1 - cheap) * Math.min(1, 0.5 + strength);
+  // Draws toleram preço maior que par fraco: mantêm parte extra da freq.
+  const drawBonus = hit.draw ? 0.08 : 0;
+  base = base * (priceMult + drawBonus) + (hit.draw ? priceMult * 0.12 : 0);
 
-  return Math.max(0.02, Math.min(1, base));
+  return Math.max(0.015, Math.min(1, base));
 }
 
 /** Verifica o que a mão fez no board (feito / draw). */
@@ -318,28 +324,28 @@ function checkScore(handType: string, board: BoardState, texture: BoardTexture):
   // Range de check é capado: quem paga flop e CHECKA turn joga mão controlada —
   // poucos top pairs checam de novo, draws e médios dominam o check range.
   if (hit.made === "trips+" || hit.made === "twoPairOrBetter") return 0.12;
-  if (hit.made === "topPair") return 0.22;
-  if (hit.made === "overPair") return 0.28 - (texture.wetness > 0.5 ? 0.1 : 0);
-  if (hit.draw) return 0.48;
-  if (hit.made === "middlePair") return 0.42;
-  if (hit.made === "bottomPair") return 0.36;
-  if (hit.made === "weakPair") return 0.3;
-  return 0.22; // carta alta sem hit: minoria checka; board seco sobe um pouco
+  if (hit.made === "topPair") return 0.20;
+  if (hit.made === "overPair") return 0.24 - (texture.wetness > 0.5 ? 0.1 : 0);
+  if (hit.draw) return 0.42;
+  if (hit.made === "middlePair") return 0.34;
+  if (hit.made === "bottomPair") return 0.28;
+  if (hit.made === "weakPair") return 0.22;
+  return 0.10; // carta alta sem hit: minoria checka; board seco sobe um pouco
 }
 
 // Frequência de APOSTAR (betSmall ~ meio pote) para a mão no board.
 function betScore(handType: string, board: BoardState, texture: BoardTexture, _isVillain: boolean): number {
   const hit = boardHit(handType, board);
   let base: number;
-  if (hit.made === "trips+") base = 0.8;
-  else if (hit.made === "twoPairOrBetter") base = 0.75;
-  else if (hit.made === "topPair") base = 0.62;
-  else if (hit.made === "overPair") base = 0.58;
-  else if (hit.draw) base = 0.5;
-  else if (hit.made === "middlePair") base = 0.38;
-  else if (hit.made === "bottomPair") base = 0.28;
-  else if (hit.made === "weakPair") base = 0.12 + texture.wetness * 0.12;
-  else base = 0.04 + texture.wetness * 0.22; // backdoor/air bluff em board molhado
+  if (hit.made === "trips+") base = 0.72;
+  else if (hit.made === "twoPairOrBetter") base = 0.68;
+  else if (hit.made === "topPair") base = 0.55;
+  else if (hit.made === "overPair") base = 0.52;
+  else if (hit.draw) base = 0.42;
+  else if (hit.made === "middlePair") base = 0.3;
+  else if (hit.made === "bottomPair") base = 0.22;
+  else if (hit.made === "weakPair") base = 0.12 + texture.wetness * 0.1;
+  else base = 0.05 + texture.wetness * 0.14; // backdoor/air bluff em board molhado
   return Math.min(1, Math.max(0, base));
 }
 
@@ -400,17 +406,26 @@ function normalizeSnapshot(
   ctx: StreetContext,
   action: VillainAction
 ): StreetRangeSnapshot {
+  // Corte de freq marginal: mãos com freq muito baixa já "saíram" do range
+  // efetivo (não aparecem mais na grade do vilão). Sem o corte, a grade
+  // exibiria dezenas de mãos com freq 2-4% que o recreativo não continua.
+  const trimmed: Range = {};
+  for (const [ht, freq] of Object.entries(raw)) {
+    if (freq < 0.06) continue;
+    trimmed[ht] = freq;
+  }
+
   const totalCombos = 1326;
   let weighted = 0;
-  for (const [ht, freq] of Object.entries(raw)) weighted += freq * comboCount(ht);
+  for (const [ht, freq] of Object.entries(trimmed)) weighted += freq * comboCount(ht);
   const percent = (weighted / totalCombos) * 100;
 
-  const entries = Object.entries(raw).sort((a, b) => b[1] - a[1]);
+  const entries = Object.entries(trimmed).sort((a, b) => b[1] - a[1]);
   const topHands = entries.slice(0, 6).map(([handType, freq]) => ({ handType, freq: Math.min(1, freq * 3) }));
 
   const narration = buildNarration(percent, texture, action, ctx);
 
-  return { range: raw, percent, topHands, narration };
+  return { range: trimmed, percent, topHands, narration };
 }
 
 /** Frase pedagógica (PT) explicando o que o range virou. */
