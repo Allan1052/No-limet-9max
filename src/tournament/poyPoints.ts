@@ -156,11 +156,15 @@ export function sumBestResults(
 
 /**
  * Faixa de buy-in usada nas abas do ranking (decisão aprovada do projeto):
- * micro ($5) · baixa ($11) · média ($22 e $55) · alta ($109).
+ * micro ($5) · baixa ($11) · média ($22 e $55) · alta ($109) · elite ($1.000+).
+ * O $1.000 e o $10.300 usam a mesma tabela de pontuação da alta, mas disputam
+ * ranking próprio na faixa elite — quem joga $109 não deve sumir na mesma
+ * tabela de quem disputa o $1.000.
  */
-export function tierForBuyIn(buyIn: number): "micro" | "baixa" | "media" | "alta" {
+export function tierForBuyIn(buyIn: number): "micro" | "baixa" | "media" | "alta" | "elite" {
   if (buyIn <= 5) return "micro";
   if (buyIn <= 11) return "baixa";
   if (buyIn <= 55) return "media";
+  if (buyIn >= 1000) return "elite";
   return "alta";
 }

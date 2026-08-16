@@ -24,7 +24,7 @@ import {
 import { BEST_RESULTS_COUNT, MIN_RESULTS_TO_QUALIFY } from "../tournament/poyPoints";
 import { seasonLabel, currentSeason, currentSeasonYear } from "../tournament/circuit";
 
-type Tier = "micro" | "baixa" | "media" | "alta";
+type Tier = "micro" | "baixa" | "media" | "alta" | "elite";
 
 interface LeaderboardEntry {
   nickname: string;
@@ -40,6 +40,7 @@ const TIERS: { id: Tier; label: string; buyin: string }[] = [
   { id: "baixa", label: "Baixa", buyin: "$11" },
   { id: "media", label: "Média", buyin: "$22 e $55" },
   { id: "alta", label: "Alta", buyin: "$109" },
+  { id: "elite", label: "Elite", buyin: "$1.000+" },
 ];
 
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];

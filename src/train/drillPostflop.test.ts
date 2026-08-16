@@ -6,6 +6,7 @@ import {
   createPostflopDrillSession,
   answerPostflopDrillHand,
 } from "./drillPostflop";
+import { rankOf, suitOf } from "../engine/cards";
 
 describe("Drill Pós-Flop", () => {
   it("tem 6 spots predefinidos", () => {
@@ -54,4 +55,102 @@ describe("Drill Pós-Flop", () => {
     }
     expect(session.done).toBe(true);
   });
+
+  // ---------------------------------------------------------------------------
+  // CONSISTÊNCIA TÍTULO × MÃO — o coração da correção.
+  // Antes, a mão era sorteada livremente e o título mentia (ex.: "Overpair"
+  // com Q♠A♥ num board 8-4-2). Agora cada spot gera mão compatível.
+  // ---------------------------------------------------------------------------
+  describe("mão sempre bate com o título do spot (500 amostras cada)", () => {
+    for (const spot of POSTFLOP_DRILL_SPOTS) {
+      for (let seed = 0; seed < 500; seed++) {
+        const rng = mulberry32(seed * 997 + 13);
+        const h = generatePostflopDrillHand(spot, rng);
+        const [c1, c2] = h.hand;
+        it(`${spot.id} [seed ${seed}]`, () => {
+          switch (spot.id) {
+            case "flush_draw":
+              // 2 cartas do mesmo naipe do flush draw do board (copas)
+              expect(suitOf(c1)).toBe(suitOf(c2));
+              expect(boardSuits(spot).includes(suitOf(c1))).toBe(true);
+              break;
+            case "top_pair": {
+              const top = Math.max(...boardRanks(spot));
+              const hasTop = rankOf(c1) === top || rankOf(c2) === top;
+              expect(hasTop).toBe(true);
+              break;
+            }
+            case "overpair": {
+              const maxBoard = Math.max(...boardRanks(spot));
+              expect(rankOf(c1)).toBeGreaterThan(maxBoard);
+              expect(rankOf(c2)).toBeGreaterThan(maxBoard);
+              expect(rankOf(c1)).toBe(rankOf(c2)); // par
+              break;
+            }
+            case "monster_dry": {
+              const boardSet = new Set(boardRanks(spot));
+              const isSetTrip = boardSet.has(rankOf(c1)) && rankOf(c1) === rankOf(c2);
+              const isMonarch = rankOf(c1) === 14 || rankOf(c2) === 14;
+              expect(isSetTrip || isMonarch).toBe(true);
+              break;
+            }
+            case "air_facing_bet": {
+              // sem par, sem flush draw, cartas baixas
+              expect(rankOf(c1)).not.toBe(rankOf(c2));
+              expect(suitOf(c1)).not.toBe(suitOf(c2));
+              expect(rankOf(c1)).toBeLessThanOrEqual(9);
+              expect(rankOf(c2)).toBeLessThanOrEqual(9);
+              break;
+            }
+            case "straight_draw": {
+              // OESD real: 4 ranks consecutivos presentes + outs nas DUAS pontas.
+              // Board 8-7-2 com hero: T9 → 7,8,9,T + outs 6 e J (OESD).
+              const all = [...new Set([...boardRanks(spot), rankOf(c1), rankOf(c2)])];
+              let hasOesd = false;
+              for (let lo = 2; lo <= 11 && !hasOesd; lo++) {
+                const window = [lo, lo + 1, lo + 2, lo + 3, lo + 4];
+                // OESD: exatamente 4 dos 5 ranks da janela presentes, faltando 1 nas pontas
+                const present = window.filter((r) => all.includes(r));
+                const missing = window.filter((r) => !all.includes(r));
+                if (present.length === 4 && missing.length === 1 && (missing[0] === lo || missing[0] === lo + 4)) {
+                  hasOesd = true;
+                }
+              }
+              expect(hasOesd).toBe(true);
+              break;
+            }
+          }
+        });
+      }
+    }
+  });
+
+  it("explicação tem uma única linha (sem duplicação)", () => {
+    for (const spot of POSTFLOP_DRILL_SPOTS) {
+      const h = generatePostflopDrillHand(spot, Math.random);
+      const lines = h.explanation.split("\n").filter((l) => l.trim().length > 0);
+      expect(lines.length).toBe(1);
+      // Deve mencionar a mão específica (ex.: "K♠7♥:")
+      expect(h.explanation).toMatch(/♣|♦|♥|♠/);
+    }
+  });
 });
+
+/** RNG determinístico para testes (mulberry32). */
+function mulberry32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function boardRanks(spot: { board: number[] }): number[] {
+  return spot.board.map((c) => rankOf(c));
+}
+
+function boardSuits(spot: { board: number[] }): number[] {
+  return spot.board.map((c) => suitOf(c));
+}

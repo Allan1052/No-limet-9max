@@ -34,6 +34,12 @@
   --card-bg: #faf7f0; /* Fundo carta mais premium */
   --card-red: #c0392b;
   --card-black: #1c1c1c;
+  /* Padrão de cores de ação (solver): cinza=fold, azul=call, âmbar=raise, vermelho=3-bet, dourado=all-in. */
+  --c-fold: #9ca3af;
+  --c-call: #3b82f6;
+  --c-raise: #f59e0b;
+  --c-3bet: #ef4444;
+  --c-allin: #eab308;
 }
 
 * { box-sizing: border-box; }
@@ -4345,9 +4351,10 @@ body {
   border-radius: 6px;
   transition: width 0.5s ease;
 }
-.an-fill.fold { background: #556b2f; }
-.an-fill.call { background: #c9a227; }
-.an-fill.raise { background: #b8860b; }
+.an-fill.fold { background: var(--c-fold, #9ca3af); }
+.an-fill.call { background: var(--c-call, #3b82f6); }
+.an-fill.raise { background: var(--c-raise, #f59e0b); }
+.an-reraise { color: var(--c-3bet, #ef4444); }
 .an-reraise {
   position: absolute;
   top: 50%;

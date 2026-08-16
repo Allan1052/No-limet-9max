@@ -473,9 +473,6 @@ export function DrillPostflopView() {
             <p style={{ ...styles.feedbackTitle, color: feedback.correct ? '#5cbe8d' : '#e0645f' }}>
               {feedback.correct ? "✅ Boa!" : "❌ Errada"}
             </p>
-            <p style={styles.feedbackAdvice}>
-              Certo: {feedback.bestAction} · Equity {feedback.equity}% vs Pot odds {feedback.potOdds}%
-            </p>
             <p style={styles.feedbackText}>{feedback.explanation}</p>
           </div>
         )}

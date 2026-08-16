@@ -48,14 +48,15 @@ export function recordDecision(key: "fold" | "call" | "raise" | "allin"): void {
 // por faixa de buy-in (micro / baixa / média / alta).
 // ---------------------------------------------------------------------------
 
-export type Tier = "micro" | "baixa" | "media" | "alta";
-export const TIERS: Tier[] = ["micro", "baixa", "media", "alta"];
+export type Tier = "micro" | "baixa" | "media" | "alta" | "elite";
+export const TIERS: Tier[] = ["micro", "baixa", "media", "alta", "elite"];
 
-/** Buy-ins do app: $5, $11, $22, $55, $109 → 4 faixas. */
+/** Buy-ins do app: $5/$11 · $22 · $55 · $109 · $1.000+ → 5 faixas. */
 export function buyInTier(buyIn: number): Tier {
   if (buyIn <= 11) return "micro";
   if (buyIn <= 22) return "baixa";
   if (buyIn <= 55) return "media";
+  if (buyIn >= 1000) return "elite";
   return "alta";
 }
 
@@ -69,6 +70,7 @@ function emptyTierMap(): TierMap {
     baixa: { fold: 0, call: 0, raise: 0 },
     media: { fold: 0, call: 0, raise: 0 },
     alta: { fold: 0, call: 0, raise: 0 },
+    elite: { fold: 0, call: 0, raise: 0 },
   };
 }
 

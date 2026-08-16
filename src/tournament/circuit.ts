@@ -234,6 +234,8 @@ export function tierLabel(tier: string): string {
       return "Média";
     case "alta":
       return "Alta";
+    case "elite":
+      return "Elite";
     default:
       return tier;
   }
