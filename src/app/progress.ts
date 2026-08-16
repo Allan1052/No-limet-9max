@@ -73,6 +73,8 @@ export interface ProgressSummary {
   botsFoldedThisWeek: number;
   /** Nível de evolução (1-5) baseado no VPIP. */
   evolutionLevel: number;
+  /** Taxa de boas decisões por semana ISO, para o gráfico do painel de evolução. */
+  weeksCounts: Record<string, { total: number; good: number }>;
 }
 
 const STORAGE_KEY = "poker-sim-progress";
@@ -259,7 +261,17 @@ export function summarize(state: ProgressState, now: Date = new Date()): Progres
     cbetsThisWeek: disc.cbets,
     botsFoldedThisWeek: disc.botsFolded,
     evolutionLevel: calcEvolutionLevel(calcVpip(state)),
+    weeksCounts: weeksCounts(state.weeks),
   };
+}
+
+/** Agregado por semana: total de decisões e boas (boa+ok). */
+function weeksCounts(weeks: Record<string, RatingCounts>): Record<string, { total: number; good: number }> {
+  const out: Record<string, { total: number; good: number }> = {};
+  for (const [key, c] of Object.entries(weeks)) {
+    out[key] = { total: sum(c), good: c.boa + c.ok };
+  }
+  return out;
 }
 
 // ----- Persistência (localStorage) -----

@@ -212,14 +212,31 @@ body {
 }
 .variant-btn:hover:not(.active) { color: var(--gold-soft); }
 
-/* ---- Placar de evolução ---- */
-.progress-panel { text-align: center; }
+/* ---- Painel de evolução (técnico) ---- */
+.progress-panel { text-align: left; }
 .pp-head { display: flex; align-items: center; justify-content: space-between; }
 .pp-head h3 { margin: 0; }
+.pp-metric { margin-top: 10px; }
+.pp-metric-head { display: flex; align-items: baseline; justify-content: space-between; }
+.pp-metric-name { font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.pp-metric-sub { font-size: 11px; color: var(--text-dim); opacity: 0.8; }
+
+/* VPIP com zona de referência */
+.pp-vpip-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.pp-vpip-track { position: relative; flex: 1; height: 10px; border-radius: 6px; background: #2a2c22; }
+.pp-vpip-zone { position: absolute; top: 0; bottom: 0; background: rgba(74, 222, 128, 0.22); border-left: 2px solid rgba(74, 222, 128, 0.55); border-right: 2px solid rgba(74, 222, 128, 0.55); }
+.pp-vpip-marker { position: absolute; top: -4px; width: 4px; height: 18px; border-radius: 2px; background: var(--gold); transform: translateX(-50%); }
+.pp-vpip-val { font-size: 18px; font-weight: 800; color: var(--text); min-width: 44px; text-align: right; }
+.pp-vpip-val.in-zone { color: var(--good); }
+.pp-level-line { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+.pp-level-icon { font-size: 16px; }
+.pp-level-name { font-weight: 700; color: var(--gold); }
+
+/* Precisão: anel + lado */
+.pp-prec-row { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px; }
 .pp-ring {
-  margin: 8px auto 6px;
-  width: 120px;
-  height: 120px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -228,14 +245,35 @@ body {
   background: radial-gradient(closest-side, #14170f 78%, transparent 79%),
     conic-gradient(var(--good) calc(var(--rate, 0) * 1%), #2a2c22 0);
 }
-.pp-rate { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1; }
-.pp-rate-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-.pp-stats { display: flex; justify-content: center; gap: 14px; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
-.pp-week { font-size: 12px; color: var(--text); }
-.pp-week b { color: var(--gold); }
-.pp-trend { font-size: 12px; font-weight: 700; margin-top: 4px; }
-.pp-trend.up { color: var(--good); }
-.pp-trend.down { color: var(--warn); }
+.pp-rate { font-size: 20px; font-weight: 800; color: var(--gold); line-height: 1; }
+.pp-rate-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.pp-prec-side { width: 100%; display: flex; justify-content: space-between; gap: 6px; }
+.pp-prec-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.pp-prec-num { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.pp-prec-val { font-size: 15px; font-weight: 800; color: var(--text); white-space: nowrap; }
+.pp-prec-val.good { color: var(--good); }
+.pp-prec-val.bad { color: var(--warn); }
+
+/* Gráfico semanal */
+.pp-chart { margin-top: 6px; }
+.pp-sw-list { display: flex; align-items: flex-end; gap: 6px; height: 94px; padding-top: 4px; border-bottom: 1px solid #2a2c22; }
+.pp-sw-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pp-sw-lbl { font-size: 10px; font-weight: 700; color: var(--text-dim); }
+.pp-sw-bar { width: 100%; max-width: 26px; min-height: 4px; border-radius: 3px; background: #2a2c22; }
+.pp-sw-bar.cur { background: var(--gold); }
+.pp-sw-key { font-size: 9px; color: var(--text-dim); opacity: 0.7; }
+
+/* Forças e fraquezas */
+.pp-fx { margin-top: 8px; }
+.pp-fx-title { font-size: 12px; font-weight: 700; }
+.pp-fx-title.good { color: var(--good); }
+.pp-fx-title.bad { color: var(--warn); margin-top: 8px; }
+.pp-fx-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.pp-fx-tag { font-size: 11px; line-height: 1.4; padding: 3px 8px; border-radius: 999px; }
+.pp-fx-tag.good { background: rgba(74, 222, 128, 0.12); color: var(--good); }
+.pp-fx-tag.bad { background: rgba(245, 158, 11, 0.14); color: var(--warn); }
+
+.pp-stats { display: flex; justify-content: center; gap: 14px; font-size: 12px; color: var(--text-dim); margin-top: 10px; margin-bottom: 6px; }
 
 /* ---- Onboarding ---- */
 .onboard { width: min(460px, 94vw); text-align: center; }
