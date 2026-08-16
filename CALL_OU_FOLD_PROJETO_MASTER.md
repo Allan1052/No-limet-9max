@@ -1070,3 +1070,11 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 **Testes visuais (16/08):** painel Sua Evolução com dados de teste (VPIP 27% na faixa, precisão 93% all-time/82% semana, trend -11, gráfico W26–W33 com W33 dourada, tags de força/fraqueza) — nota 10.
 
 *Documento atualizado em 16/08/2026 — noite: 4 fixes do Allan no ar.*
+
+### 🎯 ITEM 1 "Rumo a nota 10" — CALIBRAÇÃO DOS RANGES DO VILÃO (Rua por Rua) — 16/08 tarde
+- Problema: ranges do vilão continuavam largos demais após ação (banner dizia encolher, mas grade visual ainda cobria quase o baralho).
+- Causas-raiz corrigidas:
+  1. `src/train/streets/dynamicRanges.ts` recalibrado: floors de continuação altos removidos; multiplicador de preço aplicado ao call; checkScore/betScore redefinidos (trips+/twoPair check 0.12 armadilha, topPair 0.20, draw 0.42, middles 0.28-0.34); corte de frequência marginal 0.06 elimina a cauda de air; narração do banner alinhada.
+  2. `src/ui/StreetTrainer.tsx` `ctxFor` reescrito: `facedBetBB` agora captura a aposta do herói na rua corrente quando o vilão responde (antes call do vilão chegava com faced=0).
+- Validação: `scripts/sim_calibracao.ts` — 1.000 sementes × 10 texturas × 3 posições × 5 ações (~150.000 spots): check seco 2.6-9.8%, call ½ seco 5-11.3%, bet ½ 5.7-13.3%, call molhado/flush 9.9-16.1% — todos no alvo com composição correta.
+- Suíte completa 3.560 testes passando + preview local conferido. Commit `e27c91c5`. Deploy verificado ao vivo: index-DFFeukID.js, StreetTrainer-BiXiO4_k.js (200), CSS com cores padrão (md5 idêntico ao local). Grade do range do vilão agora mostra poucas células acesas no flop seco, sets/AA/Ax no topo.
