@@ -5071,6 +5071,51 @@ body {
   text-align: center; font-size: 13px; color: var(--cream-dim, #c9c2a5);
   padding: 6px; border-radius: 8px; background: rgba(212,175,55,0.10);
 }
+/* Banner da ação do vilão: dourado forte + narração do motor, some em 2,4s */
+.street-villain-banner {
+  margin: 10px 4px 2px;
+  border: 1.5px solid var(--gold, #e6c454);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(212,175,55,0.22), rgba(212,175,55,0.08));
+  padding: 10px 12px;
+  box-shadow: 0 0 18px rgba(212,175,55,0.28);
+}
+.street-villain-banner-title {
+  text-align: center; font-size: 14px; font-weight: 700; color: var(--gold, #e6c454);
+  margin-bottom: 4px;
+}
+.street-villain-banner-body {
+  font-size: 12.5px; line-height: 1.45; color: #d8d2bc; text-align: center;
+}
+/* Linha do encolhimento no topo da grade do vilão */
+.street-range-delta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px; font-weight: 700; color: var(--gold, #e6c454);
+  margin: 6px 0 2px;
+}
+.street-range-delta-out {
+  font-size: 11.5px; font-weight: 500; color: rgba(239,100,100,0.9);
+}
+/* Célula que SAIU do range do vilão: riscada com ✗ */
+.rg-cell.out {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: rgba(239,100,100,0.85);
+  text-decoration-thickness: 1px;
+  position: relative;
+}
+.rg-cell-out-x {
+  position: absolute; top: -3px; right: -4px;
+  font-size: 9px; color: rgba(239,100,100,0.95); font-weight: 700;
+  line-height: 1;
+}
+/* Linha do vilão na timeline final */
+.street-tl-vil {
+  color: rgba(212,175,55,0.92);
+  margin-left: 6px;
+  font-weight: 600;
+}
 .street-final {
   margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--gold-dim, #4a3f1e);
 }

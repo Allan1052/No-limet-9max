@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CardView, CardBack } from "./Card";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
-import { comboToHandType, type Position } from "../ranges/types";
+import { comboToHandType, comboCount, type Position, type Range } from "../ranges/types";
 import { seededRng, makeCard, type Card } from "../engine/cards";
 import { handRank } from "../ranges/handStrength";
 import {
@@ -207,20 +207,56 @@ export function StreetTrainer() {
   // Range do vilão evolui conforme os passos já dados. Também captura a
   // última ação do vilão para avisar quando o range desaparece (fold) —
   // assim a tela nunca mostra uma grade 100% cinza sem explicação.
-  const villainRange = useMemo(() => {
+  // Range do vilão evolui conforme os passos já dados. Também captura a
+  // última ação do vilão para avisar quando o range desaparece (fold) —
+  // assim a tela nunca mostra uma grade 100% cinza sem explicação.
+  // O `perStep` guarda o snapshot POR RUA (percentual antes/depois da
+  // ação dele), alimentando o banner de encolhimento e a grade com
+  // as mãos que saíram do range.
+  const villainPerStep = useMemo(() => {
     const init = preflopOpenRange(villainPos, effBB);
+    const out: { street: StreetName; prev: Range; next: Range; action: string; board: BoardState }[] = [];
     let prev = init;
-    let lastVillainAction: string | null = null;
     for (const step of steps) {
       if (step.villainAction) {
-        prev = continueVillainRange(prev, step.villainAction as never, step.board, ctxFor(step, s)).range;
-        lastVillainAction = step.villainAction;
+        const snap = continueVillainRange(prev, step.villainAction as never, step.board, ctxFor(step, s));
+        out.push({ street: step.street, prev, next: snap.range, action: step.villainAction, board: step.board });
+        prev = snap.range;
       }
     }
-    return { range: prev, lastVillainAction };
+    return out;
   }, [steps, villainPos, effBB, s]);
-  const villainRangeIsV = villainRange.range;
-  const villainLastAction = villainRange.lastVillainAction;
+  const villainRangeIsV = villainPerStep.length
+    ? villainPerStep[villainPerStep.length - 1].next
+    : preflopOpenRange(villainPos, effBB);
+  const villainLastAction = steps.length
+    ? steps[steps.length - 1].villainAction
+    : null;
+
+  // Percentual do range antes da última ação do vilão (para o banner "42% → 19%")
+  const villainPercent = (r: Range): number => {
+    let w = 0;
+    for (const [ht, freq] of Object.entries(r)) w += freq * comboCount(ht);
+    return (w / 1326) * 100;
+  };
+  const lastStep = villainPerStep.length ? villainPerStep[villainPerStep.length - 1] : null;
+  const bannerInfo = useMemo(() => {
+    if (!lastStep) return null;
+    const from = villainPercent(lastStep.prev);
+    const to = villainPercent(lastStep.next);
+    // Narração pedagógica PT do próprio motor (explica o que saiu/entrou)
+    const snap = continueVillainRange(lastStep.prev, lastStep.action as never, lastStep.board, ctxFor({ street: lastStep.street, board: lastStep.board, heroAction: null, villainAction: null }, s));
+    return { from: Math.round(from), to: Math.round(to), narration: snap.narration, action: lastStep.action };
+  }, [lastStep, s, villainPos, effBB]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Banner visível por 2,4s a cada ação NOVA do vilão (mesmo no re-enter da rua)
+  const [banner, setBanner] = useState<{ from: number; to: number; narration: string; action: string } | null>(null);
+  useEffect(() => {
+    if (!bannerInfo) { setBanner(null); return; }
+    setBanner(bannerInfo);
+    const t = setTimeout(() => setBanner((b) => (b && b.narration === bannerInfo.narration ? null : b)), 2400);
+    return () => clearTimeout(t);
+  }, [bannerInfo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Grade recomendada do herói (memo para não recalcular a cada render)
   const heroGrid = useMemo(
@@ -571,6 +607,12 @@ export function StreetTrainer() {
             {showVillainRange ? (
               <div className="street-grid-box">
                 <div className="ultra-grid-title">{t("street.villainRangeTitle" as TransKey)}</div>
+                {lastStep ? (
+                  <div className="street-range-delta">
+                    🦈 {t("street.rangeDelta" as TransKey, { from: villainPercent(lastStep.prev), to: villainPercent(lastStep.next) })}
+                    <span className="street-range-delta-out">{t("street.deltaOut" as TransKey, { out: Math.round(villainPercent(lastStep.prev) - villainPercent(lastStep.next)) })}</span>
+                  </div>
+                ) : null}
                 {Object.keys(villainRangeIsV).length === 0 ? (
                   <div className="street-range-empty">
                     <div className="street-range-empty-title">
@@ -589,7 +631,7 @@ export function StreetTrainer() {
                     </div>
                   </div>
                 ) : (
-                  <VillainRangeGrid range={villainRangeIsV} cellNote={t("street.villainRangeNote" as TransKey)} />
+                  <VillainRangeGrid range={villainRangeIsV} prevRange={lastStep?.prev ?? null} cellNote={t("street.villainRangeNote" as TransKey)} />
                 )}
                 <RangeLegend mode="villain" />
               </div>
@@ -675,8 +717,15 @@ export function StreetTrainer() {
           </div>
         ) : null}
 
-        {/* Reação do vilão na rua atual */}
-        {streetDec[current].villain && !isDone ? (
+        {/* Banner da ação do vilão — aparece na hora e encolhe em 2,4s */}
+        {banner && !isDone ? (
+          <div className="street-villain-banner toast-in">
+            <div className="street-villain-banner-title">
+              🦈 {t("street.villainBanner" as TransKey, { action: t((`street.act.${banner.action}`) as TransKey), from: banner.from, to: banner.to })}
+            </div>
+            <div className="street-villain-banner-body">{banner.narration}</div>
+          </div>
+        ) : streetDec[current].villain && !isDone ? (
           <div className="street-reaction">
             🦈 {t("street.reacted" as TransKey, { action: t((`street.act.${streetDec[current].villain}`) as TransKey) })}
           </div>
@@ -701,12 +750,16 @@ export function StreetTrainer() {
               </div>
             </div>
             <div className="street-timeline">
-              {steps.map((st, i) => (
-                <div key={i} className="street-tl-item">
-                  <span className="street-tl-st">{streetLabel(st.street)}</span>
-                  <span>{describeBoard(st.board)} — você {t((`street.act.${st.heroAction}`) as TransKey)}, vilão {t((`street.act.${st.villainAction}`) as TransKey)}</span>
-                </div>
-              ))}
+              {steps.map((st, i) => {
+                const ps = villainPerStep.find((p) => p.street === st.street && p.action === st.villainAction);
+                return (
+                  <div key={i} className="street-tl-item">
+                    <span className="street-tl-st">{streetLabel(st.street)}</span>
+                    <span>{describeBoard(st.board)} — você {t((`street.act.${st.heroAction}`) as TransKey)}</span>
+                    <span className="street-tl-vil">🦈 {t((`street.act.${st.villainAction}`) as TransKey)}{ps ? ` · ${t("street.tlRange" as TransKey, { from: Math.round(villainPercent(ps.prev)), to: Math.round(villainPercent(ps.next)) })}` : ""}</span>
+                  </div>
+                );
+              })}
             </div>
             <div className="street-final-score">{t("street.finalScore" as TransKey, { s: score, t: streetScoreTotal })}</div>
             <button className="btn primary train-next" onClick={start}>{t("street.playAgain" as TransKey)}</button>
@@ -757,7 +810,7 @@ function StreetRangeGrid({ grid, highlight, cellNote }: { grid: ReturnType<typeo
           let bg = "#191c13";
           let fg = "#5f6350";
           if (cat === "bet") { bg = "rgba(212,175,55,0.85)"; fg = "#12140c"; }
-          else if (cat === "check") { bg = "rgba(76,175,125,0.65)"; fg = "#0d1f16"; }
+          else if (cat === "check") { bg = "rgba(77,143,230,0.65)"; fg = "#e6eaf2"; }
           const isHl = highlight === hand;
           const isSelected = cell === hand;
           return (
@@ -797,8 +850,14 @@ function StreetRangeGrid({ grid, highlight, cellNote }: { grid: ReturnType<typeo
 
 /** Grade do range do vilão: intensidade pela frequência (dourado=forte, azul=continua, cinza=saiu).
  *  Células tocáveis: mostra a mão + % de continuar no range. */
-function VillainRangeGrid({ range, cellNote }: { range: Record<string, number>; cellNote?: string }) {
+function VillainRangeGrid({ range, prevRange, cellNote }: { range: Record<string, number>; prevRange: Range | null; cellNote?: string }) {
   const [cell, setCell] = useState<string | null>(null);
+  // Células que ESTAVAM no range antes da última ação do vilão e agora saíram:
+  // aparecem riscadas com ✗ — o jogador VÊ o encolhimento na grade.
+  const removed = prevRange
+    ? Object.keys(prevRange).filter((ht) => (prevRange[ht] > 0.05) && !(range[ht] > 0.05))
+    : [];
+  const removedSet = new Set(removed);
   return (
     <div className="rg-grid spot-grid">
       {Array.from({ length: 13 }, (_, i) =>
@@ -810,21 +869,23 @@ function VillainRangeGrid({ range, cellNote }: { range: Record<string, number>; 
           let fg = "#5f6350";
           if (freq > 0.66) { bg = `rgba(212,175,55,${alpha})`; fg = "#12140c"; } // mãos fortes
           else if (freq > 0.25) { bg = `rgba(76,130,200,${alpha})`; fg = "#e6eaf2"; } // continua
+          const isOut = removedSet.has(hand);
           const isSelected = cell === hand;
           return (
             <div
               key={`${i}-${j}`}
-              className={`rg-cell ${i === j ? "pair" : ""} ${isSelected ? "sel" : ""}`}
+              className={`rg-cell ${i === j ? "pair" : ""} ${isSelected ? "sel" : ""} ${isOut ? "out" : ""}`}
               style={{ background: bg, color: fg }}
               role="button"
               tabIndex={0}
               aria-label={`${hand} ${Math.round(freq * 100)}%`}
-              title={`${hand} · ${Math.round(freq * 100)}%`}
+              title={`${hand} · ${Math.round(freq * 100)}%${isOut ? " · saiu do range" : ""}`}
               onClick={() => setCell((v) => (v === hand ? null : hand))}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCell((v) => (v === hand ? null : hand)); } }}
             >
               {hand.replace("o", "").replace("s", "")}
               <span className="rg-suit">{hand.endsWith("s") ? "s" : hand.endsWith("o") ? "o" : ""}</span>
+              {isOut ? <span className="rg-cell-out-x" aria-hidden>✗</span> : null}
             </div>
           );
         }),
