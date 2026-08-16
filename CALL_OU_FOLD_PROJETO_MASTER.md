@@ -953,3 +953,39 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Qualidade: tsc limpo; **536 testes verdes** (8 novos do learn.test.ts); build OK; deploy verificado ao vivo (index-BpdQ2RaA.js importa LearnTrailView-Dm50jP1D.js); revisão visual completa local.
 - Pendências conhecidas: lições 2-7 aprovadas só com respostas corretas no teste manual; conteúdo textual das lições 2-7 é v1 (Allan pode pedir ajustes de tom depois).
 
+
+---
+
+## ✅ SESSÃO 16/08 — Card Carrossel (histórico da mão rua por rua) + Legenda pronta com botão copiar — NO AR
+
+**Pedidos do Allan:** (1) card compartilhável com a AÇÃO COMPLETA da mão (quem apostou quanto em cada rua, tipo "vilão apostou, eu dei call, caiu tal carta...") e possibilidade de gerar as 2 imagens juntas estilo carrossel pro Instagram; (2) depois: legenda pronta salva dentro do app pra postar direto.
+
+**Entregue — commits `92d5c0fa` + `84467814` (Carrossel) e `84f907a8` (legenda), GitHub Actions GREEN, verificado ao vivo no bundle `assets/index-CTsrZP_V.js`):**
+
+- `src/app/handShareCard.ts`: novo card type **"historico"** (`drawHistoryCard`) com layout em **2 colunas** (PRÉ-FLOP+FLOP à esquerda · TURN+RIVER à direita, divisor vertical sutil, resultado da mão em dourado fechando a coluna esquerda) — mãos longas nunca invadem o rodapé (corrigido na 2ª revisão: a 1ª versão de coluna única estourava a caixa).
+- `src/ui/HandActions.tsx`: monta `actionLog` no shareData (log rua a rua com who/action/correct) e renderiza o `CaptionPanel`.
+- `src/ui/HandShareButton.tsx`: grupo de botões (dev unlock do card) agora tem **🖼️ Carrossel (2 cards)** — baixa `card_1_desafio.png` + `card_2_historico.png` — e **📝 Copiar legenda**.
+- `src/app/captionSuggestions.ts` (NOVO): `buildCaption()` monta legenda da mão no estilo do Allan (curta, 🔥♠🍀, SEM mencionar nome do Allan, "um recreativo qualquer", sem dinheiro real, fecha com `calloufold.com.br · link na bio ♠` + hashtags) + `CAPTION_PRESETS` (drill, campeão de torneio, vida de recreativo — uso futuro).
+- `CaptionPanel`: painel dourado sob os botões mostrando a legenda + botão 📋 Copiar.
+- `src/train/streets/carouselCard.test.ts` (12 spots reais: valida conteúdo e ordem do actionLog).
+- **Qualidade:** tsc limpo · **539 testes verdes** · build OK · revisão visual nota 10 (2 PNGs 1080×1080 verificados: caixa, rodapé, ✓/✗ e tipografia sem sobreposição) · deploy verificado ao vivo (`HISTÓRICO DA MÃO` + `Copiar legenda` presentes no bundle).
+- **Motor intocado** (só app/handShareCard.ts, captionSuggestions.ts, HandActions/HandShareButton e testes).
+
+### ✅ ENGAJAMENTO INSTAGRAM — 10 comentários + follows (16/08) — CONCLUÍDO
+
+| # | Perfil | Post comentado | Follow |
+|---|--------|----------------|:------:|
+| 1 | @homegamersclub | Mesa Final Rankeada | ✅ |
+| 2 | @rogerfloripa0474 | Reel Freeroll 2º/389 (Db4qcDPOM24) | ✅ |
+| 3 | @bridgepokercashbrasil | Post de posição (Db9h0H-kVws) | ✅ |
+| 4 | @recreativoonline | Reel home game online (DQ-KSQGktGe) | ✅ |
+| 5 | @maxspokerjundiai | Post MPF prêmio moto (DbtiQHFPNtQ) | ✅ |
+| 6 | @las_vegas_experience_br | Reel Neymar (Db_BsnfumfE) | ✅ |
+| 7 | @sierrapoker | Reel top 10 (DcElKTTK2pg) | ✅ |
+| 8 | @fernandopokerdepressao | Reel humor (DcEKQXABrg0) | ✅ |
+| 9 | @poker7espada | Post agenda semanal (DZBh9ztMd8F) | (já seguia) |
+| 10 | @dio_pokerclub | Post campeão (DaZuVOrEeXE) | ✅ |
+
+**Pendências conhecidas:** (1) ranges do Rua por Rua ainda precisam de recalibração nota 100; (2) Aprenda do Zero lições 2-7 v1 (tom); (3) créditos do Allan voltam 17/08 — até lá só site + UI polish; (4) MASTER não pode receber a secret do Supabase (push protection); (5) bluff_catcher bug em achievements.ts (~374-377) — Claude cuida; (6) RLS sem DELETE/UPDATE intencional (anti-cheat).
+
+*Documento atualizado em 16/08/2026 — sessões do dia concluídas: Carrossel + legenda pronta no ar + engajamento Instagram 10/10.*
