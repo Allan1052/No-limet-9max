@@ -1,20 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 17/08/2026 — Botão 'Treinar esse ponto fraco' + curva de evolução no painel de vazamentos + selo 'Motor validado vs GTO' (modal de dicas + ranking) + painel 'Trajetória no Circuito' (torneios disputados/premiados por buy-in) + card carrossel com showdown + fixes (decisions reais no ranking, hint z-index, botão Nova Mão)
-
----
-
-## 🆕 SESSÃO 17/08/2026 — RESUMO DAS ENTREGAS
-
-1. **Card compartilhado CARROSSEL (2 cards)**: histórico completo da mão (pote por rua) + box de showdown com cartas do vilão + resultado + pote final. Botão "Carrossel (2 cards)" em `HandShareButton.tsx` via `shareSpotMulti()` (share nativo multi-file com fallback download). Teste visual `handShareCard.screenshot.test.ts` (node-canvas como devDependency). DEPLOYED.
-2. **Bug hint cobrindo aposta do vilão**: `.seat-bet` z-index → 7 em `theme.css`. DEPLOYED.
-3. **Bug ranking com decisions vazias**: `sessionDecisionDetails` em `gameController.ts` (heroCards + heroPosition em cada decisão); `TournamentSummary.tsx` envia decisions reais. DEPLOYED.
-4. **Bug "Nova Mão" não funcionava**: botão "Jogar nova mão" dentro do modal de resumo + prop `onNewHand`. DEPLOYED.
-5. **Trajetória no Circuito** (pedido Allan: contar torneios disputados por faixa $10/$11/$22/$50/$109/$1K/$10.300): `TournamentCountPanel.tsx` no perfil, acima do Top 10 Premiações — disputados/premiados/barra % de aproveitamento por faixa, dados da nuvem (`fetchTournamentEntries` em `ranking.ts`). Faixa $1.000+ depende do SQL do tier 'elite' (pendente Allan no Supabase). DEPLOYED.
-6. **Treino dirigido de vazamentos (leak)**: botão "🏋️ Treinar esse ponto fraco" no LeakCard + mini-curve de evolução (svg `LeakTrendMini`). Motor: `src/train/leakTraining.ts` (`createLeakDrillSession`, `planForLeak`, `recordLeakTraining`, `leakTrainingTrend` — versão do upstream a6fd8a5b mantida, NÃO reescrever). `DrillView` recebe props `leakSession`/`leakFocus` e registra `recordLeakTraining(leakId, accuracy)` ao concluir; banner de foco no drill. DEPLOYED.
-7. **Selo GTO**: `runCalibration()` de `src/ranges/_calibration/gtoBenchmark.ts` usado em (a) chip "✓ Motor validado — bate com o GTO em X% de N spots-referência" no header do `HandTipsModal.tsx` e (b) parágrafo `.lb-gto` dentro de "Como a pontuação funciona" no `Leaderboard.tsx` (números dinâmicos: AA vs KK = 82% etc.). DEPLOYED.
-
-**Checklist**: tsc OK · vitest 3594 passed · build OK · deploy verificado no ar (grep dos textos nos bundles servidos).
+### Última atualização: 17/08/2026 — Anatomia com números reais do motor + rótulo do denominador + prints ANTES/DEPOIS entregues
 
 ---
 
@@ -1111,3 +1097,25 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - **RANKING ELITE — CAUSA RAIZ ENCONTRADA**: banco `tournament_scores` tem CHECK `tournament_scores_tier_check` sem o valor 'elite' → todo INSERT elite rejeitado (23514) → aba Elite vazia para TODOS. App (produção) já tem tier elite no código. Allan deve rodar SQL no dashboard (service_role ignora RLS): alterar constraint + UPDATE do row 1K dele (player_key 3cd4bfe250...27b0, buy_in 1000) para elite. SQL: /home/ubuntu/sql_correcao_ranking_elite.sql. RLS anon continua INSERT-only (anti-cheat) — NÃO adicionar UPDATE/DELETE.
 - Deploy verificado: bundle prod = local (390.646 bytes, rua2026 presente), workflow verde, commit cdb33d7.
 - NÃO FEITO (fila próxima): startup instantâneo (landing-hero + splash não-bloqueante); bluff_catcher segue com Claude.
+
+## ✅ SESSÃO 17/08 — ANATOMIA COM NÚMEROS REAIS DO MOTOR + RÓTULO DO DENOMINADOR (deployado e verificado ao vivo)
+**Pedidos do Allan:** (1) números da Anatomia eram fixos (62/24/14 × 82/7/11) — trocar pelos REAIS do motor, mudando por faixa (micro≠elite); (2) contradição fold × raise entre a aba Estudar e o resumo pós-jogo — botar rótulo do denominador em cada tela; (3) prints ANTES/DEPOIS da Anatomia.
+**Entregue — commits desta sessão (deploy GitHub Pages verificado ao vivo: bundle serve `fieldDistribution`, headline dinâmica e rodapé denom):**
+- `src/ui/AnatomiaTorneio.tsx`: REC/IDE fixos removidos; `ideal = idealDistribution()` (todas as faixas), `campo = fieldDistribution(tier)` (muda por faixa, cast `as unknown as AnatTier`), caixa de lição usa `licao = anatomyInsight(campo, ideal)` (headline + detail) — a lição fixa "O buraco é o CALL: 24% × 7%" foi jogada fora, lição agora centrada no FOLD; rodapé `.anat-denom` com `t("anat.denom")` = "Números do motor, medidos de todas as mãos".
+- `src/ui/TournamentSummary.tsx`: rótulo "Padrão de torneio" → **"Padrão das mãos que você JOGOU"** (resolve: aba Estudar = todas as mãos, resumo = só as jogadas).
+- `src/i18n/translations.ts`: chaves `anat.denom` em pt/es/en; `anat.note` pt atualizado.
+- `src/ui/theme.css`: bloco `.anat-denom`.
+- **Motor intocado** — `src/tournament/anatomy.ts` só IMPORTADO/LENDO (idealDistribution, fieldDistribution, anatomyInsight, AnatTier).
+- **Números reais por faixa (prova):** micro campo {62,24,14}, elite campo {76,9,15}, ideal ~{80,5,15} — a coincidência micro=fixo foi notada e explicada ao Allan.
+- **Prints ANTES/DEPOIS entregues ao Allan:** montagem `/home/ubuntu/comparacao_anatomia.png` (3 colunas: ANTES fixo | DEPOIS micro | DEPOIS elite com chip Elite selecionado). Antes capturado no ar com bundle antigo; DEPOIS verificado no ar e local (fullPage via puppeteer-core, clique via evaluate).
+- Validação: tsc limpo · 3.594 testes · build OK · visual nota 10 (cores padrão fold cinza/call azul/raise âmbar nas barras novas).
+
+## 📌 PENDÊNCIAS 17/08 (para próxima sessão)
+1. **SQL Elite ranking** — Allan roda no Supabase (login GitHub, NÃO email): https://supabase.com/dashboard/project/bdzuwjyvjmnpkufkdokt/editor/sql — arquivo `/home/ubuntu/correcao_ranking_elite_1k.sql` (ALTER TABLE + UPDATE row id=11 tier='alta'→'elite').
+2. **Startup instantâneo** — remover overlay `#landing-hero` de `public/index.html` + splash não-bloqueante (App.tsx).
+3. **bluff_catcher achievements.ts (~L374-377)** — fica com o Claude, NÃO mexer.
+4. **Prompt para Claude** — entregue em PDF `/home/ubuntu/prompt_para_claude_17-08.pdf` (lista o que está certo e o que falta).
+
+**Entregas da sessão 17/08 (tudo no ar):** prompt Claude PDF · painel Trajetória no Circuito por buy-in (`TournamentCountPanel.tsx` + `fetchTournamentEntries`) · botão "Treinar esse ponto fraco" + curva de evolução (`LeaksPanel` + `DrillView` leakSession + `leakTraining.ts` upstream, NÃO EDITAR) · selo GTO (`GtoSealChip` no `HandTipsModal` + `GtoValidationSection` no `Leaderboard` via `runCalibration` de `gtoBenchmark.ts`, NÃO EDITAR) · polimento de legibilidade (theme.css: `.card.sm` 30×43, números ≥12px, tabular-nums, .tc-panel, .seat-bet z-index) · Anatomia com números reais + denom.
+
+**Regra de qualidade cumprida:** tsc + vitest + build + revisão visual + deploy verificado ao vivo ANTES de avisar o Allan.
