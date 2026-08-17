@@ -1,6 +1,20 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 16/08/2026 — Estudo de Mesa Final no ar + auditoria visual completa + landing atualizada + Banner do Vilão no Rua por Rua
+### Última atualização: 17/08/2026 — Botão 'Treinar esse ponto fraco' + curva de evolução no painel de vazamentos + selo 'Motor validado vs GTO' (modal de dicas + ranking) + painel 'Trajetória no Circuito' (torneios disputados/premiados por buy-in) + card carrossel com showdown + fixes (decisions reais no ranking, hint z-index, botão Nova Mão)
+
+---
+
+## 🆕 SESSÃO 17/08/2026 — RESUMO DAS ENTREGAS
+
+1. **Card compartilhado CARROSSEL (2 cards)**: histórico completo da mão (pote por rua) + box de showdown com cartas do vilão + resultado + pote final. Botão "Carrossel (2 cards)" em `HandShareButton.tsx` via `shareSpotMulti()` (share nativo multi-file com fallback download). Teste visual `handShareCard.screenshot.test.ts` (node-canvas como devDependency). DEPLOYED.
+2. **Bug hint cobrindo aposta do vilão**: `.seat-bet` z-index → 7 em `theme.css`. DEPLOYED.
+3. **Bug ranking com decisions vazias**: `sessionDecisionDetails` em `gameController.ts` (heroCards + heroPosition em cada decisão); `TournamentSummary.tsx` envia decisions reais. DEPLOYED.
+4. **Bug "Nova Mão" não funcionava**: botão "Jogar nova mão" dentro do modal de resumo + prop `onNewHand`. DEPLOYED.
+5. **Trajetória no Circuito** (pedido Allan: contar torneios disputados por faixa $10/$11/$22/$50/$109/$1K/$10.300): `TournamentCountPanel.tsx` no perfil, acima do Top 10 Premiações — disputados/premiados/barra % de aproveitamento por faixa, dados da nuvem (`fetchTournamentEntries` em `ranking.ts`). Faixa $1.000+ depende do SQL do tier 'elite' (pendente Allan no Supabase). DEPLOYED.
+6. **Treino dirigido de vazamentos (leak)**: botão "🏋️ Treinar esse ponto fraco" no LeakCard + mini-curve de evolução (svg `LeakTrendMini`). Motor: `src/train/leakTraining.ts` (`createLeakDrillSession`, `planForLeak`, `recordLeakTraining`, `leakTrainingTrend` — versão do upstream a6fd8a5b mantida, NÃO reescrever). `DrillView` recebe props `leakSession`/`leakFocus` e registra `recordLeakTraining(leakId, accuracy)` ao concluir; banner de foco no drill. DEPLOYED.
+7. **Selo GTO**: `runCalibration()` de `src/ranges/_calibration/gtoBenchmark.ts` usado em (a) chip "✓ Motor validado — bate com o GTO em X% de N spots-referência" no header do `HandTipsModal.tsx` e (b) parágrafo `.lb-gto` dentro de "Como a pontuação funciona" no `Leaderboard.tsx` (números dinâmicos: AA vs KK = 82% etc.). DEPLOYED.
+
+**Checklist**: tsc OK · vitest 3594 passed · build OK · deploy verificado no ar (grep dos textos nos bundles servidos).
 
 ---
 
