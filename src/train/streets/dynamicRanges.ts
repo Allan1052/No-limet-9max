@@ -441,9 +441,9 @@ export function continueVillainRange(
 function normalizeSnapshot(
   raw: Range,
   _prev: Range,
-  _board: BoardState,
+  board: BoardState,
   texture: BoardTexture,
-  ctx: StreetContext,
+  _ctx: StreetContext,
   action: VillainAction
 ): StreetRangeSnapshot {
   // Corte de freq marginal: mãos com freq muito baixa já "saíram" do range
@@ -463,38 +463,73 @@ function normalizeSnapshot(
   const entries = Object.entries(trimmed).sort((a, b) => b[1] - a[1]);
   const topHands = entries.slice(0, 6).map(([handType, freq]) => ({ handType, freq: Math.min(1, freq * 3) }));
 
-  const narration = buildNarration(percent, texture, action, ctx);
+  const narration = buildNarration(percent, texture, action, trimmed, board);
 
   return { range: trimmed, percent, topHands, narration };
 }
 
-/** Frase pedagógica (PT) explicando o que o range virou. */
+/** Nome curto e legível de um handType para o recreativo: "AJs"→"AJ", "99"→"99". */
+function shortHandName(ht: string): string {
+  return ht.length === 3 ? ht.slice(0, 2) : ht;
+}
+
+/**
+ * NOMEIA as mãos concretas que o vilão CONTINUA carregando, agrupadas pelo que
+ * elas são no board — igual o Yuri narra ("ele tem Jx de top par, projetos como
+ * KQ, pares médios como 88"). Pega o range que sobrou e traduz em exemplos.
+ */
+function nameContinuingHands(range: Range, board: BoardState): string {
+  const groups: Record<string, string[]> = { forte: [], topPar: [], projeto: [], parMedio: [] };
+  const seen: Record<string, boolean> = {};
+  const entries = Object.entries(range).sort((a, b) => b[1] - a[1]);
+  for (const [ht] of entries) {
+    const hit = boardHit(ht, board);
+    let bucket: string | null = null;
+    if (hit.made === "trips+" || hit.made === "twoPairOrBetter" || hit.made === "overPair") bucket = "forte";
+    else if (hit.made === "topPair") bucket = "topPar";
+    else if (hit.draw) bucket = "projeto";
+    else if (hit.made === "middlePair" || hit.made === "bottomPair" || hit.made === "weakPair") bucket = "parMedio";
+    if (!bucket) continue;
+    const name = shortHandName(ht);
+    if (seen[name]) continue;
+    if (groups[bucket].length < 2) { groups[bucket].push(name); seen[name] = true; }
+  }
+  const parts: string[] = [];
+  if (groups.forte.length) parts.push(`mãos feitas (${groups.forte.join(", ")})`);
+  if (groups.topPar.length) parts.push(`top par (${groups.topPar.join(", ")})`);
+  if (groups.projeto.length) parts.push(`projetos (${groups.projeto.join(", ")})`);
+  if (groups.parMedio.length) parts.push(`pares médios (${groups.parMedio.join(", ")})`);
+  return parts.slice(0, 3).join(", ");
+}
+
+/** Frase pedagógica (PT) explicando o que o range virou — nomeando as mãos. */
 function buildNarration(
   percent: number,
   texture: BoardTexture,
   action: VillainAction,
-  _ctx: StreetContext
+  range: Range,
+  board: BoardState
 ): string {
   const round = Math.round(percent);
+  const hands = nameContinuingHands(range, board);
+  const comOsQuais = hands ? ` — tipo ${hands}` : "";
   if (action === "fold") {
-    return `O que ele DESISTIU: o fundo do range — mãos sem hit e sem projeto. ${round}% do range não pagou.`;
+    return `O que ele DESISTIU: o fundo do range — carta alta sem hit e sem projeto. ${round}% do range largou.`;
   }
   if (action === "call") {
-    let line = `Ele pagou e o range encolheu para ~${round}% — quem paga aqui carrega hit no board, par na mão ou projeto de ${texture.threeOfASuit ? "flush" : texture.straightDrawFriendly ? "escada" : "melhoria"}. O fundo do range sai.`;
-    if (texture.highCardPresent) line += " Carta alta no board pesa: mãos com hit forte dominam o topo.";
+    let line = `Ele pagou e o range encolheu para ~${round}%. Quem paga aqui continua com hit ou projeto${comOsQuais}. O lixo sai.`;
+    if (texture.highCardPresent) line += " A carta alta no board pesa: quem tem esse hit domina o topo.";
     return line;
   }
   if (action === "check") {
-    let line = `Ele deu check. O range agora tem ~${round}% — misto de mãos médias querendo controle, draws e alguma armadilha. Topo e fundo do range saíram.`;
-    if (texture.highCardPresent) line += " Carta alta no board: o que sobrou acima é o que tinha hit.";
-    return line;
+    return `Ele deu check → range ~${round}%: mão média querendo controle, projeto ou armadilha${comOsQuais}. Topo e fundo saíram.`;
   }
   if (action === "betSmall") {
-    let line = `Aposta pequena (~${round}%): mistura de valores médios (pares +), projetos e alguns bluffs.`;
-    if (texture.wetness > 0.5) line += " Board molhado = mais bluffs e draws no mix.";
+    let line = `Aposta pequena (~${round}%): valores médios, projetos e alguns blefes${comOsQuais}.`;
+    if (texture.wetness > 0.5) line += " Board molhado = mais projetos no mix.";
     return line;
   }
-  return `Aposta forte (~${round}%): mãos feitas (dois pares+, trinca) ou blefes polares. A periferia do range saiu.`;
+  return `Aposta forte (~${round}%): mão feita (dois pares+, trinca) ou blefe polar${comOsQuais}. A periferia saiu.`;
 }
 
 // ----------------------------- Range recomendado do herói -----------------------------
@@ -604,10 +639,14 @@ export function heroBestAction(
     }
     return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço ${Math.round(neededEquity * 100)}%`, equity };
   }
-  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `aposta por valor (equity ${p}%)`, equity };
-  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%)`, equity };
-  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%)`, equity };
-  return { action: "check", freq: 0.7, reason: `controle de pote (equity ${p}%)`, equity };
+  // Tamanho ideal pelo board: molhado → grande (~⅔+) pra cobrar projetos;
+  // seco → pequena (~⅓) pra manter as mãos piores pagando.
+  const wet = texture.wetness > 0.5;
+  const sizeTip = wet ? "aposta grande (~⅔ do pote) pra cobrar os projetos" : "aposta pequena (~⅓ do pote) pra manter as piores pagando";
+  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `valor forte (equity ${p}%): ${sizeTip}`, equity };
+  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%): aposta pequena (~⅓), extrai um pouco sem inflar`, equity };
+  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%): aposta pequena e barata — fold equity + você melhora quando bate`, equity };
+  return { action: "check", freq: 0.7, reason: `controle de pote (equity ${p}%): sem valor claro nem projeto forte, o check evita inflar o pote`, equity };
 }
 
 // ----------------------------- Narração simples/técnica -----------------------------
