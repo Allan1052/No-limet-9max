@@ -195,20 +195,3 @@ function toEngineAction(
       return la.canCheck ? { type: "check" } : { type: "fold" };
   }
 }
-
-/**
- * Comportamento pós-flop PROVISÓRIO (substituído pelo cérebro pós-flop no
- * próximo bloco): check livre; paga apostas de até ~1/3 do pote; desiste de
- * apostas maiores. Simples e sem pretensão de ser bom — só para as mãos
- * rodarem até o showdown enquanto a Etapa 5 não chega.
- */
-export function botPostflopActionPlaceholder(t: TableState, _seat: number): Action {
-  const la = legalActions(t);
-  if (la.canCheck) return { type: "check" };
-  if (la.canCall) {
-    const pot = totalPot(t);
-    if (la.callAmount <= pot / 3) return { type: "call" };
-    return { type: "fold" };
-  }
-  return { type: "fold" };
-}

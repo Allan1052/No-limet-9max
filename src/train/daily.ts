@@ -51,7 +51,7 @@ export function buildDailyScenario(): { day: string; scenario: Scenario } {
     heroPosition,
     effectiveBB,
     raiserPosition,
-    openSizeBB: raiserPosition ? 2.3 : undefined,
+    openSizeBB: raiserPosition ? 2.0 : undefined, // open padrão do app (2.0bb)
   };
   return { day, scenario: buildScenarioFromSpec(spec, rng) };
 }
