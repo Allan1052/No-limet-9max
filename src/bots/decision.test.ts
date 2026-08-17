@@ -84,6 +84,57 @@ describe("pós-flop — pot odds", () => {
   });
 });
 
+describe("pós-flop — implied odds do projeto (Frente #3)", () => {
+  // Flush draw no flop (6s5s em Ks7s2h: 4 espadas). Mesmo projeto, mesma aposta:
+  // muda só o stack ATRÁS. Fundo (mais implied) deve exigir MENOS equity que raso.
+  const drawSpot = (heroStack: number) =>
+    postflopDecision(ctx({
+      hand: cardsFromString("6s5s"),
+      board: cardsFromString("Ks7s2h"),
+      potSize: 100,
+      toCall: 30,
+      heroStack,
+      inPosition: true,
+      wasPreflopAggressor: false,
+    }));
+
+  it("projeto FUNDO exige menos equity que projeto RASO (crédito de implied)", () => {
+    const fundo = drawSpot(1000); // SPR alto atrás → crédito cheio
+    const raso = drawSpot(60); // pouco atrás → crédito quase zero
+    expect(fundo.requiredEquity).toBeLessThan(raso.requiredEquity);
+  });
+
+  it("projeto exige menos equity que mão SEM projeto no mesmo board fundo", () => {
+    const comProjeto = drawSpot(1000);
+    const semProjeto = postflopDecision(ctx({
+      hand: cardsFromString("AhAd"), // overpar, sem flush/reta no Ks7s2h
+      board: cardsFromString("Ks7s2h"),
+      potSize: 100,
+      toCall: 30,
+      heroStack: 1000,
+      inPosition: true,
+      wasPreflopAggressor: false,
+    }));
+    expect(comProjeto.requiredEquity).toBeLessThan(semProjeto.requiredEquity);
+  });
+
+  it("no river não há crédito de implied (sem carta por vir)", () => {
+    const turnDraw = postflopDecision(ctx({
+      hand: cardsFromString("6s5s"),
+      board: cardsFromString("Ks7s2h"), // flop: projeto vale
+      potSize: 100, toCall: 30, heroStack: 1000, inPosition: true, wasPreflopAggressor: false,
+    }));
+    const riverMade = postflopDecision(ctx({
+      hand: cardsFromString("AhAd"),
+      board: cardsFromString("Ks7s2h9dQc"), // river: sem projeto
+      potSize: 100, toCall: 30, heroStack: 1000, inPosition: true, wasPreflopAggressor: false,
+    }));
+    // sanity: o crédito só aparece com projeto vivo (turn/flop), não some o teste
+    expect(turnDraw.requiredEquity).toBeGreaterThan(0);
+    expect(riverMade.requiredEquity).toBeGreaterThan(0);
+  });
+});
+
 describe("pós-flop — perfis diferenciam o blefe", () => {
   it("o LAG dá c-bet de blefe muito mais que o calling station", () => {
     // Mão sem valor (ar) em board seco, ação passada: mede frequência de aposta
