@@ -13,6 +13,7 @@ import type { HandHistory } from "../app/replay";
 import type { FeedbackItem, Rating } from "../feedback/analyzer";
 import { detectLeaksFromPairs, type Leak, type LeakOccurrence } from "../feedback/leaks";
 import { heroBBBefore } from "./handDepth";
+import { leakTrainingTrend, planForLeak } from "../train/leakTraining";
 
 /** Índice do evento no replay que corresponde ao FeedbackItem da mão. */
 function itemEventIndex(hand: HandHistory, item: FeedbackItem): number {
@@ -33,9 +34,15 @@ const FAM_LABEL: Record<string, string> = {
 export function LeaksPanel({
   hands,
   onClose,
+  /** Chamado quando o jogador clica em "Treinar esse ponto fraco". */
+  onTrainLeak,
+  /** Se o treino dirigido está bloqueado (senha rua2026) — botão vira dica. */
+  trainingLocked,
 }: {
   hands: HandHistory[];
   onClose: () => void;
+  onTrainLeak?: (leak: Leak) => void;
+  trainingLocked?: boolean;
 }) {
   const { leaks, total, aligned } = useMemo(() => {
     // Pares item+mão: cada erro fica ligado à mão em que aconteceu — carta,
@@ -117,6 +124,8 @@ export function LeaksPanel({
                 open={openLeaks.has(leak.id)}
                 onToggle={() => toggle(leak.id)}
                 onSelectOcc={(occ) => setSelOcc(occ)}
+                onTrainLeak={onTrainLeak}
+                trainingLocked={trainingLocked}
               />
             ))}
             <div style={{ fontSize: 11, color: "#8a8a7a", marginTop: 6, textAlign: "center" }}>
@@ -154,16 +163,22 @@ function LeakCard({
   open,
   onToggle,
   onSelectOcc,
+  onTrainLeak,
+  trainingLocked,
 }: {
   leak: Leak;
   rank: number;
   open: boolean;
   onToggle: () => void;
   onSelectOcc: (occ: LeakOccurrence) => void;
+  onTrainLeak?: (leak: Leak) => void;
+  trainingLocked?: boolean;
 }) {
   // Cor da faixa por gravidade: erros claros (badCount) puxam pro vermelho.
   const heavy = leak.badCount >= 2 || leak.severity >= 6;
   const accent = heavy ? "#e06b6b" : "#d4af37";
+  const plan = planForLeak(leak.id);
+  const trend = leakTrainingTrend(leak.id);
   const ratingColor: Record<string, string> = {
     boa: "#5fb96a",
     ok: "#8f9c6e",
@@ -219,6 +234,58 @@ function LeakCard({
         </div>
         <span style={{ fontSize: 12, color: "#8a8a7a", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>▸</span>
       </button>
+
+      {/* Treino dirigido + curva de evolução */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "6px 14px 10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {onTrainLeak && plan ? (
+          trainingLocked ? (
+            <span
+              style={{
+                fontSize: 11,
+                color: "#8a8a7a",
+                fontStyle: "italic",
+              }}
+            >
+              🔒 O treino desse ponto fraco está em teste — peça o desbloqueio.
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTrainLeak(leak);
+              }}
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#0a0d0a",
+                background: "linear-gradient(160deg, #f7e79b, #e6c454)",
+                border: "none",
+                borderRadius: 10,
+                padding: "6px 12px",
+                cursor: "pointer",
+              }}
+            >
+              🏋️ Treinar esse ponto fraco
+            </button>
+          )
+        ) : onTrainLeak ? (
+          <span style={{ fontSize: 11, color: "#8a8a7a", fontStyle: "italic" }}>
+            Esse vazamento se corrige estudando as mãos aqui do painel.
+          </span>
+        ) : null}
+
+        {/* Mini-curva de evolução deste vazamento */}
+        {trend && <LeakTrendMini trend={trend} accent={accent} />}
+      </div>
 
       {/* Erros individuais — cada mão com carta, posição e análise */}
       {open && leak.occurrences.length > 0 ? (
@@ -308,5 +375,51 @@ function OccurrenceRow({
       </span>
       <span style={{ fontSize: 11, color: "#6e7a5e", flexShrink: 0 }}>👁</span>
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Mini-curva de evolução do vazamento: acerto médio por dia dos treinos
+// dirigidos. SVG leve (sem biblioteca), escala vertical 0–100%.
+// ---------------------------------------------------------------------------
+function LeakTrendMini({ trend, accent }: { trend: import("../train/leakTraining").LeakTrend; accent: string }) {
+  const pts = trend.history;
+  if (pts.length === 0) return null;
+  const W = 150;
+  const H = 30;
+  const padX = 2;
+  const stepX = pts.length > 1 ? (W - padX * 2) / (pts.length - 1) : 0;
+  const d = pts
+    .map((p, i) => {
+      const x = padX + i * stepX;
+      const y = H - 2 - (p / 100) * (H - 4);
+      return (i === 0 ? `M${x},${y}` : `L${x},${y}`);
+    })
+    .join(" ");
+  const deltaColor = trend.delta >= 0 ? "#5fb96a" : "#e06b6b";
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 10,
+        color: "#a8a898",
+        marginLeft: "auto",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-label="Evolução do treino">
+        <path d={d} fill="none" stroke={accent} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.9} />
+      </svg>
+      <span>
+        {trend.attempts}× · última {trend.last}%{trend.delta !== 0 ? (
+          <span style={{ color: deltaColor, fontWeight: 700 }}>
+            {" "}
+            {trend.delta >= 0 ? "▲" : "▼"}{Math.abs(trend.delta)}
+          </span>
+        ) : null}
+      </span>
+    </span>
   );
 }

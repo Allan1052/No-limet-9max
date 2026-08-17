@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Leak Panel — visual</title>
+<style>
+  body { margin: 0; background: #141714; color: #e8e6d8; font-family: -apple-system, "Segoe UI", sans-serif; }
+  #app { max-width: 620px; margin: 0 auto; padding: 12px; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "/node_modules/.vite/deps/react.js?v=77af3eec",
+    "react-dom/client": "/node_modules/.vite/deps/react-dom_client.js?v=77af3eec",
+    "react/jsx-runtime": "/node_modules/.vite/deps/react_jsx-runtime.js?v=77af3eec",
+    "react-dom": "/node_modules/.vite/deps/react-dom.js?v=77af3eec"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+  import React from "react";
+  import { createRoot } from "react-dom/client";
+  window.React = React;
+
+  // Preenche localStorage com treinos para a curva aparecer.
+  localStorage.setItem(
+    "cof-leak-training-v1",
+    JSON.stringify([
+      { leakId: "loose_preflop", day: "2026-08-13", accuracy: 45, mastery: "beginner", ts: 1 },
+      { leakId: "loose_preflop", day: "2026-08-14", accuracy: 60, mastery: "intermediate", ts: 2 },
+      { leakId: "loose_preflop", day: "2026-08-15", accuracy: 75, mastery: "advanced", ts: 3 },
+    ]),
+  );
+
+  const { LeaksPanel } = await import("/src/ui/LeaksPanel.tsx");
+  const root = createRoot(document.getElementById("app"));
+  const fakeItem = {
+    text: "x",
+    advice: "fold",
+    action: "call",
+    adviceFam: "fold",
+    heroFam: "aggro",
+    rating: "ruim",
+    confidence: 0.9,
+    kind: "preflop",
+    street: "preflop",
+    mix: null,
+    equity: null,
+    evBB: null,
+    potOdds: null,
+  };
+  const hands = [
+    { handFeedback: [fakeItem, fakeItem, fakeItem], events: [] },
+    { handFeedback: [fakeItem, fakeItem, fakeItem], events: [] },
+  ];
+  root.render(
+    React.createElement(LeaksPanel, {
+      hands,
+      onClose: () => {},
+      onTrainLeak: (leak) => console.log("TREINAR", leak.id),
+      trainingLocked: false,
+    }),
+  );
+</script>
+</body>
+</html>

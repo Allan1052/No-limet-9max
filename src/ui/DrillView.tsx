@@ -25,6 +25,8 @@ import {
   type DrillSession,
   type DrillResult,
 } from "../train/drill";
+import { recordLeakTraining } from "../train/leakTraining";
+import { useEffect, useRef } from "react";
 
 // Estilos inline para o Drill Mode (paleta do app)
 const styles: Record<string, React.CSSProperties> = {
@@ -314,7 +316,20 @@ const styles: Record<string, React.CSSProperties> = {
 type Phase = "select" | "drill" | "done";
 type DrillMode = "preflop" | "postflop";
 
-export function DrillView() {
+export function DrillView({
+  /**
+   * Sessão dirigida por vazamento — quando presente, o DrillView pula a
+   * seleção e entra direto no drill com o foco do ponto fraco.
+   */
+  leakSession,
+}: {
+  leakSession?: {
+    session: DrillSession;
+    focus: string;
+    leakId: string;
+    leakTitle: string;
+  } | null;
+} = {}) {
   const [drillMode, setDrillMode] = useState<DrillMode & string>("preflop");
   const [phase, setPhase] = useState<Phase>("select");
   const [activePresetId, setActivePresetId] = useState<string>("");
@@ -324,6 +339,18 @@ export function DrillView() {
   const [showingFeedback, setShowingFeedback] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
   const [tipsItems, setTipsItems] = useState<{ free: any[]; tech: any[]; hand: any[] } | null>(null);
+  // Sessão dirigida: entra direto no drill quando o painel de leaks chama.
+  const leakSessionRef = useRef<NonNullable<Exclude<typeof leakSession, undefined | null>> | null>(null);
+  leakSessionRef.current = leakSession ?? null;
+  useEffect(() => {
+    if (leakSession && phase === "select") {
+      setActivePresetId(leakSession.session.spot.type + "_" + leakSession.session.spot.heroPosition);
+      setSession(leakSession.session);
+      setPhase("drill");
+      setFeedback(null);
+      setShowingFeedback(false);
+    }
+  }, [leakSession, phase]);
 
   // Abre a análise (Simples/Técnico) de um erro do drill.
   const openMistakeTips = useCallback((mistake: { hand: string; choice: string; advice: string }) => {
@@ -388,6 +415,10 @@ export function DrillView() {
         const result = computeDrillResult(session);
         const newProgress = recordDrillResult(session.spot.type + "_" + session.spot.heroPosition, result.accuracy, result.mastery);
         setProgress(newProgress);
+        // Grava na curva do vazamento (se for treino dirigido).
+        if (leakSessionRef.current) {
+          recordLeakTraining(leakSessionRef.current.leakId, result.accuracy);
+        }
         setPhase("done");
       } else {
         setSession({ ...session });
@@ -549,6 +580,7 @@ export function DrillView() {
     const currentHand = session.hands[session.currentIndex];
     if (!currentHand) return null;
     const spotLabel = `${session.spot.heroPosition}`;
+    const leak = leakSessionRef.current;
     const contextLabel = session.spot.type === "open"
       ? `${spotLabel} · ${session.spot.effectiveBB}bb · Pote não aberto`
       : session.spot.type === "vsOpen"
@@ -577,6 +609,25 @@ export function DrillView() {
         <div style={styles.context}>
           <p style={{ margin: 0 }}>{contextLabel}</p>
         </div>
+        {/* Foco do treino dirigido — o vazamento que este drill ataca */}
+        {leak ? (
+          <div
+            style={{
+              textAlign: "center",
+              margin: "-8px 0 16px",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#e6c454",
+              background: "rgba(230,196,84,0.10)",
+              border: "1px solid rgba(230,196,84,0.35)",
+              borderRadius: 10,
+              padding: "7px 12px",
+            }}
+          >
+            🎯 Treino dirigido · {leak.leakTitle}
+            <span style={{ display: "block", color: "#c9c4b0", fontWeight: 400, marginTop: 2 }}>{leak.focus}</span>
+          </div>
+        ) : null}
         {/* Cartas */}
         <div style={styles.cardsRow}>
           <CardView card={currentHand.hand[0]} />

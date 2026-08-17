@@ -12,7 +12,8 @@
 // Cada faixa de buy-in tem o próprio ranking, para que quem joga micro dispute
 // com quem joga micro.
 // ---------------------------------------------------------------------------
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
 import { useT } from "../i18n";
 import {
   fetchTournamentLeaderboard,
@@ -323,6 +324,7 @@ export function Leaderboard() {
                   Ninguém consegue apagar nem editar um resultado — nem nós. O
                   placar só aceita inclusão.
                 </p>
+                <GtoValidationSection />
               </div>
             ) : null}
           </div>
@@ -336,5 +338,24 @@ export function Leaderboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Validação "motor vs GTO" — aparece dentro de "Como a pontuação funciona".
+// Explica em linguagem simples que as recomendações são medidas contra a
+// teoria, com números sempre dinâmicos (runCalibration).
+// ---------------------------------------------------------------------------
+export function GtoValidationSection() {
+  const cal = useMemo(() => runCalibration(), []);
+  const pct = Math.round(cal.score * 100);
+  return (
+    <p className="lb-gto">
+      <b>As recomendações não são chute.</b> O motor de equity é conferido contra
+      valores exatos conhecidos (AA vs KK = 82% etc.) e as decisões de range são
+      medidas contra a teoria GTO num banco de spots-referência. Hoje: {pct}% de
+      concordância em {cal.total} spots-referência ({cal.matched} de {cal.total}{" "}
+      acertos diretos).
+    </p>
   );
 }

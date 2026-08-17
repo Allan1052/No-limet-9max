@@ -63,6 +63,7 @@ import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
+import { createLeakDrillSession, planForLeak } from "../train/leakTraining";
 import { isDevUnlocked } from "../lib/devLock";
 import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
@@ -182,6 +183,8 @@ export function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLogOpen, setHistoryLogOpen] = useState(false);
   const [leaksOpen, setLeaksOpen] = useState(false);
+  // Treino dirigido: sessão montada pelo painel de leaks para o DrillView.
+  const [leakTrainingSession, setLeakTrainingSession] = useState<{ session: any; focus: string; leakId: string; leakTitle: string } | null>(null);
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
@@ -357,7 +360,7 @@ export function App() {
         )
       ) : view === "drill" ? (
         isDevUnlocked("rua2026") ? (
-          <Suspense><DrillView /></Suspense>
+          <Suspense><DrillView leakSession={leakTrainingSession} /></Suspense>
         ) : (
           <DevLockedPlaceholder onGo={() => setView("treino")} />
         )
@@ -520,7 +523,29 @@ export function App() {
       ) : null}
 
       {leaksOpen ? (
-        <LeaksPanel hands={controller.handLog} onClose={() => setLeaksOpen(false)} />
+        <LeaksPanel
+          hands={controller.handLog}
+          onClose={() => setLeaksOpen(false)}
+          onTrainLeak={(leak) => {
+            // Monta o drill dirigido e leva o jogador direto ao treino.
+            const sess = createLeakDrillSession(leak.id);
+            if (!sess) {
+              // Sem drill dirigido (leaks pós-flop): estuda as mãos do painel.
+              setLeaksOpen(true);
+              return;
+            }
+            const plan = planForLeak(leak.id);
+            setLeakTrainingSession({
+              session: sess,
+              focus: plan?.focus ?? "",
+              leakId: leak.id,
+              leakTitle: leak.title,
+            });
+            setView("drill");
+            setLeaksOpen(false);
+          }}
+          trainingLocked={!isDevUnlocked("rua2026")}
+        />
       ) : null}
 
       {tipsOpen ? (

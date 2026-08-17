@@ -6,6 +6,8 @@ import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { findBlockers } from "../bots/blockers";
 import { classifyBoard } from "../bots/boardTexture";
+import { useMemo } from "react";
+import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
 import { getHandCommentary } from "./handCommentary";
@@ -88,6 +90,7 @@ export function HandTipsModal({
             fechar ✕
           </button>
         </div>
+        <GtoSealChip />
 
         {/* Abas Simples / Técnico */}
         <div className="tips-mode-tabs">
@@ -165,6 +168,36 @@ export function HandTipsModal({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Selo de confiança: o motor é medido contra a teoria GTO num banco de
+// spots-referência e o placar de concordância aparece como chip verde.
+// Númérico sempre dinâmico (lido de runCalibration) — nunca fixo.
+// ---------------------------------------------------------------------------
+export function GtoSealChip() {
+  const cal = useMemo(() => runCalibration(), []);
+  const pct = Math.round(cal.score * 100);
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        margin: "-4px 12px 6px",
+        fontSize: 11,
+        color: "#7ec58a",
+        border: "1px solid #3c5f44",
+        background: "rgba(80,160,95,0.08)",
+        borderRadius: 20,
+        padding: "3px 12px",
+        whiteSpace: "nowrap",
+      }}
+    >
+      ✓ Motor validado — bate com o GTO em {pct}% de {cal.total} spots-referência
     </div>
   );
 }
