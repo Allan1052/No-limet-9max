@@ -79,22 +79,34 @@ await new Promise((r) => setTimeout(r, 2000));
 await page.screenshot({ path: `/tmp/${prefix}-anat-micro.png` });
 console.log("micro ok");
 
-// Trocar para ELITE e capturar
-const eliteBtn = await page.evaluate(() => {
-  const els = [...document.querySelectorAll(".raiox-tier")].filter((e) => {
-    const t = (e.textContent || "").trim();
-    return /Elite/i.test(t) && e.offsetParent !== null;
-  });
-  if (!els.length) return null;
-  const r = els[0].getBoundingClientRect();
-  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+// Trocar para ELITE e capturar — os chips de tier podem estar fora da viewport
+const tierInfo = await page.evaluate(() => {
+  const els = [...document.querySelectorAll(".raiox-tier")];
+  return els.map((e) => ({ t: (e.textContent || "").trim(), y: e.getBoundingClientRect().y, on: e.className.includes(" on") }));
 });
-console.log("eliteBtn:", eliteBtn);
-if (eliteBtn) {
-  await page.mouse.click(eliteBtn.x, eliteBtn.y);
-  await new Promise((r) => setTimeout(r, 1500));
-  await page.screenshot({ path: `/tmp/${prefix}-anat-elite.png` });
-  console.log("elite ok");
+console.log("tiers:", JSON.stringify(tierInfo));
+if (tierInfo.some((x) => /Elite/i.test(x.t))) {
+  // rolar até o tier Elite
+  await page.evaluate(() => {
+    const el = [...document.querySelectorAll(".raiox-tier")].find((e) => /Elite/i.test(e.textContent || ""));
+    if (el) el.scrollIntoView({ block: "center" });
+  });
+  await new Promise((r) => setTimeout(r, 800));
+  const eliteBtn = await page.evaluate(() => {
+    const els = [...document.querySelectorAll(".raiox-tier")].filter((e) => /Elite/i.test(e.textContent || "") && e.offsetParent !== null);
+    if (!els.length) return null;
+    const r = els[0].getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  console.log("eliteBtn:", eliteBtn);
+  if (eliteBtn) {
+    await page.mouse.click(eliteBtn.x, eliteBtn.y);
+    await new Promise((r) => setTimeout(r, 1500));
+    await page.screenshot({ path: `/tmp/${prefix}-anat-elite.png` });
+    console.log("elite ok");
+  }
+} else {
+  console.log("AVISO: sem chips de tier visíveis nesta página");
 }
 
 // Scrollar para baixo e capturar a parte do raio-x (opcional)

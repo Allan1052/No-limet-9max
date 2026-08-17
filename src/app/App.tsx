@@ -163,15 +163,12 @@ export function App() {
     }
   }, [controller.tournamentOver, controller.tournamentSummary()]);
 
-  // Esconde a landing page overlay quando o app está pronto
+  // 17/08: o overlay landing-hero foi removido do index.html (abertura
+  // instantânea). Este efeito virou no-op e fica para revisão futura.
   useEffect(() => {
     const lh = document.getElementById("landing-hero");
-    if (lh) {
-      setTimeout(() => {
-        lh.style.transition = "opacity 0.4s ease";
-        lh.style.opacity = "0";
-        setTimeout(() => { lh.style.display = "none"; }, 400);
-      }, 1200);
+    if (lh && lh.offsetParent !== null) {
+      lh.style.display = "none";
     }
   }, []);
 
@@ -315,12 +312,12 @@ export function App() {
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
   const hint = advice ? tr("hint.baseline", { action: adviceLabel(advice.action) }) : undefined;
 
-  if (!splashComplete) {
-    return <SplashScreen onComplete={() => setSplashComplete(true)} />;
-  }
-
+  // 17/08: splash NÃO-BLOQUEANTE — o app já monta por baixo enquanto a logo
+  // aparece; o splash é só um overlay que some com fade (sem early return).
+  // Assim a abertura fica instantânea: nada bloqueia a montagem do React.
   return (
     <div className={`app${navHidden ? " nav-hidden" : ""}`}>
+      {!splashComplete && <SplashScreen onComplete={() => setSplashComplete(true)} />}
       {updateReady ? (
         <div className="update-banner">
           <span>✨ {tr("update.available")}</span>

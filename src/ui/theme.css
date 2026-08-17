@@ -2288,10 +2288,11 @@ body {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0d0f0d 0%, #050604 100%);
-  z-index: 9999;
-  animation: splash-in 0.6s ease-out;
+  z-index: 100;
+  animation: splash-in 0.4s ease-out;
   opacity: 1;
-  transition: opacity 0.6s ease-out;
+  transition: opacity 0.4s ease-out;
+  pointer-events: auto;
 }
 
 .splash-screen.fade-out {
