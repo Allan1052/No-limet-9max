@@ -7,10 +7,11 @@ import {
   heroBestAction,
   heroRecommendedGrid,
   preflopOpenRange,
+  villainCallingRange,
   type BoardState,
   type StreetContext,
 } from "./dynamicRanges";
-import { makeCard } from "../../engine/cards";
+import { makeCard, seededRng } from "../../engine/cards";
 
 // helpers de construção de cartas
 const A = (r: string, s: number) => {
@@ -226,6 +227,36 @@ describe("heroBestAction (scoring street)", () => {
   it("sem hit e sem aposta na mesa: check", () => {
     const d = heroBestAction("72o", flopA86(), 0, 5.1, analyzeBoard(flopA86()), preflopOpenRange("BTN", 20));
     expect(d.action).toBe("check");
+  });
+});
+
+// Regressão dos "erros básicos de range" que o Allan sentiu — trava a decisão
+// por EQUITY REAL contra quem PAGOU (villainCallingRange), no board A-8-6:
+//   • carta alta que ERROU (ace-high/broadway) NUNCA é "aposta por valor";
+//   • par médio (99/TT/JJ) num board de Ás é CHECK (controle de pote), não bet;
+//   • só o valor de verdade (top par bom / trinca) aposta.
+describe("heroBestAction — equity real, sem falso valor (regressão nota 10)", () => {
+  const b = flopA86();
+  const t = analyzeBoard(b);
+  const vr = villainCallingRange("BTN", 30);
+  const act = (h: string) => heroBestAction(h, b, 0, 5, t, vr, 400, seededRng(101)).action;
+
+  it("carta alta/broadway que errou NÃO aposta (sem falso valor)", () => {
+    for (const h of ["KQo", "QJo", "JTs"]) {
+      expect(act(h)).toBe("check");
+    }
+  });
+
+  it("par médio (99/TT/JJ) num board de Ás é CHECK, não value bet", () => {
+    for (const h of ["99", "TT", "JJ"]) {
+      expect(act(h)).toBe("check");
+    }
+  });
+
+  it("valor de verdade (top par bom / trinca) aposta", () => {
+    for (const h of ["AJo", "AQs", "88"]) {
+      expect(act(h)).toContain("bet"); // betSmall/betBig
+    }
   });
 });
 
