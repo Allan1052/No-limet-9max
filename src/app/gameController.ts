@@ -190,6 +190,8 @@ export interface TournamentSummary {
   review: FeedbackItem[];
   /** Histórico de TODAS as ações do herói — alimenta a anatomia (Fold/Call/Raise/Re-raise). */
   decisions: Array<{ heroAction: string }>;
+  /** Decisões detalhadas (mão do herói, ação, posição) — alimenta o hash anti-cheat do ranking. */
+  decisionsDetail?: Array<{ hand: string; action: string; position: string }>;
 }
 
 /** Estado serializável para salvar/retomar um torneio (entre mãos). */
@@ -264,6 +266,7 @@ export class GameController {
   private sessionReview: FeedbackItem[] = [];
   // Todas as ações do herói na sessão — a "anatomia" de fim de torneio.
   private sessionDecisions: Array<{ heroAction: string }> = [];
+  private sessionDecisionDetails: Array<{ hand: string; action: string; position: string }> = [];
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
@@ -397,6 +400,7 @@ export class GameController {
     this.sessionMistakes = [];
     this.sessionReview = [];
     this.sessionDecisions = [];
+    this.sessionDecisionDetails = [];
     this.tournamentResult = null;
     this.tournamentFinishPlace = null;
     this.setMessage("msg.tourneyConfigured", { stage: stageInfo.label });
@@ -910,6 +914,19 @@ export class GameController {
     // Anatomia: registra toda ação do herói (mesmo sem advice, para o check
     // contar como "não investiu") no raio-X Fold/Call/Raise/Re-raise.
     this.sessionDecisions.push({ heroAction: action.type === "raise" ? "raise" : action.type });
+    // Detalhe da decisão para o ranking: mão do herói + ação + posição.
+    // lastHand já foi congelada com as cartas dele antes de heroAct ser chamado
+    // (startHand roda no início da mão e congela holeCards no lastHand).
+    const curHand = this.lastHand;
+    if (curHand) {
+      const hc = curHand.holeCards[curHand.heroSeat];
+      const cardLabel = hc ? cardsToString(hc) : "";
+      this.sessionDecisionDetails.push({
+        hand: cardLabel,
+        action: action.type === "raise" ? "raise" : action.type,
+        position: curHand.heroPosition ?? "",
+      });
+    }
     this.applyLabeled(action, advice);
   }
 
@@ -1044,6 +1061,7 @@ export class GameController {
       mistakes,
       review: [...this.sessionReview],
       decisions: [...this.sessionDecisions],
+      decisionsDetail: [...this.sessionDecisionDetails],
     };
   }
 

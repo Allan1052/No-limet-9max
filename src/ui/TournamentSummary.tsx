@@ -48,9 +48,11 @@ const RATING_LABEL: Record<string, string> = {
 export function TournamentSummary({
   summary,
   onClose,
+  onNewHand,
 }: {
   summary: Summary;
   onClose: () => void;
+  onNewHand?: () => void;
 }) {
   const champ = summary.result === "campeao";
   const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
@@ -73,6 +75,11 @@ export function TournamentSummary({
     if (isCircuit && !nickname) return;
 
     setSending(true);
+    // Decisões detalhadas (mão + ação + posição) — hash anti-cheat real do ranking.
+    const detail = summary.decisionsDetail ?? [];
+    const decisions = detail.length
+      ? detail.map((d) => ({ hand: d.hand, action: d.action, position: d.position }))
+      : [];
     submitTournamentResult({
       nickname: nickname || "",
       stage: summary.initialStage,
@@ -81,7 +88,7 @@ export function TournamentSummary({
       finishPosition: summary.finishPlace,
       handsPlayed: summary.handsPlayed,
       handsCorrect: summary.ratings.boa + summary.ratings.ok,
-      decisions: [],
+      decisions,
       mode: summary.mode,
       circuitStage: summary.circuitStage,
     })
@@ -354,9 +361,14 @@ export function TournamentSummary({
           </div>
         )}
 
-        <button className="btn primary" onClick={onClose} style={{ marginTop: 10 }}>
-          Fechar e configurar novo torneio
-        </button>
+        <div style={{ marginTop: 10, display: "flex", gap: 8, justifyContent: "center" }}>
+          <button className="btn primary" onClick={onNewHand ?? onClose}>
+            🃏 Jogar nova mão
+          </button>
+          <button className="btn" onClick={onClose}>
+            Fechar e configurar novo torneio
+          </button>
+        </div>
       </div>
     </div>
   );

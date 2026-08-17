@@ -429,7 +429,7 @@ export function App() {
 
           {handOver ? (
             <div className="controls action-row">
-              <button className="btn primary" onClick={newHand}>
+              <button className="btn primary" onClick={() => { if (controller.tournamentOver) dismissSummary(); newHand(); }}>
                 {tr("btn.newHand")}
               </button>
               <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
@@ -563,6 +563,11 @@ export function App() {
           summary={controller.tournamentSummary()!}
           onClose={() => {
             dismissSummary();
+            setView("torneio");
+          }}
+          onNewHand={() => {
+            dismissSummary();
+            newHand();
             setView("torneio");
           }}
         />

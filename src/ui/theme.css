@@ -939,7 +939,7 @@ body {
 .seat-bet {
   position: absolute;
   transform: translate(-50%, -50%);
-  z-index: 4;
+  z-index: 7;
   animation: bet-in 0.24s ease-out both;
 }
 /* Fichas recolhidas pelo dealer deslizando pro pote. */
