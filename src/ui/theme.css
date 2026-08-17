@@ -249,7 +249,7 @@ body {
 .pp-rate-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
 .pp-prec-side { width: 100%; display: flex; justify-content: space-between; gap: 6px; }
 .pp-prec-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
-.pp-prec-num { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+.pp-prec-num { font-size: 12px; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pp-prec-val { font-size: 15px; font-weight: 800; color: var(--text); white-space: nowrap; }
 .pp-prec-val.good { color: var(--good); }
 .pp-prec-val.bad { color: var(--warn); }
@@ -514,7 +514,7 @@ body {
   text-shadow: 0 0 10px rgba(230, 196, 84, 0.4);
 }
 .tbl-of { font-size: 11px; color: var(--text-dim); font-weight: 600; }
-.tbl-money { font-size: 10px; color: var(--text-dim); font-weight: 700; margin-top: 2px; }
+.tbl-money { font-size: 12px; color: var(--text); font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .tbl-money.itm { color: var(--good); }
 .tbl-unit {
   position: absolute;
@@ -797,9 +797,10 @@ body {
 .pot {
   color: var(--gold);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 8px;
   text-shadow: 0 1px 2px #000;
+  font-variant-numeric: tabular-nums;
 }
 .board { display: flex; gap: 6px; justify-content: center; min-height: 62px; }
 
@@ -929,12 +930,14 @@ body {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
   display: block;
 }
+/* Valor da aposta do jogador/bot: número que precisa ler — nunca abaixo de 11px. */
 .chipstack-amt {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--gold-bright, #e6c454);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   margin-top: 0;
+  font-variant-numeric: tabular-nums;
 }
 .seat-bet {
   position: absolute;
@@ -1475,16 +1478,18 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .seat .pod { padding: 4px 5px; }
   .seat .name { font-size: 10px; }
   .seat .arch { font-size: 8px; }
-  .seat .stack { font-size: 10px; }
+  /* Stack do jogador é número que precisa ler: nunca abaixo de 12px. */
+  .seat .stack { font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; }
   .seat .badge { font-size: 9px; padding: 1px 5px; }
 
-  /* Cartas menores. */
-  .card { width: 34px; height: 48px; }
-  .card .rank { font-size: 16px; }
+  /* Cartas: as normais ficam um pouco menores, mas as pequenas
+     (listas de erro, compartilhamento, resumos) precisam ser legíveis. */
+  .card { width: 32px; height: 46px; }
+  .card .rank { font-size: 15px; }
   .card .suit { font-size: 12px; }
-  .card.sm { width: 22px; height: 32px; }
-  .card.sm .rank { font-size: 11px; }
-  .card.sm .suit { font-size: 8px; }
+  .card.sm { width: 26px; height: 38px; }
+  .card.sm .rank { font-size: 13px; }
+  .card.sm .suit { font-size: 11px; }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
   /* Controles e ICM empilham. */
@@ -3932,7 +3937,7 @@ body {
 .lb-nick { font-weight: 700; font-size: 15px; color: var(--ink, #ece7d6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lb-nick small { display: block; font-weight: 500; font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--dim, #9c9a86); }
 .lb-pts { text-align: right; font-weight: 800; font-size: 17px; color: var(--gold-bright, #e6c454); font-variant-numeric: tabular-nums; }
-.lb-pts small { display: block; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--dim, #9c9a86); }
+.lb-pts small { display: block; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: #c3c0ae; }
 
 .lb-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid #1e2216; }
 .lb-quote { font-style: italic; font-size: 12.5px; color: var(--gold-soft, #e8cf7f); max-width: 44ch; margin: 0 auto 10px; line-height: 1.5; }

@@ -86,7 +86,7 @@ export function LeaksPanel({
         {/* Barra de progresso — % alinhado com o ótimo */}
         {total > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#a8a898", marginBottom: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#b8b5a4", marginBottom: 4 }}>
               <span>{total} decisões analisadas</span>
               <span style={{ color: aligned >= 70 ? "#5fb96a" : aligned >= 50 ? "#d4af37" : "#e06b6b", fontWeight: 600 }}>{aligned}% alinhado</span>
             </div>
@@ -361,7 +361,7 @@ function OccurrenceRow({
       {/* Nota do erro */}
       <span
         style={{
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: 700,
           color: ratingColor,
           border: `1px solid ${ratingColor}88`,
@@ -403,8 +403,8 @@ function LeakTrendMini({ trend, accent }: { trend: import("../train/leakTraining
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        fontSize: 10,
-        color: "#a8a898",
+        fontSize: 12,
+        color: "#b8b5a4",
         marginLeft: "auto",
         whiteSpace: "nowrap",
       }}
