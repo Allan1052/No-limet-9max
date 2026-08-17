@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 17/08/2026 — Anatomia com números reais do motor + rótulo do denominador + prints ANTES/DEPOIS entregues
+### Última atualização: 17/08/2026 — SQL do ranking Elite executado e validado no Supabase
 
 ---
 
@@ -1111,7 +1111,7 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - Validação: tsc limpo · 3.594 testes · build OK · visual nota 10 (cores padrão fold cinza/call azul/raise âmbar nas barras novas).
 
 ## 📌 PENDÊNCIAS 17/08 (para próxima sessão)
-1. **SQL Elite ranking** — Allan roda no Supabase (login GitHub, NÃO email): https://supabase.com/dashboard/project/bdzuwjyvjmnpkufkdokt/editor/sql — arquivo `/home/ubuntu/correcao_ranking_elite_1k.sql` (ALTER TABLE + UPDATE row id=11 tier='alta'→'elite').
+1. ~~**SQL Elite ranking**~~ — **EXECUTADO E VALIDADO (17/08, 14:05)**: rodado no SQL Editor do dashboard da Supabase (sessão da conta calloufold.sonho@gmail.com já logada no browser). Constraint atualizada para aceitar 'elite' e row id=11 (743 pts, buy_in=1000, 7º/180) movido para tier='elite'. Validado via REST API anon: `tier=eq.elite` retorna 2 rows (id=11 com 743 pts + id=13 residual de QA com 1 pt — inofensivo, NÃO remover). Aba Elite agora aparece com o resultado do Allan. Pendência encerrada.
 2. **Startup instantâneo** — remover overlay `#landing-hero` de `public/index.html` + splash não-bloqueante (App.tsx).
 3. **bluff_catcher achievements.ts (~L374-377)** — fica com o Claude, NÃO mexer.
 4. **Prompt para Claude** — entregue em PDF `/home/ubuntu/prompt_para_claude_17-08.pdf` (lista o que está certo e o que falta).
