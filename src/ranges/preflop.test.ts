@@ -30,14 +30,14 @@ describe("pré-flop — abertura (pote não aberto)", () => {
     expect(decide("Ks9s", "BTN").action).toBe("raise");
   });
 
-  it("sem limper, a abertura é a padrão de 2.3bb", () => {
-    expect(decide("AsAh", "CO").sizeBB).toBeCloseTo(2.3, 5);
+  it("sem limper, a abertura é a padrão de 2.0bb", () => {
+    expect(decide("AsAh", "CO").sizeBB).toBeCloseTo(2.0, 5);
   });
 
   it("com limpers, o raise sobe +1bb por limper (isolamento)", () => {
-    expect(decide("AsAh", "CO", { limpers: 1 }).sizeBB).toBeCloseTo(3.3, 5);
-    expect(decide("AsAh", "CO", { limpers: 2 }).sizeBB).toBeCloseTo(4.3, 5);
-    expect(decide("AsAh", "CO", { limpers: 3 }).sizeBB).toBeCloseTo(5.3, 5);
+    expect(decide("AsAh", "CO", { limpers: 1 }).sizeBB).toBeCloseTo(3.0, 5);
+    expect(decide("AsAh", "CO", { limpers: 2 }).sizeBB).toBeCloseTo(4.0, 5);
+    expect(decide("AsAh", "CO", { limpers: 3 }).sizeBB).toBeCloseTo(5.0, 5);
   });
 
   it("o raise com limper aparece na justificativa (isola)", () => {
@@ -209,6 +209,22 @@ describe("pré-flop — nível de aposta (3-bet vs 4-bet vs 5-bet)", () => {
     });
     expect(vsOpen.action).not.toBe("fold");
     expect(vs3bet.action).toBe("fold");
+  });
+
+  it("commitment ~26bb: enfrentando 3-bet, a reração vira ALL-IN (não 4-bet-e-larga)", () => {
+    // O caso que o Allan viu: com ~26bb, 4-betar pra ~15 e largar ~11 atrás é
+    // dominado por jogar all-in. Mão premium → jam, não 4-bet parcial.
+    const d = decide("AsAd", "CO", {
+      effectiveBB: 26, raiserPosition: "BTN", openSizeBB: 7, threeBet: true, betLevelFaced: 2,
+    });
+    expect(d.action).toBe("jam");
+  });
+
+  it("fundo (50bb): a reração é 4-bet normal, não all-in", () => {
+    const d = decide("AsAd", "CO", {
+      effectiveBB: 50, raiserPosition: "BTN", openSizeBB: 7, threeBet: true, betLevelFaced: 2,
+    });
+    expect(d.action).toBe("3bet");
   });
 
   // Re-integração do 4-bet+ (betLevelFaced >= 3) ao MOTOR DE EQUITY: com stack

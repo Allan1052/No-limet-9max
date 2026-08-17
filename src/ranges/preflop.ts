@@ -116,12 +116,12 @@ function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
 }
 
-/** Abertura padrão (2.3bb) num pote sem limper. */
-const BASE_OPEN_BB = 2.3;
+/** Abertura padrão (2.0bb) num pote sem limper — o open mínimo/padrão moderno. */
+const BASE_OPEN_BB = 2.0;
 
 /**
- * Tamanho da abertura: mantém 2.3bb quando ninguém limpou, e sobe +1bb por
- * limper (isolamento). Ex.: 1 limper → 3.3bb, 2 limpers → 4.3bb. É a matemática
+ * Tamanho da abertura: mantém 2.0bb quando ninguém limpou, e sobe +1bb por
+ * limper (isolamento). Ex.: 1 limper → 3.0bb, 2 limpers → 4.0bb. É a matemática
  * de mesa ao vivo — cada limper que já pôs uma ficha no pote pede um raise maior
  * para cobrar quem quer ver flop barato.
  */
@@ -489,7 +489,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       };
     }
 
-    const raiseSize = ctx.openSizeBB ?? 2.3;
+    const raiseSize = ctx.openSizeBB ?? BASE_OPEN_BB;
     const sizeFactor = raiseSize <= 2.6 ? 1 : Math.max(0.1, Math.pow(2.4 / raiseSize, 0.9));
 
     const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFactor * sizeFactor;
@@ -506,15 +506,16 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const bluffZone = rangeSubtract(wider, defendRange);
     const callsOutOfPosition = ctx.profile.coldCallFactor >= 1.5;
 
-    const openSize = ctx.openSizeBB ?? 2.3;
-    // 3-bet size: OOP (SB, CO, HJ, LJ) devolve maior (~3.8x). IP (BTN) devolve menor (~3x).
-    // SB precisa do maior porque está sem posição pós-flop.
-    // BTN 3-bet pode ser menor porque tem posição e pode jogar melhor pós-flop.
+    const openSize = ctx.openSizeBB ?? BASE_OPEN_BB;
+    // 3-bet size (padrão moderno, menor que o antigo): IP (BTN) ~3x, CO ~3.3x,
+    // OOP (SB, HJ, LJ) ~3.5x. OOP devolve maior porque joga o pós-flop sem
+    // posição; IP pode 3-betar menor porque joga melhor depois. Ex.: com open de
+    // 2bb → BTN 6bb, CO 6.6bb, OOP 7bb.
     const threeBetSize = ctx.heroPosition === "BTN"
       ? openSize * 3.0
       : ctx.heroPosition === "CO"
-        ? openSize * 3.5
-        : openSize * 3.8;
+        ? openSize * 3.3
+        : openSize * 3.5;
 
     // Overrides: mãos premium SEMPRE 3-betam, independente da posição OOP.
     // Isso é poker fundamental — AKo+ nunca é fold OOP contra raiser.
@@ -760,10 +761,16 @@ function holdemVsThreeBet(
   icmFactor: number,
 ): PreflopDecision {
   const eff = ctx.effectiveBB;
-  const short = !!sd.pushFold || eff <= 25;
   const inPos = ctx.raiserPosition ? heroIpVsThreeBettor(ctx.heroPosition, ctx.raiserPosition) : false;
   const openSize = ctx.openSizeBB ?? 7;
   const fourBetSize = Math.min(eff, openSize * 2.2);
+  // COMMITMENT: se um 4-bet NÃO all-in já põe metade+ do stack no meio, 4-betar
+  // e depois foldar é dominado por jogar ALL-IN direto — foi o erro que o Allan
+  // viu (stack ~26bb: 4-bet pra ~17 e largar ~8 é o pior dos mundos). Nesse
+  // ponto de commitment a re-agressão vira JAM: quem continua, vai com tudo;
+  // quem não tem mão pra ir all-in, folda (não faz o 4-bet-e-larga).
+  const committing = fourBetSize >= eff * 0.55;
+  const short = !!sd.pushFold || eff <= 25 || committing;
 
   const betLevel = Math.max(0, Math.floor(ctx.betLevelFaced ?? 0));
 
