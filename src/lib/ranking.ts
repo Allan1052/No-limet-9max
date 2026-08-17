@@ -81,6 +81,13 @@ export async function submitVerifiedScore(params: {
   tier?: string;
   points?: number;
   hands_played?: number;
+  /**
+   * ATENÇÃO (nome enganoso — ver BACKLOG.md): guarda DECISÕES corretas
+   * (boa+ok), não MÃOS corretas. Uma mão tem várias decisões (pré/flop/turn/
+   * river), então esse valor PODE passar de hands_played — é esperado. O app
+   * mostra "% decisões corretas" a partir das notas, nunca divide os dois
+   * campos. TODO futuro: renomear a coluna do banco para decisions_correct.
+   */
   hands_correct?: number;
   stages_cleared?: number;
   mission_id?: string;
