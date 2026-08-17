@@ -8,7 +8,7 @@
 // força. Perfil, profundidade de stack e ICM depois esticam ou apertam o alvo.
 // ---------------------------------------------------------------------------
 
-import { buildTopRange, buildTopRangeWithBonus } from "../build";
+import { buildTopRangeWithBonus } from "../build";
 import type { Position, Range } from "../types";
 
 // Percentual-base de abertura por posição (fração de 1326 combos).
@@ -47,6 +47,20 @@ export function rfiTargetPercent(position: Position, adj: RfiAdjust = {}): numbe
   return Math.max(0.03, Math.min(0.65, pct));
 }
 
+// Bônus LEVE de pares/suited connectors na abertura funda — APENAS em posição
+// LARGA (CO/BTN/SB). O ranking de força cru subvaloriza essas mãos: o valor
+// delas vem de jogabilidade/set-mine e da equity que REALIZAM pós-flop, não da
+// equity crua. Sem isso o botão FOLDAVA 22/33/54s/65s/76s, mãos que o GTO abre
+// (leak achado pela calibração GTO em _calibration/gtoBenchmark).
+//
+// Por que SÓ em posição larga: mãos especulativas ganham valor EM POSIÇÃO e com
+// mais gente já foldada atrás — exatamente CO/BTN/SB. Em posição CEDO (UTG/MP) a
+// abertura é sobre força bruta/dominação (broadways), então aplicar o bônus lá
+// trocaria erradamente KQo por 98s. O corte por base >= 0.25 mantém as posições
+// cedo com o ranking puro (KQo segue abrindo em UTG) e só corrige as largas.
+export const RFI_SPECULATIVE_BONUS = 0.06;
+const RFI_SPECULATIVE_MIN_BASE = 0.25;
+
 /** Range de abertura concreta para a posição, já ajustada. */
 export function rfiRange(position: Position, adj: RfiAdjust = {}): Range {
   if (position === "BB") return {};
@@ -54,5 +68,6 @@ export function rfiRange(position: Position, adj: RfiAdjust = {}): Range {
   if (adj.shoveBonus && adj.shoveBonus > 0) {
     return buildTopRangeWithBonus(pct, adj.shoveBonus);
   }
-  return buildTopRange(pct);
+  const speculative = RFI_BASE_PERCENT[position] >= RFI_SPECULATIVE_MIN_BASE ? RFI_SPECULATIVE_BONUS : 0;
+  return buildTopRangeWithBonus(pct, speculative);
 }

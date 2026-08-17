@@ -200,7 +200,7 @@ describe("=== AUDITORIA GTO — Mesa Final ===", () => {
       { pos: "UTG" as Position, raiser: null as any, hand: "KQo", expected: "raise" }, // KQo opens UTG at ~15% freq in many solver solutions
       { pos: "BTN" as Position, raiser: null as any, hand: "A5o", expected: "raise" },
       { pos: "BTN" as Position, raiser: null as any, hand: "72o", expected: "fold" },
-      { pos: "BTN" as Position, raiser: null as any, hand: "65s", expected: "fold" }, // 65s is borderline, most solvers fold in RFI
+      { pos: "BTN" as Position, raiser: null as any, hand: "65s", expected: "raise" }, // BTN RFI abre 65s (~45%): conector suited é open padrão do botão em todo solver moderno (a nota antiga confundia early position com botão). Corrigido junto do fix de RFI especulativa.
     ];
 
     for (const check of checkMãos) {
@@ -346,8 +346,16 @@ describe("=== AUDITORIA GTO — Mesa Final ===", () => {
 
   // Save report
   it("salva relatório completo", () => {
-    const { writeFileSync } = require("fs");
-    writeFileSync("/home/ubuntu/no-limet-9max/gto-audit-report.txt", report.join("\n"));
-    log("\n\n=== Relatório salvo em gto-audit-report.txt ===");
+    // Grava relativo ao cwd (não a um caminho absoluto da máquina local), e nunca
+    // falha o teste se o disco estiver read-only — é só um artefato de relatório.
+    try {
+      const { writeFileSync } = require("fs");
+      const { tmpdir } = require("os");
+      const { join } = require("path");
+      writeFileSync(join(tmpdir(), "gto-audit-report.txt"), report.join("\n"));
+      log("\n\n=== Relatório salvo em <tmp>/gto-audit-report.txt ===");
+    } catch {
+      log("\n\n=== Relatório não gravado (disco read-only) — segue o jogo ===");
+    }
   });
 });

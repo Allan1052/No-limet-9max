@@ -338,8 +338,16 @@ describe("=== AUDITORIA GTO — 4 Estágios de Torneio ===", () => {
 
   // --- SALVAR RELATÓRIO ---
   it("salva relatório completo", () => {
-    const { writeFileSync } = require("fs");
-    writeFileSync("/home/ubuntu/no-limet-9max/multi-stage-audit-report.txt", report.join("\n"));
-    log("\n\n=== Relatório multi-estágio salvo em multi-stage-audit-report.txt ===");
+    // Grava relativo ao cwd (não a um caminho absoluto da máquina local), e nunca
+    // falha o teste se o disco estiver read-only — é só um artefato de relatório.
+    try {
+      const { writeFileSync } = require("fs");
+      const { tmpdir } = require("os");
+      const { join } = require("path");
+      writeFileSync(join(tmpdir(), "multi-stage-audit-report.txt"), report.join("\n"));
+      log("\n\n=== Relatório multi-estágio salvo em <tmp>/multi-stage-audit-report.txt ===");
+    } catch {
+      log("\n\n=== Relatório não gravado (disco read-only) — segue o jogo ===");
+    }
   });
 });
