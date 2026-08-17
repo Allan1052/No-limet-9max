@@ -15,9 +15,49 @@
 //   - continueVillainRange(prev, action, board, ctx) → range do vilão após a ação dele
 // ---------------------------------------------------------------------------
 
-import { allHandTypes, comboCount, type Range } from "../../ranges/types";
+import { allHandTypes, comboCount, handTypeCombos, rangeCombos, type Range } from "../../ranges/types";
+import { buildTopRange } from "../../ranges/build";
 import { handRank, handScore } from "../../ranges/handStrength";
-import type { Card } from "../../engine/cards";
+import { equityHandVsRange } from "../../engine/equity";
+import { seededRng, type Card } from "../../engine/cards";
+
+// ---------------------------------------------------------------------------
+// EQUITY REAL (Monte Carlo) — o mesmo motor do jogo. Substitui o "proxy por
+// categoria" (topPair=0.62 etc.): cada mão específica ganha o SEU valor real
+// contra o range do vilão naquele board. É o "cada carta tem um valor".
+// ---------------------------------------------------------------------------
+
+/** Um combo do handType que não conflita com o board (pra equity válida). */
+function pickHeroCombo(handType: string, board: Card[]): Card[] | null {
+  const used = new Set(board);
+  for (const c of handTypeCombos(handType)) {
+    if (!used.has(c[0]) && !used.has(c[1])) return c;
+  }
+  return null;
+}
+
+/** Semente estável por (mão × board) — a grade não "pisca" entre renders. */
+function equitySeed(handType: string, board: Card[]): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < handType.length; i++) h = Math.imul(h ^ handType.charCodeAt(i), 16777619);
+  for (const c of board) h = Math.imul(h ^ (c + 1), 16777619);
+  return (h >>> 0) || 1;
+}
+
+/** Equity REAL da mão do herói contra o range do vilão, neste board. */
+export function realEquity(
+  handType: string,
+  villainRange: Range,
+  board: Card[],
+  iterations = 500,
+  rng?: () => number,
+): number {
+  const hero = pickHeroCombo(handType, board);
+  const villain = rangeCombos(villainRange);
+  if (!hero || villain.length === 0) return 0.5;
+  const r = rng ?? seededRng(equitySeed(handType, board));
+  return equityHandVsRange(hero, villain, board, iterations, r).equity;
+}
 
 // ----------------------------- Tipos públicos -----------------------------
 
@@ -474,67 +514,58 @@ export interface HeroGridCell {
   draw?: boolean;
 }
 
+/**
+ * Range de VILÃO QUE PAGOU um raise (não o range de abertura dele).
+ *
+ * Medir a equity do herói contra o range de ABERTURA do vilão superestima a
+ * força do herói: o abridor tem muito lixo que, na prática, teria foldado ao
+ * raise. Contra quem paga (range mais forte, cheio de ases e pares), pares
+ * médios como 99/TT/JJ num board A-alto passam a ser CHECK (controle de pote),
+ * não "aposta por valor". Modelo: a interseção do range de abertura da posição
+ * com as ~22% mãos mais fortes — naturalmente sensível à posição (posição mais
+ * cedo abre e paga mais apertado, então a interseção fica mais estreita).
+ */
+export function villainCallingRange(villainPosition: string, effBB: number): Range {
+  const open = preflopOpenRange(villainPosition, effBB);
+  const cap = buildTopRange(0.22);
+  const out: Range = {};
+  for (const [ht, f] of Object.entries(open)) {
+    if (ht in cap) out[ht] = Math.min(f, cap[ht]);
+  }
+  // Segurança: se a interseção esvaziar (posição muito apertada), volta ao open.
+  return Object.keys(out).length > 0 ? out : open;
+}
+
 export function heroRecommendedGrid(
   board: BoardState,
   heroPosition: string,
   _villainPosition: string,
   effBB: number,
   _villainIsAggressive: boolean,
-  _potBB: number
+  potBB: number,
+  villainRange?: Range,
 ): HeroGridCell[] {
   const texture = analyzeBoard(board);
   // Limite pedagógico: o herói só "vive" o range que a teoria manda abrir da
-  // posição dele. Fora da faixa RFI, a célula vira cinza (fold) — igual ao
-  // padrão de solver de rua por rua e ao print esperado do Allan (UTG ~15%).
+  // posição dele (RFI real do motor). Fora dele, a célula é fold.
   const rfi = preflopOpenRange(heroPosition, effBB);
+  // O range do vilão contra quem medir a equity. Sem ele (fallback), usa o
+  // range de quem PAGOU um raise da posição do vilão — não o range de abertura
+  // cru, que superestima a equity do herói (ver villainCallingRange).
+  const vRange = villainRange && Object.keys(villainRange).length > 0
+    ? villainRange
+    : villainCallingRange(_villainPosition, effBB);
+
   return allHandTypes().map((ht) => {
-    if (!(ht in rfi)) {
-      // Fora do range de abertura da posição: nunca deveria estar lá.
-      return { handType: ht, category: "fold", freq: 0 };
-    }
+    if (!(ht in rfi)) return { handType: ht, category: "fold", freq: 0 };
     const hit = boardHit(ht, board);
-    let category: string;
-    let freq: number;
-
-    if (hit.made === "trips+" || hit.made === "twoPairOrBetter") {
-      category = "bet";
-      freq = 0.95;
-    } else if (hit.made === "topPair") {
-      category = "bet";
-      freq = 0.85;
-    } else if (hit.made === "overPair") {
-      category = texture.wetness > 0.6 ? "check" : "bet";
-      freq = 0.8;
-    } else if (hit.made === "middlePair") {
-      category = texture.wetness > 0.5 ? "check" : "bet";
-      freq = 0.6;
-    } else if (hit.made === "bottomPair" || hit.made === "weakPair") {
-      category = "check";
-      freq = 0.5;
-    } else if (hit.draw === "flushDraw" || hit.draw === "straightDraw") {
-      category = "bet";
-      freq = 0.72;
-    } else {
-      // mão sem hit: check só com força alta (overcards fortes); resto fold.
-      // Em board A-alto, KQo sem hit em UTG não deve defender por padrão.
-      const strength = handScore(ht);
-      category = strength > 0.62 ? "check" : strength > 0.45 ? "check" : "fold";
-      freq = strength > 0.62 ? 0.45 : strength > 0.45 ? 0.35 : 0.5;
-    }
-
-    // Stack curto (~15bb): a teoria manda shovear/comprar com mais — mãos
-    // marginais sem hit viram bet shove, draw forte vira shove.
-    if (effBB <= 15) {
-      if ((hit.draw === "flushDraw" || hit.draw === "straightDraw") && freq < 0.9) {
-        category = "bet";
-        freq = 0.9;
-      }
-    }
-
+    // Decisão pela EQUITY REAL (grade = herói na vez, sem aposta na frente).
+    const best = heroBestAction(ht, board, 0, potBB, texture, vRange, 320);
+    const category = best.action === "check" ? "check" : "bet"; // betSmall/betBig → "bet"
     return {
       handType: ht,
       category,
-      freq,
+      freq: best.freq,
       topPair: hit.made === "topPair" || hit.made === "trips+",
       draw: !!hit.draw,
     };
@@ -543,43 +574,40 @@ export function heroRecommendedGrid(
 
 // ----------------------------- Helpers de decisão -----------------------------
 
-/** Ação correta aproximada do herói no spot street-by-street (para scoring). */
+/**
+ * Ação correta do herói no spot street-by-street (para scoring e para a grade).
+ * Agora usa EQUITY REAL (Monte Carlo vs o range do vilão neste board) — não mais
+ * proxy por categoria. O `hit` (par de topo, projeto…) segue só para a NARRAÇÃO
+ * e o semi-blefe; a decisão vem da conta.
+ */
 export function heroBestAction(
   handType: string,
   board: BoardState,
   facingBetBB: number,
   potBB: number,
-  texture: BoardTexture
-): { action: string; freq: number; reason: string } {
+  texture: BoardTexture,
+  villainRange: Range,
+  iterations = 500,
+  rng?: () => number,
+): { action: string; freq: number; reason: string; equity: number } {
   const hit = boardHit(handType, board);
   const price = facingBetBB > 0 ? facingBetBB / (potBB + facingBetBB) : 0;
   const neededEquity = facingBetBB > 0 ? price : 0;
-
-  // Equity aproximada por categoria (proxy pedagógico, não Monte Carlo aqui).
-  let equity = 0.0;
-  if (hit.made === "trips+") equity = 0.95;
-  else if (hit.made === "twoPairOrBetter") equity = 0.88;
-  else if (hit.made === "topPair") equity = 0.62 + (texture.wetness > 0.5 ? 0.08 : 0);
-  else if (hit.made === "overPair") equity = 0.7 - (texture.wetness > 0.5 ? 0.12 : 0) - (texture.threeOfASuit ? 0.06 : 0);
-  else if (hit.made === "middlePair") equity = 0.5;
-  else if (hit.made === "bottomPair") equity = 0.38;
-  else if (hit.draw === "flushDraw") equity = 0.36;
-  else if (hit.draw === "straightDraw") equity = 0.32;
-  else if (hit.made === "weakPair") equity = 0.3;
-  else equity = 0.2 + handScore(handType) * 0.2;
+  const equity = realEquity(handType, villainRange, board.cards, iterations, rng);
+  const p = Math.round(equity * 100);
 
   if (facingBetBB > 0) {
-    if (equity >= 0.62) return { action: "raise", freq: 0.8, reason: "mão forte: valor" };
-    if (equity > neededEquity + 0.05) return { action: "call", freq: 0.8, reason: "paga o preço" };
-    if (equity > neededEquity - 0.02 && (hit.draw || texture.wetness > 0.5)) {
-      return { action: "call", freq: 0.55, reason: "marginal, mas com potencial" };
+    if (equity >= 0.66) return { action: "raise", freq: 0.8, reason: `equity ${p}%: valor forte`, equity };
+    if (equity > neededEquity + 0.04) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço ${Math.round(neededEquity * 100)}%`, equity };
+    if (equity > neededEquity - 0.03 && (hit.draw || texture.wetness > 0.5)) {
+      return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto`, equity };
     }
-    return { action: "fold", freq: 0.8, reason: "preço não compensa" };
+    return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço ${Math.round(neededEquity * 100)}%`, equity };
   }
-  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: "valor" };
-  if (equity >= 0.45) return { action: "betSmall", freq: 0.6, reason: "proteção + valor fino" };
-  if (hit.draw) return { action: "betSmall", freq: 0.7, reason: "semi-bluff" };
-  return { action: "check", freq: 0.7, reason: "controle de pote" };
+  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `aposta por valor (equity ${p}%)`, equity };
+  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%)`, equity };
+  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%)`, equity };
+  return { action: "check", freq: 0.7, reason: `controle de pote (equity ${p}%)`, equity };
 }
 
 // ----------------------------- Narração simples/técnica -----------------------------

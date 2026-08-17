@@ -209,22 +209,22 @@ describe("heroRecommendedGrid (Ver meu range)", () => {
 
 describe("heroBestAction (scoring street)", () => {
   it("top pair vs aposta: call ou raise (equity ≈62%, borderline)", () => {
-    const d = heroBestAction("AQs", flopA86(), 1.5, 5.1, analyzeBoard(flopA86()));
+    const d = heroBestAction("AQs", flopA86(), 1.5, 5.1, analyzeBoard(flopA86()), preflopOpenRange("BTN", 20));
     expect(d.action === "call" || d.action === "raise").toBe(true);
   });
 
   it("trinca vs aposta: raise", () => {
-    const d = heroBestAction("88", flopA86(), 1.5, 5.1, analyzeBoard(flopA86()));
+    const d = heroBestAction("88", flopA86(), 1.5, 5.1, analyzeBoard(flopA86()), preflopOpenRange("BTN", 20));
     expect(d.action).toBe("raise");
   });
 
   it("mão lixo vs aposta cara: fold", () => {
-    const d = heroBestAction("72o", flopA86(), 4.0, 5.1, analyzeBoard(flopA86()));
+    const d = heroBestAction("72o", flopA86(), 4.0, 5.1, analyzeBoard(flopA86()), preflopOpenRange("BTN", 20));
     expect(d.action).toBe("fold");
   });
 
   it("sem hit e sem aposta na mesa: check", () => {
-    const d = heroBestAction("72o", flopA86(), 0, 5.1, analyzeBoard(flopA86()));
+    const d = heroBestAction("72o", flopA86(), 0, 5.1, analyzeBoard(flopA86()), preflopOpenRange("BTN", 20));
     expect(d.action).toBe("check");
   });
 });

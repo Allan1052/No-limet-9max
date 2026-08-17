@@ -132,21 +132,21 @@ describe("simulação massiva rua por rua", () => {
   it("heroBestAction recomenda aposta com trinca e avalia draws no board molhado", () => {
     const flop = [card("Qc"), card("8d"), card("4h")];
     // QQ no flop Q-8-4: trinca → aposta
-    const qq = heroBestAction("QQ", { street: "flop", cards: flop }, 0, 3.8, analyzeBoard({ street: "flop", cards: flop }));
+    const qq = heroBestAction("QQ", { street: "flop", cards: flop }, 0, 3.8, analyzeBoard({ street: "flop", cards: flop }), preflopOpenRange("BTN", 30));
     expect(qq.action).toBe("betSmall");
     expect(qq.freq).toBeGreaterThan(0.8);
 
     // board molhado flush-draw: 87s deve apostar
     const wetBoard = [card("7c"), card("8c"), card("9h")];
     const tWet = analyzeBoard(flopBoard(wetBoard));
-    const s87 = heroBestAction("87s", flopBoard(wetBoard), 0, 3.8, tWet);
+    const s87 = heroBestAction("87s", flopBoard(wetBoard), 0, 3.8, tWet, preflopOpenRange("BTN", 30));
     expect(["betSmall", "check"]).toContain(s87.action);
     expect(s87.freq).toBeGreaterThan(0);
 
     // mão lixo no board seco: fold/check
     const dry2 = [card("As"), card("8d"), card("6c")];
     const dDry = analyzeBoard(flopBoard(dry2));
-    const junk = heroBestAction("72o", flopBoard(dry2), 0, 3.8, dDry);
+    const junk = heroBestAction("72o", flopBoard(dry2), 0, 3.8, dDry, preflopOpenRange("BTN", 30));
     expect(["fold", "check"]).toContain(junk.action);
   });
 

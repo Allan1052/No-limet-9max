@@ -276,9 +276,9 @@ export function StreetTrainer() {
 
   // Grade recomendada do herói (memo para não recalcular a cada render)
   const heroGrid = useMemo(
-    () => heroRecommendedGrid(boardSoFar, heroPos, villainPos, effBB, false, ctxNowPot()),
+    () => heroRecommendedGrid(boardSoFar, heroPos, villainPos, effBB, false, ctxNowPot(), villainRangeIsV),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [boardSoFar, heroPos, villainPos, effBB]
+    [boardSoFar, heroPos, villainPos, effBB, villainRangeIsV]
   );
 
   function ctxNowPot(): number {
@@ -425,6 +425,7 @@ export function StreetTrainer() {
       ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB,
       ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB,
       texture,
+      villainRangeIsV,
     );
     setShowHeroRange(true);
     setTimeout(() => decide(best.action), 40);
@@ -432,7 +433,7 @@ export function StreetTrainer() {
 
   const decide = (action: string) => {
     if (!hand || streetDec[current].hero) return;
-    const best = heroBestAction(heroHandType!, boardSoFar, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB, texture);
+    const best = heroBestAction(heroHandType!, boardSoFar, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).facedBetBB, ctxFor({ street: current, board: boardSoFar, heroAction: null, villainAction: null }, s).potBB, texture, villainRangeIsV);
     const ok = action === "fold" && best.action === "fold"
       || action === "check" && best.action === "check"
       || action === "call" && (best.action === "call" || best.action === "raise")
