@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 17/08/2026 — SQL do ranking Elite executado e validado no Supabase
+### Última atualização: 17/08/2026 — abertura instantânea implementada (landing-hero removido + splash não-bloqueante)
 
 ---
 
@@ -1112,7 +1112,7 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 
 ## 📌 PENDÊNCIAS 17/08 (para próxima sessão)
 1. ~~**SQL Elite ranking**~~ — **EXECUTADO E VALIDADO (17/08, 14:05)**: rodado no SQL Editor do dashboard da Supabase (sessão da conta calloufold.sonho@gmail.com já logada no browser). Constraint atualizada para aceitar 'elite' e row id=11 (743 pts, buy_in=1000, 7º/180) movido para tier='elite'. Validado via REST API anon: `tier=eq.elite` retorna 2 rows (id=11 com 743 pts + id=13 residual de QA com 1 pt — inofensivo, NÃO remover). Aba Elite agora aparece com o resultado do Allan. Pendência encerrada.
-2. **Startup instantâneo** — remover overlay `#landing-hero` de `public/index.html` + splash não-bloqueante (App.tsx).
+2. ~~**Startup instantâneo**~~ — **RESOLVIDO (17/08)**: commit a950e536. Removido todo o HTML/CSS do overlay `#landing-hero` de `index.html` (o app monta direto sobre `#root`); splash virou overlay NÃO-bloqueante dentro do `<div class="app">` (App.tsx sem early return; `!splashComplete && <SplashScreen/>`; z-index 9999→100, fade 0.6s→0.4s). Validação: tsc + 3.599 testes + build; local DOMContentLoaded 59ms/FCP 200ms; ar verificado via puppeteer (splash sumido aos 1s, app completo em PT, sem landing). Nota: o modal onboarding/Welcome vem em EN no primeiro acesso — comportamento do idioma default (i18n key `poker-sim-lang`), NÃO é regressão.
 3. **bluff_catcher achievements.ts (~L374-377)** — fica com o Claude, NÃO mexer.
 4. **Prompt para Claude** — entregue em PDF `/home/ubuntu/prompt_para_claude_17-08.pdf` (lista o que está certo e o que falta).
 
