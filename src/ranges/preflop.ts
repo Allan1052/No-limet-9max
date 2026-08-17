@@ -765,22 +765,40 @@ function holdemVsThreeBet(
   const openSize = ctx.openSizeBB ?? 7;
   const fourBetSize = Math.min(eff, openSize * 2.2);
 
-  // Contra 4-bet+ (betLevelFaced >= 3): a agressão acumulada indica mão premium
-  // ou dominação clara. 99 ou menor NUNCA paga 4-bet+. Só QQ+/AKs continua.
   const betLevel = Math.max(0, Math.floor(ctx.betLevelFaced ?? 0));
+
+  // PILAR 1 (parte 2): stack fundo + dados de mesa → a decisão nasce da EQUITY
+  // REAL, INCLUSIVE contra 4-bet+ (betLevel >= 3). O motor vsReraise já aperta
+  // sozinho o range de valor por nível (5-bet exige domínio {QQ+}; range cheio
+  // ~6%) e ainda deixa a mão forte PAGAR em posição — então não é preciso a
+  // lista fixa "só premium continua, o resto folda" que superestimava os folds.
+  // Piso de segurança: uma mão PREMIUM (VS3BET_VALUE) nunca FOLDA a um 4-bet+ —
+  // se a conta mandaria foldar (ex.: AK, que não é 5-bet de valor puro vs {QQ+}),
+  // ela ainda leva as fichas pro meio pelo peso do pote morto já acumulado.
+  const eq = equityReraise(ctx, handType, { short, inPos, openSize, fourBetSize, icmFactor });
+  if (eq) {
+    if (betLevel >= 3 && eq.action === "fold" && VS3BET_VALUE.has(handType)) {
+      return {
+        action: "3bet",
+        sizeBB: fourBetSize,
+        reason: `${handType}: ${nBetLabel(betLevel)} na frente — premium não larga; 5-bet levando as fichas (o pote morto acumulado paga o get-it-in).`,
+        handType,
+      };
+    }
+    return eq;
+  }
+
+  // Sem dados de mesa OU stack curto → heurístico. Contra 4-bet+ (betLevel >= 3):
+  // a agressão acumulada indica mão premium ou dominação clara — só QQ+/AK
+  // continua (jam se curto), pares médios e largados foldam.
   if (betLevel >= 3) {
-    const premium = new Set(["AA", "KK", "QQ", "AKs", "AKo"]);
-    if (premium.has(handType)) {
+    if (VS3BET_VALUE.has(handType)) {
       return short
         ? { action: "jam", sizeBB: eff, reason: `${handType}: ${nBetLabel(betLevel)} na frente — mão premium joga o torneio.`, handType }
         : { action: "3bet", sizeBB: fourBetSize, reason: `${handType}: ${nBetLabel(betLevel)} na frente — premium continua por valor.`, handType };
     }
     return { action: "fold", sizeBB: 0, reason: `${handType}: ${nBetLabel(betLevel)} na frente — contra essa agressão, pares médios e largados são fold.`, handType };
   }
-
-  // PILAR 1 (parte 2): stack fundo + dados de mesa → decide por EQUITY REAL.
-  const eq = equityReraise(ctx, handType, { short, inPos, openSize, fourBetSize, icmFactor });
-  if (eq) return eq;
 
   // Valor: 4-bet sempre (all-in se stack curto). Nunca folda.
   if (VS3BET_VALUE.has(handType)) {

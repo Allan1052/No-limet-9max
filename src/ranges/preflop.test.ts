@@ -210,6 +210,40 @@ describe("pré-flop — nível de aposta (3-bet vs 4-bet vs 5-bet)", () => {
     expect(vsOpen.action).not.toBe("fold");
     expect(vs3bet.action).toBe("fold");
   });
+
+  // Re-integração do 4-bet+ (betLevelFaced >= 3) ao MOTOR DE EQUITY: com stack
+  // fundo e dados de mesa, a decisão vem da conta (vsReraise), não de uma lista
+  // fixa. Piso de segurança: mão premium nunca FOLDA a um 4-bet+.
+  it("4-bet na frente (betLevel 3, fundo + dados de mesa): premium (AA/KK/QQ/AK) NUNCA folda", () => {
+    const rng = seededRng(7);
+    for (const h of ["AsAd", "KsKd", "QsQd", "AsKs", "AsKd"]) {
+      const d = decide(h, "CO", {
+        effectiveBB: 80, raiserPosition: "BTN", openSizeBB: 7, threeBet: true,
+        betLevelFaced: 3, potBB: 45, callAmountBB: 18, rng,
+      });
+      expect(d.action).not.toBe("fold");
+      expect(["3bet", "jam"]).toContain(d.action);
+    }
+  });
+
+  it("4-bet na frente (betLevel 3): pares médios e largados (99/88/KJs) FOLDAM pela conta", () => {
+    const rng = seededRng(9);
+    for (const h of ["9s9d", "8s8d", "KsJs"]) {
+      const d = decide(h, "CO", {
+        effectiveBB: 80, raiserPosition: "BTN", openSizeBB: 7, threeBet: true,
+        betLevelFaced: 3, potBB: 45, callAmountBB: 18, rng,
+      });
+      expect(d.action).toBe("fold");
+    }
+  });
+
+  it("4-bet na frente: a re-agressão é rotulada 5-bet", () => {
+    const d = decide("AsAd", "CO", {
+      effectiveBB: 80, raiserPosition: "BTN", openSizeBB: 7, threeBet: true,
+      betLevelFaced: 3, potBB: 45, callAmountBB: 18, rng: seededRng(3),
+    });
+    expect(d.nBet).toBe("5-bet");
+  });
 });
 
 describe("pré-flop — premium nunca flata e par pequeno defende (bugs dos prints)", () => {
