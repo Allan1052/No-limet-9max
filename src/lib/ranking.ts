@@ -559,3 +559,73 @@ export async function fetchMissionLeaderboard(
     return [];
   }
 }
+// Buscar TODOS os torneios oficiais do Circuito (verified=true) jogados com o
+// apelido dado — incluindo os fora do dinheiro — para montar a "Trajetória por
+// Buy-in" (contagem de torneios disputados/premiados por faixa).
+//
+// POR QUE BUSCA POR FAIXA EM VEZ DE TODOS DE UMA VEZ:
+//   O ranking filtra por tier (cada faixa tem ranking próprio) e por janela
+//   mensal/anual. Aqui queremos a trajetória COMPLETA do jogador na faixa —
+//   todos os meses, sem janela — então a consulta é direta por tier + apelido.
+export async function fetchTournamentEntries(
+  tiers: Array<"micro" | "baixa" | "media" | "alta" | "elite">,
+  nickname: string
+): Promise<
+  Array<{
+    player_key: string;
+    buy_in: number;
+    finish_position: number;
+    paid_places: number | null;
+    /** 1 se chegou ao dinheiro (posição <= lugares pagos), 0 caso contrário. */
+    in_money: 0 | 1;
+  }>
+> {
+  try {
+    // 1. Descobre a(s) player_key(s) deste apelido na tabela players.
+    const { data: players, error: playersError } = await supabase
+      .from("players")
+      .select("player_key")
+      .eq("nickname", nickname);
+    if (playersError) throw playersError;
+    const keys = (players || []).map((p) => p.player_key);
+    if (keys.length === 0) return [];
+
+    // 2. Cada faixa → resultados oficiais (verified) dessa faixa.
+    //    Supabase anônima: eq/limit são permitidos para leitura.
+    const out: Array<{
+      player_key: string;
+      buy_in: number;
+      finish_position: number;
+      paid_places: number | null;
+      in_money: 0 | 1;
+    }> = [];
+    for (const tier of tiers) {
+      const { data, error } = await supabase
+        .from("tournament_scores")
+        .select("player_key, buy_in, finish_position, paid_places")
+        .eq("tier", tier)
+        .eq("mode", "circuito")
+        .eq("verified", true)
+        .in("player_key", keys)
+        .limit(2000);
+      if (error) throw error;
+      for (const row of data || []) {
+        out.push({
+          player_key: row.player_key,
+          buy_in: row.buy_in,
+          finish_position: row.finish_position,
+          paid_places: row.paid_places ?? null,
+          in_money:
+            typeof row.paid_places === "number" &&
+            row.finish_position > 0 &&
+            row.finish_position <= row.paid_places
+              ? 1
+              : 0,
+        });
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}

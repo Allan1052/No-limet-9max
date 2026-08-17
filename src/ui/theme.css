@@ -5443,3 +5443,86 @@ body {
 .ft-trainer > .table-wrap { margin-top: 8px; }
 .ft-actions { display: flex; gap: 10px; padding: 8px 12px; justify-content: center; flex-wrap: wrap; }
 .ft-done { padding: 12px; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Trajetória por Buy-in (contador de torneios disputados por faixa) ─── */
+.tc-panel {
+  background: #0d1f16;
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 14px;
+  padding: 16px 18px 14px;
+  margin: 14px 0 6px;
+}
+.tc-title {
+  color: var(--gold, #e6c454);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.tc-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-dim, #a8a596);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.tc-badge-cloud {
+  background: rgba(59,130,246,0.18);
+  color: #93c5fd;
+  border: 1px solid rgba(59,130,246,0.4);
+}
+.tc-sub {
+  color: var(--text, #f0ede0);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 4px 0 10px;
+}
+.tc-list { display: flex; flex-direction: column; gap: 6px; }
+.tc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.tc-label { min-width: 78px; }
+.tc-buyin { display: block; color: var(--text, #f0ede0); font-size: 15px; font-weight: 800; }
+.tc-tier { display: block; color: var(--text-dim, #a8a596); font-size: 10.5px; margin-top: 1px; }
+.tc-body { flex: 1; min-width: 0; }
+.tc-nums { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.tc-played { color: var(--text, #f0ede0); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.tc-inmoney {
+  color: var(--gold, #e6c454);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tc-inmoney small { color: var(--text-dim, #a8a596); font-weight: 400; }
+.tc-bar-wrap { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); margin-top: 5px; overflow: hidden; }
+.tc-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #b8912e, #e6c454);
+  transition: width 0.4s ease;
+}
+.tc-foot {
+  color: var(--text-dim, #a8a596);
+  font-size: 11.5px;
+  margin-top: 8px;
+  font-style: italic;
+}
+.tc-empty {
+  background: #0d1f16;
+  border: 1px dashed rgba(212,175,55,0.4);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 14px 0 6px;
+  text-align: center;
+  color: var(--text, #f0ede0);
+}
+.tc-empty-sub { color: var(--text-dim, #a8a596); font-size: 13px; margin-top: 6px; }

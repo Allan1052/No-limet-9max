@@ -13,6 +13,7 @@ import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { SupportPix } from "./SupportPix";
 import { TopPrizesPanel } from "./TopPrizesPanel";
+import { TournamentCountPanel } from "./TournamentCountPanel";
 import { loadEliteWins, recordTournamentWin } from "../tournament/eliteUnlock";
 import { recordEliteWinCloud, syncEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
@@ -161,6 +162,10 @@ export function ProfileView({
             🏆 Conquistas
           </button>
         </div>
+
+        {/* Trajetória por buy-in: quantos torneios do Circuito disputados
+            (e quantos no dinheiro) em cada faixa — a jornada completa. */}
+        <TournamentCountPanel />
 
         {/* Mural de troféus: os 10 maiores prêmios do jogador */}
         <TopPrizesPanel />
