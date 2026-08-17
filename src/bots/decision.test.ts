@@ -54,6 +54,23 @@ describe("pós-flop — valor", () => {
     }));
     expect(d.action).toBe("raise");
   });
+
+  it("sizing por polarização: near-nuts no river estoura o pote e passa do valor no flop", () => {
+    const riverNuts = postflopDecision(ctx({
+      hand: cardsFromString("AsKs"),
+      board: cardsFromString("QsJsTs2h3d"), // royal flush no river (near-nuts)
+      potSize: 100, toCall: 0, inPosition: true, wasPreflopAggressor: true,
+    }));
+    const flopStrong = postflopDecision(ctx({
+      hand: cardsFromString("AsAd"),
+      board: cardsFromString("Ah7d2c"), // top set no flop seco
+      potSize: 100, toCall: 0, inPosition: true, wasPreflopAggressor: true,
+    }));
+    expect(riverNuts.action).toBe("bet");
+    expect(flopStrong.action).toBe("bet");
+    expect(riverNuts.sizeToPot!).toBeGreaterThanOrEqual(1.0); // overbet do range polarizado
+    expect(riverNuts.sizeToPot!).toBeGreaterThan(flopStrong.sizeToPot!);
+  });
 });
 
 describe("pós-flop — pot odds", () => {

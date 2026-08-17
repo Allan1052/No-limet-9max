@@ -79,9 +79,24 @@ export interface PostflopDecision {
   mix: ActionFreq[];
 }
 
-/** Tamanho de aposta por textura: seco aposta pequeno, molhado aposta grande. */
-function sizeForTexture(texture: BoardTexture): number {
-  return Math.round((0.33 + 0.4 * texture.wetness) * 100) / 100; // 0.33..0.73 do pote
+/**
+ * Tamanho de aposta (fração do pote) por TEXTURA + POLARIZAÇÃO (Frente #4).
+ *
+ * Base pela textura (seco pequeno, molhado grande). Sobre isso, a polarização:
+ * ranges ficam mais polarizados nas ruas finais, então o tamanho cresce rua a
+ * rua. No RIVER, os EXTREMOS do range — near-nuts OU ar puro — podem estourar o
+ * pote (overbet); os DOIS usam o mesmo tamanho, então não há "tell" (grande =
+ * valor, pequeno = blefe). O valor MÉDIO/merge encolhe (aposta fina/proteção),
+ * porque não é polarizado. `streetIdx`: 0=flop 1=turn 2=river.
+ */
+function betSize(texture: BoardTexture, streetIdx: number, equity: number): number {
+  let size = 0.33 + 0.4 * texture.wetness; // base 0.33..0.73
+  size += [0, 0.08, 0.2][streetIdx]; // polarização por rua (river aposta maior)
+  // Overbet só no river e só nos EXTREMOS do range (nuts ou ar) — sem tell.
+  if (streetIdx === 2 && (equity >= 0.85 || equity <= 0.18)) size += 0.35;
+  // Valor médio/merge: aposta menor (não é range polarizado).
+  else if (equity >= 0.5 && equity < 0.68) size *= 0.82;
+  return clamp(Math.round(size * 100) / 100, 0.25, 1.3);
 }
 
 function clamp(x: number, lo: number, hi: number): number {
@@ -154,7 +169,7 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   const realization = isAllInSpot ? 1.0 : (ctx.inPosition ? 1.05 : 0.9);
   const effEquity = Math.min(1, equity * realization);
 
-  const size = sizeForTexture(texture);
+  const size = betSize(texture, streetIdx, equity);
 
   // ---------- Caso A: há uma aposta para pagar ----------
   if (ctx.toCall > 0) {
