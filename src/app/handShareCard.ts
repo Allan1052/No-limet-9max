@@ -6,7 +6,7 @@
 // Modo "simples": recreativo — posição, stack, ação, nota, frase simples.
 // Modo "tecnico": com matemática — equity, potOdds, evBB (só se existirem).
 // ---------------------------------------------------------------------------
-import { rankOf, suitOf, RANKS, type Card } from "../engine/cards";
+import { rankOf, suitOf, RANKS, makeCard, type Card } from "../engine/cards";
 import type { Rating } from "../feedback/analyzer";
 import { LOGO_CF_BASE64 } from "./logoCfBase64";
 
@@ -283,6 +283,14 @@ export interface HandShareData {
   actionLog?: ActionLogEntry[];
   /** Buy-in em dólares, para o rodapé do card de histórico. */
   buyIn?: number;
+  /** Pote FINAL de cada rua (em big blinds), ex.: { "Pré-Flop": 5.5, "Flop": 12 }.
+   *  Quando presente, o card do histórico mostra "Pote: Xbb" ao final de cada rua. */
+  potByStreet?: Record<string, number>;
+  /** Pote total da mão (em big blinds) — usado quando não há rua específica. */
+  finalPotBB?: number;
+  /** SHOWDOWN: a mão revelada de cada jogador que mostrou as cartas.
+   *  O herói entra com isHero: true. `won` indica se aquele jogador levou o pote. */
+  showdown?: { name: string; cards: Card[]; isHero: boolean; won: boolean }[];
 }
 
 /**
@@ -765,12 +773,12 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
 
   // ── CARTAS DO HERÓI + BOARD (compactas, como protagonistas) ──
   const hasBoard = data.board.length > 0;
-  const cardW = hasBoard ? 118 : 164;
-  const cardH = hasBoard ? 162 : 226;
-  const gap = hasBoard ? 20 : 28;
+  const cardW = hasBoard ? 110 : 156;
+  const cardH = hasBoard ? 150 : 212;
+  const gap = hasBoard ? 18 : 28;
   const cardsTotalW = cardW * 2 + gap;
   const cardsX = (S - cardsTotalW) / 2;
-  const cardsY = 318;
+  const cardsY = 292;
 
   const glowCx = S / 2;
   const glowCy = cardsY + cardH / 2;
@@ -790,7 +798,7 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
     const bGap = 9;
     const bTotalW = data.board.length * bCardW + (data.board.length - 1) * bGap;
     const bX = (S - bTotalW) / 2;
-    const bY = cardsY + cardH + 12;
+    const bY = cardsY + cardH + 10;
     for (let i = 0; i < data.board.length; i++) {
       drawCardOnCanvas(ctx, data.board[i], bX + i * (bCardW + bGap), bY, bCardW, bCardH);
     }
@@ -814,12 +822,12 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
     streetGroups.get(entry.street)!.push(entry);
   }
 
-  const blockTop = posStackY + 28;
+  const blockTop = posStackY + 14;
   const blockPadX = 36;
-  const blockPadY = 16;
-  const lineH = 28; // altura por linha de ação
-  const streetGap = 12; // respiro entre ruas
-  const streetHeaderH = 22; // linha do nome da rua
+  const blockPadY = 8;
+  const lineH = 21; // altura por linha de ação
+  const streetGap = 5; // respiro entre ruas
+  const streetHeaderH = 18; // linha do nome da rua
   const colGap = 20; // espaço entre as duas colunas
 
   // divide as ruas em 2 colunas: esquerda = primeiro meio, direita = segundo
@@ -848,13 +856,13 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
 
   // o resultado fecha a coluna mais baixa; o bloco ocupa a maior das duas
   const resultLabel = data.tournamentResult ? `Resultado: ${data.tournamentResult}` : "";
-  const resultLineH = resultLabel ? 32 : 0;
-  const blockH = Math.max(leftH + (leftStreets.length === 0 ? 0 : resultLineH), rightH + (rightStreets.length === 0 ? 0 : resultLineH));
-  const blockMaxH = S - blockTop - 140; // folga para o rodapé
+  // o resultado não entra mais na coluna (box final o exibe); blockH = max das colunas
+  const blockH = Math.max(leftH, rightH);
+  const blockMaxH = S - blockTop - 224; // folga para o rodapé E o box do showdown
 
   // se a coluna esquerda + resultado estourar, encurta as linhas (raro: máximo
   // ~10 ações na coluna esquerda cabe em ~400px)
-  const fitLeft = leftStreets.length > 0 && leftH + resultLineH > blockMaxH;
+  const fitLeft = leftStreets.length > 0 && leftH > blockMaxH;
   const effLineH = fitLeft ? Math.max(22, lineH - 4) : lineH;
 
   // caixa translúcida do histórico (largura total, altura controlada)
@@ -864,7 +872,7 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.fill();
 
   // desenha uma coluna de ruas
-  const drawColumn = (streets: string[], cx: number, isLeft: boolean) => {
+  const drawColumn = (streets: string[], cx: number) => {
     let ry = blockTop + blockPadY;
     for (let i = 0; i < streets.length; i++) {
       const street = streets[i];
@@ -910,23 +918,118 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
         x += wAct;
         ry += effLineH + (mark ? 4 : 0);
       }
+
+      // POTE DA RUA (dourado, sempre que a rua teve pot registrado)
+      if (data.potByStreet?.[street] !== undefined) {
+        const potTxt = `Pote: ${data.potByStreet[street].toFixed(1)}bb`;
+        ctx.fillStyle = COLOR_GOLD;
+        ctx.font = "bold 18px Georgia, serif";
+        ctx.fillText(potTxt, cx + 16, ry + effLineH / 2);
+        ry += effLineH;
+      }
+
       if (i < streets.length - 1) ry += streetGap;
     }
 
-    // resultado da mão, fechado na coluna esquerda (começo da mão) se existir
-    if (resultLabel && isLeft && streets.length > 0) {
-      ry += 8;
-      const maxY = blockTop + Math.min(blockH, blockMaxH) - 16;
-      const textY = Math.min(ry, maxY);
-      ctx.fillStyle = COLOR_GOLD_BRIGHT;
-      ctx.font = "bold 21px Georgia, serif";
-      ctx.textAlign = "left";
-      ctx.fillText(resultLabel, cx + 16, textY);
-    }
+    // resultado da mão: desenhado apenas no box final (abaixo do bloco),
+    // nunca dentro da coluna — evita sobreposição com as ações da rua.
+    void 0;
   };
 
   const leftX = blockPadX;
   const rightX = blockPadX + colW / 2 + colGap / 2;
+
+  // ── SHOWDOWN — as mãos reveladas, quem levou o pote e o tamanho do pote.
+  // Quando a mão chegou ao showdown, este é o bloco que o público quer ver:
+  // o vilão mostra as cartas e o resultado fecha a história.
+  // O box do showdown precisa de ~160px; se não couber antes do rodapé, o card
+  // fecha só com o pote final (caixa de 48px) para nunca invadir o rodapé. ──
+  const showdownDrawY = blockTop + Math.min(blockH, blockMaxH) + 14;
+  const canFitShowdown = (data.showdown && data.showdown.length > 0) && (showdownDrawY + 170 < S - 100);
+  const canFitPotBox = showdownDrawY + 60 < S - 100;
+  if (canFitShowdown) {
+    const sdPad = 16;
+    const miniW = 58;
+    const miniH = 82;
+    const miniGap = 10;
+    // vilão primeiro (cartas de quem jogou contra), herói depois
+    const sdPlayers = [...(data.showdown ?? [])].sort((a, _b) => (a.isHero ? 1 : -1));
+    // vencedor destacado em dourado, perdedor em creme comum
+    const winner = sdPlayers.find((p) => p.won);
+    const potLabel = data.finalPotBB
+      ? `Pote: ${data.finalPotBB.toFixed(1)}bb`
+      : winner
+        ? `Vencedor levou o pote`
+        : "";
+
+    ctx.fillStyle = "rgba(0,0,0,0.32)";
+    const resultInBox = resultLabel && !potLabel ? 26 : 0; // resultado como linha do box (só se não houver pote)
+    const sdBoxH = 8 + miniH + (potLabel ? 34 : 8) + sdPad * 2 + resultInBox;
+    const sdBoxTop = showdownDrawY;
+    roundRect(ctx, blockPadX, sdBoxTop, colW, sdBoxH, 12);
+    ctx.fill();
+
+    // título — combina SHOWDOWN com o resultado da mão na mesma linha
+    ctx.fillStyle = COLOR_GOLD_BRIGHT;
+    ctx.font = "bold 22px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const titleTxt = resultLabel ? `SHOWDOWN — ${resultLabel.replace(/^Resultado: /, "")}` : "SHOWDOWN";
+    ctx.fillText(titleTxt, S / 2, sdBoxTop + sdPad + 11);
+
+    // total de largura dos jogadores (cartas + nome) para centralizar
+    const nameFontH = 18;
+    let totalW = 0;
+    const widths = sdPlayers.map((p) => {
+      const cardsW = Math.max(1, p.cards.length) * miniW + (Math.max(1, p.cards.length) - 1) * miniGap;
+      ctx.font = `bold ${nameFontH}px Georgia, serif`;
+      const wName = ctx.measureText(p.name).width;
+      return { cardsW, wName };
+    });
+    totalW = widths.reduce((t, w) => t + w.cardsW + w.wName, 0) + (sdPlayers.length - 1) * 30;
+    const fitW = Math.min(colW - 32, totalW);
+
+    // nunca deixa o grupo de cartas encostar na borda do box (margem interna 20)
+    let gx = Math.max(blockPadX + 20, S / 2 - fitW / 2);
+    const cardsY = sdBoxTop + sdPad + 22 + 8;
+    for (let i = 0; i < sdPlayers.length; i++) {
+      const p = sdPlayers[i];
+      const w = widths[i];
+      const groupW = w.cardsW + w.wName;
+
+      // cartas (mesmo estilo dos cards grandes, versão compacta)
+      for (let c = 0; c < Math.max(1, p.cards.length); c++) {
+        drawMiniCard(ctx, p.cards[c] ?? makeCard(14, 3), gx + c * (miniW + miniGap), cardsY, miniW, miniH);
+      }
+      // nome + indicador do vencedor
+      const nameColor = p.won ? COLOR_GOLD_BRIGHT : COLOR_CREAM_DIM;
+      ctx.fillStyle = nameColor;
+      ctx.font = `bold ${nameFontH}px Georgia, serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const nameTxt = p.won ? `${p.name} ${winner ? "👑" : ""} levou` : p.name;
+      ctx.fillText(nameTxt, gx + groupW / 2, cardsY + miniH + 14);
+
+      if (p.won && potLabel) {
+        ctx.font = `600 16px Georgia, serif`;
+        ctx.fillText(potLabel, gx + groupW / 2, cardsY + miniH + 32);
+      }
+      gx += groupW + 30;
+    }
+  } else if (canFitPotBox && data.finalPotBB) {
+    // mão SEM showdown (todo mundo foldou) ou sem espaço: o pote final fecha a história.
+    const potTxt = `Pote final: ${data.finalPotBB.toFixed(1)}bb`;
+    const potLabel = resultLabel ? `${resultLabel} — ${potTxt}` : potTxt;
+    ctx.fillStyle = "rgba(0,0,0,0.32)";
+    const potBoxH = 48;
+    roundRect(ctx, blockPadX, showdownDrawY, colW, potBoxH, 12);
+    ctx.fill();
+    ctx.fillStyle = COLOR_GOLD_BRIGHT;
+    ctx.font = "bold 20px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(potLabel, S / 2, showdownDrawY + potBoxH / 2);
+  }
   // divisor vertical sutil entre as colunas
   ctx.strokeStyle = "rgba(212,175,55,0.25)";
   ctx.lineWidth = 1;
@@ -934,8 +1037,8 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.moveTo(S / 2, blockTop + 18);
   ctx.lineTo(S / 2, blockTop + Math.min(blockH, blockMaxH) - 18);
   ctx.stroke();
-  drawColumn(leftStreets, leftX, true);
-  drawColumn(rightStreets, rightX, false);
+  drawColumn(leftStreets, leftX);
+  drawColumn(rightStreets, rightX);
 
   // ── RODAPÉ ──
   const footerY = S - 52;
@@ -952,4 +1055,43 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+}
+
+/** Carta em versão COMPACTA (mesmo estilo visual dos cards grandes): usada no
+ *  showdown do card de histórico, onde o espaço é curto. Fundo creme, cantos
+ *  arredondados, naipe e valor nos dois cantos — fiel ao padrão da marca. */
+function drawMiniCard(
+  ctx: CanvasRenderingContext2D,
+  card: Card,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  // Card é um número 0..51: rank = 2 + floor(card/4), suit = card % 4 (0=♣, 1=♦, 2=♥, 3=♠)
+  const suits = ["♣", "♦", "♥", "♠"];
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+  const r = rankOf(card);
+  const s = suitOf(card);
+  const red = s === 1 || s === 2;
+  // corpo da carta (creme) com cantos arredondados
+  ctx.fillStyle = "#f4efe2";
+  roundRect(ctx, x, y, w, h, Math.min(8, w * 0.12));
+  ctx.fill();
+  // contorno fino para destacar da mesa
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, x, y, w, h, Math.min(8, w * 0.12));
+  ctx.stroke();
+
+  const label = `${ranks[r - 2]}${suits[s]}`;
+  ctx.fillStyle = red ? "#c0392b" : "#1a1a1a";
+  // valor no canto superior esquerdo, grande em relação ao card
+  ctx.font = `bold ${Math.round(w * 0.42)}px Georgia, serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, x + w * 0.28, y + h * 0.28);
+  // naipe grande no centro
+  ctx.font = `${Math.round(w * 0.7)}px Georgia, serif`;
+  ctx.fillText(suits[s], x + w / 2, y + h * 0.62);
 }

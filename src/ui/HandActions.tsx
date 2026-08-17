@@ -58,6 +58,52 @@ export function HandActions({
       correct: ev.isHero ? streetCorrect.get(ev.street) : undefined,
     }));
 
+    // ── POTE POR RUA (em big blinds): o maior pote registrado na rua, somado às
+    // ações da rua via actionLabel. Simplificação fiel ao replay: usamos o maior
+    // `pot` da rua + as apostas explícitas extraídas dos labels (Raise/Call/All-in).
+    const potByStreet: Record<string, number> = {};
+    const streetPotBefore = new Map<string, number>();
+    for (const ev of hand.events) {
+      streetPotBefore.set(ev.street, Math.max(streetPotBefore.get(ev.street) ?? 0, ev.pot));
+    }
+    const addStreetValue = (street: string, amount: number) => {
+      potByStreet[street] = (potByStreet[street] ?? 0) + amount;
+    };
+    for (const ev of hand.events) {
+      const m = ev.actionLabel.match(/(?:Raise|Call|All-in|Bet)\s+([\d.]+)/i);
+      if (m && ev.actionType !== "fold" && ev.actionType !== "check") {
+        addStreetValue(ev.street, parseFloat(m[1]));
+      }
+    }
+    for (const [street, base] of streetPotBefore) {
+      potByStreet[street] = Math.round((base + (potByStreet[street] ?? 0)) * 10) / 10;
+    }
+    // Pote total da mão (se houve showdown ou vitória registrada).
+    let finalPotBB: number | undefined;
+    if (hand.result) {
+      const total = hand.result.pots.reduce((s, p) => s + p.amount, 0);
+      if (total > 0) finalPotBB = Math.round((total / hand.bigBlind) * 10) / 10;
+    }
+
+    // ── SHOWDOWN — mãos reveladas de todos os jogadores que mostraram cartas,
+    // quem levou o pote e o tamanho final. Sem showdown, nada é exibido (a mão
+    // termina com o pote final da caixa acima).
+    let showdown: HandShareData["showdown"];
+    if (hand.result?.showdown && hand.result.winningsBySeat) {
+      showdown = Object.entries(hand.holeCards)
+        .map(([seatStr, cards]) => {
+          const seat = Number(seatStr);
+          const won = (hand.result?.winningsBySeat[seat] ?? 0) > 0;
+          return {
+            name: hand.names[seat] ?? (seat === hand.heroSeat ? "Você" : "Vilão"),
+            cards,
+            isHero: seat === hand.heroSeat,
+            won,
+          };
+        })
+        .filter((p) => p.cards.length > 0);
+    }
+
     return {
       heroCards,
       board: hand.finalBoard,
@@ -76,6 +122,10 @@ export function HandActions({
       evBB: lastItem.evBB,
       decisions,
       actionLog,
+      potByStreet,
+      finalPotBB,
+      showdown,
+      bigBlind: hand.bigBlind,
     };
   })();
 
