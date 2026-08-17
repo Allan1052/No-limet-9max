@@ -275,7 +275,7 @@ export function TournamentSummary({
             </div>
           </div>
           <div className="anatomy-ref">
-            Padrão de torneio: Fold {anatomy.ref.fold}% · Call {anatomy.ref.call}% · Raise {anatomy.ref.raise}%
+            Padrão das mãos que você JOGOU: Fold {anatomy.ref.fold}% · Call {anatomy.ref.call}% · Raise {anatomy.ref.raise}%
             {anatomy.counts.reRaises > 0 && ` · Você fez ${anatomy.counts.reRaises} re-raise`}
           </div>
           <div className="anatomy-note">{anatomy.note}</div>

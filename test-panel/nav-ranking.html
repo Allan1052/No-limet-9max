@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>nav</title>
+<script type="module">
+  // Abre o app e dispara a navegação para a aba Ranking após o splash.
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("nav-to", { detail: "ranking" }));
+    }, 2500);
+  });
+</script>
+</head>
+<body></body>
+</html>

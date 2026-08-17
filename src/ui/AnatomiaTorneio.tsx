@@ -1,23 +1,23 @@
 // ---------------------------------------------------------------------------
 // Anatomia do Torneio — a comparação "como o recreativo joga × o jeito ideal".
 // Mostra que a maioria das mãos é fold e onde a ficha escorre (o CALL).
-// Só apresentação: números ilustrativos, alinhados ao motor pré-flop do app.
+// Os números das barras vêm do PRÓPRIO MOTOR (src/tournament/anatomy),
+// medidos por faixa — o campo Micro joga muito diferente do Elite.
 // ---------------------------------------------------------------------------
 import { useState } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
+import { idealDistribution, fieldDistribution, anatomyInsight, type AnatTier } from "../tournament/anatomy";
 import { loadDecisionStats, tournamentStatsFor, TIERS, type Tier } from "../train/decisionStats";
 
 type Dist = { fold: number; call: number; raise: number };
-const REC: Dist = { fold: 62, call: 24, raise: 14 }; // recreativo típico
-const IDE: Dist = { fold: 82, call: 7, raise: 11 }; // jogo disciplinado
 
 const RAIOX_MIN = 15; // decisões mínimas pra revelar um perfil confiável
 
-function leakKey(you: Dist): TransKey {
-  if (you.call - IDE.call >= 6) return "raiox.leakCall";
-  if (IDE.fold - you.fold >= 10) return "raiox.leakFold";
-  if (you.raise - IDE.raise >= 8) return "raiox.leakRaise";
+function leakKey(you: Dist, ideal: Dist): TransKey {
+  if (you.call - ideal.call >= 6) return "raiox.leakCall";
+  if (ideal.fold - you.fold >= 10) return "raiox.leakFold";
+  if (you.raise - ideal.raise >= 8) return "raiox.leakRaise";
   return "raiox.leakOk";
 }
 
@@ -42,6 +42,12 @@ export function AnatomiaTorneio() {
   const [mode, setMode] = useState<"treino" | "torneio">("treino");
   const [tier, setTier] = useState<Tier>("micro");
   const src = mode === "torneio" ? tournamentStatsFor(tier) : loadDecisionStats();
+  // Números REAIS do motor (src/tournament/anatomy): ideal medido na própria
+  // amostra de decisões pré-flop do motor; campo muda por faixa (Micro sangra,
+  // Elite quase no ideal). A lição sai da função anatomyInsight, sempre no fold.
+  const ideal: Dist = idealDistribution();
+  const campo: Dist = fieldDistribution(tier as unknown as AnatTier);
+  const licao = anatomyInsight(campo, ideal);
   const you: Dist =
     src.total > 0
       ? {
@@ -50,7 +56,7 @@ export function AnatomiaTorneio() {
           raise: Math.round((src.raise / src.total) * 100),
         }
       : { fold: 0, call: 0, raise: 0 };
-  const leak = leakKey(you);
+  const leak = leakKey(you, ideal);
   return (
     <div className="train-view">
       <div className="panel anat-panel">
@@ -60,7 +66,7 @@ export function AnatomiaTorneio() {
 
         <div className="anat-chart">
           <div className="anat-col">
-            <Bar d={REC} />
+            <Bar d={campo} />
             <div className="anat-lab rec">
               {t("anat.rec")}
               <small>{t("anat.recSub")}</small>
@@ -68,13 +74,15 @@ export function AnatomiaTorneio() {
           </div>
           <div className="anat-vs">×</div>
           <div className="anat-col">
-            <Bar d={IDE} />
+            <Bar d={ideal} />
             <div className="anat-lab ide">
               {t("anat.ide")}
               <small>{t("anat.ideSub")}</small>
             </div>
           </div>
         </div>
+
+        <div className="anat-denom">{t("anat.denom")}</div>
 
         <div className="anat-legend">
           <span>
@@ -92,10 +100,8 @@ export function AnatomiaTorneio() {
         </div>
 
         <div className="anat-leak">
-          <div className="anat-leak-t">
-            {t("anat.leakTitle")}: <span style={{ color: "var(--c-call,#3b82f6)" }}>24% × 7%</span>
-          </div>
-          <div className="anat-leak-s">{t("anat.leak")}</div>
+          <div className="anat-leak-t">{licao.headline}</div>
+          <div className="anat-leak-s">{licao.detail}</div>
         </div>
 
         <div className="anat-punch">{t("anat.punch")}</div>
@@ -143,7 +149,7 @@ export function AnatomiaTorneio() {
                 </div>
                 <div className="anat-vs">×</div>
                 <div className="anat-col">
-                  <Bar d={IDE} />
+                  <Bar d={ideal} />
                   <div className="anat-lab ide">
                     {t("anat.ide")}
                     <small>{t("anat.ideSub")}</small>
