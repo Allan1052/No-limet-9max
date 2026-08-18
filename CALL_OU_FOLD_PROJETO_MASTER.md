@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 17/08/2026 — abertura instantânea implementada (landing-hero removido + splash não-bloqueante)
+### Última atualização: 18/08/2026 — cards de compartilhamento corrigidos (carrossel padrão, showdown obrigatório, assinatura única) + 4 cards SHOWDOWN premium gerados
 
 ---
 
@@ -1110,7 +1110,36 @@ Allan reportou que o app recomendava Fold com 88/TT/JJ vs open raise e que 44/A4
 - **Prints ANTES/DEPOIS entregues ao Allan:** montagem `/home/ubuntu/comparacao_anatomia.png` (3 colunas: ANTES fixo | DEPOIS micro | DEPOIS elite com chip Elite selecionado). Antes capturado no ar com bundle antigo; DEPOIS verificado no ar e local (fullPage via puppeteer-core, clique via evaluate).
 - Validação: tsc limpo · 3.594 testes · build OK · visual nota 10 (cores padrão fold cinza/call azul/raise âmbar nas barras novas).
 
-## 📌 PENDÊNCIAS 17/08 (para próxima sessão)
+## ✅ SESSÃO 18/08 — 3 CORREÇÕES NOS CARDS DE COMPARTILHAMENTO (NO AR) + 4 CARDS SHOWDOWN PREMIUM
+
+### 🃏 CORREÇÕES NOS CARDS DE COMPARTILHAMENTO (deploy confirmado ao vivo)
+
+**Contexto:** o Allan aprovou a análise dos cards gerados pela Claude (carrossel não era padrão, showdown podia sumir, 3 assinaturas diferentes, formatos mistos). Entregues 3 correções, testadas tsc + 3.599 testes + build + **revisão visual renderizada em canvas via CDP** (chromium headless, render-cdp em `/tmp/render-cdp.py`).
+
+1. **Carrossel como padrão** (`src/ui/HandShareButton.tsx`): quem compartilha mão com 2+ ações gera automaticamente 2 cards (decisão + histórico completo com todas as ações) — pronto para postar como carrossel no Instagram. Dev lock removido do botão principal.
+2. **Showdown obrigatório** (`src/app/handShareCard.ts`): o card do histórico reserva o espaço do showdown ANTES de dimensionar o bloco de ações (variáveis `effHeaderH`/`effStreetGap`); colunas truncadas com fontes compactas (17/16/15px) quando a mão é longa — nunca invade o box do showdown, mesmo em mãos de 4 ruas.
+3. **Assinatura única**: card 1 (decisão) ganhou subtítulo "Call ou Fold · Simulador grátis" e o mesmo rodapé do card 2: "calloufold.com.br · Grátis · sem dinheiro real".
+
+**Portado também o fix do vilão errado** (commit paralelo 88629558 — `HandActions.tsx` filtra showdown só para quem chegou ao showdown; no card 1, painel HERÓI×VILÃO desenhado quando há board e vilão). Conflitos de rebase resolvidos com cuidado (2 trabalhos no mesmo arquivo).
+
+**Deploy:** rebase completo sobre origin/main → push → GitHub Actions green → bundle novo no ar (textos "Simulador grátis" e showdown confirmados no bundle servido). Render visual final dos 2 cards: nota 10.
+
+### 🏆 4 CARDS SHOWDOWN PREMIUM (estilo aprovado pelo Allan — IMG-20260817-WA9039.jpg)
+
+Gerados via canvas + chromium headless (render em `/tmp/render-showdown.py`, PNGs 1600×1600 em `/tmp/cards-showdown/`, PDF de entrega `/tmp/cards_showdown_premium.pdf`):
+
+| Card | Mão | Board | Equity | Dica do Coach |
+|---|---|---|---|---|
+| 1. Bad Beat | Herói 9h 9c × Vilão A♠J♠ | 3♥ 9♦ J♠ 5♣ 3♣ | 82% | Aposte 60% do pote para extrair valor |
+| 2. Call de herói | Herói K♥Q♥ × Vilão 7♣2♦ | 4♠ 5♦ K♣ 9♠ 7♣ | 61% | Bluff-catcher: o preço paga contra o range do vilão |
+| 3. All-in herói | Herói A♠K♥ × Vilão 8♣8♦ | A♣ 7♦ 3♠ 9♥ 2♣ (all-in PF, 20bb) | 88% | Com 20bb, AK é shove direto |
+| 4. Fold disciplinado | Herói Q♥Q♦ × Vilão (vs 3-bet) | — | — | Fold disciplinado |
+
+**Estilo (fiel à referência aprovada):** fundo preto com textura e partículas douradas, medallion CF com coroa de louros, título "CALL OU FOLD — SHOWDOWN", painéis HERÓI × VS × VILÃO com cartas legíveis (rank + naipe em cantos, naipe central), timeline de 4 caixas (posição/bb, pré-flop, flop, turn/river), bloco EQUITY (gradiente dourado) + DICA DO COACH, rodapé "TREINAMENTO PREMIUM DE POKER · CALL OU FOLD".
+
+**Nota:** estes cards são MATERIAL DE POSTAGEM (geração por script, fora do repo). Os 4 PNGs foram entregues ao Allan em PDF.
+
+### 📌 PENDÊNCIAS 17/08 (para próxima sessão)
 1. ~~**SQL Elite ranking**~~ — **EXECUTADO E VALIDADO (17/08, 14:05)**: rodado no SQL Editor do dashboard da Supabase (sessão da conta calloufold.sonho@gmail.com já logada no browser). Constraint atualizada para aceitar 'elite' e row id=11 (743 pts, buy_in=1000, 7º/180) movido para tier='elite'. Validado via REST API anon: `tier=eq.elite` retorna 2 rows (id=11 com 743 pts + id=13 residual de QA com 1 pt — inofensivo, NÃO remover). Aba Elite agora aparece com o resultado do Allan. Pendência encerrada.
 2. ~~**Startup instantâneo**~~ — **RESOLVIDO (17/08)**: commit a950e536. Removido todo o HTML/CSS do overlay `#landing-hero` de `index.html` (o app monta direto sobre `#root`); splash virou overlay NÃO-bloqueante dentro do `<div class="app">` (App.tsx sem early return; `!splashComplete && <SplashScreen/>`; z-index 9999→100, fade 0.6s→0.4s). Validação: tsc + 3.599 testes + build; local DOMContentLoaded 59ms/FCP 200ms; ar verificado via puppeteer (splash sumido aos 1s, app completo em PT, sem landing). Nota: o modal onboarding/Welcome vem em EN no primeiro acesso — comportamento do idioma default (i18n key `poker-sim-lang`), NÃO é regressão.
 3. **bluff_catcher achievements.ts (~L374-377)** — fica com o Claude, NÃO mexer.
