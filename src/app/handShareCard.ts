@@ -10,6 +10,7 @@ import { rankOf, suitOf, RANKS, makeCard, type Card } from "../engine/cards";
 import type { Rating } from "../feedback/analyzer";
 import { LOGO_CF_BASE64 } from "./logoCfBase64";
 import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
+import { buildHandNarrative } from "./handNarrative";
 
 const SUIT_SYMBOL = ["♣", "♦", "♥", "♠"]; // ordem de SUITS = "cdhs"
 const SUIT_RED = [false, true, true, false];
@@ -30,7 +31,7 @@ export type ShareCardMode = "simples" | "tecnico";
 /** Tipo de card: "decisao" = card da mão/decisão (padrão, simétrico ao modo
  *  simples/técnico); "historico" = card com o histórico completo da mão, rua por
  *  rua, com os valores apostados — feito para postar em carrossel no Instagram. */
-export type ShareCardType = "decisao" | "historico";
+export type ShareCardType = "decisao" | "historico" | "narrativa";
 
 export interface ShareCardOptions {
   mode?: ShareCardMode;
@@ -374,6 +375,7 @@ export async function drawHandShareCard(
   cardType: ShareCardType = "decisao",
 ): Promise<Blob | null> {
   if (cardType === "historico") return drawHistoryCard(data);
+  if (cardType === "narrativa") return drawNarrativeCard(data);
   return drawDecisionCard(data, mode);
 }
 
@@ -554,6 +556,97 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
 
   // ── rodapé ──
   ctx.fillStyle = GSOFT; ctx.font = "700 20px Georgia, serif"; ctx.textAlign = "center";
+  spaced("calloufold.com.br  ·  SEM DINHEIRO REAL  ·  SÓ ESTUDO", W / 2, H - 40, 2);
+
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+}
+
+// ── Card 2 (carrossel): A MÃO RUA POR RUA — narração estilo Yuri, dos dados
+// reais (buildHandNarrative). Timeline vertical: cada rua com a ação do herói e
+// o range do vilão apertando ("paga → 99, JJ, JT, KQ").
+async function drawNarrativeCard(data: HandShareData): Promise<Blob | null> {
+  const W = 1080, H = 1350;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.resolve(null);
+
+  const GLINE = "#7a5f1e", GSOFT = "#c9a227", GOLD = "#e6c454";
+  const CREAM = "#efe9d8", DIM = "#a89a72";
+  const goldGrad = (y: number, h: number) => {
+    const g = ctx.createLinearGradient(0, y, 0, y + h);
+    g.addColorStop(0, "#f9edb0"); g.addColorStop(0.5, "#e6c454"); g.addColorStop(1, "#c49a2a");
+    return g;
+  };
+  const spaced = (text: string, cx: number, y: number, ls: number) => {
+    const ws = [...text].map((c) => ctx.measureText(c).width);
+    const total = ws.reduce((a, b) => a + b, 0) + ls * Math.max(0, text.length - 1);
+    let x = cx - total / 2; ctx.textAlign = "left";
+    for (let i = 0; i < text.length; i++) { ctx.fillText(text[i], x, y); x += ws[i] + ls; }
+    return total;
+  };
+  const ellip = (text: string, maxW: number) => {
+    if (ctx.measureText(text).width <= maxW) return text;
+    let t = text;
+    while (t.length > 4 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+    return t + "…";
+  };
+
+  // fundo + moldura
+  ctx.fillStyle = "#0b0906"; ctx.fillRect(0, 0, W, H);
+  const bg = ctx.createRadialGradient(W / 2, 0, 80, W / 2, 0, H * 1.05);
+  bg.addColorStop(0, "#241c10"); bg.addColorStop(0.42, "#14100a"); bg.addColorStop(1, "#0b0906");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.lineWidth = 2; ctx.strokeStyle = GLINE; roundRect(ctx, 24, 24, W - 48, H - 48, 22); ctx.stroke();
+  ctx.textBaseline = "middle";
+
+  // header
+  await drawLogoImage(ctx, W / 2, 88, 88);
+  ctx.textAlign = "left";
+  const seg = [{ t: "CALL ", f: "900 66px Georgia, serif" }, { t: "ou", f: "italic 700 44px Georgia, serif" }, { t: " FOLD", f: "900 66px Georgia, serif" }];
+  let tw = 0; for (const s of seg) { ctx.font = s.f; tw += ctx.measureText(s.t).width; }
+  let wx = W / 2 - tw / 2; const wy = 184;
+  ctx.fillStyle = goldGrad(wy - 36, 72);
+  for (const s of seg) { ctx.font = s.f; ctx.fillText(s.t, wx, wy); wx += ctx.measureText(s.t).width; }
+  ctx.font = "800 22px Georgia, serif"; ctx.fillStyle = GSOFT;
+  spaced("A MÃO · RUA POR RUA", W / 2, 232, 6);
+
+  // sua mão (contexto)
+  ctx.font = "700 24px Georgia, serif"; ctx.textAlign = "center"; ctx.fillStyle = DIM;
+  const made = (() => { try { return data.board.length >= 3 ? CATEGORY_NAMES_PT[categoryOf(evaluate([...data.heroCards, ...data.board]))] : ""; } catch { return ""; } })();
+  const handStr = data.heroCards.map((c) => RANKS[rankOf(c) - 2] + ["♣", "♦", "♥", "♠"][suitOf(c)]).join(" ");
+  ctx.fillText(`Sua mão: ${handStr}${made ? ` · ${made}` : ""}`, W / 2, 272);
+
+  // timeline
+  const streets = buildHandNarrative(data);
+  const railX = 84;
+  const top = 310, bottom = H - 66;
+  const n = Math.max(1, streets.length);
+  const blockH = Math.min(210, (bottom - top) / n);
+  ctx.strokeStyle = GLINE; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(railX, top + 16); ctx.lineTo(railX, top + (n - 1) * blockH + 16); ctx.stroke();
+
+  for (let i = 0; i < streets.length; i++) {
+    const s = streets[i]; const y = top + i * blockH;
+    // ponto na trilha
+    ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(railX, y + 16, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#0b0906"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(railX, y + 16, 9, 0, Math.PI * 2); ctx.stroke();
+    const tx = 118;
+    // rótulo da rua
+    ctx.textAlign = "left"; ctx.fillStyle = GOLD; ctx.font = "900 27px Georgia, serif";
+    ctx.fillText(s.label, tx, y + 16);
+    // você
+    ctx.font = "800 20px Georgia, serif"; ctx.fillStyle = GSOFT; ctx.fillText("VOCÊ", tx, y + 58);
+    ctx.font = "700 25px Georgia, serif"; ctx.fillStyle = CREAM;
+    ctx.fillText(ellip(s.heroShort, W - tx - 210), tx + 78, y + 58);
+    // vilão
+    ctx.font = "800 20px Georgia, serif"; ctx.fillStyle = GSOFT; ctx.fillText("VILÃO", tx, y + 96);
+    ctx.font = "700 25px Georgia, serif"; ctx.fillStyle = DIM;
+    ctx.fillText(ellip(s.villainShort, W - tx - 210), tx + 78, y + 96);
+  }
+
+  // rodapé
+  ctx.fillStyle = GSOFT; ctx.font = "700 20px Georgia, serif";
   spaced("calloufold.com.br  ·  SEM DINHEIRO REAL  ·  SÓ ESTUDO", W / 2, H - 40, 2);
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
