@@ -2327,6 +2327,19 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   color: var(--gold-soft); text-transform: uppercase; font-size: 11px;
   letter-spacing: 1px; font-family: Georgia, serif;
 }
+.ir-newsession {
+  display: block; margin: 4px auto 0; max-width: 470px; width: 100%;
+  background: none; border: 1px dashed var(--gold-dim); border-radius: 10px;
+  color: var(--gold-soft); font-family: inherit; font-size: 14px; font-weight: 700;
+  padding: 10px; cursor: pointer;
+}
+.ir-newsession:hover { color: var(--gold-bright); border-color: var(--gold-soft); }
+.ir-coach .ir-coach-est {
+  display: inline-block; margin-left: 8px; padding: 1px 7px;
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+  color: var(--text-dim); background: rgba(0,0,0,0.35);
+  border: 1px solid var(--gold-dim); border-radius: 999px; vertical-align: middle;
+}
 .ir-coach-badge {
   flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;

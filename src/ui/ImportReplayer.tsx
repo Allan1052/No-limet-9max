@@ -250,6 +250,7 @@ export function ImportReplayer({
   session,
   startIndex = 0,
   onBack,
+  onNewSession,
   _previewStep,
 }: {
   hands: ParsedHand[];
@@ -258,6 +259,8 @@ export function ImportReplayer({
   session?: SessionReport;
   startIndex?: number;
   onBack?: () => void;
+  /** Fecha e LIMPA a sessão salva, pra importar outra do zero. */
+  onNewSession?: () => void;
   /** Apenas para preview/testes: passo inicial do replay. */
   _previewStep?: number;
 }) {
@@ -429,6 +432,7 @@ export function ImportReplayer({
                 {" · "}você fez <b>{coachFb.heroAction.toUpperCase()}</b>
               </>
             ) : null}
+            {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
           </span>
         </div>
       ) : null}
@@ -562,6 +566,12 @@ export function ImportReplayer({
           ))}
         </div>
       </details>
+
+      {onNewSession ? (
+        <button className="ir-newsession" onClick={onNewSession}>
+          ➕ Importar outra sessão
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -187,6 +187,18 @@ export function ImportView() {
           reports={report ? report.hands : []}
           session={report ?? undefined}
           onBack={() => setReplay(false)}
+          onNewSession={() => {
+            setReplay(false);
+            setReport(null);
+            setParsed([]);
+            setText("");
+            setError(null);
+            try {
+              localStorage.removeItem(LAST_IMPORT_KEY);
+            } catch {
+              // ignora
+            }
+          }}
         />
       ) : report ? (
         <ReportView
