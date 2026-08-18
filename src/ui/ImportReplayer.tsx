@@ -25,18 +25,18 @@ const POS_SHORT: Record<string, string> = {
   BTN: "BTN",
 };
 
-// Mesmo mapa da mesa real (seat 0 = posição do herói no download; os demais
-// recebem posições em torno da mesa conforme a rotação do botão).
+// Anel de posições da mesa (herói embaixo, no centro = slot 0). Mesa em retrato
+// (mais alta) e assentos afastados do centro pra não encavalar o board no 9-max.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "90%", left: "50%" },
-  { top: "82%", left: "19%" },
-  { top: "52%", left: "9%" },
-  { top: "20%", left: "14%" },
-  { top: "8%", left: "37%" },
-  { top: "8%", left: "63%" },
-  { top: "20%", left: "86%" },
-  { top: "52%", left: "91%" },
-  { top: "82%", left: "81%" },
+  { top: "88%", left: "50%" },
+  { top: "80%", left: "20%" },
+  { top: "54%", left: "12%" },
+  { top: "29%", left: "17%" },
+  { top: "14%", left: "40%" },
+  { top: "14%", left: "60%" },
+  { top: "29%", left: "83%" },
+  { top: "54%", left: "88%" },
+  { top: "80%", left: "80%" },
 ];
 
 const STREET_PT: Record<Street, string> = {
@@ -59,8 +59,19 @@ const ACTION_PT: Record<string, string> = {
   collected: "Levou o pote",
 };
 
-/** Label legível da ação: "Call 2bb", "Raise 5bb", "All-in". */
-function actionText(a: ParsedAction): string {
+/** bb inteiro a partir de fichas (o parser guarda FICHAS, não bb). */
+function toBB(chips: number, bb: number): number {
+  return bb > 0 ? Math.round(chips / bb) : Math.round(chips);
+}
+
+/** bb com 1 casa quando pequeno ("3.5bb"), inteiro quando grande ("14bb"). */
+function fmtBB(chips: number, bb: number): string {
+  const v = bb > 0 ? chips / bb : chips;
+  return v < 10 ? `${(Math.round(v * 2) / 2).toString().replace(/\.0$/, "")}bb` : `${Math.round(v)}bb`;
+}
+
+/** Label legível da ação já em bb: "Call 2bb", "Raise 5bb", "All-in". */
+function actionText(a: ParsedAction, bb: number): string {
   const label = ACTION_PT[a.type] ?? a.type;
   if (
     a.type === "fold" ||
@@ -69,9 +80,9 @@ function actionText(a: ParsedAction): string {
     a.type === "collected"
   )
     return label;
-  if (a.allIn) return `${label} all-in`;
-  const bbv = Math.round(a.amount);
-  return `${label} ${bbv}bb`;
+  const bbv = fmtBB(a.amount, bb);
+  if (a.allIn) return `${label} ${bbv} (all-in)`;
+  return `${label} ${bbv}`;
 }
 
 interface SeatState {
@@ -91,6 +102,7 @@ interface StepInfo {
   board: number[];
   seats: SeatState[];
   pot: string | null; // ex.: "Alguém levou o pote"
+  potBB: number; // pote acumulado (em bb) até este passo
 }
 
 /**
@@ -131,6 +143,11 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
     lastAction: null,
   }));
 
+  const bb = hand.bb || 1;
+  // Pote e apostas por rua (em FICHAS) — reconstrói o pote crescendo de verdade.
+  let potChips = 0;
+  let committed: Record<string, number> = {}; // aposta desta rua, por jogador
+
   const steps: StepInfo[] = [
     {
       actionIdx: -1,
@@ -138,6 +155,7 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
       board: [],
       seats: seatsAt.map((s) => ({ ...s })),
       pot: null,
+      potBB: 0,
     },
   ];
 
@@ -157,30 +175,41 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
     if (targetVisible > visibleBoard && lastStreet !== a.street) {
       visibleBoard = targetVisible;
       lastStreet = a.street;
+      committed = {}; // nova rua: zera as apostas da rua
       steps.push({
         actionIdx: -2,
         action: null,
         board: hand.board.slice(0, visibleBoard),
         seats: seatsAt.map((s) => ({ ...s })),
         pot: null,
+        potBB: toBB(potChips, bb),
       });
     }
     const seat = seatsAt.find((s) => s.name === a.player);
     if (seat) {
-      seat.lastAction = actionText(a);
+      seat.lastAction = actionText(a, bb);
       if (a.type === "fold") {
         seat.folded = true;
         seat.lastAction = "Fold";
-      } else if (a.type === "sb") {
-        seat.stack = Math.max(0, seat.stack - hand.sb - hand.ante);
-      } else if (a.type === "bb") {
-        seat.stack = Math.max(0, seat.stack - hand.bb - hand.ante);
       } else if (a.type === "ante") {
-        seat.stack = Math.max(0, seat.stack - hand.ante);
-      } else if (a.type === "call" || a.type === "bet" || a.type === "raise") {
-        seat.stack = Math.max(0, seat.stack - Math.round(a.amount));
+        const d = a.amount || hand.ante;
+        seat.stack = Math.max(0, seat.stack - d);
+        potChips += d;
+      } else if (a.type === "sb" || a.type === "bb" || a.type === "call" || a.type === "bet") {
+        const d = a.amount || (a.type === "sb" ? hand.sb : a.type === "bb" ? hand.bb : 0);
+        seat.stack = Math.max(0, seat.stack - d);
+        potChips += d;
+        committed[a.player] = (committed[a.player] ?? 0) + d;
+      } else if (a.type === "raise") {
+        // amount é o TOTAL "to" — o que entra é o delta sobre o já apostado na rua.
+        const delta = Math.max(0, a.amount - (committed[a.player] ?? 0));
+        seat.stack = Math.max(0, seat.stack - delta);
+        potChips += delta;
+        committed[a.player] = a.amount;
       } else if (a.type === "uncalled") {
-        seat.stack += Math.round(a.amount);
+        seat.stack += a.amount;
+        potChips = Math.max(0, potChips - a.amount);
+        committed[a.player] = Math.max(0, (committed[a.player] ?? 0) - a.amount);
       }
     }
     steps.push({
@@ -194,6 +223,7 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
           : a.type === "uncalled"
             ? `Devolvido a ${a.player}`
             : null,
+      potBB: toBB(potChips, bb),
     });
   }
 
@@ -204,6 +234,7 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
     board: hand.board,
     seats: seatsAt.map((s) => ({ ...s })),
     pot: "Resultado",
+    potBB: toBB(potChips, bb),
   });
 
   void n;
@@ -216,6 +247,7 @@ export function ImportReplayer({
   session,
   startIndex = 0,
   onBack,
+  _previewStep,
 }: {
   hands: ParsedHand[];
   reports: { handId: string; feedback?: FeedbackItem; heroCardsText: string; effectiveBB: number; situation: string }[];
@@ -223,6 +255,8 @@ export function ImportReplayer({
   session?: SessionReport;
   startIndex?: number;
   onBack?: () => void;
+  /** Apenas para preview/testes: passo inicial do replay. */
+  _previewStep?: number;
 }) {
   const { t } = useT();
   const [handIdx, setHandIdx] = useState(startIndex);
@@ -230,7 +264,7 @@ export function ImportReplayer({
   const hand = hands[handIdx];
   const report = reports[handIdx];
   const steps = useMemo(() => buildSteps(hand), [hand]);
-  const [stepIdx, setStepIdx] = useState(0);
+  const [stepIdx, setStepIdx] = useState(_previewStep ?? 0);
   const step = steps[stepIdx];
   const atEnd = stepIdx >= steps.length - 1;
   const isLastHand = handIdx === hands.length - 1;
@@ -319,12 +353,12 @@ export function ImportReplayer({
             style={SEAT_POS[s.slot]}
           >
             <div className="pod">
+              {s.isButton ? <span className="ir-dealer">D</span> : null}
               <div className="name">{s.name}</div>
-              <div className="arch">
-                {s.position}
-                {s.isButton ? " · BTN" : ""}
+              <div className="arch">{s.position}</div>
+              <div className="stack">
+                {s.folded ? "fora" : `${toBB(s.stack, hand.bb)}bb`}
               </div>
-              <div className="stack">{s.stack > 0 ? `${s.stack}bb` : s.folded ? "—" : "0bb"}</div>
               {s.isHero && hand.heroCards.length > 0 ? (
                 <div className="hole">
                   {hand.heroCards.map((c, j) => (
@@ -337,18 +371,21 @@ export function ImportReplayer({
           </div>
         ))}
 
-        {/* Board no centro da mesa */}
-        <div className="board ir-board">
-          {step.board.length === 0 ? (
-            <span className="muted">(pré-flop)</span>
-          ) : (
-            step.board.map((c, i) => <CardView key={i} card={c} />)
-          )}
+        {/* Centro da mesa: pote + board */}
+        <div className="ir-center">
+          <div className="ir-potchip">🪙 Pote {step.potBB}bb</div>
+          <div className="board ir-board">
+            {step.board.length === 0 ? (
+              <span className="muted">pré-flop</span>
+            ) : (
+              step.board.map((c, i) => <CardView key={i} card={c} />)
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Pote / resultado em destaque */}
-      {step.pot ? (
+      {/* Aviso de pote coletado / devolvido */}
+      {step.pot && step.actionIdx !== -3 ? (
         <div className="ir-pot">{step.pot}</div>
       ) : null}
 
@@ -364,7 +401,7 @@ export function ImportReplayer({
           <span
             className={`ir-action ${step.action.type === "fold" ? "act-fold" : step.action.type === "call" ? "act-call" : "act-raise"}`}
           >
-            {actionText(step.action)}
+            {actionText(step.action, hand.bb)}
           </span>
         </div>
       ) : step.actionIdx === -3 ? (
@@ -454,7 +491,7 @@ export function ImportReplayer({
               className={`ir-tl-item${i === stepIdx ? " ir-tl-now" : ""}`}
               onClick={() => setStepIdx(i + 1)}
             >
-              <b>{a.player}</b> {actionText(a)}
+              <b>{a.player}</b> {actionText(a, hand.bb)}
             </span>
           ))}
         </div>

@@ -2271,6 +2271,52 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 }
 .ir-tl-item:hover { border-color: var(--gold-dim); }
 .ir-tl-now { border-color: var(--gold); color: var(--gold); font-weight: 700; }
+
+/* ── Replay importado: mesa COMPACTA 9-max (assentos não vazam no celular) ── */
+.ir-table { aspect-ratio: 1 / 1.16; max-width: min(100%, 440px); }
+.ir-seat { width: 86px; }
+.ir-seat .pod { padding: 4px 6px; border-radius: 10px; }
+.ir-seat .name { font-size: 11px; line-height: 1.15; }
+.ir-seat .arch { font-size: 9px; }
+.ir-seat .stack {
+  font-size: 12px; font-weight: 800; color: var(--gold-bright); margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.ir-seat.folded .stack { color: var(--text-dim); font-weight: 600; }
+.ir-seat .hole { margin-top: 4px; gap: 2px; }
+.ir-seat .hole > * { transform: scale(0.82); transform-origin: top center; }
+.ir-seat .badge { font-size: 10px; padding: 1px 6px; margin-top: 3px; min-height: 0; }
+.ir-seat.acting .pod {
+  box-shadow: 0 0 0 2px var(--gold), 0 0 16px rgba(230, 196, 84, 0.55);
+  border-color: var(--gold);
+}
+.ir-dealer {
+  position: absolute; top: -7px; right: -7px; width: 20px; height: 20px;
+  border-radius: 50%; background: #f5f0e1; color: #1a1408;
+  font-size: 11px; font-weight: 900; line-height: 20px; text-align: center;
+  border: 1px solid #c49a2a; z-index: 6; box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.ir-center {
+  position: absolute; top: 47%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: max-content; max-width: 74%;
+}
+.ir-potchip {
+  font-size: 12.5px; font-weight: 800; color: var(--gold-bright);
+  background: rgba(10, 13, 8, 0.72); border: 1px solid var(--gold-dim);
+  border-radius: 999px; padding: 3px 13px; text-shadow: 0 1px 2px #000;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ir-center .ir-board {
+  position: static; top: auto; left: auto; transform: none;
+  padding: 0; gap: 3px; background: transparent; border: none;
+}
+.ir-center .ir-board > * { transform: scale(0.66); transform-origin: center; margin: -8px -6px; }
+.ir-center .ir-board .muted {
+  transform: none; margin: 0; font-size: 12px; letter-spacing: 1px;
+  padding: 4px 12px; background: rgba(10,13,8,0.5); border: 1px solid var(--gold-dim); border-radius: 8px;
+}
+
 .import-cta-btn {
   width: 100%;
   margin-top: 10px;
