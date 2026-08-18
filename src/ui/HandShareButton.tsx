@@ -62,20 +62,20 @@ export function HandShareButton({
   // cards saem juntos e o Instagram monta o carrossel automaticamente;
   // quando o celular não aceita envio múltiplo, baixa os 2 PNGs prontos.
   const handleCarousel = async () => {
-    if (generating || !data.actionLog || data.actionLog.length < 3) return;
+    if (generating || !data.actionLog || data.actionLog.length < 2) return;
     setGenerating(true);
     try {
       const card1 = await drawHandShareCard(data, "simples", "decisao");
-      const card2 = await drawHandShareCard(data, "simples", "narrativa");
+      const card2 = await drawHandShareCard(data, "simples", "historico");
       if (!card1 || !card2) return;
       const files = [
-        new File([card1], "card_1_resultado.png", { type: "image/png" }),
-        new File([card2], "card_2_rua_por_rua.png", { type: "image/png" }),
+        new File([card1], "card_1_desafio.png", { type: "image/png" }),
+        new File([card2], "card_2_historico.png", { type: "image/png" }),
       ];
       const result = await shareMulti(files, SHARE_URL, SHARE_TEXT, DISCLAIMER);
       if (result === "download") {
-        await downloadBlob(card1, "card_1_resultado.png");
-        await downloadBlob(card2, "card_2_rua_por_rua.png");
+        await downloadBlob(card1, "card_1_desafio.png");
+        await downloadBlob(card2, "card_2_historico.png");
       }
       if (result === "shared" || result === "download") {
         setDone(true);
@@ -91,7 +91,11 @@ export function HandShareButton({
     }
   };
 
-  const showCarousel = showToggle && !!data.actionLog && data.actionLog.length >= 3;
+  // A mão completa é o produto: se houver histórico de ação, o compartilhamento
+  // padrão é o CARROSSEL (decisão + histórico com showdown). O card único fica
+  // apenas para mãos que morreram no pré-flop, sem história para contar.
+  const hasHistory = !!data.actionLog && data.actionLog.length >= 2;
+  const showCarousel = showToggle && hasHistory;
 
   // LEGENDA PRONTA: caption gerada com os dados da mão + botão copiar, pra
   // postar direto no Instagram sem escrever nada.
@@ -172,8 +176,12 @@ export function HandShareButton({
     <button
       className={className}
       disabled={generating}
-      onClick={() => handleShare("simples")}
-      title="Gera um card com a mão para compartilhar no Instagram/WhatsApp"
+      onClick={() => (hasHistory ? handleCarousel() : handleShare("simples"))}
+      title={
+        hasHistory
+          ? "Gera o carrossel da mão (decisão + ação completa com o showdown) para o Instagram/WhatsApp"
+          : "Gera um card com a mão para compartilhar no Instagram/WhatsApp"
+      }
     >
       {generating ? "Gerando…" : done ? "✓ Compartilhado!" : label}
     </button>

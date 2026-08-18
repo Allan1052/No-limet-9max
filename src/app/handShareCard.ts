@@ -9,8 +9,6 @@
 import { rankOf, suitOf, RANKS, makeCard, type Card } from "../engine/cards";
 import type { Rating } from "../feedback/analyzer";
 import { LOGO_CF_BASE64 } from "./logoCfBase64";
-import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
-import { buildHandNarrative } from "./handNarrative";
 
 const SUIT_SYMBOL = ["♣", "♦", "♥", "♠"]; // ordem de SUITS = "cdhs"
 const SUIT_RED = [false, true, true, false];
@@ -22,6 +20,8 @@ const COLOR_GOLD = "#d4af37";
 const COLOR_GOLD_BRIGHT = "#e6c454";
 const COLOR_CREAM = "#ece7d5";
 const COLOR_CREAM_DIM = "#b8b29a";
+const COLOR_GREEN_OK = "#2d7a3a";
+const COLOR_RED_ERR = "#c0392b";
 const COLOR_CARD_WHITE = "#f4f1e6";
 const COLOR_RED_SUIT = "#c0392b";
 const COLOR_BLACK_SUIT = "#1a1a1a";
@@ -31,7 +31,7 @@ export type ShareCardMode = "simples" | "tecnico";
 /** Tipo de card: "decisao" = card da mão/decisão (padrão, simétrico ao modo
  *  simples/técnico); "historico" = card com o histórico completo da mão, rua por
  *  rua, com os valores apostados — feito para postar em carrossel no Instagram. */
-export type ShareCardType = "decisao" | "historico" | "narrativa";
+export type ShareCardType = "decisao" | "historico";
 
 export interface ShareCardOptions {
   mode?: ShareCardMode;
@@ -112,6 +112,75 @@ function drawCardOnCanvas(
   ctx.textBaseline = "middle";
   ctx.font = `${h * 0.4}px Georgia, serif`;
   ctx.fillText(suit, x + w / 2, y + h * 0.55);
+}
+
+/** Chip arredondado de nota (✓ verde / ✗ vermelho) com brilho — usado nos dois modos. */
+function drawRatingChip(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  label: string,
+  correct: boolean,
+) {
+  const color = correct ? COLOR_GREEN_OK : COLOR_RED_ERR;
+  ctx.font = "bold 27px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const tw = ctx.measureText(label).width;
+  const chipH = 48;
+  const chipW = Math.max(210, tw + 56);
+  const chipX = cx - chipW / 2;
+
+  ctx.save();
+  ctx.shadowColor = correct ? "rgba(45,122,58,0.6)" : "rgba(192,57,43,0.6)";
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 4;
+  ctx.fillStyle = color;
+  roundRect(ctx, chipX, cy - chipH / 2, chipW, chipH, chipH / 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 27px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, cx, cy + 1);
+}
+
+/** Uma linha da timeline da mão: "PRÉ-FLOP · Raise 2.3bb ✓" (rua dourada, ação
+ *  creme, marca verde/vermelha), centralizada. */
+function drawTimelineRow(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  y: number,
+  street: string,
+  action: string,
+  correct: boolean,
+) {
+  const streetTxt = street.toUpperCase();
+  const midTxt = ` · ${action}`;
+  const mark = correct ? "  ✓" : "  ✗";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.font = "bold 25px Georgia, serif";
+  const w1 = ctx.measureText(streetTxt).width;
+  ctx.font = "600 25px Georgia, serif";
+  const w2 = ctx.measureText(midTxt).width;
+  ctx.font = "bold 25px Georgia, serif";
+  const w3 = ctx.measureText(mark).width;
+  let x = cx - (w1 + w2 + w3) / 2;
+
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 25px Georgia, serif";
+  ctx.fillText(streetTxt, x, y);
+  x += w1;
+  ctx.fillStyle = COLOR_CREAM;
+  ctx.font = "600 25px Georgia, serif";
+  ctx.fillText(midTxt, x, y);
+  x += w2;
+  ctx.fillStyle = correct ? "#5fb96a" : "#e07b6b";
+  ctx.font = "bold 25px Georgia, serif";
+  ctx.fillText(mark, x, y);
 }
 
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
@@ -238,6 +307,26 @@ export function cleanCoachText(raw: string): string {
   return cleaned.trim();
 }
 
+/** Nota em palavra para o card simples. */
+function ratingWord(rating: Rating): string {
+  switch (rating) {
+    case "boa": return "Boa!";
+    case "ok": return "Ok";
+    case "imprecisa": return "Impreciso";
+    case "ruim": return "Erro";
+    default: return "—";
+  }
+}
+
+/** Veredito para o card técnico. */
+function ratingVerdict(rating: Rating): string {
+  return rating === "boa" || rating === "ok" ? "✓ CORRETO" : "✗ ERROU";
+}
+
+function isRatingCorrect(rating: Rating): boolean {
+  return rating === "boa" || rating === "ok";
+}
+
 // ── Card de Conquista ("Trophy Room" — compartilhar vitória/ITM) ──────────
 export interface TrophyShareData {
   /** Torneio (ex.: "Circuito · Etapa 3 — Buy-in $109"). */
@@ -300,19 +389,21 @@ async function drawTrophyCanvas(data: TrophyShareData): Promise<Blob | null> {
   ctx.font = "bold 48px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("CALL OU FOLD", S / 2, 178);
-
+  ctx.fillText("CALL OU FOLD", S / 2, 172);
+  ctx.fillStyle = COLOR_GOLD;
+  ctx.font = "bold 20px Georgia, serif";
+  ctx.fillText("Simulador grátis de poker", S / 2, 214);
   // Torneio
   ctx.fillStyle = COLOR_CREAM_DIM;
   ctx.font = "600 26px Georgia, serif";
-  ctx.fillText(data.tournamentInfo, S / 2, 222);
+  ctx.fillText(data.tournamentInfo, S / 2, 258);
 
   // Separador dourado
   ctx.strokeStyle = "rgba(212,175,55,0.4)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(120, 256);
-  ctx.lineTo(S - 120, 256);
+  ctx.moveTo(120, 296);
+  ctx.lineTo(S - 120, 296);
   ctx.stroke();
 
   // Troféu (emoji em dourado) + colocação
@@ -353,16 +444,47 @@ async function drawTrophyCanvas(data: TrophyShareData): Promise<Blob | null> {
   ctx.lineTo(S - 120, 810);
   ctx.stroke();
 
-  ctx.fillStyle = COLOR_CREAM_DIM;
-  ctx.font = "600 30px Georgia, serif";
-  ctx.fillText("Treina de graça · calloufold.com.br", S / 2, 870);
-  ctx.font = "500 24px Georgia, serif";
-  ctx.fillStyle = "rgba(236,231,213,0.5)";
-  ctx.fillText("App de estudo. Sem apostas nem dinheiro real.", S / 2, 920);
+  // ASSINATURA PADRÃO: a mesma nos três cards — site + "Grátis" + aviso de
+  // sem dinheiro real, sempre no rodapé, sempre no mesmo estilo.
+  ctx.strokeStyle = "rgba(212,175,55,0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(120, 822);
+  ctx.lineTo(S - 120, 822);
+  ctx.stroke();
+
+  const footerY = S - 52;
+  ctx.beginPath();
+  ctx.moveTo(120, footerY - 26);
+  ctx.lineTo(S - 120, footerY - 26);
+  ctx.stroke();
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 24px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
 
   return new Promise((resolve) => {
     canvas.toBlob((b) => resolve(b), "image/png");
   });
+}
+
+/** Quebra um texto em linhas para caber no canvas. */
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+  for (const word of words) {
+    const testWidth = ctx.measureText(currentLine + (currentLine ? " " : "") + word).width;
+    if (testWidth <= maxWidth) {
+      currentLine += (currentLine ? " " : "") + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
 }
 
 /**
@@ -375,82 +497,75 @@ export async function drawHandShareCard(
   cardType: ShareCardType = "decisao",
 ): Promise<Blob | null> {
   if (cardType === "historico") return drawHistoryCard(data);
-  if (cardType === "narrativa") return drawNarrativeCard(data);
   return drawDecisionCard(data, mode);
 }
 
-// ── Card da DECISÃO — "SHOWDOWN" premium preto/ouro (1080×1350). Usa os dados
-// REAIS da mão: herói × vilão (se houve showdown), board, timeline, pote+aposta,
-// equity, resultado e a explicação Simples | Técnica. Robusto a dados faltando
-// (sem showdown → só a mão do herói; sem board → pula; sem equity → oculta).
-async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Promise<Blob | null> {
-  const W = 1080, H = 1350;
+// ── Card da DECISÃO (layout atual: mão + board + timeline/chip + tip) ────────
+async function drawDecisionCard(data: HandShareData, mode: ShareCardMode): Promise<Blob | null> {
+  const S = 1080;
   const canvas = document.createElement("canvas");
-  canvas.width = W; canvas.height = H;
+  canvas.width = S;
+  canvas.height = S;
   const ctx = canvas.getContext("2d");
   if (!ctx) return Promise.resolve(null);
 
-  // paleta
-  const GLINE = "#7a5f1e", GSOFT = "#c9a227", GOLD = "#e6c454";
-  const CREAM = "#efe9d8", DIM = "#9a927e", GREEN = "#57b06a";
-  const goldGrad = (y: number, h: number) => {
-    const g = ctx.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, "#f9edb0"); g.addColorStop(0.5, "#e6c454"); g.addColorStop(1, "#c49a2a");
-    return g;
-  };
-  const panel = (x: number, y: number, w: number, h: number, r: number, fill: string, border: string, bw = 2) => {
-    roundRect(ctx, x, y, w, h, r); ctx.fillStyle = fill; ctx.fill();
-    ctx.lineWidth = bw; ctx.strokeStyle = border; roundRect(ctx, x, y, w, h, r); ctx.stroke();
-  };
-  const spaced = (text: string, cx: number, y: number, ls: number, align: "center" | "left" = "center") => {
-    const ws = [...text].map((c) => ctx.measureText(c).width);
-    const total = ws.reduce((a, b) => a + b, 0) + ls * Math.max(0, text.length - 1);
-    let x = align === "center" ? cx - total / 2 : cx;
-    ctx.textAlign = "left";
-    for (let i = 0; i < text.length; i++) { ctx.fillText(text[i], x, y); x += ws[i] + ls; }
-    return total;
-  };
-  const wrap = (text: string, maxW: number): string[] => {
-    const words = text.split(/\s+/); const lines: string[] = []; let cur = "";
-    for (const w of words) {
-      const t = cur ? cur + " " + w : w;
-      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; }
-      else cur = t;
-    }
-    if (cur) lines.push(cur);
-    return lines;
-  };
-  const madeHand = (cards: Card[]): string => {
-    if (data.board.length < 3 || cards.length < 2) return "";
-    try { return CATEGORY_NAMES_PT[categoryOf(evaluate([...cards, ...data.board]))] ?? ""; } catch { return ""; }
-  };
+  // ── Fundo: feltro escuro com gradiente radial ──
+  const bgGrad = ctx.createRadialGradient(S / 2, S * 0.4, S * 0.1, S / 2, S * 0.5, S * 0.8);
+  bgGrad.addColorStop(0, COLOR_BG_FELT);
+  bgGrad.addColorStop(1, COLOR_BG_DARK);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, S, S);
 
-  // ── fundo ──
-  ctx.fillStyle = "#0b0906"; ctx.fillRect(0, 0, W, H);
-  const bg = ctx.createRadialGradient(W / 2, 0, 80, W / 2, 0, H * 1.05);
-  bg.addColorStop(0, "#241c10"); bg.addColorStop(0.42, "#14100a"); bg.addColorStop(1, "#0b0906");
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  // moldura
-  ctx.lineWidth = 2; ctx.strokeStyle = GLINE; roundRect(ctx, 24, 24, W - 48, H - 48, 22); ctx.stroke();
+  // ── Textura de feltro sutil ──
+  ctx.globalAlpha = 0.03;
+  for (let i = 0; i < 200; i++) {
+    const px = Math.random() * S;
+    const py = Math.random() * S;
+    ctx.fillStyle = Math.random() > 0.5 ? "#fff" : "#000";
+    ctx.fillRect(px, py, 2, 2);
+  }
+  ctx.globalAlpha = 1;
 
+  // ── Vinheta: escurece os cantos, dá profundidade de mesa ──
+  const vig = ctx.createRadialGradient(S / 2, S / 2, S * 0.34, S / 2, S / 2, S * 0.72);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,0.4)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, S, S);
+
+  // ── Linha dourada superior (sem moldura pesada) ──
+  ctx.strokeStyle = "rgba(212,175,55,0.5)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(S - 60, 20);
+  ctx.stroke();
+
+  // ── TOPO: Logo oficial + título + subtítulo + info do torneio ──
+  await drawLogoImage(ctx, S / 2, 85, 88);
+  ctx.fillStyle = COLOR_GOLD;
+  ctx.font = "bold 48px Georgia, serif";
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.fillText("CALL OU FOLD", S / 2, 172);
 
-  // ── header: logo + wordmark + showdown ──
-  await drawLogoImage(ctx, W / 2, 92, 96);
-  ctx.textAlign = "left";
-  ctx.font = "900 74px Georgia, serif";
-  const seg = [{ t: "CALL ", f: "900 74px Georgia, serif" }, { t: "ou", f: "italic 700 48px Georgia, serif" }, { t: " FOLD", f: "900 74px Georgia, serif" }];
-  let tot = 0; for (const s of seg) { ctx.font = s.f; tot += ctx.measureText(s.t).width; }
-  let wx = W / 2 - tot / 2; const wy = 196;
-  ctx.fillStyle = goldGrad(wy - 40, 80);
-  for (const s of seg) { ctx.font = s.f; ctx.fillText(s.t, wx, wy); wx += ctx.measureText(s.t).width; }
-  ctx.font = "800 23px Georgia, serif"; ctx.fillStyle = GSOFT;
-  const subtitle = data.showdown?.some((p) => !p.isHero && p.cards.length >= 2) ? "SHOWDOWN" : "A JOGADA";
-  const swW = spaced(subtitle, W / 2, 250, 11);
-  ctx.strokeStyle = GSOFT; ctx.lineWidth = 2;
-  const lgap = swW / 2 + 26;
-  ctx.beginPath(); ctx.moveTo(W / 2 - lgap - 56, 250); ctx.lineTo(W / 2 - lgap, 250); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W / 2 + lgap, 250); ctx.lineTo(W / 2 + lgap + 56, 250); ctx.stroke();
+  // Subtítulo da marca (padrão visual aprovado pelo Allan)
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 28px Georgia, serif";
+  ctx.fillText("Call ou Fold · Simulador grátis", S / 2, 218);
+
+  // Info do torneio
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 26px Georgia, serif";
+  ctx.fillText(data.tournamentInfo, S / 2, 258);
+
+  // ── Linha separadora dourada ──
+  ctx.strokeStyle = "rgba(212,175,55,0.4)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(120, 293);
+  ctx.lineTo(S - 120, 293);
+  ctx.stroke();
 
   // ── matchup: herói × vilão (se showdown) ──
   // Vilão a mostrar: prioriza QUEM VENCEU o pote (pra "você perdeu" mostrar quem
@@ -458,204 +573,191 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   const villain =
     data.showdown?.find((p) => !p.isHero && p.won && p.cards.length >= 2) ??
     data.showdown?.find((p) => !p.isHero && p.cards.length >= 2);
-  const heroWon = data.showdown?.find((p) => p.isHero)?.won;
-  const drawPlayer = (px: number, pw: number, tag: string, cards: Card[], made: string) => {
-    panel(px, 286, pw, 206, 16, "rgba(230,196,84,0.05)", GLINE);
-    ctx.fillStyle = GOLD; ctx.font = "800 22px Georgia, serif"; spaced(tag, px + pw / 2, 314, 5);
-    const cw = 90, ch = 116, cg = 12, cx0 = px + pw / 2 - (cw * 2 + cg) / 2;
-    if (cards[0]) drawCardOnCanvas(ctx, cards[0], cx0, 330, cw, ch);
-    if (cards[1]) drawCardOnCanvas(ctx, cards[1], cx0 + cw + cg, 330, cw, ch);
-    if (made) { ctx.fillStyle = DIM; ctx.font = "700 21px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText(made, px + pw / 2, 472); }
+  // ── painel HERÓI × VILÃO no topo: mostra QUEM TE GANHOU (ou a sua mão
+  // quando não há showdown), coerente com o resultado do torneio ──
+  const cw = 84, ch = 112, cg = 10, tagFont = "800 21px Georgia, serif";
+  const drawPlayerBox = (cx: number, tag: string, cards: Card[], highlight: boolean) => {
+    ctx.fillStyle = highlight ? "rgba(230,196,84,0.10)" : "rgba(230,196,84,0.04)";
+    ctx.strokeStyle = highlight ? "rgba(230,196,84,0.55)" : "rgba(230,196,84,0.25)";
+    ctx.lineWidth = highlight ? 2 : 1;
+    roundRect(ctx, cx - cw - 16, 318, cw * 2 + cg + 32, ch + 56, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = highlight ? COLOR_GOLD_BRIGHT : COLOR_CREAM_DIM;
+    ctx.font = tagFont;
+    ctx.textAlign = "center";
+    ctx.fillText(tag, cx, 340);
+    const cx0 = cx - (cw * 2 + cg) / 2;
+    if (cards[0]) drawCardOnCanvas(ctx, cards[0], cx0, 354, cw, ch);
+    if (cards[1]) drawCardOnCanvas(ctx, cards[1], cx0 + cw + cg, 354, cw, ch);
   };
-  if (villain) {
-    const pw = 400;
-    drawPlayer(56, pw, "HERÓI", data.heroCards, madeHand(data.heroCards));
-    drawPlayer(W - 56 - pw, pw, "VILÃO", villain.cards, madeHand(villain.cards));
-    ctx.fillStyle = goldGrad(360, 70); ctx.font = "900 60px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText("VS", W / 2, 388);
-  } else {
-    const pw = 470;
-    drawPlayer((W - pw) / 2, pw, "SUA MÃO", data.heroCards, madeHand(data.heroCards));
+  if (villain && data.board.length > 0) {
+    const heroWon = data.showdown?.find((p) => p.isHero)?.won;
+    drawPlayerBox(S / 2 - 110, "HERÓI", data.heroCards, heroWon === true);
+    drawPlayerBox(S / 2 + 110, "VILÃO", villain.cards, heroWon !== true);
+    ctx.fillStyle = COLOR_GOLD_BRIGHT;
+    ctx.font = "900 44px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText("VS", S / 2, 386);
   }
 
-  // ── board ──
-  let y = 512;
+  // ── CARTAS DO HERÓI ──
+  // Sem board, as cartas do herói são maiores (protagonistas) e descem um pouco,
+  // pra o card não ficar com um vazio grande embaixo.
+  const hasBoard = data.board.length > 0;
+  const cardW = hasBoard ? 148 : 188;
+  const cardH = hasBoard ? 204 : 262;
+  const gap = hasBoard ? 28 : 32;
+  const cardsTotalW = cardW * 2 + gap;
+  const cardsX = (S - cardsTotalW) / 2;
+  // Header terminou em 293 (com o subtítulo da marca). Quando há showdown,
+  // as cartas descem para dar espaço ao painel HERÓI × VILÃO no topo.
+  const cardsY = (villain && hasBoard) ? 432 : hasBoard ? 306 : 338;
+
+  // Brilho dourado atrás das cartas do herói — destaca "a mão" como protagonista.
+  const glowCx = S / 2;
+  const glowCy = cardsY + cardH / 2;
+  const glow = ctx.createRadialGradient(glowCx, glowCy, 30, glowCx, glowCy, cardsTotalW * 0.7);
+  glow.addColorStop(0, "rgba(230,196,84,0.2)");
+  glow.addColorStop(1, "rgba(230,196,84,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(glowCx - cardsTotalW, glowCy - cardH, cardsTotalW * 2, cardH * 2);
+
+  if (data.heroCards.length >= 1) {
+    drawCardOnCanvas(ctx, data.heroCards[0], cardsX, cardsY, cardW, cardH);
+  }
+  if (data.heroCards.length >= 2) {
+    drawCardOnCanvas(ctx, data.heroCards[1], cardsX + cardW + gap, cardsY, cardW, cardH);
+  }
+
+  // ── BOARD (se houver) ──
+  let bottomY = cardsY + cardH; // borda inferior do último bloco de cartas
   if (data.board.length > 0) {
-    ctx.fillStyle = GSOFT; ctx.font = "800 21px Georgia, serif"; spaced("BOARD", W / 2, y, 8);
-    const cw = 104, ch = 146, cg = 12;
-    const totalW = data.board.length * cw + (data.board.length - 1) * cg;
-    let bx = (W - totalW) / 2; const by = y + 22;
-    for (const c of data.board) { drawCardOnCanvas(ctx, c, bx, by, cw, ch); bx += cw + cg; }
-    y = by + ch + 26;
-  } else { y = 540; }
-
-  // ── timeline: posição + ruas ──
-  const steps: { k: string; v: string }[] = [{ k: "POSIÇÃO", v: `${data.position} · ${data.stackBB}` }];
-  for (const d of (data.decisions ?? []).slice(0, 3)) steps.push({ k: d.street.toUpperCase(), v: d.action });
-  while (steps.length < 4) steps.push({ k: "", v: "" });
-  const sN = 4, sGap = 10, sW = (W - 112 - sGap * (sN - 1)) / sN, sH = 66;
-  for (let i = 0; i < sN; i++) {
-    const sx = 56 + i * (sW + sGap);
-    if (!steps[i].k) continue;
-    panel(sx, y, sW, sH, 12, "rgba(230,196,84,0.04)", GLINE, 1.5);
-    ctx.fillStyle = GSOFT; ctx.font = "800 17px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText(steps[i].k, sx + sW / 2, y + 22);
-    ctx.fillStyle = CREAM; ctx.font = "800 23px Georgia, serif"; ctx.fillText(steps[i].v, sx + sW / 2, y + 46);
+    const bCardW = 96;
+    const bCardH = 134;
+    const bGap = 10;
+    const bTotalW = data.board.length * bCardW + (data.board.length - 1) * bGap;
+    const bX = (S - bTotalW) / 2;
+    const bY = cardsY + cardH + 14;
+    for (let i = 0; i < data.board.length; i++) {
+      drawCardOnCanvas(ctx, data.board[i], bX + i * (bCardW + bGap), bY, bCardW, bCardH);
+    }
+    bottomY = bY + bCardH;
   }
-  y += sH + 12;
 
-  // ── pote + sua aposta ──
-  const poteBB = data.finalPotBB ?? (data.potByStreet ? Object.values(data.potByStreet).slice(-1)[0] : undefined);
-  const betM = /([\d.,]+)\s*bb/i.exec(data.heroAction) ?? /([\d.,]+)\s*bb/i.exec(data.context);
-  const betBB = betM ? parseFloat(betM[1].replace(",", ".")) : undefined;
-  const pctPot = betBB && poteBB ? Math.round((betBB / poteBB) * 100) : undefined;
-  const bW = (W - 112 - 10) / 2, bH = 62;
-  panel(56, y, bW * 0.82, bH, 13, "rgba(230,196,84,0.05)", GLINE);
-  ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("POTE", 78, y + bH / 2);
-  ctx.fillStyle = CREAM; ctx.font = "900 30px Georgia, serif"; ctx.textAlign = "right"; ctx.fillText(poteBB !== undefined ? `${Math.round(poteBB * 10) / 10} bb` : "—", 56 + bW * 0.82 - 22, y + bH / 2);
-  const hx = 56 + bW * 0.82 + 10, hW = W - 56 - hx;
-  panel(hx, y, hW, bH, 13, "rgba(230,196,84,0.12)", GSOFT);
-  ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("SUA AÇÃO", hx + 22, y + bH / 2);
-  ctx.textAlign = "right";
-  ctx.fillStyle = GOLD; ctx.font = "900 30px Georgia, serif";
-  const actTxt = betBB !== undefined ? `${betBB} bb${pctPot ? ` · ${pctPot}%` : ""}` : (data.heroAction || "—");
-  ctx.fillText(actTxt, W - 56 - 22, y + bH / 2);
-  y += bH + 12;
+  // ── POSIÇÃO + STACK (SEMPRE visível) — com respiro após as cartas ──
+  // Sem board há mais espaço vertical: alarga os intervalos pra distribuir.
+  const g = hasBoard ? 0 : 12;
+  const posStackY = bottomY + (hasBoard ? 40 : 58);
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "bold 30px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`${data.position} · ${data.stackBB}`, S / 2, posStackY);
 
-  // ── equity + resultado ──
-  const rW1 = (W - 112) * 0.42, rW2 = (W - 112) - rW1 - 12, rH = 96;
-  panel(56, y, rW1, rH, 14, "rgba(230,196,84,0.07)", GLINE);
-  ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText("EQUITY", 56 + rW1 / 2, y + 26);
-  if (data.equity !== undefined) { ctx.fillStyle = goldGrad(y + 34, 52); ctx.font = "900 56px Georgia, serif"; ctx.fillText(`${Math.round(data.equity * 100)}%`, 56 + rW1 / 2, y + 64); }
-  else { ctx.fillStyle = DIM; ctx.font = "900 40px Georgia, serif"; ctx.fillText("—", 56 + rW1 / 2, y + 62); }
-  const r2x = 56 + rW1 + 12;
-  panel(r2x, y, rW2, rH, 14, "rgba(230,196,84,0.07)", GLINE);
-  ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("RESULTADO", r2x + 20, y + 26);
-  const correct = data.rating === "boa" || data.rating === "ok";
-  const resTxt = heroWon === undefined ? (correct ? "Jogada certa" : "Dá pra melhorar") : (heroWon ? "Você venceu" : "Você perdeu");
-  ctx.fillStyle = (heroWon === undefined ? correct : heroWon) ? GREEN : "#e07b6b";
-  ctx.font = "900 30px Georgia, serif"; ctx.fillText(resTxt, r2x + 20, y + 54);
-  const made = madeHand(data.heroCards);
-  if (made) { ctx.fillStyle = DIM; ctx.font = "700 20px Georgia, serif"; ctx.fillText(`Sua mão: ${made}`, r2x + 20, y + 78); }
-  y += rH + 12;
+  const useTimeline = !!data.decisions && data.decisions.length >= 2;
+  let statsY: number;
 
-  // ── simples | técnica ──
-  const eH = H - 52 - y - 8;
-  panel(56, y, W - 112, eH, 16, "rgba(230,196,84,0.08)", GSOFT);
-  const colW = (W - 112) / 2;
-  ctx.strokeStyle = GLINE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(56 + colW, y + 14); ctx.lineTo(56 + colW, y + eH - 14); ctx.stroke();
-  const drawCol = (cx: number, title: string, body: string) => {
-    ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(cx + 22, y + 30, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.font = "900 22px Georgia, serif"; ctx.textAlign = "left"; ctx.fillStyle = GOLD; ctx.fillText(title, cx + 38, y + 31);
-    ctx.fillStyle = CREAM; ctx.font = "600 24px Georgia, serif";
-    const lines = wrap(body, colW - 44);
-    let ly = y + 68;
-    for (const ln of lines.slice(0, 5)) { ctx.fillText(ln, cx + 22, ly); ly += 33; }
-  };
-  const tecParts: string[] = [];
-  if (data.equity !== undefined) tecParts.push(`Equity ${Math.round(data.equity * 100)}%`);
-  if (data.potOdds !== undefined) tecParts.push(`preço ${Math.round(data.potOdds * 100)}%`);
-  if (data.evBB !== undefined) tecParts.push(`EV ${data.evBB > 0 ? "+" : ""}${Math.round(data.evBB * 10) / 10}bb`);
-  const tecnica = tecParts.length ? `${tecParts.join(" · ")}. Coach: ${data.coachAction}.` : `Coach recomenda: ${data.coachAction}.`;
-  drawCol(56, "SIMPLES", cleanCoachText(data.coachTip));
-  drawCol(56 + colW, "TÉCNICA", tecnica);
+  if (useTimeline) {
+    // ── LINHA DO TEMPO DA MÃO — uma linha por rua (pré-flop→river) ──
+    let ry = posStackY + 42;
+    for (const d of data.decisions!) {
+      drawTimelineRow(ctx, S / 2, ry, d.street, d.action, d.correct);
+      ry += 36;
+    }
+    statsY = ry - 36 + 46; // após a última rua, espaço antes da dica
+  } else {
+    // ── CONTEXTO + DECISÃO + CHIP (mão de uma decisão só, ex.: all-in pré) ──
+    const ctxY = posStackY + 36 + g;
+    ctx.fillStyle = COLOR_CREAM_DIM;
+    ctx.font = "600 26px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText(data.street + " — " + data.context, S / 2, ctxY);
 
-  // ── rodapé ──
-  ctx.fillStyle = GSOFT; ctx.font = "700 20px Georgia, serif"; ctx.textAlign = "center";
-  spaced("calloufold.com.br  ·  SEM DINHEIRO REAL  ·  SÓ ESTUDO", W / 2, H - 40, 2);
+    const decY = ctxY + 44 + g;
+    ctx.fillStyle = COLOR_CREAM;
+    ctx.font = "bold 38px Georgia, serif";
+    ctx.fillText(`Você: ${data.heroAction}`, S / 2, decY);
 
-  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
-}
+    const verY = decY + 42 + g;
+    const correct = isRatingCorrect(data.rating);
+    if (mode === "simples") {
+      const label = `${correct ? "✓" : "✗"} ${ratingWord(data.rating).toUpperCase()}`;
+      drawRatingChip(ctx, S / 2, verY, label, correct);
+    } else {
+      drawRatingChip(ctx, S / 2, verY, ratingVerdict(data.rating), correct);
+    }
 
-// ── Card 2 (carrossel): A MÃO RUA POR RUA — narração estilo Yuri, dos dados
-// reais (buildHandNarrative). Timeline vertical: cada rua com a ação do herói e
-// o range do vilão apertando ("paga → 99, JJ, JT, KQ").
-async function drawNarrativeCard(data: HandShareData): Promise<Blob | null> {
-  const W = 1080, H = 1350;
-  const canvas = document.createElement("canvas");
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return Promise.resolve(null);
+    // ── MATEMÁTICA (só no modo técnico, mão de uma decisão) ──
+    statsY = verY + 40;
+    if (mode === "tecnico") {
+      const statParts: string[] = [];
+      if (data.equity !== undefined) statParts.push(`Equity ${Math.round(data.equity * 100)}%`);
+      if (data.potOdds !== undefined) statParts.push(`Pot odds ${Math.round(data.potOdds * 100)}%`);
+      if (data.evBB !== undefined) statParts.push(`EV ${data.evBB.toFixed(1)}bb`);
+      if (statParts.length > 0) {
+        ctx.fillStyle = COLOR_GOLD_BRIGHT;
+        ctx.font = "600 24px Georgia, serif";
+        ctx.textAlign = "center";
+        ctx.fillText(statParts.join("  ·  "), S / 2, statsY);
+        statsY += 38;
+      }
+    }
+  }
 
-  const GLINE = "#7a5f1e", GSOFT = "#c9a227", GOLD = "#e6c454";
-  const CREAM = "#efe9d8", DIM = "#a89a72";
-  const goldGrad = (y: number, h: number) => {
-    const g = ctx.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, "#f9edb0"); g.addColorStop(0.5, "#e6c454"); g.addColorStop(1, "#c49a2a");
-    return g;
-  };
-  const spaced = (text: string, cx: number, y: number, ls: number) => {
-    const ws = [...text].map((c) => ctx.measureText(c).width);
-    const total = ws.reduce((a, b) => a + b, 0) + ls * Math.max(0, text.length - 1);
-    let x = cx - total / 2; ctx.textAlign = "left";
-    for (let i = 0; i < text.length; i++) { ctx.fillText(text[i], x, y); x += ws[i] + ls; }
-    return total;
-  };
-  const ellip = (text: string, maxW: number) => {
-    if (ctx.measureText(text).width <= maxW) return text;
-    let t = text;
-    while (t.length > 4 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
-    return t + "…";
-  };
-
-  // fundo + moldura
-  ctx.fillStyle = "#0b0906"; ctx.fillRect(0, 0, W, H);
-  const bg = ctx.createRadialGradient(W / 2, 0, 80, W / 2, 0, H * 1.05);
-  bg.addColorStop(0, "#241c10"); bg.addColorStop(0.42, "#14100a"); bg.addColorStop(1, "#0b0906");
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  ctx.lineWidth = 2; ctx.strokeStyle = GLINE; roundRect(ctx, 24, 24, W - 48, H - 48, 22); ctx.stroke();
+  // ── TIP DO COACH (texto limpo, sem aspas quebradas) ──
+  // Quebra o texto ANTES pra a caixa ter a altura exata (sem espaço morto) e
+  // nunca invadir o rodapé.
+  const cleanTip = cleanCoachText(data.coachTip);
+  ctx.font = "italic 23px Georgia, serif";
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  const maxTipWidth = S - 220;
+  let tipLines = wrapText(ctx, cleanTip, maxTipWidth);
+  const maxLines = 3;
+  if (tipLines.length > maxLines) {
+    const lastLine = tipLines.slice(maxLines - 1).join(" ");
+    tipLines = [...tipLines.slice(0, maxLines - 1), lastLine + "…"];
+  }
+  const lineHeight = 28;
+  const boxPad = 19;
+  const tipBoxH = boxPad * 2 + tipLines.length * lineHeight;
+  const tipBoxTop = statsY + 6 + g;
 
-  // header
-  await drawLogoImage(ctx, W / 2, 88, 88);
-  ctx.textAlign = "left";
-  const seg = [{ t: "CALL ", f: "900 66px Georgia, serif" }, { t: "ou", f: "italic 700 44px Georgia, serif" }, { t: " FOLD", f: "900 66px Georgia, serif" }];
-  let tw = 0; for (const s of seg) { ctx.font = s.f; tw += ctx.measureText(s.t).width; }
-  let wx = W / 2 - tw / 2; const wy = 184;
-  ctx.fillStyle = goldGrad(wy - 36, 72);
-  for (const s of seg) { ctx.font = s.f; ctx.fillText(s.t, wx, wy); wx += ctx.measureText(s.t).width; }
-  ctx.font = "800 22px Georgia, serif"; ctx.fillStyle = GSOFT;
-  spaced("A MÃO · RUA POR RUA", W / 2, 232, 6);
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  roundRect(ctx, 70, tipBoxTop, S - 140, tipBoxH, 12);
+  ctx.fill();
 
-  // sua mão (contexto)
-  ctx.font = "700 24px Georgia, serif"; ctx.textAlign = "center"; ctx.fillStyle = DIM;
-  const made = (() => { try { return data.board.length >= 3 ? CATEGORY_NAMES_PT[categoryOf(evaluate([...data.heroCards, ...data.board]))] : ""; } catch { return ""; } })();
-  const handStr = data.heroCards.map((c) => RANKS[rankOf(c) - 2] + ["♣", "♦", "♥", "♠"][suitOf(c)]).join(" ");
-  ctx.fillText(`Sua mão: ${handStr}${made ? ` · ${made}` : ""}`, W / 2, 272);
-
-  // timeline
-  const streets = buildHandNarrative(data);
-  const railX = 84;
-  const top = 310, bottom = H - 66;
-  const n = Math.max(1, streets.length);
-  const blockH = Math.min(210, (bottom - top) / n);
-  ctx.strokeStyle = GLINE; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(railX, top + 16); ctx.lineTo(railX, top + (n - 1) * blockH + 16); ctx.stroke();
-
-  for (let i = 0; i < streets.length; i++) {
-    const s = streets[i]; const y = top + i * blockH;
-    // ponto na trilha
-    ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(railX, y + 16, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#0b0906"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(railX, y + 16, 9, 0, Math.PI * 2); ctx.stroke();
-    const tx = 118;
-    // rótulo da rua
-    ctx.textAlign = "left"; ctx.fillStyle = GOLD; ctx.font = "900 27px Georgia, serif";
-    ctx.fillText(s.label, tx, y + 16);
-    // você
-    ctx.font = "800 20px Georgia, serif"; ctx.fillStyle = GSOFT; ctx.fillText("VOCÊ", tx, y + 58);
-    ctx.font = "700 25px Georgia, serif"; ctx.fillStyle = CREAM;
-    ctx.fillText(ellip(s.heroShort, W - tx - 210), tx + 78, y + 58);
-    // vilão
-    ctx.font = "800 20px Georgia, serif"; ctx.fillStyle = GSOFT; ctx.fillText("VILÃO", tx, y + 96);
-    ctx.font = "700 25px Georgia, serif"; ctx.fillStyle = DIM;
-    ctx.fillText(ellip(s.villainShort, W - tx - 210), tx + 78, y + 96);
+  ctx.fillStyle = COLOR_CREAM;
+  const firstLineY = tipBoxTop + boxPad + lineHeight / 2;
+  for (let i = 0; i < tipLines.length; i++) {
+    ctx.fillText(tipLines[i], S / 2, firstLineY + i * lineHeight);
   }
 
-  // rodapé
-  ctx.fillStyle = GSOFT; ctx.font = "700 20px Georgia, serif";
-  spaced("calloufold.com.br  ·  SEM DINHEIRO REAL  ·  SÓ ESTUDO", W / 2, H - 40, 2);
+  // ── RODAPÉ — garante folga do bloco da dica e fica sempre visível ──
+  const footerY = Math.max(S - 52, tipBoxTop + tipBoxH + 40);
+  // Linha dourada fina acima do rodapé (fecha o card).
+  ctx.strokeStyle = "rgba(212,175,55,0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(200, footerY - 26);
+  ctx.lineTo(S - 200, footerY - 26);
+  ctx.stroke();
+  ctx.fillStyle = COLOR_GOLD_BRIGHT;
+  ctx.font = "600 22px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("calloufold.com.br · Grátis · sem dinheiro real", S / 2, footerY);
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
 }
 
+/**
+ * CARD DO HISTÓRICO COMPLETO DA MÃO — rua por rua, com valores apostados.
+ * Layout: topo padrão (logo + título + torneio), cartas do herói + board, e em
+ * vez do chip/dica, um bloco com TODAS as ações da mão (pré-flop → river),
+ * herói destacado em dourado. Fechado com o resultado da mão, se houver.
+ * Feito para compor o carrossel do Instagram junto com o card da decisão.
+ */
 async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   const S = 1080;
   const log = data.actionLog ?? [];
@@ -697,23 +799,28 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.lineTo(S - 60, 20);
   ctx.stroke();
 
-  // ── TOPO ──
+  // ── TOPO (mesmo padrão da marca: logo + título + subtítulo) ──
   await drawLogoImage(ctx, S / 2, 85, 88);
   ctx.fillStyle = COLOR_GOLD;
   ctx.font = "bold 48px Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("CALL OU FOLD", S / 2, 178);
+  ctx.fillText("CALL OU FOLD", S / 2, 172);
+
+  // Subtítulo da marca (padrão visual aprovado pelo Allan)
+  ctx.fillStyle = COLOR_CREAM_DIM;
+  ctx.font = "600 28px Georgia, serif";
+  ctx.fillText("Call ou Fold · Simulador grátis", S / 2, 216);
 
   ctx.fillStyle = COLOR_CREAM_DIM;
   ctx.font = "600 26px Georgia, serif";
-  ctx.fillText(data.tournamentInfo, S / 2, 220);
+  ctx.fillText(data.tournamentInfo, S / 2, 258);
 
   // Chip "HISTÓRICO DA MÃO" — identifica o card do carrossel (2ª imagem)
   ctx.fillStyle = "rgba(212,175,55,0.14)";
   ctx.strokeStyle = "rgba(212,175,55,0.55)";
   ctx.lineWidth = 1.5;
-  const chipY = 258;
+  const chipY = 300;
   const chipH = 40;
   ctx.font = "bold 22px Georgia, serif";
   const chipLabel = "HISTÓRICO DA MÃO — AÇÃO COMPLETA";
@@ -732,7 +839,8 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   const gap = hasBoard ? 18 : 28;
   const cardsTotalW = cardW * 2 + gap;
   const cardsX = (S - cardsTotalW) / 2;
-  const cardsY = 292;
+  // Header com subtítulo termina em ~340; cartas descem logo após o chip (antes 292).
+  const cardsY = 336;
 
   const glowCx = S / 2;
   const glowCy = cardsY + cardH / 2;
@@ -783,6 +891,8 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   const streetGap = 5; // respiro entre ruas
   const streetHeaderH = 18; // linha do nome da rua
   const colGap = 20; // espaço entre as duas colunas
+  // quando encurtar linhas, apertar também cabeçalho e respiro das ruas
+  // (effHeaderH/effStreetGap definidos após fitCols, logo abaixo)
 
   // divide as ruas em 2 colunas: esquerda = primeiro meio, direita = segundo
   // meio (garante a ordem temporal: esquerda = começo da mão)
@@ -811,40 +921,99 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   // o resultado fecha a coluna mais baixa; o bloco ocupa a maior das duas
   const resultLabel = data.tournamentResult ? `Resultado: ${data.tournamentResult}` : "";
   // o resultado não entra mais na coluna (box final o exibe); blockH = max das colunas
-  const blockH = Math.max(leftH, rightH);
-  const blockMaxH = S - blockTop - 224; // folga para o rodapé E o box do showdown
+  // SHOWDOWN É OBRIGATÓRIO quando a mão chegou lá: se houver cartas
+  // reveladas, reservamos o espaço do box do showdown (~168px) ANTES de
+  // dimensionar o bloco de ações. Assim o card nunca fecha sem mostrar
+  // as cartas do vilão — é o momento que o público quer ver.
+  const hasShowdown = !!(data.showdown && data.showdown.length > 0);
+  // o rodapé fica em ~S-52; o showdown box precisa de ~168px logo abaixo do
+  // bloco. reserva real: rodapé (112) + respiro (14) + showdown (168).
+  const blockMaxH = S - blockTop - 112 - 14 - (hasShowdown ? 168 : 0);
 
-  // se a coluna esquerda + resultado estourar, encurta as linhas (raro: máximo
-  // ~10 ações na coluna esquerda cabe em ~400px)
-  const fitLeft = leftStreets.length > 0 && leftH > blockMaxH;
-  const effLineH = fitLeft ? Math.max(22, lineH - 4) : lineH;
+  // se o bloco de ações estourar o espaço reservado, encurta as linhas das
+  // duas colunas até caberem (mãos longas com ação nas 4 ruas cabem ~10 ações;
+  // o encurtamento mantém tudo dentro do card sem cortar o showdown)
+  const fitCols = Math.max(leftH, rightH) > blockMaxH;
+  // recalcula a altura com linhas compactas para saber se precisa truncar
+  // modo compacto: fonte 16px bold/600 continua legível em 1080px, e a
+  // compactação garante que o showdown obrigatório sempre caiba abaixo.
+  const effLineH = fitCols ? 13 : lineH;
+  const effMarkH = fitCols ? 0 : 4;
+  const effHeaderH = fitCols ? 13 : streetHeaderH;
+  const effStreetGap = fitCols ? 3 : streetGap;
+  const effPotLine = fitCols ? effLineH : lineH;
+  // se mesmo compactando estourar, corta entradas das ruas mais longas
+  // (mantendo a ordem: Pré-Flop e Flop à esquerda primeiro)
+  const colHeightFit = (streets: string[]): number => {
+    let h = blockPadY * 2;
+    for (let i = 0; i < streets.length; i++) {
+      const entries = streetGroups.get(streets[i])!;
+      h += effHeaderH;
+      for (let j = 0; j < entries.length; j++) {
+        const mark = entries[j].correct !== undefined ? effMarkH : 0;
+        h += effLineH + mark;
+      }
+      // linha do pote da rua (dourada, se houver registro)
+      if (data.potByStreet?.[streets[i]] !== undefined) h += effPotLine;
+      if (i < streets.length - 1) h += effStreetGap;
+    }
+    return h;
+  };
+  const trimToFit = (streets: string[]): string[] => {
+    if (!fitCols) return streets;
+    const out: string[] = [];
+    for (const st of streets) {
+      const entries = streetGroups.get(st)!.slice();
+      // testa se coube sem truncar esta rua
+      streetGroups.set(st, entries);
+      const h = colHeightFit(out) + (out.length ? effStreetGap : 0) + effHeaderH + entries.length * (effLineH + effMarkH) + (data.potByStreet?.[st] !== undefined ? effPotLine : 0);
+      if (h > blockMaxH) {
+        // corta ações da rua atual até caber (manter header + mínimo 2 ações)
+        const budget = blockMaxH - colHeightFit(out) - (out.length ? effStreetGap : 0) - effHeaderH - (data.potByStreet?.[st] !== undefined ? effPotLine : 0);
+        const maxActs = Math.max(2, Math.floor(budget / (effLineH + effMarkH)));
+        streetGroups.set(st, entries.slice(0, maxActs));
+      }
+      out.push(st);
+    }
+    return out;
+  };
+  const leftStreetsFit = trimToFit(leftStreets);
+  const rightStreetsFit = trimToFit(rightStreets);
+  const leftHFit = colHeightFit(leftStreetsFit);
+  const rightHFit = colHeightFit(rightStreetsFit);
+  const blockHFit = Math.max(leftHFit, rightHFit);
+  const drawBlockH = Math.min(blockHFit, blockMaxH);
 
   // caixa translúcida do histórico (largura total, altura controlada)
   const colW = S - blockPadX * 2;
   ctx.fillStyle = "rgba(0,0,0,0.32)";
-  roundRect(ctx, blockPadX, blockTop, colW, Math.min(blockH, blockMaxH), 12);
+  roundRect(ctx, blockPadX, blockTop, colW, drawBlockH ?? 0, 12);
   ctx.fill();
 
-  // desenha uma coluna de ruas
+  // desenha uma coluna de ruas (fonte compacta no modo fit, para bater com
+  // effLineH — assim o texto nunca invade o box do showdown)
   const drawColumn = (streets: string[], cx: number) => {
     let ry = blockTop + blockPadY;
+    const colFont = fitCols ? 16 : 20;
+    const colFontAct = fitCols ? 15 : 19;
+    const colFontPot = fitCols ? 14 : 18;
     for (let i = 0; i < streets.length; i++) {
       const street = streets[i];
       const entries = streetGroups.get(street)!;
 
       // nome da rua em dourado
       ctx.fillStyle = COLOR_GOLD_BRIGHT;
-      ctx.font = "bold 20px Georgia, serif";
+      ctx.font = `bold ${colFont}px Georgia, serif`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(street.toUpperCase(), cx + 16, ry + streetHeaderH / 2);
-      ry += streetHeaderH;
+      ctx.fillText(street.toUpperCase(), cx + 16, ry + effHeaderH / 2);
+      ry += effHeaderH;
 
       // ações da rua
       for (const entry of entries) {
         const whoColor = entry.isHero ? COLOR_GOLD_BRIGHT : COLOR_CREAM;
         const actionColor = entry.isHero ? COLOR_CREAM : COLOR_CREAM_DIM;
-        const fontSize = "19px";
+        const fontSize = `${colFontAct}px`;
         ctx.font = `bold ${fontSize} Georgia, serif`;
         const whoTxt = entry.who;
         const wWho = ctx.measureText(whoTxt).width;
@@ -877,12 +1046,12 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
       if (data.potByStreet?.[street] !== undefined) {
         const potTxt = `Pote: ${data.potByStreet[street].toFixed(1)}bb`;
         ctx.fillStyle = COLOR_GOLD;
-        ctx.font = "bold 18px Georgia, serif";
+        ctx.font = `bold ${colFontPot}px Georgia, serif`;
         ctx.fillText(potTxt, cx + 16, ry + effLineH / 2);
         ry += effLineH;
       }
 
-      if (i < streets.length - 1) ry += streetGap;
+      if (i < streets.length - 1) ry += effStreetGap;
     }
 
     // resultado da mão: desenhado apenas no box final (abaixo do bloco),
@@ -896,9 +1065,9 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   // ── SHOWDOWN — as mãos reveladas, quem levou o pote e o tamanho do pote.
   // Quando a mão chegou ao showdown, este é o bloco que o público quer ver:
   // o vilão mostra as cartas e o resultado fecha a história.
-  // O box do showdown precisa de ~160px; se não couber antes do rodapé, o card
+  // O box do showdown precisa de ~170px; se não couber antes do rodapé, o card
   // fecha só com o pote final (caixa de 48px) para nunca invadir o rodapé. ──
-  const showdownDrawY = blockTop + Math.min(blockH, blockMaxH) + 14;
+  const showdownDrawY = blockTop + drawBlockH + 14;
   const canFitShowdown = (data.showdown && data.showdown.length > 0) && (showdownDrawY + 170 < S - 100);
   const canFitPotBox = showdownDrawY + 60 < S - 100;
   if (canFitShowdown) {
@@ -989,10 +1158,10 @@ async function drawHistoryCard(data: HandShareData): Promise<Blob | null> {
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(S / 2, blockTop + 18);
-  ctx.lineTo(S / 2, blockTop + Math.min(blockH, blockMaxH) - 18);
+  ctx.lineTo(S / 2, blockTop + drawBlockH - 18);
   ctx.stroke();
-  drawColumn(leftStreets, leftX);
-  drawColumn(rightStreets, rightX);
+  drawColumn(leftStreetsFit, leftX);
+  drawColumn(rightStreetsFit, rightX);
 
   // ── RODAPÉ ──
   const footerY = S - 52;
