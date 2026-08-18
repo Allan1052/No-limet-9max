@@ -72,11 +72,6 @@ export function onUpdateAvailable(cb: Listener): () => void {
 // em segundo plano mas não força o reload).
 // ---------------------------------------------------------------------------
 
-/** Chave usada no localStorage p/ não repetir o banner da mesma versão. */
-function notifiedKey(hash: string): string {
-  return `cof-update-notified-${hash}`;
-}
-
 let checkInFlight = false;
 
 export function currentBundleHash(): string {
@@ -93,44 +88,58 @@ export function extractBundleHash(html: string): string {
 }
 
 /**
- * Verifica (silencioso) se o servidor já está servindo uma versão nova.
- * Se sim, marca o update disponível (1x por versão — localStorage impede
- * banner repetido enquanto a pessoa não atualizar).
+ * Verifica (silencioso) se há uma versão nova no servidor e, se houver, deixa o
+ * botão "Atualizar" disponível.
+ *
+ * ANTES o app buscava o /index.html e comparava o hash — mas o próprio service
+ * worker devolvia o index.html DO CACHE (versão velha), então nunca detectava e
+ * o botão não aparecia. Agora o caminho principal pede ao SW para revalidar o
+ * sw.js na REDE (registration.update()): se houver worker novo (installing/
+ * waiting), avisamos a UI. O antigo comparador de hash fica só como reserva.
  */
 export async function checkForUpdate(): Promise<boolean> {
   try {
-    if (checkInFlight) return available;
     if (available) return true;
+    if (checkInFlight) return false;
     checkInFlight = true;
 
+    // 1) CAMINHO CONFIÁVEL: perguntar ao service worker (bate na rede sempre).
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        try {
+          await reg.update(); // revalida o sw.js no servidor
+        } catch {
+          // sem rede — tenta o fallback abaixo
+        }
+        const pending = reg.waiting || reg.installing;
+        if (pending && navigator.serviceWorker.controller) {
+          announceUpdate(() => {
+            (reg.waiting || pending).postMessage({ type: "SKIP_WAITING" });
+          });
+          return true;
+        }
+        if (available) return true;
+      }
+    }
+
+    // 2) RESERVA: compara o hash do bundle servido pela rede com o em execução.
     const current = currentBundleHash();
     if (!current) return false;
-
     const res = await fetch(`/index.html?cb=${Date.now()}`, {
       cache: "no-store",
       credentials: "omit",
     });
     if (!res.ok) return false;
-    const html = await res.text();
-    const remote = extractBundleHash(html);
+    const remote = extractBundleHash(await res.text());
     if (!remote || remote === current) return false;
 
-    // Versão nova no servidor. Marca 1x (não perturba a cada reload).
-    const key = notifiedKey(remote);
-    if (!localStorage.getItem(key)) {
-      try {
-        localStorage.setItem(key, "1");
-      } catch {
-        // storage cheio/bloqueado — ignora
-      }
-      announceUpdate(() => {
-        // Recarrega com cache-buster forçando a versão nova
-        const url = new URL(location.href);
-        url.searchParams.delete("u");
-        url.searchParams.set("u", Date.now().toString());
-        location.replace(url.toString());
-      });
-    }
+    announceUpdate(() => {
+      const url = new URL(location.href);
+      url.searchParams.delete("u");
+      url.searchParams.set("u", Date.now().toString());
+      location.replace(url.toString());
+    });
     return true;
   } catch {
     return false;
