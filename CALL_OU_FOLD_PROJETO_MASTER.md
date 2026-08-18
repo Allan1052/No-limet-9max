@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 18/08/2026 — cards de compartilhamento corrigidos (carrossel padrão, showdown obrigatório, assinatura única) + 4 cards SHOWDOWN premium gerados
+### Última atualização: 18/08/2026 (tarde) — aba Importar + parser PokerStars em português + ImportReplayer (replayer de mesa) no ar
 
 ---
 
@@ -1148,3 +1148,38 @@ Gerados via canvas + chromium headless (render em `/tmp/render-showdown.py`, PNG
 **Entregas da sessão 17/08 (tudo no ar):** prompt Claude PDF · painel Trajetória no Circuito por buy-in (`TournamentCountPanel.tsx` + `fetchTournamentEntries`) · botão "Treinar esse ponto fraco" + curva de evolução (`LeaksPanel` + `DrillView` leakSession + `leakTraining.ts` upstream, NÃO EDITAR) · selo GTO (`GtoSealChip` no `HandTipsModal` + `GtoValidationSection` no `Leaderboard` via `runCalibration` de `gtoBenchmark.ts`, NÃO EDITAR) · polimento de legibilidade (theme.css: `.card.sm` 30×43, números ≥12px, tabular-nums, .tc-panel, .seat-bet z-index) · Anatomia com números reais + denom.
 
 **Regra de qualidade cumprida:** tsc + vitest + build + revisão visual + deploy verificado ao vivo ANTES de avisar o Allan.
+
+---
+
+## ✅ SESSÃO 18/08 (TARDE) — ABA IMPORTAR + PARSER PORTUGUÊS + IMPORTREPLAYER (TUDO NO AR)
+
+### 📥 Aba "Importar" na navegação inferior
+- `BottomNav.tsx` ganhou a aba **📥 Importar** como tab separado (entre Estudar e Ranking).
+- `ImportView.tsx`: colar ou anexar histórico (.txt/.docx/.pdf) → analisar com o analyzer da sessão → stats (VPIP/PFR/3-bet, mãos boas/ok/imprecisas/ruins) + botão **"Ver como replayer"** que abre o replayer de mesa direto.
+
+### 🇧🇷 Parser PokerStars em PORTUGUÊS (`src/import/handHistory.ts`)
+- `splitHands`, `parseHandBlock`, `detectSite` e regex de handId agora entendem o formato PT: "Mão PokerStars #...", "recebe", "iguala", "desiste", "aumenta para", "coloca ante" etc.
+- Formato inglês e GGPoker continuam suportados.
+- **Testado com o histórico real de 100 mãos do Allan** (`/home/ubuntu/upload/Históricodemãos.txt`): VPIP 16%, PFR 7%, 50 mãos boas, 6 ajustes menores, 0 erros.
+
+### 🎬 ImportReplayer (commits `c01afad2` + `4f5c1c89`, NO AR)
+Replayer de mesa para mãos importadas — conforme pedido do Allan ("sem lista — abrir direto na mesa, uma mão por vez"):
+- Mesa circular idêntica ao jogo: assentos com nome/posição/stack, herói com borda dourada e cartas sempre visíveis, quem foldou fica apagado (opacity baixa), destaque no assento agindo (`.seat.acting`)
+- Avança **ação por ação** com ◀/▶ ("Próximo ▶", "◀ Anterior", contador "Ação N/M")
+- **Board abre rua por rua** (pré-flop → flop → turn → river); banner da street + ação colorida no padrão aprovado (cinza=fold, azul=call, âmbar=raise)
+- Fim da mão: **resultado** (vencedor/showdown) + feedback do analyzer (situação, nota e comentário)
+- Navegação entre mãos ◀◀/▶▶ com contador **"Mão X/Y"**
+- i18n completa PT/ES/EN (chaves `import.*`) e CSS `.ir-*` em `theme.css` (mesa horizontal 16/10, máx. 640px no desktop, exceção no @media mobile para não herdar a mesa vertical 3/4 do jogo)
+- Página de teste isolada `site/test-ir.html` (entrada extra no rollupOptions do vite; fora do navigation fallback do SW via `navigateFallbackDenylist`)
+- **COMO TESTAR:** app → aba 📥 Importar → colar o histórico do Allan → Analisar → tocar em "Ver como replayer" → avançar com ▶ e navegar entre mãos
+
+### 🧪 Verificação visual via CDP
+- chromium headless em **localhost:9223** (não 9222 — websocket quebrado lá)
+- Scripts em `/tmp/`: `render-ir2.py` (connect_page, eval, screenshot; `ws_recv_all` corrige frames de continuação 0x0 do websocket), `ir-steps.py` (avanço ação por ação com snapshots), `ir-check.py`
+- Screenshot final validado: mesa circular completa, 7 assentos, herói Q♦Q♥ em destaque, contador "Mão 1/2", board rua por rua, resultado final + feedback
+
+### 📦 Deploy verificado
+- `tsc` limpo + `vitest` (3.599+) + build OK → `git pull --rebase origin main` → push (nunca `--force`)
+- GitHub Actions verde; bundle novo confirmado ao vivo: `assets/main-BvIXX9lk.js`; página de teste pública em `https://calloufold.com.br/site/test-ir.html` (HTTP 200)
+
+**Regras mantidas:** motor intocável (src/bots, ranges, game, engine, feedback, tournament; leakTraining.ts/gtoBenchmark.ts NÃO editar) · nome do Allan oculto no app · app grátis · PDF para documentos entregues · tudo em português.
