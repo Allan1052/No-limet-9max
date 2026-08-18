@@ -144,6 +144,7 @@ export function ImportView() {
         <ImportReplayer
           hands={parsed}
           reports={report ? report.hands : []}
+          session={report ?? undefined}
           onBack={() => setReplay(false)}
         />
       ) : report ? (

@@ -10,6 +10,8 @@ import { CardView } from "./Card";
 import { cardToString } from "../engine/cards";
 import type { ParsedHand, ParsedAction, Street } from "../import/handHistory";
 import type { FeedbackItem } from "../feedback/analyzer";
+import type { SessionReport } from "../import/analyzeSession";
+import { SessionDiagnosis } from "./SessionDiagnosis";
 
 const POS_SHORT: Record<string, string> = {
   UTG: "UTG",
@@ -211,22 +213,51 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
 export function ImportReplayer({
   hands,
   reports,
+  session,
   startIndex = 0,
   onBack,
 }: {
   hands: ParsedHand[];
   reports: { handId: string; feedback?: FeedbackItem; heroCardsText: string; effectiveBB: number; situation: string }[];
+  /** Sessão completa — habilita o diagnóstico final (nota + fortes/fracos/ajustes). */
+  session?: SessionReport;
   startIndex?: number;
   onBack?: () => void;
 }) {
   const { t } = useT();
   const [handIdx, setHandIdx] = useState(startIndex);
+  const [showDiag, setShowDiag] = useState(false);
   const hand = hands[handIdx];
   const report = reports[handIdx];
   const steps = useMemo(() => buildSteps(hand), [hand]);
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx];
   const atEnd = stepIdx >= steps.length - 1;
+  const isLastHand = handIdx === hands.length - 1;
+
+  // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
+  if (showDiag && session) {
+    return (
+      <div className="import-replayer">
+        <div className="ir-head">
+          <button className="btn tiny" onClick={() => setShowDiag(false)}>
+            ◀ Voltar ao replay
+          </button>
+          <span className="ir-counter">🏁 Diagnóstico</span>
+          <span />
+        </div>
+        <SessionDiagnosis
+          report={session}
+          onReview={() => {
+            setShowDiag(false);
+            setHandIdx(0);
+            setStepIdx(0);
+          }}
+          onTrain={onBack}
+        />
+      </div>
+    );
+  }
 
   const boardStr = useMemo(
     () => hand.board.map((c) => cardToString(c)).join(" "),
@@ -271,6 +302,11 @@ export function ImportReplayer({
           >
             ▶▶
           </button>
+          {session ? (
+            <button className="btn tiny" onClick={() => setShowDiag(true)} title="Diagnóstico da sessão">
+              🏁
+            </button>
+          ) : null}
         </span>
       </div>
 
@@ -361,6 +397,17 @@ export function ImportReplayer({
                   ) : null}
                   {report?.situation ? (
                     <div className="ir-situ">{report.situation}</div>
+                  ) : null}
+                  {session ? (
+                    <button
+                      className="btn primary"
+                      style={{ marginTop: 14, width: "100%" }}
+                      onClick={() => setShowDiag(true)}
+                    >
+                      {isLastHand
+                        ? "🏁 Ver diagnóstico da sessão"
+                        : "🏁 Diagnóstico da sessão (pontos fortes e fracos)"}
+                    </button>
                   ) : null}
                 </>
               );
