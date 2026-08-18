@@ -128,8 +128,8 @@ export function assignPositions(seats: ParsedSeat[], buttonSeat: number): void {
 
 /** Detecta o site pelo cabeçalho. */
 function detectSite(header: string): Site {
-  if (/^PokerStars/i.test(header)) return "PokerStars";
-  if (/^(GG|Poker Hand)/i.test(header) || /GGPoker/i.test(header)) return "GGPoker";
+  if (/^PokerStars|^(Mão\s+)?PokerStars/i.test(header)) return "PokerStars";
+  if (/^(GG|Poker Hand|Mão\s+Poker)/i.test(header) || /GGPoker/i.test(header)) return "GGPoker";
   return "desconhecido";
 }
 
@@ -141,7 +141,9 @@ function splitHands(text: string): string[] {
   const blocks: string[] = [];
   let current: string[] = [];
   const isHeader = (l: string) =>
-    /^(PokerStars|GGPoker)\b.*Hand\s+#/i.test(l) || /^Poker Hand\s+#/i.test(l);
+    /^(PokerStars|GGPoker)\b.*Hand\s+#/i.test(l) ||
+    /^Poker Hand\s+#/i.test(l) ||
+    /^Mão PokerStars\s+#/i.test(l);
   for (const line of lines) {
     if (isHeader(line)) {
       if (current.length) blocks.push(current.join("\n"));
@@ -151,7 +153,7 @@ function splitHands(text: string): string[] {
     }
   }
   if (current.length) blocks.push(current.join("\n"));
-  return blocks.filter((b) => /Hand\s+#/i.test(b));
+  return blocks.filter((b) => /Hand\s+#/i.test(b) || /^Mão PokerStars\s+#/i.test(b));
 }
 
 function currentStreet(sawFlop: boolean, sawTurn: boolean, sawRiver: boolean): Street {
@@ -169,8 +171,11 @@ export function parseHandBlock(block: string): ParsedHand | null {
   const header = lines[0];
   const site = detectSite(header);
 
-  const handId = (header.match(/Hand\s+#(\w+)/i)?.[1]) ?? "";
-  const tournamentId = header.match(/Tournament\s+#(\w+)/i)?.[1];
+  const handId =
+    (header.match(/(?:Hand|Mão)\s+#(\w+)/i)?.[1]) ??
+    (header.match(/#(\d{8,})/)?.[1]) ??
+    "";
+  const tournamentId = header.match(/Tournament\s+#(\w+)/i)?.[1] || header.match(/Torneio\s+#(\w+)/i)?.[1];
   // Blinds: primeiro grupo "(X/Y)" no cabeçalho (nível ou stakes).
   const blindMatch = header.match(/\(\s*([\d.,]+)\s*\/\s*([\d.,]+)/);
   const sb = blindMatch ? num(blindMatch[1]) : 0;
@@ -191,7 +196,9 @@ export function parseHandBlock(block: string): ParsedHand | null {
 
   for (const line of lines) {
     // Mesa e botão.
-    const tableMatch = line.match(/Table\s+'.*?'\s+(\d+)-max\s+Seat\s+#(\d+)\s+is the button/i);
+    const tableMatch =
+      line.match(/Table\s+'.*?'\s+(\d+)-max\s+Seat\s+#(\d+)\s+is the button/i) ||
+      line.match(/Mesa\s+'.*?'\s+(\d+)-max\s+Lugar\s*#(\d+)\s+é o botão/i);
     if (tableMatch) {
       maxSeats = parseInt(tableMatch[1], 10);
       buttonSeat = parseInt(tableMatch[2], 10);
@@ -199,7 +206,9 @@ export function parseHandBlock(block: string): ParsedHand | null {
     }
 
     // Assentos.
-    const seatMatch = line.match(/^Seat\s+(\d+):\s+(.+?)\s+\(([\d.,]+)\s+in chips/i);
+    const seatMatch =
+      line.match(/^Seat\s+(\d+):\s+(.+?)\s+\(([\d.,]+)\s+in chips/i) ||
+      line.match(/^Lugar\s+(\d+):\s+(.+?)\s+\(([\d.,]+)\s+em fichas/i);
     if (seatMatch && !inSummary) {
       seats.push({
         seat: parseInt(seatMatch[1], 10),
@@ -238,7 +247,9 @@ export function parseHandBlock(block: string): ParsedHand | null {
     }
 
     // Cartas do herói.
-    const dealtM = line.match(/^Dealt to\s+(.+?)\s+\[([^\]]+)\]/i);
+    const dealtM =
+      line.match(/^Dealt to\s+(.+?)\s+\[([^\]]+)\]/i) ||
+      line.match(/^(.+?)\s+recebe\s+\[([^\]]+)\]/);
     if (dealtM) {
       heroName = dealtM[1].trim();
       heroCards = parseCards(dealtM[2]);
@@ -246,18 +257,24 @@ export function parseHandBlock(block: string): ParsedHand | null {
     }
 
     // Antes e blinds.
-    const anteM = line.match(/^(.+?):\s+posts\s+the\s+ante\s+([\d.,]+)/i);
+    const anteM =
+      line.match(/^(.+?):\s+posts\s+the\s+ante\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+coloca\s+ante\s+([\d.,]+)/i);
     if (anteM) {
       ante = Math.max(ante, num(anteM[2]));
       actions.push({ street: "preflop", player: anteM[1].trim(), type: "ante", amount: num(anteM[2]), allIn: /all-in/i.test(line) });
       continue;
     }
-    const sbM = line.match(/^(.+?):\s+posts\s+small blind\s+([\d.,]+)/i);
+    const sbM =
+      line.match(/^(.+?):\s+posts\s+small blind\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+paga o small blind\s+([\d.,]+)/i);
     if (sbM) {
       actions.push({ street: "preflop", player: sbM[1].trim(), type: "sb", amount: num(sbM[2]), allIn: false });
       continue;
     }
-    const bbM = line.match(/^(.+?):\s+posts\s+big blind\s+([\d.,]+)/i);
+    const bbM =
+      line.match(/^(.+?):\s+posts\s+big blind\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+paga o big blind\s+([\d.,]+)/i);
     if (bbM) {
       actions.push({ street: "preflop", player: bbM[1].trim(), type: "bb", amount: num(bbM[2]), allIn: false });
       continue;
@@ -265,32 +282,41 @@ export function parseHandBlock(block: string): ParsedHand | null {
 
     // Ações de jogo.
     const street = currentStreet(sawFlop, sawTurn, sawRiver);
-    const foldM = line.match(/^(.+?):\s+folds/i);
+    const foldM =
+      line.match(/^(.+?):\s+folds/i) || line.match(/^(.+?):\s+desiste\s*$/);
     if (foldM) {
       actions.push({ street, player: foldM[1].trim(), type: "fold", amount: 0, allIn: false });
       continue;
     }
-    const checkM = line.match(/^(.+?):\s+checks/i);
+    const checkM = line.match(/^(.+?):\s+checks/i) || line.match(/^(.+?):\s+passa\s*$/);
     if (checkM) {
       actions.push({ street, player: checkM[1].trim(), type: "check", amount: 0, allIn: false });
       continue;
     }
-    const callM = line.match(/^(.+?):\s+calls\s+([\d.,]+)/i);
+    const callM =
+      line.match(/^(.+?):\s+calls\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+iguala\s+([\d.,]+)/i);
     if (callM) {
       actions.push({ street, player: callM[1].trim(), type: "call", amount: num(callM[2]), allIn: /all-in/i.test(line) });
       continue;
     }
-    const raiseM = line.match(/^(.+?):\s+raises\s+[\d.,]+\s+to\s+([\d.,]+)/i);
+    const raiseM =
+      line.match(/^(.+?):\s+raises\s+[\d.,]+\s+to\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+aumenta\s+[\d.,]+\s+para\s+([\d.,]+)/i);
     if (raiseM) {
       actions.push({ street, player: raiseM[1].trim(), type: "raise", amount: num(raiseM[2]), allIn: /all-in/i.test(line) });
       continue;
     }
-    const betM = line.match(/^(.+?):\s+bets\s+([\d.,]+)/i);
+    const betM =
+      line.match(/^(.+?):\s+bets\s+([\d.,]+)/i) ||
+      line.match(/^(.+?):\s+aposta\s+([\d.,]+)/i);
     if (betM) {
       actions.push({ street, player: betM[1].trim(), type: "bet", amount: num(betM[2]), allIn: /all-in/i.test(line) });
       continue;
     }
-    const uncalledM = line.match(/^Uncalled bet\s+\(([\d.,]+)\)\s+returned to\s+(.+)/i);
+    const uncalledM =
+      line.match(/^Uncalled bet\s+\(([\d.,]+)\)\s+returned to\s+(.+)/i) ||
+      line.match(/^Aposta não-igualada \(([\d.,]+)\) voltou para (.+)/i);
     if (uncalledM) {
       actions.push({ street, player: uncalledM[2].trim(), type: "uncalled", amount: num(uncalledM[1]), allIn: false });
       continue;

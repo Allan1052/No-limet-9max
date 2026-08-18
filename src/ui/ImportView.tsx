@@ -68,7 +68,13 @@ export function ImportView() {
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    const content = await file.text();
+    // PokerStars exporta o histórico em ISO-8859-1; file.text() decodifica como
+    // UTF-8 e corrompe os acentos (vira U+FFFD). Detecta e reinterpreta.
+    const buf = await file.arrayBuffer();
+    const asUtf8 = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+    const content = asUtf8.includes("\uFFFD")
+      ? new TextDecoder("windows-1252").decode(buf)
+      : asUtf8;
     setText(content);
     run(content);
   };
