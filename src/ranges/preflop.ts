@@ -593,6 +593,36 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       };
     }
 
+    // ── STACK CURTO (push/fold): enfrentando UMA abertura é JAM-ou-FOLD, e o
+    // range de re-shove é bem MAIS LARGO que o de valor. Ex.: 66 a ~13bb no SB
+    // sobre um open é all-in padrão (antes o motor só jamava o topo ~10% e
+    // foldava 66). Largura escala com o stack (mais curto = mais largo) e com a
+    // posição do abridor (mais largo vs abridor tardio/solto).
+    if (sd.pushFold) {
+      const raiserWide = RFI_BASE_PERCENT[ctx.raiserPosition] ?? 0.18;
+      const jamPct = Math.min(
+        0.45,
+        Math.max(0.14, 0.22 + (13 - ctx.effectiveBB) * 0.02 + 0.25 * raiserWide),
+      );
+      const jamRange = buildTopRange(jamPct);
+      if (freqIn(jamRange, handType) > 0) {
+        return {
+          action: "jam",
+          sizeBB: ctx.effectiveBB,
+          reason: `${handType}: stack curto (${Math.round(ctx.effectiveBB)}bb) — all-in sobre a abertura de ${ctx.raiserPosition} (re-shove padrão).`,
+          handType,
+          mix: bandMix("jam", jamPct, handType, "fold"),
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: stack curto — fora do range de all-in vs ${ctx.raiserPosition}; pagar OOP raso é pior que foldar.`,
+        handType,
+        mix: bandMix("jam", jamPct, handType, "fold"),
+      };
+    }
+
     if (freqIn(value3betRange, handType) > 0) {
       const action: PreflopAction = sd.pushFold ? "jam" : "3bet";
       return {

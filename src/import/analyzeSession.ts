@@ -48,16 +48,20 @@ export interface SessionReport {
 }
 
 /** Ação pré-flop do herói já reduzida à família que o motor entende. */
-function mapHeroAction(type: string, facingRaise: boolean): { engine: string; label: string } {
+function mapHeroAction(type: string, facingRaise: boolean, allIn: boolean): { engine: string; label: string } {
   switch (type) {
     case "fold":
       return { engine: "fold", label: "Fold" };
     case "check":
       return { engine: "check", label: "Check" };
     case "call":
-      return { engine: "call", label: "Call" };
+      // Pagar um all-in é um call de all-in; senão, call normal.
+      return allIn ? { engine: "call", label: "Call (all-in)" } : { engine: "call", label: "Call" };
     case "raise":
-      // Levantar contra uma abertura é um 3-bet; sem abertura é uma abertura.
+      // Um raise ALL-IN é um jam (não um "3-bet" comum) — importante em stack
+      // curto, onde re-shovar é o jogo certo. Sem all-in: 3-bet (vs abertura) ou
+      // abertura (pote não aberto).
+      if (allIn) return { engine: "allin", label: "All-in" };
       return facingRaise ? { engine: "3bet", label: "3-bet" } : { engine: "raise", label: "Raise/abertura" };
     default:
       return { engine: type, label: actionLabel(type) };
@@ -86,7 +90,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
   // última abertura (raise) enfrentada.
   let raiserPosition: Position | undefined;
   let openSizeBB: number | undefined;
-  let heroActed: { type: string } | undefined;
+  let heroActed: { type: string; allIn: boolean } | undefined;
 
   for (const a of h.actions) {
     if (a.street !== "preflop") break;
@@ -94,7 +98,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
 
     if (a.player === h.heroName) {
       if (a.type === "fold" || a.type === "check" || a.type === "call" || a.type === "raise") {
-        heroActed = { type: a.type };
+        heroActed = { type: a.type, allIn: !!a.allIn };
         break;
       }
       continue;
@@ -112,7 +116,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
   }
 
   const facingRaise = raiserPosition != null;
-  const mapped = mapHeroAction(heroActed.type, facingRaise);
+  const mapped = mapHeroAction(heroActed.type, facingRaise, heroActed.allIn);
 
   // BB sem abertura (pote limpado/andado): jogada padrão, fora do escopo v1.
   if (hero.position === "BB" && !facingRaise) {
@@ -140,6 +144,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
     kind: "preflop",
     action: dec.action,
     reason: dec.reason,
+    effectiveBB: base.effectiveBB,
     mix: dec.mix?.map((m) => ({ action: m.action, freq: m.freq })),
   }, {
     heroPosition: hero.position,
