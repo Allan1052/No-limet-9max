@@ -21,3 +21,26 @@ app; são dívidas de higiene/consistência para uma passada futura.
   3. Coordenar deploy (o código novo tem que sair junto com a migração).
 - **Prioridade:** baixa (cosmético/dados; sem impacto no usuário).
 - **Origem:** auditoria de correção do app (sessão 17/08), ao validar o rank Elite.
+
+## Divisão de trabalho (lanes Claude × Manus)
+
+Para o Claude e o Manus trabalharem em paralelo **sem sobrescrever um ao outro**,
+cada arquivo tem um dono. Sempre `git fetch` + `rebase` antes de push; nunca
+force-push.
+
+### Cards de compartilhamento → lane do **Manus**
+- **O quê:** a partir de 18/08, os **cards** (`src/app/handShareCard.ts`,
+  `src/app/handNarrative.ts`, `src/ui/HandShareButton.tsx`, `src/ui/HandActions.tsx`)
+  passam a ser lane do **Manus**. Decisão do Allan para economizar créditos do Claude.
+- **Contexto:** houve colisão nesse arquivo — o Manus subiu uma versão do card
+  (quadrada) por cima da versão premium do Claude; a do Manus estava com subtítulo
+  duplicado e cartas sobrepostas. Em 18/08 o Claude restaurou o card premium
+  1080×1350 (HERÓI×VILÃO, SIMPLES | TÉCNICA) + criou o **Card 2 "A mão, contada"**
+  (crônica escrita, rua por rua). **Essa é a base atual** — o Manus deve iterar a
+  partir dela, não da versão quadrada antiga.
+- **Ação:** avisar o Manus que a base do card mudou; daqui pra frente ele cuida
+  desses arquivos e o Claude não mexe sem combinar.
+
+### Lane do **Claude** (motor)
+- Motor/ranges/treino/bots: `src/engine/*`, `src/ranges/*`, `src/train/*`,
+  `src/bots/*`, `src/tournament/*`, `src/sim/*`. O Manus não mexe aqui sem combinar.
