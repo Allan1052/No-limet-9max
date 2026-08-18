@@ -28,15 +28,15 @@ const POS_SHORT: Record<string, string> = {
 // Anel de posições da mesa (herói embaixo, no centro = slot 0). Mesa em retrato
 // (mais alta) e assentos afastados do centro pra não encavalar o board no 9-max.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "88%", left: "50%" },
-  { top: "80%", left: "20%" },
-  { top: "54%", left: "12%" },
-  { top: "29%", left: "17%" },
+  { top: "87%", left: "50%" },
+  { top: "78%", left: "24%" },
+  { top: "52%", left: "16%" },
+  { top: "28%", left: "20%" },
   { top: "14%", left: "40%" },
   { top: "14%", left: "60%" },
-  { top: "29%", left: "83%" },
-  { top: "54%", left: "88%" },
-  { top: "80%", left: "80%" },
+  { top: "28%", left: "80%" },
+  { top: "52%", left: "84%" },
+  { top: "78%", left: "76%" },
 ];
 
 const STREET_PT: Record<Street, string> = {
@@ -269,7 +269,14 @@ export function ImportReplayer({
   const atEnd = stepIdx >= steps.length - 1;
   const isLastHand = handIdx === hands.length - 1;
 
+  const boardStr = useMemo(
+    () => hand.board.map((c) => cardToString(c)).join(" "),
+    [hand],
+  );
+
   // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
+  // IMPORTANTE: este return fica DEPOIS de todos os hooks (senão o React
+  // renderiza menos hooks ao abrir o diagnóstico e o app trava).
   if (showDiag && session) {
     return (
       <div className="import-replayer">
@@ -292,11 +299,6 @@ export function ImportReplayer({
       </div>
     );
   }
-
-  const boardStr = useMemo(
-    () => hand.board.map((c) => cardToString(c)).join(" "),
-    [hand],
-  );
   const fb = report?.feedback;
 
   const streetOfStep = (): Street => {

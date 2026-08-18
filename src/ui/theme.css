@@ -2272,49 +2272,61 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ir-tl-item:hover { border-color: var(--gold-dim); }
 .ir-tl-now { border-color: var(--gold); color: var(--gold); font-weight: 700; }
 
-/* ── Replay importado: mesa COMPACTA 9-max (assentos não vazam no celular) ── */
-.ir-table { aspect-ratio: 1 / 1.16; max-width: min(100%, 440px); }
+/* ── Replay importado: mesa GRANDE 9-max (tela cheia no celular) ── */
+.import-replayer { width: 100%; max-width: 760px; margin: 0 auto; box-sizing: border-box; padding: 8px 6px 18px; gap: 10px; overflow-x: clip; }
+.ir-head { flex-wrap: wrap; row-gap: 6px; }
+.ir-head .btn.tiny { padding: 5px 9px; }
+/* alta especificidade p/ vencer a regra .table-wrap.ir-table (aspect 16/10) */
+.table-wrap.ir-table {
+  aspect-ratio: auto; width: min(94%, 480px); max-width: 94%;
+  height: min(70vh, 620px); min-height: 430px; margin: 0 auto; overflow: visible;
+}
 .ir-seat { width: 86px; }
-.ir-seat .pod { padding: 4px 6px; border-radius: 10px; }
-.ir-seat .name { font-size: 11px; line-height: 1.15; }
+.ir-seat .pod { padding: 5px 7px; border-radius: 12px; }
+.ir-seat .name { font-size: 12px; line-height: 1.15; }
 .ir-seat .arch { font-size: 9px; }
 .ir-seat .stack {
-  font-size: 12px; font-weight: 800; color: var(--gold-bright); margin-top: 1px;
+  font-size: 13px; font-weight: 800; color: var(--gold-bright); margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
 .ir-seat.folded .stack { color: var(--text-dim); font-weight: 600; }
-.ir-seat .hole { margin-top: 4px; gap: 2px; }
-.ir-seat .hole > * { transform: scale(0.82); transform-origin: top center; }
-.ir-seat .badge { font-size: 10px; padding: 1px 6px; margin-top: 3px; min-height: 0; }
+.ir-seat .badge { font-size: 11px; padding: 2px 8px; margin-top: 4px; min-height: 0; }
+/* HERÓI em destaque: pod e cartas MAIORES — dá a sensação de "jogando". */
+.ir-seat.hero { width: 128px; z-index: 5; }
+.ir-seat.hero .pod { padding: 8px 10px; }
+.ir-seat.hero .name { font-size: 15px; }
+.ir-seat.hero .stack { font-size: 16px; }
+.ir-seat .hole { margin-top: 5px; gap: 3px; }
+.ir-seat.hero .hole > * { transform: scale(1.25); transform-origin: top center; margin: 3px 4px 8px; }
 .ir-seat.acting .pod {
-  box-shadow: 0 0 0 2px var(--gold), 0 0 16px rgba(230, 196, 84, 0.55);
+  box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(230, 196, 84, 0.6);
   border-color: var(--gold);
 }
 .ir-dealer {
-  position: absolute; top: -7px; right: -7px; width: 20px; height: 20px;
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px;
   border-radius: 50%; background: #f5f0e1; color: #1a1408;
-  font-size: 11px; font-weight: 900; line-height: 20px; text-align: center;
+  font-size: 13px; font-weight: 900; line-height: 24px; text-align: center;
   border: 1px solid #c49a2a; z-index: 6; box-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
 .ir-center {
   position: absolute; top: 47%; left: 50%; transform: translate(-50%, -50%);
-  z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  width: max-content; max-width: 74%;
+  z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: max-content; max-width: 82%;
 }
 .ir-potchip {
-  font-size: 12.5px; font-weight: 800; color: var(--gold-bright);
+  font-size: 15px; font-weight: 800; color: var(--gold-bright);
   background: rgba(10, 13, 8, 0.72); border: 1px solid var(--gold-dim);
-  border-radius: 999px; padding: 3px 13px; text-shadow: 0 1px 2px #000;
+  border-radius: 999px; padding: 5px 18px; text-shadow: 0 1px 2px #000;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .ir-center .ir-board {
   position: static; top: auto; left: auto; transform: none;
-  padding: 0; gap: 3px; background: transparent; border: none;
+  padding: 0; gap: 4px; background: transparent; border: none;
 }
-.ir-center .ir-board > * { transform: scale(0.66); transform-origin: center; margin: -8px -6px; }
+.ir-center .ir-board > * { transform: scale(0.8); transform-origin: center; margin: -6px -4px; }
 .ir-center .ir-board .muted {
-  transform: none; margin: 0; font-size: 12px; letter-spacing: 1px;
-  padding: 4px 12px; background: rgba(10,13,8,0.5); border: 1px solid var(--gold-dim); border-radius: 8px;
+  transform: none; margin: 0; font-size: 14px; letter-spacing: 1px;
+  padding: 6px 16px; background: rgba(10,13,8,0.5); border: 1px solid var(--gold-dim); border-radius: 10px;
 }
 
 .import-cta-btn {
