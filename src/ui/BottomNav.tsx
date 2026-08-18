@@ -31,7 +31,7 @@ export type AppView =
 type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
 
 // Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
-const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "importar", "drill", "ft"];
+const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "drill", "ft"];
 
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
 export const HUBS: Hub[] = [
@@ -40,7 +40,10 @@ export const HUBS: Hub[] = [
   // o treino sempre começa na aba "Sua Mão", que carrega a mão, a posição e o
   // stack reais do spot. O acesso solto pela sub-nav "zerava" o treino.
   { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha", "ft"] },
-  { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "aprenda", "icm", "importar"] },
+  { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "aprenda", "icm"] },
+  // Allan (18/08): a Importação de mãos saiu de dentro de Estudar (ficava escondida
+  // atrás do botão ⋯) e virou aba separada na barra principal, bem visível.
+  { id: "importar", icon: "📥", labelKey: "nav.import", views: ["importar"] },
   { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
   { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
 ];
