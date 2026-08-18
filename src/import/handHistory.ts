@@ -65,6 +65,12 @@ export interface ParsedHand {
   heroCards: Card[]; // vazio se não revelado
   board: Card[];
   actions: ParsedAction[];
+  /** Cartas reveladas no showdown por jogador (nome → cartas). */
+  shownCards?: Record<string, Card[]>;
+  /** Descrição da mão feita por jogador ("dois pares, Ás e Nove"). */
+  handDesc?: Record<string, string>;
+  /** Quem levou (parte do) pote no showdown. */
+  winners?: string[];
   /** Ordem original das linhas, guardada para depuração/replay futuro. */
   raw: string;
 }
@@ -193,8 +199,41 @@ export function parseHandBlock(block: string): ParsedHand | null {
   let sawTurn = false;
   let sawRiver = false;
   let inSummary = false;
+  const shownCards: Record<string, Card[]> = {};
+  const handDesc: Record<string, string> = {};
+  const winners = new Set<string>();
 
   for (const line of lines) {
+    // ── SHOWDOWN / RESUMO: cartas reveladas, descrição da mão e vencedores.
+    // Vem antes de tudo pra pegar tanto a seção "SHOW DOWN" quanto o "SUMÁRIO".
+    const showM = line.match(/^(.+?):\s*(?:mostra|shows)\s+\[([^\]]+)\](?:\s*\(([^)]+)\))?/i);
+    if (showM) {
+      const nm = showM[1].trim();
+      const cs = parseCards(showM[2]);
+      if (cs.length) shownCards[nm] = cs;
+      if (showM[3]) handDesc[nm] = showM[3].trim();
+      continue;
+    }
+    // Resumo: "Lugar 6: nome (small blind) mostrou [9s As] e ganhou (10602) com dois pares..."
+    const sumShowM = line.match(
+      /^(?:Seat|Lugar)\s+\d+:\s+(.+?)(?:\s+\([^)]*\))?\s+(?:mostrou|showed)\s+\[([^\]]+)\]\s+e\s+(ganhou|won|perdeu|lost)(?:\s*\(([\d.,]+)\))?(?:\s+com\s+(.+))?/i,
+    );
+    if (sumShowM) {
+      const nm = sumShowM[1].trim();
+      const cs = parseCards(sumShowM[2]);
+      if (cs.length) shownCards[nm] = cs;
+      if (sumShowM[5]) handDesc[nm] = sumShowM[5].trim();
+      if (/ganhou|won/i.test(sumShowM[3])) winners.add(nm);
+      continue;
+    }
+    // Vencedor: "nome recebeu 10602 do pote" / "name collected (10602)".
+    const wonM =
+      line.match(/^(.+?)\s+(?:recebeu|coletou)\s+[\d.,]+\s+do pote/i) ||
+      line.match(/^(.+?)\s+collected\s+\(?[\d.,]+\)?\s+from/i);
+    if (wonM) {
+      winners.add(wonM[1].trim());
+      continue;
+    }
     // Mesa e botão.
     const tableMatch =
       line.match(/Table\s+'.*?'\s+(\d+)-max\s+Seat\s+#(\d+)\s+is the button/i) ||
@@ -220,7 +259,7 @@ export function parseHandBlock(block: string): ParsedHand | null {
       continue;
     }
 
-    if (/^\*\*\* SUMMARY \*\*\*/i.test(line)) {
+    if (/^\*\*\* (SUMMARY|SUM[ÁA]RIO|RESUMO) \*\*\*/i.test(line)) {
       inSummary = true;
       continue;
     }
@@ -345,6 +384,9 @@ export function parseHandBlock(block: string): ParsedHand | null {
     heroCards,
     board,
     actions,
+    shownCards: Object.keys(shownCards).length ? shownCards : undefined,
+    handDesc: Object.keys(handDesc).length ? handDesc : undefined,
+    winners: winners.size ? [...winners] : undefined,
     raw: block,
   };
 }

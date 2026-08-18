@@ -7,7 +7,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "../i18n";
 import { CardView } from "./Card";
-import { cardToString } from "../engine/cards";
 import type { ParsedHand, ParsedAction, Street } from "../import/handHistory";
 import type { FeedbackItem } from "../feedback/analyzer";
 import type { SessionReport } from "../import/analyzeSession";
@@ -273,11 +272,6 @@ export function ImportReplayer({
   const atEnd = stepIdx >= steps.length - 1;
   const isLastHand = handIdx === hands.length - 1;
 
-  const boardStr = useMemo(
-    () => hand.board.map((c) => cardToString(c)).join(" "),
-    [hand],
-  );
-
   // Dica do coach PÓS-FLOP (flop/turn/river) — calculada sob demanda por mão
   // (equity real vs range), pra a importação inteira não travar. O pré-flop já
   // vem em report.feedback.
@@ -315,6 +309,9 @@ export function ImportReplayer({
     if (stepIdx === 0) return "preflop";
     return steps[stepIdx - 1]?.action?.street ?? "preflop";
   };
+
+  // No passo de RESULTADO revelamos as cartas do vilão e destacamos o vencedor.
+  const revealing = step.actionIdx === -3;
 
   // Dica do coach da RUA ATUAL: pós-flop quando disponível, senão o pré-flop.
   const curStreet = streetOfStep();
@@ -368,7 +365,7 @@ export function ImportReplayer({
         {step.seats.map((s) => (
           <div
             key={s.key}
-            className={`seat ir-seat${s.isHero ? " hero" : ""}${s.folded ? " folded" : ""}${s.name === step.action?.player ? " acting" : ""}`}
+            className={`seat ir-seat${s.isHero ? " hero" : ""}${s.folded && !(revealing && hand.shownCards?.[s.name]) ? " folded" : ""}${s.name === step.action?.player ? " acting" : ""}${revealing && hand.winners?.includes(s.name) ? " ir-winner" : ""}`}
             style={{ top: s.top, left: s.left }}
           >
             <div className="pod">
@@ -378,14 +375,25 @@ export function ImportReplayer({
               <div className="stack">
                 {s.folded ? "fora" : `${toBB(s.stack, hand.bb)}bb`}
               </div>
-              {s.isHero && hand.heroCards.length > 0 ? (
-                <div className="hole">
-                  {hand.heroCards.map((c, j) => (
-                    <CardView key={j} card={c} small />
-                  ))}
-                </div>
+              {(() => {
+                const cards = s.isHero
+                  ? hand.heroCards
+                  : revealing
+                    ? hand.shownCards?.[s.name]
+                    : undefined;
+                return cards && cards.length > 0 ? (
+                  <div className="hole">
+                    {cards.map((c, j) => (
+                      <CardView key={j} card={c} small />
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+              {revealing && hand.winners?.includes(s.name) ? (
+                <div className="badge ir-badge-win">🏆 levou</div>
+              ) : s.lastAction ? (
+                <div className="badge">{s.lastAction}</div>
               ) : null}
-              {s.lastAction ? <div className="badge">{s.lastAction}</div> : null}
             </div>
           </div>
         ))}
@@ -450,20 +458,37 @@ export function ImportReplayer({
           <div className="ir-result-title">{t("import.result")}</div>
           <div className="ir-result-body">
             {(() => {
-              const alive = step.seats
-                .filter((s) => !s.folded)
-                .map((s) => s.name);
-              const showdown = alive.length > 1;
+              const shown = hand.shownCards ?? {};
+              const shownNames = Object.keys(shown);
+              const winners = hand.winners ?? [];
               return (
                 <>
-                  {showdown ? (
-                    <div>
-                      <b>Showdown:</b> {alive.join(", ")}
-                      {boardStr ? <span> · board {boardStr}</span> : null}
+                  {shownNames.length > 0 ? (
+                    <div className="ir-showdown">
+                      {shownNames.map((nm) => {
+                        const won = winners.includes(nm);
+                        const isHero = nm === hand.heroName;
+                        return (
+                          <div key={nm} className={`ir-sd-row${won ? " win" : ""}${isHero ? " me" : ""}`}>
+                            <div className="ir-sd-cards">
+                              {shown[nm].map((c, i) => (
+                                <CardView key={i} card={c} small />
+                              ))}
+                            </div>
+                            <div className="ir-sd-info">
+                              <div className="ir-sd-name">
+                                {isHero ? `${nm} (você)` : nm} {won ? <span className="ir-sd-win">🏆 levou</span> : null}
+                              </div>
+                              {hand.handDesc?.[nm] ? <div className="ir-sd-desc">{hand.handDesc[nm]}</div> : null}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
-                    <div>
-                      <b>{alive[0] ? `${alive[0]} levou o pote` : "pote dividido"}</b>
+                    <div className="ir-noshow">
+                      <b>{winners.length ? `${winners.join(", ")} levou o pote` : "pote resolvido"}</b>
+                      <span className="ir-muted"> · sem showdown (ninguém precisou mostrar)</span>
                     </div>
                   )}
                   {fb ? (

@@ -2341,6 +2341,33 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ir-coach.c-ruim { border-left-color: var(--bad); }
 .ir-coach.c-ruim .ir-coach-badge { background: var(--bad); color: #fff; }
 
+/* ── SHOWDOWN no resultado: cartas reveladas + descrição + quem levou ── */
+.ir-showdown { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.ir-sd-row {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line, #2c2415);
+  border-left: 3px solid #4a4232; border-radius: 10px; padding: 8px 12px;
+}
+.ir-sd-row.win { border-left-color: var(--gold-bright); background: rgba(230, 196, 84, 0.08); }
+.ir-sd-row.me { box-shadow: inset 0 0 0 1px rgba(230, 196, 84, 0.25); }
+.ir-sd-cards { display: flex; gap: 3px; flex: 0 0 auto; }
+.ir-sd-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ir-sd-name { font-weight: 700; font-size: 15px; color: var(--text, #efe6cf); }
+.ir-sd-win { color: var(--gold-bright); font-weight: 800; font-size: 13px; margin-left: 4px; white-space: nowrap; }
+.ir-sd-desc { font-size: 13px; color: var(--gold-soft); font-style: italic; }
+.ir-noshow { text-align: center; color: var(--text); }
+.ir-noshow .ir-muted { color: var(--text-dim); font-size: 13px; }
+
+/* Vencedor destacado na mesa (pod) no passo de resultado */
+.ir-seat.ir-winner .pod {
+  border-color: var(--gold-bright) !important;
+  box-shadow: 0 0 0 2px var(--gold), 0 0 22px rgba(230, 196, 84, 0.7) !important;
+}
+.badge.ir-badge-win {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)) !important;
+  color: #1a1408 !important; border-color: #8a6c24 !important; font-weight: 800;
+}
+
 /* FELTRO: oval preto/ouro com trilho dourado, como os cards */
 .ir-fullscreen .table-wrap.ir-table {
   aspect-ratio: auto; width: min(96%, 470px); max-width: 96%;
