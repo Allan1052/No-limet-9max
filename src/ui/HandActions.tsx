@@ -90,7 +90,16 @@ export function HandActions({
     // termina com o pote final da caixa acima).
     let showdown: HandShareData["showdown"];
     if (hand.result?.showdown && hand.result.winningsBySeat) {
+      // SÓ os jogadores que CHEGARAM ao showdown entram no card. Em modo estudo
+      // `holeCards` tem as cartas de TODOS (inclusive quem foldou), então sem
+      // este filtro o card mostrava um jogador que FOLDOU como se fosse o vilão
+      // (ex.: você venceu/perdeu pra um JJ, mas o card mostrava um 74 que largou).
+      // `handValueBySeat` só contém os assentos avaliados no showdown.
+      const shown = hand.result.handValueBySeat;
+      const reachedShowdown = (seat: number) =>
+        !shown || Object.keys(shown).length === 0 || shown[seat] !== undefined;
       showdown = Object.entries(hand.holeCards)
+        .filter(([seatStr]) => reachedShowdown(Number(seatStr)))
         .map(([seatStr, cards]) => {
           const seat = Number(seatStr);
           const won = (hand.result?.winningsBySeat[seat] ?? 0) > 0;

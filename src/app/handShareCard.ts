@@ -453,7 +453,11 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   ctx.beginPath(); ctx.moveTo(W / 2 + lgap, 250); ctx.lineTo(W / 2 + lgap + 56, 250); ctx.stroke();
 
   // ── matchup: herói × vilão (se showdown) ──
-  const villain = data.showdown?.find((p) => !p.isHero && p.cards.length >= 2);
+  // Vilão a mostrar: prioriza QUEM VENCEU o pote (pra "você perdeu" mostrar quem
+  // te ganhou), senão o primeiro vilão do showdown.
+  const villain =
+    data.showdown?.find((p) => !p.isHero && p.won && p.cards.length >= 2) ??
+    data.showdown?.find((p) => !p.isHero && p.cards.length >= 2);
   const heroWon = data.showdown?.find((p) => p.isHero)?.won;
   const drawPlayer = (px: number, pw: number, tag: string, cards: Card[], made: string) => {
     panel(px, 286, pw, 206, 16, "rgba(230,196,84,0.05)", GLINE);
