@@ -4,7 +4,7 @@
 // mão a mão, usando o mesmo motor do simulador.
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "../i18n";
 import { CardView } from "./Card";
 import { cardsFromString } from "../engine/cards";
@@ -14,6 +14,9 @@ import { analyzeSession, type SessionReport, type HandReport } from "../import/a
 import { UserSubscriptionLevel } from "../app/gameController";
 import { summarize, type FeedbackItem, type Rating } from "../feedback/analyzer";
 import { supabase } from "../lib/supabase";
+
+/** localStorage: guarda o texto cru do último histórico importado (reabre sozinho). */
+const LAST_IMPORT_KEY = "cof-last-import-v1";
 
 const RATING_CLASS: Record<Rating, string> = {
   boa: "grade-boa",
@@ -40,19 +43,50 @@ export function ImportView() {
   const [replay, setReplay] = useState(false);
   const [parsed, setParsed] = useState<ParsedHand[]>([]);
 
-  const run = async (raw: string) => {
+  // Reabre automaticamente o ÚLTIMO histórico importado (pedido do Allan 18/08:
+  // não perder a sessão ao atualizar/sair do app). O texto cru fica no
+  // localStorage; ao abrir a aba, ele é reprocessado e o replay reabre — sem
+  // reinserir no Supabase (isso só acontece numa importação nova).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LAST_IMPORT_KEY);
+      if (saved && saved.trim()) {
+        setText(saved);
+        run(saved, { fromStorage: true });
+      }
+    } catch {
+      // localStorage indisponível — ignora
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const run = async (raw: string, opts: { fromStorage?: boolean } = {}) => {
     setError(null);
     const hands = parseHandHistory(raw);
     if (hands.length === 0) {
-      setReport(null);
-      setParsed([]);
-      setError(t("import.errorEmpty"));
+      if (!opts.fromStorage) {
+        setReport(null);
+        setParsed([]);
+        setError(t("import.errorEmpty"));
+      }
       return;
     }
     setParsed(hands);
     setReplay(true);
     const sessionReport = analyzeSession(hands);
     setReport(sessionReport);
+
+    // Importação nova (não veio do storage): guarda o histórico p/ reabrir depois.
+    if (!opts.fromStorage) {
+      try {
+        localStorage.setItem(LAST_IMPORT_KEY, raw);
+      } catch {
+        // storage cheio/bloqueado — ignora
+      }
+    } else {
+      // Veio do storage: não reinsere no Supabase.
+      return;
+    }
 
     // Salvar no Supabase (silenciosamente)
     try {
@@ -131,6 +165,13 @@ export function ImportView() {
                 setText("");
                 setReport(null);
                 setError(null);
+                setParsed([]);
+                setReplay(false);
+                try {
+                  localStorage.removeItem(LAST_IMPORT_KEY);
+                } catch {
+                  // ignora
+                }
               }}
             >
               {t("import.clear")}

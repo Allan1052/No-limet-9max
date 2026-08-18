@@ -29,14 +29,14 @@ const POS_SHORT: Record<string, string> = {
 // (mais alta) e assentos afastados do centro pra não encavalar o board no 9-max.
 const SEAT_POS: Array<{ top: string; left: string }> = [
   { top: "87%", left: "50%" },
-  { top: "78%", left: "24%" },
-  { top: "52%", left: "16%" },
-  { top: "28%", left: "20%" },
+  { top: "73%", left: "19%" },
+  { top: "50%", left: "15%" },
+  { top: "27%", left: "20%" },
   { top: "14%", left: "40%" },
   { top: "14%", left: "60%" },
-  { top: "28%", left: "80%" },
-  { top: "52%", left: "84%" },
-  { top: "78%", left: "76%" },
+  { top: "27%", left: "80%" },
+  { top: "50%", left: "85%" },
+  { top: "73%", left: "81%" },
 ];
 
 const STREET_PT: Record<Street, string> = {
@@ -308,14 +308,15 @@ export function ImportReplayer({
   };
 
   return (
-    <div className="import-replayer">
-      {/* Cabeçalho: mão atual + voltar para o raio-x */}
+    <div className="import-replayer ir-fullscreen">
+      {/* Cabeçalho: marca + mão atual + navegação */}
       <div className="ir-head">
-        <button className="btn tiny" onClick={onBack}>
-          ◀ {t("import.backToList")}
+        <button className="btn tiny ir-exit" onClick={onBack}>
+          ✕
         </button>
-        <span className="ir-counter">
-          {t("import.handN", { n: handIdx + 1, total: hands.length })}
+        <span className="ir-brand">
+          CALL <i>ou</i> FOLD
+          <span className="ir-counter">{t("import.handN", { n: handIdx + 1, total: hands.length })}</span>
         </span>
         <span className="ir-nav">
           <button
