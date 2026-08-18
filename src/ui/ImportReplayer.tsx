@@ -387,6 +387,26 @@ export function ImportReplayer({
         </div>
       </div>
 
+      {/* DICA DO COACH — o que era recomendado nesta mão (igual ao jogo ao vivo).
+          Fica sempre visível durante o replay, pra quem revisa ver a jogada certa. */}
+      {fb ? (
+        <div
+          className={`ir-coach ${
+            fb.rating === "boa" ? "c-boa" : fb.rating === "ok" ? "c-ok" : fb.rating === "imprecisa" ? "c-imp" : "c-ruim"
+          }`}
+        >
+          <span className="ir-coach-badge">{fb.rating === "boa" || fb.rating === "ok" ? "✓" : "✗"}</span>
+          <span className="ir-coach-txt">
+            Coach recomendava <b>{fb.advice.toUpperCase()}</b>
+            {fb.heroAction ? (
+              <>
+                {" · "}você fez <b>{fb.heroAction.toUpperCase()}</b>
+              </>
+            ) : null}
+          </span>
+        </div>
+      ) : null}
+
       {/* Aviso de pote coletado / devolvido */}
       {step.pot && step.actionIdx !== -3 ? (
         <div className="ir-pot">{step.pot}</div>

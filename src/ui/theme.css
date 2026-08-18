@@ -2278,7 +2278,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   width: 100vw; height: 100dvh; max-width: none; margin: 0;
   box-sizing: border-box; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column; gap: 8px;
-  padding: calc(8px + env(safe-area-inset-top)) 8px calc(14px + env(safe-area-inset-bottom));
+  padding: calc(18px + env(safe-area-inset-top)) 8px calc(14px + env(safe-area-inset-bottom));
   background:
     radial-gradient(130% 70% at 50% 6%, rgba(58, 46, 20, 0.5), transparent 62%),
     radial-gradient(150% 120% at 50% 104%, rgba(20, 15, 8, 0.7), transparent 60%),
@@ -2313,6 +2313,29 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ir-fullscreen .ir-pot,
 .ir-fullscreen .ir-result { text-align: center; }
 .ir-fullscreen > .ir-nav { justify-content: center; }
+
+/* DICA DO COACH — barra com a recomendação da mão (verde=certo, vermelho=erro) */
+.ir-coach {
+  display: flex; align-items: center; gap: 10px;
+  max-width: 470px; width: 100%; margin: 2px auto 0; box-sizing: border-box;
+  padding: 9px 14px; border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4); border: 1px solid var(--gold-dim);
+  border-left-width: 4px; font-size: 14.5px; color: #efe6cf;
+}
+.ir-coach b { color: var(--gold-bright); font-weight: 800; letter-spacing: 0.3px; }
+.ir-coach-badge {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 15px; color: #10140c;
+}
+.ir-coach.c-boa { border-left-color: var(--good); }
+.ir-coach.c-boa .ir-coach-badge { background: var(--good); }
+.ir-coach.c-ok { border-left-color: #9cc4a8; }
+.ir-coach.c-ok .ir-coach-badge { background: #9cc4a8; }
+.ir-coach.c-imp { border-left-color: var(--warn); }
+.ir-coach.c-imp .ir-coach-badge { background: var(--warn); }
+.ir-coach.c-ruim { border-left-color: var(--bad); }
+.ir-coach.c-ruim .ir-coach-badge { background: var(--bad); color: #fff; }
 
 /* FELTRO: oval preto/ouro com trilho dourado, como os cards */
 .ir-fullscreen .table-wrap.ir-table {
