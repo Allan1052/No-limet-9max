@@ -14,6 +14,10 @@ export default defineConfig({
   build: {
     target: "es2022",
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        'test-ir': 'site/test-ir.html',
+      },
       output: {
         format: "es",
         // Performance: separa bibliotecas 3ª-partes (react, i18n, workbox) do
