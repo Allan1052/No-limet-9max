@@ -11,6 +11,7 @@ import { cardToString } from "../engine/cards";
 import type { ParsedHand, ParsedAction, Street } from "../import/handHistory";
 import type { FeedbackItem } from "../feedback/analyzer";
 import type { SessionReport } from "../import/analyzeSession";
+import { analyzePostflopStreets } from "../import/analyzePostflop";
 import { SessionDiagnosis } from "./SessionDiagnosis";
 
 const POS_SHORT: Record<string, string> = {
@@ -274,6 +275,11 @@ export function ImportReplayer({
     [hand],
   );
 
+  // Dica do coach PÓS-FLOP (flop/turn/river) — calculada sob demanda por mão
+  // (equity real vs range), pra a importação inteira não travar. O pré-flop já
+  // vem em report.feedback.
+  const streetFb = useMemo(() => analyzePostflopStreets(hand, "free"), [hand]);
+
   // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
   // IMPORTANTE: este return fica DEPOIS de todos os hooks (senão o React
   // renderiza menos hooks ao abrir o diagnóstico e o app trava).
@@ -306,6 +312,13 @@ export function ImportReplayer({
     if (stepIdx === 0) return "preflop";
     return steps[stepIdx - 1]?.action?.street ?? "preflop";
   };
+
+  // Dica do coach da RUA ATUAL: pós-flop quando disponível, senão o pré-flop.
+  const curStreet = streetOfStep();
+  const coachFb =
+    curStreet === "flop" || curStreet === "turn" || curStreet === "river"
+      ? streetFb[curStreet] ?? fb
+      : fb;
 
   return (
     <div className="import-replayer ir-fullscreen">
@@ -387,20 +400,22 @@ export function ImportReplayer({
         </div>
       </div>
 
-      {/* DICA DO COACH — o que era recomendado nesta mão (igual ao jogo ao vivo).
-          Fica sempre visível durante o replay, pra quem revisa ver a jogada certa. */}
-      {fb ? (
+      {/* DICA DO COACH — o que era recomendado NESTA RUA (igual ao jogo ao vivo).
+          Muda rua a rua: pré-flop, flop, turn, river. Ajuda quem revisa a ver a
+          jogada certa na hora. */}
+      {coachFb ? (
         <div
           className={`ir-coach ${
-            fb.rating === "boa" ? "c-boa" : fb.rating === "ok" ? "c-ok" : fb.rating === "imprecisa" ? "c-imp" : "c-ruim"
+            coachFb.rating === "boa" ? "c-boa" : coachFb.rating === "ok" ? "c-ok" : coachFb.rating === "imprecisa" ? "c-imp" : "c-ruim"
           }`}
         >
-          <span className="ir-coach-badge">{fb.rating === "boa" || fb.rating === "ok" ? "✓" : "✗"}</span>
+          <span className="ir-coach-badge">{coachFb.rating === "boa" || coachFb.rating === "ok" ? "✓" : "✗"}</span>
           <span className="ir-coach-txt">
-            Coach recomendava <b>{fb.advice.toUpperCase()}</b>
-            {fb.heroAction ? (
+            <b className="ir-coach-street">{STREET_PT[curStreet]}</b>
+            {" · "}Coach recomendava <b>{coachFb.advice.toUpperCase()}</b>
+            {coachFb.heroAction ? (
               <>
-                {" · "}você fez <b>{fb.heroAction.toUpperCase()}</b>
+                {" · "}você fez <b>{coachFb.heroAction.toUpperCase()}</b>
               </>
             ) : null}
           </span>

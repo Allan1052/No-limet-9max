@@ -2323,6 +2323,10 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   border-left-width: 4px; font-size: 14.5px; color: #efe6cf;
 }
 .ir-coach b { color: var(--gold-bright); font-weight: 800; letter-spacing: 0.3px; }
+.ir-coach .ir-coach-street {
+  color: var(--gold-soft); text-transform: uppercase; font-size: 11px;
+  letter-spacing: 1px; font-family: Georgia, serif;
+}
 .ir-coach-badge {
   flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
