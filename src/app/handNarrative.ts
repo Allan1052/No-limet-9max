@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { rankOf, suitOf, type Card } from "../engine/cards";
+import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
 import type { HandShareData } from "./handShareCard";
 import {
   preflopOpenRange,
@@ -169,6 +170,94 @@ export function buildHandNarrative(data: HandShareData): NarrativeStreet[] {
       }
     }
     out.push({ label, hero: heroLine, villain: villainLine, heroShort, villainShort });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// HISTÓRIA ESCRITA DA MÃO — a crônica, rua por rua, com TODAS as ações.
+// Allan (18/08): "quero ver a história escrita, todas as jogadas — pré-flop,
+// flop, turn, river — mostrar todas as ações." Cada rua vira: (1) o LEDGER com
+// as ações reais de todos os jogadores (do actionLog) e (2) a LEITURA no estilo
+// Yuri (o que sua mão virou + o range do vilão apertando). Tudo dos dados reais.
+// ---------------------------------------------------------------------------
+export interface HandStoryStreet {
+  /** "PRÉ-FLOP", "FLOP  Q♥ J♣ 3♣"... (com as cartas da rua). */
+  label: string;
+  /** Ações reais da rua: "Você: Raise 2bb · CO: Call · 3 largaram". */
+  ledger: string;
+  /** A leitura (estilo Yuri): sua mão + range do vilão apertando. */
+  read: string;
+}
+
+/** Limpa o texto cru da ação p/ leitura ("Raise 2.0"→"aumenta 2bb"...). */
+function actionPhrase(action: string): string {
+  const t = action.toLowerCase();
+  const num = /([\d.,]+)/.exec(action);
+  const bb = num ? `${parseFloat(num[1].replace(",", ".")).toFixed(1).replace(/\.0$/, "")}bb` : "";
+  // "all-in" só com fronteira de palavra — senão "Call" (c-"all") vira all-in.
+  if (/\ball[\s-]?in\b|\bjam\b|\bshove\b/.test(t)) return bb ? `all-in ${bb}` : "all-in";
+  if (t.startsWith("fold") || t.includes("larg") || t.includes("desist")) return "larga";
+  if (t.startsWith("check")) return "mesa";
+  if (t.startsWith("call") || t.includes("pag")) return bb ? `paga ${bb}` : "paga";
+  if (t.startsWith("raise") || t.includes("aument")) return bb ? `aumenta ${bb}` : "aumenta";
+  if (t.startsWith("bet") || t.includes("aposta")) return bb ? `aposta ${bb}` : "aposta";
+  return action.toLowerCase();
+}
+
+/** Categoria da mão do herói AVALIADA no board da rua (real, não heurística). */
+function heroMadeAt(heroCards: Card[], boardCards: Card[]): string {
+  if (boardCards.length < 3 || heroCards.length < 2) return "";
+  try { return CATEGORY_NAMES_PT[categoryOf(evaluate([...heroCards, ...boardCards]))] ?? ""; } catch { return ""; }
+}
+
+/** Mão com artigo p/ frase natural: "um par", "uma trinca", "dois pares". */
+function madeWithArticle(made: string): string {
+  const m = made.toLowerCase();
+  if (!m) return "";
+  if (m.startsWith("dois")) return m;
+  if (m === "carta alta") return "só carta alta";
+  if (m === "trinca" || m === "quadra" || m === "sequência") return "uma " + m;
+  return "um " + m;
+}
+
+const BOARD_LEN: Record<NarrStreet, number> = { preflop: 0, flop: 3, turn: 4, river: 5 };
+
+/**
+ * Monta a história escrita da mão — uma crônica por rua, com todas as ações.
+ */
+export function buildHandStory(data: HandShareData): HandStoryStreet[] {
+  const narr = buildHandNarrative(data);
+  const log = data.actionLog ?? [];
+  const out: HandStoryStreet[] = [];
+
+  for (const st of narr) {
+    const key = streetKey(st.label);
+    // LEDGER: ações reais da rua, na ordem. Foldes viram contagem ("N largaram").
+    const acts = log.filter((e) => streetKey(e.street) === key);
+    const parts: string[] = [];
+    let folds = 0;
+    for (const a of acts) {
+      const ph = actionPhrase(a.action);
+      if (ph === "larga") { folds++; continue; }
+      const who = a.isHero ? "Você" : a.who;
+      parts.push(`${who} ${ph}`);
+    }
+    if (folds > 0) parts.push(folds === 1 ? "1 larga" : `${folds} largam`);
+    const ledger = parts.join(" · ") || "—";
+
+    // LEITURA (estilo Yuri): a mão REAL do herói na rua + o range do vilão
+    // apertando. No pré-flop, a leitura é a mão inicial.
+    let read = "";
+    if (key === "preflop") {
+      read = `Você começou com ${data.heroCards.map(cardStr).join(" ")} — mão de abertura.`;
+    } else {
+      const made = heroMadeAt(data.heroCards, data.board.slice(0, BOARD_LEN[key]));
+      const heroRead = made ? `Você tinha ${madeWithArticle(made)}.` : "";
+      const vilRead = st.villain && !/não agiu/i.test(st.villain) ? st.villain.replace(/\s+/g, " ").trim() : "";
+      read = `${heroRead}${heroRead && vilRead ? " " : ""}${vilRead}`.trim();
+    }
+    out.push({ label: st.label, ledger, read });
   }
   return out;
 }

@@ -66,16 +66,16 @@ export function HandShareButton({
     setGenerating(true);
     try {
       const card1 = await drawHandShareCard(data, "simples", "decisao");
-      const card2 = await drawHandShareCard(data, "simples", "historico");
+      const card2 = await drawHandShareCard(data, "simples", "narrativa");
       if (!card1 || !card2) return;
       const files = [
-        new File([card1], "card_1_desafio.png", { type: "image/png" }),
-        new File([card2], "card_2_historico.png", { type: "image/png" }),
+        new File([card1], "card_1_resultado.png", { type: "image/png" }),
+        new File([card2], "card_2_a_mao_contada.png", { type: "image/png" }),
       ];
       const result = await shareMulti(files, SHARE_URL, SHARE_TEXT, DISCLAIMER);
       if (result === "download") {
-        await downloadBlob(card1, "card_1_desafio.png");
-        await downloadBlob(card2, "card_2_historico.png");
+        await downloadBlob(card1, "card_1_resultado.png");
+        await downloadBlob(card2, "card_2_a_mao_contada.png");
       }
       if (result === "shared" || result === "download") {
         setDone(true);
