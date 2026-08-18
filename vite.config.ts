@@ -44,6 +44,14 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,
+      devOptions: {
+        enabled: true,
+        type: "module",
+        // Sem fallback de app-shell no SW de DEV: páginas de teste (ex.:
+        // /test-ir.html) são servidas direto pelo Vite em vez de serem
+        // substituídas pelo index.html pelo service worker.
+        navigateFallback: undefined,
+      },
       includeAssets: [
         "brand-apple-touch.png",
         "brand-icon-192.png",
@@ -51,7 +59,7 @@ export default defineConfig({
         "brand-logo-splash.png",
       ],
       workbox: {
-        navigateFallbackDenylist: [/\/site(\/|$)/],
+        navigateFallbackDenylist: [/\/site(\/|$)/, /test-ir\.html$/],
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         // Sem runtimeCaching: o precache já armazena TODOS os assets essenciais
         // (index.html, JS, CSS, imagens, manifest). Runtime caching redundante

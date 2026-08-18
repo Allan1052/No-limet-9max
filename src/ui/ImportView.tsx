@@ -8,7 +8,8 @@ import { useState } from "react";
 import { useT } from "../i18n";
 import { CardView } from "./Card";
 import { cardsFromString } from "../engine/cards";
-import { parseHandHistory } from "../import/handHistory";
+import { parseHandHistory, type ParsedHand } from "../import/handHistory";
+import { ImportReplayer } from "./ImportReplayer";
 import { analyzeSession, type SessionReport, type HandReport } from "../import/analyzeSession";
 import { UserSubscriptionLevel } from "../app/gameController";
 import { summarize, type FeedbackItem, type Rating } from "../feedback/analyzer";
@@ -36,15 +37,20 @@ export function ImportView() {
   const [report, setReport] = useState<SessionReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [onlyProblems, setOnlyProblems] = useState(false);
+  const [replay, setReplay] = useState(false);
+  const [parsed, setParsed] = useState<ParsedHand[]>([]);
 
   const run = async (raw: string) => {
     setError(null);
     const hands = parseHandHistory(raw);
     if (hands.length === 0) {
       setReport(null);
+      setParsed([]);
       setError(t("import.errorEmpty"));
       return;
     }
+    setParsed(hands);
+    setReplay(true);
     const sessionReport = analyzeSession(hands);
     setReport(sessionReport);
 
@@ -116,7 +122,7 @@ export function ImportView() {
             />
           </label>
           <button className="btn primary" disabled={!text.trim()} onClick={() => run(text)}>
-            🔍 {t("import.analyze")}
+            🎬 {t("import.analyze")}
           </button>
           {text ? (
             <button
@@ -134,21 +140,33 @@ export function ImportView() {
         {error ? <div className="import-error">{error}</div> : null}
       </div>
 
-      {report ? <ReportView report={report} onlyProblems={onlyProblems} setOnlyProblems={setOnlyProblems} userSubscriptionLevel={userSubscriptionLevel} /> : null}
+      {replay && parsed.length > 0 ? (
+        <ImportReplayer
+          hands={parsed}
+          reports={report ? report.hands : []}
+          onBack={() => setReplay(false)}
+        />
+      ) : report ? (
+        <ReportView
+          report={report}
+          onlyProblems={onlyProblems}
+          setOnlyProblems={setOnlyProblems}
+          userSubscriptionLevel={userSubscriptionLevel}
+          onOpenReplay={() => setReplay(true)}
+        />
+      ) : null}
     </div>
   );
 }
 
 function ReportView({
-  report,
-  onlyProblems,
-  setOnlyProblems,
-  userSubscriptionLevel,
+    report, onlyProblems, setOnlyProblems, userSubscriptionLevel, onOpenReplay,
 }: {
   report: SessionReport;
   onlyProblems: boolean;
   setOnlyProblems: (v: boolean) => void;
   userSubscriptionLevel: UserSubscriptionLevel;
+  onOpenReplay: () => void;
 }) {
   const { t } = useT();
   const shown = report.hands.filter((h) => {
@@ -166,6 +184,13 @@ function ReportView({
         <Stat label="✅" value={String(report.counts.boa)} tone="boa" />
         <Stat label="🟠" value={String(report.counts.imprecisa)} tone="imprecisa" />
         <Stat label="🔴" value={String(report.counts.ruim)} tone="ruim" />
+      </div>
+
+      <div className="import-replay-cta">
+        <button className="btn primary import-cta-btn" onClick={onOpenReplay}>
+          🎬 {t("import.openReplay")} ({report.totalHands} mãos)
+        </button>
+        <p className="muted">{t("import.replayHint")}</p>
       </div>
 
       <div className="import-leaks">
