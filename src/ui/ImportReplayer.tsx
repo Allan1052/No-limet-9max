@@ -26,20 +26,6 @@ const POS_SHORT: Record<string, string> = {
   BTN: "BTN",
 };
 
-// Anel de posições da mesa (herói embaixo, no centro = slot 0). Mesa em retrato
-// (mais alta) e assentos afastados do centro pra não encavalar o board no 9-max.
-const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "87%", left: "50%" },
-  { top: "73%", left: "19%" },
-  { top: "50%", left: "15%" },
-  { top: "27%", left: "20%" },
-  { top: "14%", left: "40%" },
-  { top: "14%", left: "60%" },
-  { top: "27%", left: "80%" },
-  { top: "50%", left: "85%" },
-  { top: "73%", left: "81%" },
-];
-
 const STREET_PT: Record<Street, string> = {
   preflop: "Pré-Flop",
   flop: "Flop",
@@ -87,7 +73,9 @@ function actionText(a: ParsedAction, bb: number): string {
 }
 
 interface SeatState {
-  slot: number; // índice da posição na mesa (0..8)
+  key: string; // identificador estável (nome do jogador)
+  top: string; // posição na elipse (%), calculada em ordem horária a partir do herói
+  left: string;
   name: string;
   stack: number; // fichas restantes no momento do passo
   position: string;
@@ -95,6 +83,15 @@ interface SeatState {
   isButton: boolean;
   folded: boolean;
   lastAction: string | null;
+}
+
+/** Posição na elipse da mesa por índice horário (0 = herói embaixo, centro). */
+function seatEllipsePos(i: number, n: number): { top: string; left: string } {
+  const ang = Math.PI / 2 + (2 * Math.PI * i) / Math.max(1, n);
+  const cx = 50, cy = 49, rx = 41, ry = 39;
+  const left = cx + rx * Math.cos(ang);
+  const top = cy + ry * Math.sin(ang);
+  return { top: `${top.toFixed(1)}%`, left: `${left.toFixed(1)}%` };
 }
 
 interface StepInfo {
@@ -111,43 +108,57 @@ interface StepInfo {
  * passos "rua" (flop/turn/river) que fazem o board crescer.
  */
 function buildSteps(hand: ParsedHand): StepInfo[] {
-  const n = hand.seats.length;
-  // slot visual: o herói fica embaixo (slot 0); os demais distribuídos ao redor
-  // mantendo o sentido horário. Quem não é herói: mapear na ordem dos seats.
-  const seatSlots: number[] = [];
-  let heroSlot = 0;
-  let slot = 1;
-  const order = [...hand.seats].sort((a, b) => a.seat - b.seat);
-  for (const s of order) {
-    if (s.isHero) {
-      heroSlot = 0;
-    } else {
-      seatSlots.push(slot);
-      slot += 1;
-    }
-  }
-  void heroSlot;
-  let otherIdx = 0;
-  const slotOf: Record<string, number> = {};
-  for (const s of order) {
-    slotOf[s.name] = s.isHero ? 0 : seatSlots[otherIdx++];
-  }
+  // ── ORDEM HORÁRIA a partir do herói (embaixo) — respeita as posições reais.
+  // Ação anda no sentido do maior assento (com wrap); o vizinho da esquerda do
+  // herói (próximo a agir) fica embaixo à esquerda, e assim por diante. Isso
+  // deixa botão/SB/BB nos lugares certos em relação ao herói.
+  const seated = [...hand.seats].sort((a, b) => a.seat - b.seat);
+  const N = seated.length;
+  const heroIdx = seated.findIndex((s) => s.isHero);
+  const base = heroIdx >= 0 ? heroIdx : 0;
+  const clockwise = Array.from({ length: N }, (_, k) => seated[(base + k) % N]);
 
-  const seatsAt: SeatState[] = order.map((s) => ({
-    slot: slotOf[s.name],
-    name: s.name,
-    stack: s.stack,
-    position: POS_SHORT[s.position ?? ""] ?? "",
-    isHero: s.isHero,
-    isButton: s.isButton,
-    folded: false,
-    lastAction: null,
-  }));
+  const seatsAt: SeatState[] = clockwise.map((s, i) => {
+    const pos = seatEllipsePos(i, N);
+    return {
+      key: s.name,
+      top: pos.top,
+      left: pos.left,
+      name: s.name,
+      stack: s.stack,
+      position: POS_SHORT[s.position ?? ""] ?? "",
+      isHero: s.isHero,
+      isButton: s.isButton,
+      folded: false,
+      lastAction: null,
+    };
+  });
+  const seatByName = (name: string) => seatsAt.find((s) => s.name === name);
 
   const bb = hand.bb || 1;
-  // Pote e apostas por rua (em FICHAS) — reconstrói o pote crescendo de verdade.
   let potChips = 0;
   let committed: Record<string, number> = {}; // aposta desta rua, por jogador
+
+  // ── ANTES + BLINDS já aplicados no estado inicial (sem virar passos). Assim o
+  // replay começa direto na 1ª decisão de verdade — sem "apertar Next" a mão
+  // toda pra distribuir antes. As fichas do SB/BB já aparecem colocadas.
+  for (const a of hand.actions) {
+    if (a.street !== "preflop") break;
+    const seat = seatByName(a.player);
+    if (a.type === "ante") {
+      const d = a.amount || hand.ante;
+      if (seat) seat.stack = Math.max(0, seat.stack - d);
+      potChips += d;
+    } else if (a.type === "sb" || a.type === "bb") {
+      const d = a.amount || (a.type === "sb" ? hand.sb : hand.bb);
+      if (seat) {
+        seat.stack = Math.max(0, seat.stack - d);
+        seat.lastAction = a.type === "sb" ? `SB ${fmtBB(d, bb)}` : `BB ${fmtBB(d, bb)}`;
+      }
+      potChips += d;
+      committed[a.player] = (committed[a.player] ?? 0) + d;
+    }
+  }
 
   const steps: StepInfo[] = [
     {
@@ -156,7 +167,7 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
       board: [],
       seats: seatsAt.map((s) => ({ ...s })),
       pot: null,
-      potBB: 0,
+      potBB: toBB(potChips, bb),
     },
   ];
 
@@ -165,14 +176,11 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
 
   for (let i = 0; i < hand.actions.length; i++) {
     const a = hand.actions[i];
+    // Antes/blinds já entraram no estado inicial — não viram passos.
+    if (a.type === "ante" || a.type === "sb" || a.type === "bb") continue;
+
     const targetVisible =
-      a.street === "flop"
-        ? 3
-        : a.street === "turn"
-          ? 4
-          : a.street === "river"
-            ? 5
-            : 0;
+      a.street === "flop" ? 3 : a.street === "turn" ? 4 : a.street === "river" ? 5 : 0;
     if (targetVisible > visibleBoard && lastStreet !== a.street) {
       visibleBoard = targetVisible;
       lastStreet = a.street;
@@ -186,18 +194,14 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
         potBB: toBB(potChips, bb),
       });
     }
-    const seat = seatsAt.find((s) => s.name === a.player);
+    const seat = seatByName(a.player);
     if (seat) {
       seat.lastAction = actionText(a, bb);
       if (a.type === "fold") {
         seat.folded = true;
         seat.lastAction = "Fold";
-      } else if (a.type === "ante") {
-        const d = a.amount || hand.ante;
-        seat.stack = Math.max(0, seat.stack - d);
-        potChips += d;
-      } else if (a.type === "sb" || a.type === "bb" || a.type === "call" || a.type === "bet") {
-        const d = a.amount || (a.type === "sb" ? hand.sb : a.type === "bb" ? hand.bb : 0);
+      } else if (a.type === "call" || a.type === "bet") {
+        const d = a.amount;
         seat.stack = Math.max(0, seat.stack - d);
         potChips += d;
         committed[a.player] = (committed[a.player] ?? 0) + d;
@@ -238,7 +242,6 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
     potBB: toBB(potChips, bb),
   });
 
-  void n;
   return steps;
 }
 
@@ -364,9 +367,9 @@ export function ImportReplayer({
       <div className="table-wrap ir-table">
         {step.seats.map((s) => (
           <div
-            key={s.slot}
+            key={s.key}
             className={`seat ir-seat${s.isHero ? " hero" : ""}${s.folded ? " folded" : ""}${s.name === step.action?.player ? " acting" : ""}`}
-            style={SEAT_POS[s.slot]}
+            style={{ top: s.top, left: s.left }}
           >
             <div className="pod">
               {s.isButton ? <span className="ir-dealer">D</span> : null}
