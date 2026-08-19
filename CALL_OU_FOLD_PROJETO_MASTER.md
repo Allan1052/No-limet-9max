@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 19/08/2026 (manhã) — polimento premium da aba Importar (review + mesa do replayer, commits 71c2f3f3 + 23c76711, NO AR)
+### Última atualização: 19/08/2026 — polimento 390px em rodadas: Importar (review+mesa, NO AR) + Rodada 1 (commit 401d1604, NO AR) + Rodadas 2 e 3 em andamento (header replayer, caixa Anatomia, modal evolução)
 
 ---
 
@@ -1211,3 +1211,11 @@ Somente `src/ui/theme.css` editado (nenhuma classe renomeada/removida, nenhuma l
 
 ### 📦 Deploy verificado
 - Bundle ao vivo contém as regras novas: `assets/theme-B_rX7r12.css` (24px stat, nth-child grid, arch fix confirmados via curl em produção)
+
+## 🎨 POLIMENTO VISUAL MOBILE-FIRST (19/08 — rodadas)
+- **Importar (review + mesa replayer)**: NO AR — stats grid, cabeçalho premium, labels de posição (arch fix: media query escondia no celular), feltro/trilho/assentos refinados (commit 23c76711).
+- **Rodada 1 (commit 401d1604, NO AR)**: respiro final vs bottom nav (padding-bottom 94px mobile, barras Anatomia com margem), selects de naipe da Sua Mão (HandLab) sem corte (grid 0.9fr/1.7fr, fonte 11.5px), botão 100bb sem espremer (nota em linha própria), selo duplicado do Perfil escondido no mobile (.profile-seal display:none), selo fixo (app-seal) centralizado com respiro.
+- **Rodada 2 (fila)**: header do replayer (◀◀ ▶▶ cobertos pelo "MÃO X/Y"), caixa azul da Anatomia destoa do tema preto/dourado.
+- **Rodada 3 (fila)**: modal "Sua Evolução" com áreas vazias; varredura final de números pequenos (pote/stack/bb ≥12px, tabular-nums).
+- Script de captura CDP 390px: /tmp/render-rodada1b.py (padrão audit-tabs: sem Page.enable, sleeps 3s, .bn-item/.hub-chip). Prints 780xNNN (2x).
+- Regra: rodar tsc + vitest (3599) + build + visual + curl verify antes de todo commit; git pull --rebase; nunca force-push.
