@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 19/08/2026 (madrugada) — reels vs Profissional x Recreativo (formato validado p/ Instagram) + check obrigatório de codec de reels
+### Última atualização: 19/08/2026 (manhã) — polimento premium da aba Importar (review + mesa do replayer, commits 71c2f3f3 + 23c76711, NO AR)
 
 ---
 
@@ -1188,3 +1188,26 @@ Replayer de mesa para mãos importadas — conforme pedido do Allan ("sem lista 
 - GitHub Actions verde; bundle novo confirmado ao vivo: `assets/main-BvIXX9lk.js`; página de teste pública em `https://calloufold.com.br/site/test-ir.html` (HTTP 200)
 
 **Regras mantidas:** motor intocável (src/bots, ranges, game, engine, feedback, tournament; leakTraining.ts/gtoBenchmark.ts NÃO editar) · nome do Allan oculto no app · app grátis · PDF para documentos entregues · tudo em português.
+
+---
+
+## 🎨 POLIMENTO VISUAL DA ABA IMPORTAR — IMPLEMENTADO E DEPLOYED (19/08/2026) — commits `71c2f3f3` + `23c76711`
+Somente `src/ui/theme.css` editado (nenhuma classe renomeada/removida, nenhuma lógica alterada; `tsc` limpo · `vitest` 3.599 passed · build OK · `git pull --rebase` antes do push, sem `--force`).
+
+### 📋 Tela de review (pós-análise)
+- Stats em grid de 4 colunas, com a 2ª linha (boas/ok/ruins) centralizada nas colunas 2–4; fallback 2 colunas em ≤360px
+- Números grandes (24px, weight 800, dourado/verde/âmbar/vermelho na tonalidade do app) com `tabular-nums`; labels uppercase 10px com letter-spacing
+- Cards de stat com faixa dourada no topo, sombra e hover dourado
+- CTA "Rever na mesa" com relevo premium (gradiente dourado, sombra, :hover/:active visíveis)
+- Cabeçalho "Mãos analisadas" virou painel premium (fundo, borda, h3 uppercase dourado); cards de mão com gap 10px, border-left 5px colorida por rating e hover
+- Vazamentos: painel com bullets ◆ dourados e itens com fundo sutil
+
+### 🃏 Mesa do replayer ("Rever na mesa")
+- **FIX: rótulos de posição (UTG/HJ/CO/BTN/SB/BB/LJ) agora visíveis no celular** — media query ≤460px escondia o `.arch`; corrigido com `display: block !important` na regra `.ir-fullscreen .ir-seat .arch`
+- Feltro com vinheta radial sutil, trilho dourado com glow externo discreto
+- Assento do herói com halo dourado duplo; assentos ativos com borda dourada nítida; foldados mais apagados porém legíveis
+- Pote com glow dourado; badge de ação e pill "ESTIMATIVA" do coach refinados (tabular-nums, moldura dourada)
+- Foco de teclado visível nos botões (focus-visible); mesa sempre dark (sem tema claro)
+
+### 📦 Deploy verificado
+- Bundle ao vivo contém as regras novas: `assets/theme-B_rX7r12.css` (24px stat, nth-child grid, arch fix confirmados via curl em produção)
