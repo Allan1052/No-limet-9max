@@ -5890,3 +5890,318 @@ body {
   color: var(--text, #f0ede0);
 }
 .tc-empty-sub { color: var(--text-dim, #a8a596); font-size: 13px; margin-top: 6px; }
+
+/* =========================================================================
+   POLIMENTO PREMIUM — ABA IMPORTAR (tela de review da sessão).
+   Hierarquia, paleta feltro+dourado, espaçamento em ritmo vertical,
+   CTA dourado com relevo e estados :hover/:active/:focus visíveis.
+   Só CSS — nenhuma classe existente foi removida.
+   ========================================================================= */
+
+/* --- Bloco de report: ritmo vertical consistente entre todos os blocos --- */
+.import-report {
+  gap: 18px;
+  padding-top: 2px;
+}
+
+/* --- Grid de stats: 4 cards em uma linha, alinhados, com tabular-nums --- */
+.import-stats {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.import-stat {
+  background: linear-gradient(180deg, #191d12 0%, #12160d 100%);
+  border: 1px solid #2c2f22;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.import-stat:hover {
+  border-color: var(--gold);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.import-stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gold-grad);
+  opacity: 0.85;
+}
+.import-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.import-stat-label {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.import-stat-boa .import-stat-value { color: var(--good); }
+.import-stat-boa .import-stat-label { color: rgba(92, 190, 141, 0.75); }
+.import-stat-imprecisa .import-stat-value { color: var(--warn); }
+.import-stat-imprecisa .import-stat-label { color: rgba(232, 156, 79, 0.75); }
+.import-stat-ruim .import-stat-value { color: var(--bad); }
+.import-stat-ruim .import-stat-label { color: rgba(224, 100, 95, 0.75); }
+.import-stats .import-stat:nth-child(5) {
+  grid-column: 2 / 3;
+  grid-row: 2;
+}
+.import-stats .import-stat:nth-child(6) {
+  grid-column: 3 / 4;
+  grid-row: 2;
+}
+.import-stats .import-stat:nth-child(7) {
+  grid-column: 4 / 5;
+  grid-row: 2;
+}
+@media (max-width: 360px) {
+  .import-stats { grid-template-columns: repeat(2, 1fr); }
+  .import-stats .import-stat:nth-child(5),
+  .import-stats .import-stat:nth-child(6),
+  .import-stats .import-stat:nth-child(7) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* --- CTA "Rever na mesa": relevo dourado premium, mesmo padrão dos CTAs --- */
+.import-cta-btn {
+  background: var(--gold-grad);
+  color: #0a0d0a;
+  border: 1px solid var(--gold-bright);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  width: 100%;
+  padding: 14px 16px;
+  margin-top: 10px;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.import-cta-btn:hover { box-shadow: 0 8px 30px rgba(212, 175, 55, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.import-cta-btn:active { transform: translateY(1px) scale(0.985); box-shadow: 0 3px 12px rgba(212, 175, 55, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2); }
+
+/* --- Bloco de vazamentos: destaque-herói premium (mantém o estilo aprovado) --- */
+.import-leaks {
+  padding: 16px 16px 14px;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.import-leaks ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.import-leaks li { margin: 0; padding: 8px 10px 8px 26px; position: relative; line-height: 1.45; background: rgba(255, 255, 255, 0.03); border-radius: 8px; margin-bottom: 6px; }
+.import-leaks li::before {
+  content: "◆";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  color: var(--gold-bright);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* --- Cabeçalho "Mãos analisadas": seção em coluna com painel premium --- */
+.import-hands-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 12px;
+  background: linear-gradient(180deg, #191d12 0%, #12160d 100%);
+  border: 1px solid #2c2f22;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.import-hands-head h3 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.import-summary-text {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  font-style: italic;
+}
+.import-filter { align-self: flex-start; font-size: 12px; padding: 4px 0; }
+
+/* --- Lista de mãos: respiro e acabamento premium --- */
+.import-hand-list { display: flex; flex-direction: column; gap: 10px; }
+.import-hand {
+  background: linear-gradient(180deg, #171b10 0%, #12150d 100%);
+  border: 1px solid #2c2f22;
+  border-left-width: 5px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.import-hand:hover {
+  background: linear-gradient(180deg, #1c2014 0%, #151910 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(230, 196, 84, 0.18);
+}
+.import-hand-top { gap: 10px; }
+.import-hand-sit {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gold-soft);
+  margin-bottom: 6px;
+}
+.import-hand-fb { gap: 4px; }
+.import-hand-mix {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   REFINO PREMIUM — MESA DO REPLAYER (aba Importar → "Rever na mesa").
+   Fine-tuning visual: rótulos de posição, feltro/trilho com profundidade,
+   assentos refinados, pote/badge com tabular-nums, barra do coach elegante.
+   Só CSS — nenhuma classe existente foi renomeada ou removida.
+   ========================================================================= */
+
+/* --- Rótulo de posição (.arch): info de estudo, tem que ler fácil --- */
+.ir-fullscreen .ir-seat .arch {
+  display: block !important;
+  color: var(--gold-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+.ir-fullscreen .ir-seat.folded .arch { color: rgba(168, 165, 150, 0.85); }
+.ir-fullscreen .ir-seat.hero .arch {
+  color: var(--gold-bright);
+  letter-spacing: 1.5px;
+  font-weight: 800;
+}
+
+/* --- Feltro: profundidade maior (sombra interna + vinheta radial sutil) --- */
+.ir-fullscreen .table-wrap.ir-table {
+  background:
+    radial-gradient(110% 85% at 50% 40%, rgba(46, 40, 26, 0.75) 0%, rgba(30, 24, 14, 0.45) 38%, rgba(14, 10, 6, 0.2) 70%, transparent 100%) overlay,
+    radial-gradient(closest-side at 50% 44%, #241c10 0%, #191207 52%, #100b06 100%) padding-box,
+    linear-gradient(150deg, #6a5320, #d9b24e 30%, #8a6c24 55%, #f0d989 75%, #7a5f22) border-box;
+  box-shadow:
+    inset 0 0 70px rgba(0, 0, 0, 0.72), inset 0 0 0 6px rgba(0, 0, 0, 0.35),
+    0 20px 60px rgba(0, 0, 0, 0.6), 0 0 60px rgba(212, 175, 55, 0.06);
+}
+
+/* --- Trilho dourado: brilho discreto (anéis de luz internos/externos) --- */
+.ir-fullscreen .table-wrap.ir-table::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 44% / 30%;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(240, 217, 137, 0.18), 0 0 34px rgba(212, 175, 55, 0.12);
+}
+
+/* --- Assento: vidro levemente mais profundo, cantos e sombra refinados --- */
+.ir-fullscreen .ir-seat .pod {
+  border-radius: 14px;
+  border: 1px solid rgba(230, 196, 84, 0.3);
+  background: linear-gradient(180deg, rgba(30, 26, 16, 0.96), rgba(14, 12, 8, 0.96));
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* --- Assento fora: mais apagado (apagado, mas ainda legível) --- */
+.ir-fullscreen .ir-seat.folded { opacity: 0.3; filter: grayscale(0.75); }
+.ir-fullscreen .ir-seat.folded .pod { border-color: rgba(138, 108, 36, 0.18); }
+
+/* --- Assento atuando: destaque dourado nítido com pulso sutil --- */
+.ir-fullscreen .ir-seat.acting .pod {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 0 2px var(--gold), 0 0 26px rgba(230, 196, 84, 0.7);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ir-fullscreen .ir-seat.acting .pod {
+    animation: ir-acting-glow 1.6s ease-in-out infinite alternate;
+  }
+}
+@keyframes ir-acting-glow {
+  from { box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(230, 196, 84, 0.5); }
+  to { box-shadow: 0 0 0 2px var(--gold-bright), 0 0 34px rgba(230, 196, 84, 0.85); }
+}
+
+/* --- Herói: tratamento mais nobre (pod maior, brilho dourado mais quente) --- */
+.ir-fullscreen .ir-seat.hero .pod {
+  border-width: 1px;
+  box-shadow:
+    0 0 0 1px rgba(240, 217, 137, 0.4),
+    0 0 24px rgba(230, 196, 84, 0.45),
+    0 8px 22px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.ir-fullscreen .ir-seat.hero .name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Badge de ação: chip com tabular-nums e relevo discreto --- */
+.ir-fullscreen .ir-seat .badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 2px 9px;
+  margin-top: 4px;
+  min-height: 0;
+  font-variant-numeric: tabular-nums;
+  background: rgba(10, 8, 5, 0.7);
+  border: 1px solid rgba(230, 196, 84, 0.3);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Pote: brilho dourado sutil + tabular-nums --- */
+.ir-fullscreen .ir-potchip {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(230, 196, 84, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* --- Barra do coach: espaçamento mais arejado e pill "estimativa" elegante --- */
+.ir-coach { gap: 10px; padding: 10px 14px; }
+.ir-coach .ir-coach-est {
+  margin-left: 10px;
+  padding: 2px 9px;
+  font-size: 9.5px;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  color: var(--gold-soft);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* --- Foco de teclado nos botões de navegação do replayer (já coberto pelo
+     :focus-visible global do tema — reforço de contorno no estado ativo) --- */
+.ir-fullscreen .ir-head .btn.tiny:focus-visible {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 2px;
+}
