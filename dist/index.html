@@ -28,6 +28,20 @@
     <meta name="twitter:title" content="Call ou Fold — poker é decisão, não sorte" />
     <meta name="twitter:description" content="App de estudo para o jogador recreativo. Grátis, sem dinheiro real." />
     <meta name="twitter:image" content="https://calloufold.com.br/og.png" />
+    <!-- Meta Pixel (instalado em 19/08 — ID do conjunto de dados criado no Meta Business) -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '2895094507517479');
+      fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code (noscript movido para o body, pois o parser do build não aceita <noscript> no <head>) -->
     <!-- Cache-buster automático via meta para evitar HTML antigo do browser -->
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="pragma" content="no-cache" />
@@ -56,11 +70,11 @@
       }
     }
     </script>
-  <script type="module" crossorigin src="/assets/main-CN9qk0Nt.js"></script>
+  <script type="module" crossorigin src="/assets/main-DopOJb_K.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-core-BjM7MxLi.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-CI47-K9F.js">
-  <link rel="modulepreload" crossorigin href="/assets/theme-BqVG7iSb.js">
-  <link rel="stylesheet" crossorigin href="/assets/theme-CABvXOeD.css">
+  <link rel="modulepreload" crossorigin href="/assets/theme-DfPl0RHB.js">
+  <link rel="stylesheet" crossorigin href="/assets/theme-BDTkEtAy.css">
   <link rel="stylesheet" crossorigin href="/assets/main-RmRA6gsZ.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
   <body>
@@ -79,6 +93,8 @@ não-bloqueante por cima do app já montando. -->
       <h2 style="color:#d4af37;margin:0">Carregamento travou</h2>
       <p style="color:#9a988c;max-width:420px;line-height:1.5;margin:0">O app não carregou. Toque abaixo para tentar novamente — seus dados estão seguros.</p>
       <button onclick="location.reload()" style="border:1px solid #c9b458;background:linear-gradient(180deg,#d4af37,#c9b458);color:#0d0f0d;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">🔄 Recarregar</button>
+      <!-- Meta Pixel no-script fallback -->
+      <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2895094507517479&ev=PageView&noscript=1"/></noscript>
       <button onclick="(async()=>{if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();await Promise.all(r.map(x=>x.unregister()))}if(typeof caches!=='undefined'){const k=await caches.keys();await Promise.all(k.map(c=>caches.delete(c)))}localStorage.clear();location.href=location.pathname+location.search+location.hash})();location.reload()" style="border:1px solid #c9b458;background:transparent;color:#c9b458;font-weight:800;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;width:min(320px,90vw)">🗑️ Limpar cache e recarregar</button>
     </div>
     <script>
