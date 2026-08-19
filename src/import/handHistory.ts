@@ -75,8 +75,6 @@ export interface ParsedHand {
   raw: string;
 }
 
-const NAMES_EARLY_TO_LATE = ["UTG", "UTG1", "MP", "LJ", "HJ", "CO"] as const;
-
 /** Converte "Ah Kd" / "Ah" numa lista de Cards; ignora cartas ocultas. */
 function parseCards(chunk: string): Card[] {
   const out: Card[] = [];
@@ -123,12 +121,15 @@ export function assignPositions(seats: ParsedSeat[], buttonSeat: number): void {
   ring[1].position = "BB";
   ring[n - 1].position = "BTN";
 
-  // Assentos do meio: ring[2 .. n-2]. São n-3 assentos, nomeados com o FINAL
-  // da lista early→late (o mais perto do botão vira CO, o anterior HJ, …).
+  // Assentos do meio: ring[2 .. n-2]. Nomeia a partir do BOTÃO (o mais perto
+  // vira CO, depois HJ, LJ, …) e GARANTE que o primeiro a agir (ring[2]) seja
+  // sempre UTG. Antes, em mesas curtas (6-max), o primeiro a agir saía como "LJ"
+  // — o que fazia o motor usar a range errada (LJ é mais larga que UTG).
   const middleCount = n - 3;
-  const names = NAMES_EARLY_TO_LATE.slice(NAMES_EARLY_TO_LATE.length - middleCount);
-  for (let i = 0; i < middleCount; i++) {
-    ring[2 + i].position = names[i] as Position;
+  const LATE_TO_EARLY: Position[] = ["CO", "HJ", "LJ", "MP", "UTG1"];
+  for (let k = 0; k < middleCount; k++) {
+    const idx = n - 2 - k; // ring[n-2]=CO, decrescendo até ring[2]
+    ring[idx].position = idx === 2 ? "UTG" : (LATE_TO_EARLY[k] ?? "MP");
   }
 }
 
