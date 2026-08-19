@@ -133,7 +133,11 @@ export function ProgressPanel({
       </div>
 
       {!has ? (
-        <div className="legend">{t("progress.empty")}</div>
+        <div className="legend pp-empty">
+          <div className="pp-empty-icon">🃏</div>
+          <p>{t("progress.empty")}</p>
+          <p className="pp-empty-hint">Cada decisão certa vira ponto e vira gráfico — volta aqui depois de uma sessão.</p>
+        </div>
       ) : (
         <>
           {/* ---------- VPIP com zona de referência ---------- */}

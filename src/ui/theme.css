@@ -6303,3 +6303,42 @@ body {
   /* O título nunca invade a área dos botões. */
   .ir-fullscreen .ir-head { padding-left: 40px; padding-right: 40px; }
 }
+
+/* ==========================================================================
+   RODADA 3 — "Sua Evolução" (ProgressPanel): estado vazio premium e
+   legibilidade final do gráfico semanal. Sem remover nenhuma regra anterior;
+   apenas adiciona classes novas (.pp-empty, .pp-empty-icon, .pp-empty-hint)
+   e ajusta a chave do gráfico que já existia (.pp-sw-key).
+   ========================================================================== */
+/* Estado vazio: o modal ganha um bloco centralizado com ícone dourado —
+   deixa de ser uma linha de texto solta no meio de uma área escura. */
+.pp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 34px 22px;
+  min-height: 200px;
+}
+.pp-empty-icon {
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(201, 162, 39, 0.35));
+}
+.pp-empty p {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.pp-empty-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: italic;
+  max-width: 280px;
+}
+/* Gráfico semanal: chave (número da semana) 10px com tabular-nums —
+   o "08", "12", "20" nunca dança ao lado dos rótulos vizinhos. */
+.pp-sw-key { font-size: 10px; font-variant-numeric: tabular-nums; opacity: 0.85; }
