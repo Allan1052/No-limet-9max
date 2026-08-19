@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 19/08/2026 — polimento 390px em rodadas: Importar (review+mesa, NO AR) + Rodada 1 (commit 401d1604, NO AR) + Rodadas 2 e 3 em andamento (header replayer, caixa Anatomia, modal evolução)
+### Última atualização: 19/08/2026 — polimento 390px em rodadas: Importar (review+mesa, NO AR) + Rodada 1 (commit 401d1604, NO AR) + Rodada 2 (commit 31c7201d, NO AR); falta Rodada 3 (modal evolução + legibilidade)
 
 ---
 
@@ -1215,7 +1215,7 @@ Somente `src/ui/theme.css` editado (nenhuma classe renomeada/removida, nenhuma l
 ## 🎨 POLIMENTO VISUAL MOBILE-FIRST (19/08 — rodadas)
 - **Importar (review + mesa replayer)**: NO AR — stats grid, cabeçalho premium, labels de posição (arch fix: media query escondia no celular), feltro/trilho/assentos refinados (commit 23c76711).
 - **Rodada 1 (commit 401d1604, NO AR)**: respiro final vs bottom nav (padding-bottom 94px mobile, barras Anatomia com margem), selects de naipe da Sua Mão (HandLab) sem corte (grid 0.9fr/1.7fr, fonte 11.5px), botão 100bb sem espremer (nota em linha própria), selo duplicado do Perfil escondido no mobile (.profile-seal display:none), selo fixo (app-seal) centralizado com respiro.
-- **Rodada 2 (fila)**: header do replayer (◀◀ ▶▶ cobertos pelo "MÃO X/Y"), caixa azul da Anatomia destoa do tema preto/dourado.
+- **Rodada 2 (commit 31c7201d, NO AR)**: header do replayer sem overlap (brand estático 132px, counter inline, head padding 56px); caixa da lição da Anatomia (.anat-leak) e label Recreativo harmonizadas com dourado (barras de ação seguem padrão solver); modal Pix com anonimato — nome real (PIX_DISPLAY_NAME) só aparece após clicar em qualquer botão de copiar, antes mostra "Call ou Fold"; QR/chave/dourado intactos. Prints: /tmp/r2/cmp-antes-replayer.png, cmp-depois-replayer.png, /home/ubuntu/upload/pasted_file_YG58de_image.png (antes pix, com nome) vs depois-pix.
 - **Rodada 3 (fila)**: modal "Sua Evolução" com áreas vazias; varredura final de números pequenos (pote/stack/bb ≥12px, tabular-nums).
 - Script de captura CDP 390px: /tmp/render-rodada1b.py (padrão audit-tabs: sem Page.enable, sleeps 3s, .bn-item/.hub-chip). Prints 780xNNN (2x).
 - Regra: rodar tsc + vitest (3599) + build + visual + curl verify antes de todo commit; git pull --rebase; nunca force-push.
