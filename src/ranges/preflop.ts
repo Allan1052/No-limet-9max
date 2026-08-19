@@ -507,6 +507,19 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const callsOutOfPosition = ctx.profile.coldCallFactor >= 1.5;
 
     const openSize = ctx.openSizeBB ?? BASE_OPEN_BB;
+
+    // IMPLIED ODDS DO SET-MINING — pagar uma abertura com par pequeno só existe
+    // pra flopar o set (~1 em 8,5). Pra isso pagar, tem que sobrar stack ATRÁS
+    // suficiente pra ganhar um pote grande quando acerta: a regra clássica pede
+    // ~1:10 (ganhar ao menos ~10x o que pagou). Razão = stack_atrás / valor_a_pagar.
+    //   • 100bb pagando open de 2,5bb → 97,5 / 1,5 ≈ 65 → PAGA (set-mine barato).
+    //   • 20bb pagando open de 6bb    → 14   / 5   ≈ 2,8 → FOLDA (não paga o set).
+    // Sem isso o motor pagava 33 do BB a 20bb contra um raise de 6bb — exatamente
+    // o vazamento que o Allan pegou: fica com 14bb atrás, implied insuficiente.
+    const setMineCall = Math.max(openSize - 1, 0.5); // BB já postou 1bb
+    const setMineBehind = Math.max(ctx.effectiveBB - openSize, 0);
+    const setMineOK = setMineBehind / setMineCall >= 9;
+
     // 3-bet size (padrão moderno, menor que o antigo): IP (BTN) ~3x, CO ~3.3x,
     // OOP (SB, HJ, LJ) ~3.5x. OOP devolve maior porque joga o pós-flop sem
     // posição; IP pode 3-betar menor porque joga melhor depois. Ex.: com open de
@@ -683,12 +696,22 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       !sd.pushFold &&
       (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition)
     ) {
+      // Só paga pra buscar o set se houver implied odds (stack atrás suficiente).
+      if (setMineOK) {
+        return {
+          action: "call",
+          sizeBB: openSize,
+          reason: `${handType}: par pequeno paga a abertura de ${ctx.raiserPosition} para buscar o set (~${Math.round(setMineBehind / setMineCall)}x de implied atrás — preço bom).`,
+          handType,
+          mix: bandMix("call", Math.max(defendPct, 0.15), handType),
+        };
+      }
       return {
-        action: "call",
-        sizeBB: openSize,
-        reason: `${handType}: par pequeno paga a abertura de ${ctx.raiserPosition} para buscar o set (preço bom).`,
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: par pequeno SEM implied odds pro set-mine — pagar ${openSize.toFixed(1)}bb deixando só ${Math.round(setMineBehind)}bb atrás (~${(setMineBehind / setMineCall).toFixed(1)}x, precisa ~10x). O set não paga o bastante: FOLD.`,
         handType,
-        mix: bandMix("call", Math.max(defendPct, 0.15), handType),
+        mix: [{ action: "fold", freq: 1 }],
       };
     }
 

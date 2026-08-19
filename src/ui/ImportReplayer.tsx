@@ -192,6 +192,9 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
       visibleBoard = target;
       lastStreet = street;
       committed = {}; // nova rua: zera as apostas da rua
+      // Limpa os badges de ação da rua ANTERIOR (senão o "Call 3bb" do pré-flop
+      // fica aparecendo no flop). Quem foldou continua marcado como "fora".
+      for (const s of seatsAt) if (!s.folded) s.lastAction = null;
       steps.push({
         actionIdx: -2,
         action: null,
