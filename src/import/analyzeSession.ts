@@ -90,6 +90,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
   // última abertura (raise) enfrentada.
   let raiserPosition: Position | undefined;
   let openSizeBB: number | undefined;
+  let raiserAllIn = false; // a abertura/reraise que o herói enfrenta é all-in?
   let heroActed: { type: string; allIn: boolean } | undefined;
 
   for (const a of h.actions) {
@@ -108,6 +109,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
       const seat = h.seats.find((s) => s.name === a.player);
       raiserPosition = seat?.position;
       openSizeBB = a.amount / h.bb;
+      raiserAllIn = !!a.allIn;
     }
   }
 
@@ -140,12 +142,27 @@ export function analyzeHand(h: ParsedHand): HandReport {
       variant: h.variant ?? "holdem",
     });
 
+  // Enfrentando um ALL-IN no pré-flop não existe 3-bet/abertura — só dá pra
+  // PAGAR ou FOLDAR. Se o motor recomendou agressão (3bet/jam/raise) contra um
+  // shove, a jogada EXIBIDA vira CALL (pagar o all-in é como "botar as fichas").
+  // Isso NÃO altera o motor GTO (preflopDecision continua igual, selo intacto) —
+  // só corrige o rótulo da dica, que mostrava "recomendava 3-BET" contra um
+  // all-in (impossível). Fold e call seguem como estão.
+  let advAction = dec.action;
+  let advReason = dec.reason;
+  let advMix = dec.mix?.map((m) => ({ action: m.action, freq: m.freq }));
+  if (raiserAllIn && (advAction === "3bet" || advAction === "jam" || advAction === "raise")) {
+    advAction = "call";
+    advReason = "Contra um all-in não dá pra aumentar — a decisão é PAGAR ou FOLDAR. Com essa mão o padrão é pagar o shove.";
+    advMix = [{ action: "call", freq: 1 }];
+  }
+
   const feedback = gradeDecision("Pré-flop", 'free', mapped.engine, {
     kind: "preflop",
-    action: dec.action,
-    reason: dec.reason,
+    action: advAction,
+    reason: advReason,
     effectiveBB: base.effectiveBB,
-    mix: dec.mix?.map((m) => ({ action: m.action, freq: m.freq })),
+    mix: advMix,
   }, {
     heroPosition: hero.position,
     heroBB: base.effectiveBB,
