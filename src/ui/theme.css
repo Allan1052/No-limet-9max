@@ -2353,6 +2353,8 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ir-coach.c-imp .ir-coach-badge { background: var(--warn); }
 .ir-coach.c-ruim { border-left-color: var(--bad); }
 .ir-coach.c-ruim .ir-coach-badge { background: var(--bad); color: #fff; }
+.ir-coach.c-alt { border-left-color: #d9b24e; }
+.ir-coach.c-alt .ir-coach-badge { background: #d9b24e; color: #221a08; }
 
 /* ── SHOWDOWN no resultado: cartas reveladas + descrição + quem levou ── */
 .ir-showdown { display: flex; flex-direction: column; gap: 8px; text-align: left; }

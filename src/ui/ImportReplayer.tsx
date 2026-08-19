@@ -71,6 +71,16 @@ function actionText(a: ParsedAction, bb: number): string {
   return `${label} ${bbv}`;
 }
 
+/** Família da ação a partir do rótulo (fold/check/call/aggro) — pra saber se a
+ *  jogada do herói bateu com a recomendação do coach. */
+function famOf(label: string): "fold" | "check" | "call" | "aggro" {
+  const t = label.toLowerCase();
+  if (t.includes("fold") || t.includes("larg")) return "fold";
+  if (t.includes("check") || t.includes("mesa")) return "check";
+  if (t.includes("call") || t.includes("pag")) return "call";
+  return "aggro"; // raise / 3-bet / all-in / aposta / bet
+}
+
 interface SeatState {
   key: string; // identificador estável (nome do jogador)
   top: string; // posição na elipse (%), calculada em ordem horária a partir do herói
@@ -94,12 +104,14 @@ function seatEllipsePos(i: number, n: number): { top: string; left: string } {
 }
 
 interface StepInfo {
-  actionIdx: number; // -1 inicial, -2 rua, -3 resultado
+  actionIdx: number; // -1 inicial, -2 rua, -3 resultado, -4 folds agrupados
   action: ParsedAction | null;
   board: number[];
   seats: SeatState[];
   pot: string | null; // ex.: "Alguém levou o pote"
   potBB: number; // pote acumulado (em bb) até este passo
+  /** Nomes que largaram juntos neste passo (folds consecutivos agrupados). */
+  foldNames?: string[];
 }
 
 /**
@@ -173,16 +185,12 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
   let visibleBoard = 0;
   let lastStreet: Street = "preflop";
 
-  for (let i = 0; i < hand.actions.length; i++) {
-    const a = hand.actions[i];
-    // Antes/blinds já entraram no estado inicial — não viram passos.
-    if (a.type === "ante" || a.type === "sb" || a.type === "bb") continue;
-
-    const targetVisible =
-      a.street === "flop" ? 3 : a.street === "turn" ? 4 : a.street === "river" ? 5 : 0;
-    if (targetVisible > visibleBoard && lastStreet !== a.street) {
-      visibleBoard = targetVisible;
-      lastStreet = a.street;
+  // Insere o passo de "abrir a rua" (flop/turn/river) quando o board cresce.
+  const maybeStreetStep = (street: Street) => {
+    const target = street === "flop" ? 3 : street === "turn" ? 4 : street === "river" ? 5 : 0;
+    if (target > visibleBoard && lastStreet !== street) {
+      visibleBoard = target;
+      lastStreet = street;
       committed = {}; // nova rua: zera as apostas da rua
       steps.push({
         actionIdx: -2,
@@ -193,13 +201,51 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
         potBB: toBB(potChips, bb),
       });
     }
+  };
+
+  let i = 0;
+  while (i < hand.actions.length) {
+    const a = hand.actions[i];
+    // Antes/blinds já entraram no estado inicial — não viram passos.
+    if (a.type === "ante" || a.type === "sb" || a.type === "bb") {
+      i++;
+      continue;
+    }
+    maybeStreetStep(a.street);
+
+    // FOLDS CONSECUTIVOS (mesma rua) viram UM passo só — os jogadores somem
+    // juntos, sem obrigar a apertar "Próximo" pra cada largada.
+    if (a.type === "fold") {
+      const foldNames: string[] = [];
+      while (
+        i < hand.actions.length &&
+        hand.actions[i].type === "fold" &&
+        hand.actions[i].street === a.street
+      ) {
+        const seat = seatByName(hand.actions[i].player);
+        if (seat) {
+          seat.folded = true;
+          seat.lastAction = "Fold";
+        }
+        foldNames.push(hand.actions[i].player);
+        i++;
+      }
+      steps.push({
+        actionIdx: -4,
+        action: null,
+        board: hand.board.slice(0, visibleBoard),
+        seats: seatsAt.map((s) => ({ ...s })),
+        pot: null,
+        potBB: toBB(potChips, bb),
+        foldNames,
+      });
+      continue;
+    }
+
     const seat = seatByName(a.player);
     if (seat) {
       seat.lastAction = actionText(a, bb);
-      if (a.type === "fold") {
-        seat.folded = true;
-        seat.lastAction = "Fold";
-      } else if (a.type === "call" || a.type === "bet") {
+      if (a.type === "call" || a.type === "bet") {
         const d = a.amount;
         seat.stack = Math.max(0, seat.stack - d);
         potChips += d;
@@ -229,6 +275,7 @@ function buildSteps(hand: ParsedHand): StepInfo[] {
             : null,
       potBB: toBB(potChips, bb),
     });
+    i++;
   }
 
   // Passo final: resultado da mão
@@ -307,10 +354,11 @@ export function ImportReplayer({
   }
   const fb = report?.feedback;
 
+  // Rua do passo atual pela QUANTIDADE de cartas no board (robusto): assim que
+  // o flop abre, o texto já diz FLOP — não fica preso no "pré-flop" anterior.
   const streetOfStep = (): Street => {
-    if (step.action) return step.action.street;
-    if (stepIdx === 0) return "preflop";
-    return steps[stepIdx - 1]?.action?.street ?? "preflop";
+    const n = step.board.length;
+    return n >= 5 ? "river" : n === 4 ? "turn" : n >= 3 ? "flop" : "preflop";
   };
 
   // No passo de RESULTADO revelamos as cartas do vilão e destacamos o vencedor.
@@ -417,25 +465,41 @@ export function ImportReplayer({
       {/* DICA DO COACH — o que era recomendado NESTA RUA (igual ao jogo ao vivo).
           Muda rua a rua: pré-flop, flop, turn, river. Ajuda quem revisa a ver a
           jogada certa na hora. */}
-      {coachFb ? (
-        <div
-          className={`ir-coach ${
-            coachFb.rating === "boa" ? "c-boa" : coachFb.rating === "ok" ? "c-ok" : coachFb.rating === "imprecisa" ? "c-imp" : "c-ruim"
-          }`}
-        >
-          <span className="ir-coach-badge">{coachFb.rating === "boa" || coachFb.rating === "ok" ? "✓" : "✗"}</span>
-          <span className="ir-coach-txt">
-            <b className="ir-coach-street">{STREET_PT[curStreet]}</b>
-            {" · "}Coach recomendava <b>{coachFb.advice.toUpperCase()}</b>
-            {coachFb.heroAction ? (
-              <>
-                {" · "}você fez <b>{coachFb.heroAction.toUpperCase()}</b>
-              </>
-            ) : null}
-            {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
-          </span>
-        </div>
-      ) : null}
+      {coachFb ? (() => {
+        const good = coachFb.rating === "boa" || coachFb.rating === "ok";
+        const matched = !!coachFb.heroAction && famOf(coachFb.heroAction) === famOf(coachFb.advice);
+        // Spot MISTO: o herói fez algo diferente da recomendação, mas a nota é
+        // boa — as duas jogadas valem. Mostra "≈ alternativa ok" (âmbar), não um
+        // ✓ verde que parece "acertou em cheio" numa jogada diferente.
+        const alt = good && !matched;
+        const cls = alt
+          ? "c-alt"
+          : coachFb.rating === "boa" ? "c-boa" : coachFb.rating === "ok" ? "c-ok" : coachFb.rating === "imprecisa" ? "c-imp" : "c-ruim";
+        const icon = alt ? "≈" : good ? "✓" : "✗";
+        return (
+          <div className={`ir-coach ${cls}`}>
+            <span className="ir-coach-badge">{icon}</span>
+            <span className="ir-coach-txt">
+              <b className="ir-coach-street">{STREET_PT[curStreet]}</b>
+              {alt ? (
+                <>
+                  {" · "}<b>{coachFb.heroAction.toUpperCase()}</b> é alternativa ok — padrão: <b>{coachFb.advice.toUpperCase()}</b>
+                </>
+              ) : (
+                <>
+                  {" · "}Coach recomendava <b>{coachFb.advice.toUpperCase()}</b>
+                  {coachFb.heroAction ? (
+                    <>
+                      {" · "}você fez <b>{coachFb.heroAction.toUpperCase()}</b>
+                    </>
+                  ) : null}
+                </>
+              )}
+              {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
+            </span>
+          </div>
+        );
+      })() : null}
 
       {/* Aviso de pote coletado / devolvido */}
       {step.pot && step.actionIdx !== -3 ? (
@@ -455,6 +519,15 @@ export function ImportReplayer({
             className={`ir-action ${step.action.type === "fold" ? "act-fold" : step.action.type === "call" ? "act-call" : "act-raise"}`}
           >
             {actionText(step.action, hand.bb)}
+          </span>
+        </div>
+      ) : step.foldNames && step.foldNames.length > 0 ? (
+        <div className="ir-step">
+          <span className="ir-street">{STREET_PT[curStreet]}</span>
+          <span className="ir-action act-fold">
+            {step.foldNames.length === 1
+              ? `${step.foldNames[0]} largou`
+              : `${step.foldNames.length} jogadores largaram`}
           </span>
         </div>
       ) : step.actionIdx === -3 ? (
