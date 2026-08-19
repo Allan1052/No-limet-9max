@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 18/08/2026 (tarde) — aba Importar + parser PokerStars em português + ImportReplayer (replayer de mesa) no ar
+### Última atualização: 19/08/2026 (madrugada) — reels vs Profissional x Recreativo (formato validado p/ Instagram) + check obrigatório de codec de reels
 
 ---
 
@@ -318,6 +318,11 @@ CREATE INDEX IF NOT EXISTS idx_ts_verified_points ON tournament_scores (verified
 - **Engajamento Fase 2 (navegador):** 8 comentários em contas micro/média BR (victordosanjos ×2, luizscipiao ×2, full_house_poker_clube, combatesportbar, royalpokerclubsp, sportbuzzbr/Neymar) + 5 follows (victordosanjos, luizscipiao, full_house_poker_clube, combatesportbar, royalpokerclubsp) + likes. Método que funciona para comentar: abrir /p/shortcode, rolar até "Add a comment...", clicar, preencher char a char via beforeinput/input no `div[contenteditable=true][role=textbox]`, clicar botão "Postar", confirmar keyword. Reels em modal não expõem textarea — sempre abrir via /p/. Limites de segurança respeitados (8-12/dia).
 - Estratégia Reels mantida: cards têm 0% alcance não-seguidor; Reels 85-100%.
 - Card próximo (10/08 20:30): Seq 10 "ESSA HISTÓRIA É MINHA. ESSA HISTÓRIA É SUA. ESSA HISTÓRIA É NOSSA. NÃO INVENTADA." (07_historia_nossa).
+
+### REELS — CHECK OBRIGATÓRIO DE COMPATIBILIDADE (regra gravada 19/08)
+- Incidente 19/08: reels "Profissional x Recreativo" postado com codec H.264 **Main Profile** → Instagram aceitou upload mas não decodificou = tela preta + 0 views (4h perdidas para o Allan). Versão que FUNCIONA (reels âncora $1K): **H.264 High Profile Level 3.1, 29.97fps, yuv420p, movflags +faststart**.
+- REGRA: TODO reels ANTES de entregar deve passar por `ffprobe`: conferir profile=High, level=3.1, r_frame_rate=2997/100, pix_fmt=yuv420p. Se qualquer parâmetro diferir, re-encodar. Sem trilha de áudio é OK (Allan adiciona música no app), mas o check de codec é inegociável.
+- Referências: /tmp/ref_build/reels_poker_vs_ig_fix.mp4 (versão corrigida OK), /tmp/cards_torneio/reels_ancora_torneio_1k.mp4 (codec que funcionou).
 
 ---
 
