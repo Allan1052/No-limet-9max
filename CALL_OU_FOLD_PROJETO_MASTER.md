@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 19/08/2026 — polimento 390px 100% CONCLUÍDO (Importar review+mesa + rodadas 1-3 + plano v2): commits 23c76711, 401d1604, 31c7201d, 2dfe5422 e 09ee7331 (plano v2, NO AR)
+### Última atualização: 19/08/2026 — Meta Pixel INSTALADO (dc7a6bdc) + polimento 390px 100% CONCLUÍDO: 23c76711, 401d1604, 31c7201d, 2dfe5422, 09ee7331 e dc7a6bdc — TUDO NO AR
 
 ---
 
@@ -39,6 +39,9 @@
 ### Site — calloufold.com.br
 - Domínio ativo
 - Tracking: **Umami** (cloud.umami.is) — instalado e funcionando
+- **Meta Pixel ID `2895094507517479` — INSTALADO 19/08 (commit dc7a6bdc)**. Conjunto "www.calloufold.com.br", conta "Ligue ou Fold.sonho" (portfólio) no Meta Business. Script no `<head>` de index.html; noscript movido para o `<body>` (parser do build rejeita `<noscript>` no head). Status no Gerenciador de Eventos: criado, aguardando primeiros PageView.
+- Open Graph card: `og.png` (1200x630, preto/dourado com logo CF) + tags OG/Twitter já presentes no index.html — card bonito ao compartilhar no WhatsApp/Instagram/Facebook
+- `public/sitemap.xml` + `public/robots.txt` — publicados e no ar (19/08)
 - Conta Umami: calloufold.sonho@gmail.com
 - Site criado há 2 dias (05/08/2026)
 - Já recebeu visitas (gráfico mostra pico)
