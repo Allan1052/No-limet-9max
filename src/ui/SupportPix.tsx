@@ -50,11 +50,15 @@ async function copy(text: string): Promise<boolean> {
 export function SupportPix({ onClose }: { onClose: () => void }) {
   const { t } = useT();
   const [copied, setCopied] = useState<"" | "key" | "code">("");
+  // Anonimato: o nome completo só aparece depois que a pessoa decide de
+  // verdade (primeiro clique em "Copiar"). Antes disso, exibe "Call ou Fold".
+  const [revealed, setRevealed] = useState(false);
   const qr = useMemo(() => makeQrPath(PIX_COPIA_E_COLA), []);
   const margin = 4;
   const size = qr.count + margin * 2;
 
   const doCopy = async (what: "key" | "code", value: string) => {
+    setRevealed(true);
     if (await copy(value)) {
       setCopied(what);
       setTimeout(() => setCopied(""), 1800);
@@ -87,7 +91,7 @@ export function SupportPix({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="pix-to">
-          {t("support.to")} <b>{PIX_DISPLAY_NAME}</b> · {PIX_CITY}
+          {t("support.to")} <b>{revealed ? PIX_DISPLAY_NAME : "Call ou Fold"}</b> · {PIX_CITY}
         </div>
 
         <div className="pix-key-row">

@@ -3918,7 +3918,7 @@ body {
 .anat-seg.raise { background: linear-gradient(180deg,#f2dd8c,#d9b544); color: #2a2006; } /* padrão: raise = âmbar/dourado */
 .anat-vs { align-self: center; font-weight: 900; font-size: 24px; color: var(--dim,#9c9a86); padding-bottom: 60px; }
 .anat-lab { margin-top: 12px; font-size: 16px; font-weight: 800; }
-.anat-lab.rec { color: var(--c-call,#3b82f6); }
+.anat-lab.rec { color: var(--gold-soft,#d4af37); }
 .anat-lab.ide { color: var(--gold,#e6c454); }
 .anat-lab small { display: block; font-weight: 600; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--dim,#9c9a86); margin-top: 2px; }
 .anat-legend { display: flex; gap: 18px; justify-content: center; margin: 10px 0; font-size: 13px; color: var(--dim,#9c9a86); }
@@ -3926,9 +3926,9 @@ body {
 .anat-legend i.fold { background: var(--c-fold,#9ca3af); }
 .anat-legend i.call { background: var(--c-call,#3b82f6); }
 .anat-legend i.raise { background: var(--c-raise,#f59e0b); }
-.anat-leak { background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.4); border-radius: 12px; padding: 12px 14px; margin: 12px auto; max-width: 36ch; }
+.anat-leak { background: rgba(212,175,55,.06); border: 1px solid rgba(212,175,55,.35); border-radius: 12px; padding: 12px 14px; margin: 12px auto; max-width: 36ch; }
 .anat-denom { font-size: 12px; color: var(--dim,#9c9a86); margin: 8px auto 2px; text-align: center; max-width: 42ch; font-variant-numeric: tabular-nums; }
-.anat-leak-t { font-weight: 800; font-size: 16px; color: #85b6fb; }
+.anat-leak-t { font-weight: 800; font-size: 16px; color: var(--gold-soft, #d4af37); }
 .anat-leak-s { font-size: 13px; color: var(--dim,#9c9a86); margin-top: 3px; }
 .anat-punch { font-weight: 800; font-size: 18px; margin: 12px 0 4px; }
 .anat-note { font-size: 11.5px; color: var(--dim,#9c9a86); margin-top: 6px; }
@@ -6261,4 +6261,45 @@ body {
     font-size: 11px;
     line-height: 1.45;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   RODADA 2 — header do replayer (Importar → "Rever na mesa") no celular:
+   o "MÃO X/Y" dourado não pode cobrir os botões ◀◀ ▶▶ 🏁.
+   (JSX intacto: a marca é central absoluta; os botões ficam nas pontas.)
+   --------------------------------------------------------------------------- */
+@media (max-width: 460px) {
+  /* Marca central em 2 linhas, presa ENTRE os botões (head padding 56px).
+     head: 390px — botões até x56 e desde x334 — marca 132px em x129..261: cabe. */
+  .ir-fullscreen .ir-brand {
+    position: static;
+    transform: none;
+    width: 132px;
+    min-width: 120px;
+    font-size: 13px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .ir-fullscreen .ir-brand .ir-counter {
+    display: block;
+    margin-top: 2px;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .ir-fullscreen .ir-head {
+    padding-left: 56px;
+    padding-right: 56px;
+  }
+  /* Botões de navegação SEMPRE por cima do título em caso de sobreposição. */
+  .ir-fullscreen .ir-head .ir-nav {
+    position: relative;
+    z-index: 3;
+  }
+  .ir-fullscreen .ir-head .ir-exit {
+    position: relative;
+    z-index: 3;
+  }
+  /* O título nunca invade a área dos botões. */
+  .ir-fullscreen .ir-head { padding-left: 40px; padding-right: 40px; }
 }
