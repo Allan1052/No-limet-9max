@@ -367,11 +367,16 @@ export function ImportReplayer({
   // No passo de RESULTADO revelamos as cartas do vilão e destacamos o vencedor.
   const revealing = step.actionIdx === -3;
 
-  // Dica do coach da RUA ATUAL: pós-flop quando disponível, senão o pré-flop.
+  // Dica do coach da RUA ATUAL. IMPORTANTE: cada rua mostra APENAS a nota da
+  // decisão daquela rua. No pré-flop, a nota pré-flop; no flop/turn/river, só a
+  // nota pós-flop DAQUELA rua. Sem fallback pro pré-flop nas ruas pós-flop —
+  // senão, quando a mão já foi all-in antes (turn/river viram só "corrida", sem
+  // decisão), a nota do pré-flop vazava com o rótulo errado ("RIVER · 3-BET",
+  // "RIVER · FOLD/CALL"). Numa corrida não há o que avaliar: barra some.
   const curStreet = streetOfStep();
   const coachFb =
     curStreet === "flop" || curStreet === "turn" || curStreet === "river"
-      ? streetFb[curStreet] ?? fb
+      ? streetFb[curStreet]
       : fb;
 
   return (

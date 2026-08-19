@@ -63,26 +63,34 @@ interface Spot {
   potBB: number;
   facingBB: number;
   heroType: string; // fold|check|call|bet|raise
+  facingAllIn: boolean; // a aposta enfrentada é um all-in? (não dá pra aumentar)
 }
 
 /** Reconstrói o pote (bb) e a aposta enfrentada (bb) na última ação do herói da rua. */
 function reconstructSpot(hand: ParsedHand, street: Street, bb: number): Spot | null {
   let potChips = 0;
   let committed: Record<string, number> = {};
+  let allInBy: Record<string, boolean> = {}; // quem já está all-in nesta rua
   let curStreet: Street | null = null;
   let snap: Spot | null = null;
 
   for (const a of hand.actions) {
     if (a.street !== curStreet) {
       committed = {}; // nova rua: zera as apostas da rua
+      allInBy = {};
       curStreet = a.street;
     }
     // Snapshot ANTES de aplicar a ação do herói na rua-alvo.
     if (a.player === hand.heroName && a.street === street && isVoluntary(a.type)) {
       const maxC = Object.values(committed).reduce((m, v) => Math.max(m, v), 0);
       const heroC = committed[hand.heroName] ?? 0;
-      snap = { potBB: potChips / bb, facingBB: Math.max(0, maxC - heroC) / bb, heroType: a.type };
+      // Enfrentando all-in = quem colocou o maior valor na rua está all-in.
+      const facingAllIn = Object.keys(committed).some(
+        (p) => p !== hand.heroName && allInBy[p] && committed[p] >= maxC && maxC > heroC,
+      );
+      snap = { potBB: potChips / bb, facingBB: Math.max(0, maxC - heroC) / bb, heroType: a.type, facingAllIn };
     }
+    if (a.allIn && a.player !== hand.heroName) allInBy[a.player] = true;
     // Aplica a ação ao pote/committed (mesma lógica do replayer).
     if (a.type === "ante") {
       potChips += a.amount || hand.ante;
@@ -164,7 +172,14 @@ export function analyzePostflopStreets(
         const facing = spot.heroType === "call" || spot.heroType === "raise" || spot.heroType === "fold" ? spot.facingBB : 0;
         const potBB = spot.potBB > 0 ? spot.potBB : 6;
         const rec = heroBestAction(heroHt, board, facing, potBB, texture, villainRange, 400);
-        const advAction = rec.action === "betSmall" || rec.action === "betBig" ? "bet" : rec.action;
+        let advAction = rec.action === "betSmall" || rec.action === "betBig" ? "bet" : rec.action;
+        // Enfrentando ALL-IN não existe raise/aposta — a decisão é só pagar ou
+        // foldar. Se o motor recomendou agressão (ex.: set querendo valor), a
+        // jogada certa vira CALL. Senão o coach mandava "recomendava RAISE" num
+        // all-in, o que é impossível (bug pego pelo Allan na mão de 88 no turn).
+        if (spot.facingAllIn && (advAction === "raise" || advAction === "bet")) {
+          advAction = "call";
+        }
         const potOdds = facing > 0 ? facing / (potBB + facing) : undefined;
         out[st] = gradeDecision(
           STREET_LABEL[st],
