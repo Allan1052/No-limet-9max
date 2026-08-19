@@ -6205,3 +6205,60 @@ body {
   outline: 3px solid var(--gold-bright);
   outline-offset: 2px;
 }
+
+/* =====================================================================
+   RODADA 1 — POLIMENTO 390px (19/08)
+   1) Respiro final vs bottom nav (selo não pode ficar colado na borda)
+   2) Sua Mão: selects de naipe cortados + botão 100bb espremido
+   3) Selo do card de ajuda do Perfil duplica o selo fixo — some no mobile
+   ===================================================================== */
+
+/* 1) Respiro final: no mobile o selo marca o fim da página com folga
+   confortável antes da bottom nav (que já tem padding do conteúdo). */
+@media (max-width: 460px) {
+  .app {
+    /* folga extra no fim do conteúdo p/ nada parecer "encolhido" na nav */
+    padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+  }
+  .app-seal { margin: 20px auto 10px; }
+  /* 3) o selo dentro do card "Ajuda" do Perfil replica o selo fixo do rodapé
+     — no celular, um dos dois basta (o fixo, com logo + marca). */
+  .profile-seal { display: none; }
+  /* Anatomia: as barras terminam com respiro antes do rótulo/denominador,
+     assim no scroll final nada fica "colado" atrás da nav. */
+  .anat-chart { margin-bottom: 12px; }
+  .anat-panel { margin-bottom: 16px; }
+
+  /* 2) Sua Mão (HandLab): os selects de naipe eram cortados porque a
+     coluna interna tinha ~66px e "♠ Espadas" precisa de mais espaço.
+     Rank compacto + naipe com espaço suficiente (grid reforçado). */
+  .hl-card-picker {
+    grid-template-columns: minmax(54px, 0.9fr) minmax(100px, 1.7fr);
+  }
+  .hl-select-rank {
+    padding-left: 10px;
+    font-size: 13.5px;
+    background-position: right 8px center;
+    background-size: 10px;
+  }
+  .hl-select-suit {
+    min-width: 0;
+    font-size: 11.5px;
+    padding: 9px 26px 9px 8px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* 2) Sua Mão: o 100bb caía espremido na 2ª linha porque a nota lateral
+     (min-width:140px) disputava a mesma linha dos 5 botões de stack.
+     A nota agora ocupa a linha inteira por baixo, botões na linha de cima. */
+  .hl-stack-row { gap: 6px; }
+  .hl-stack-btn { padding: 8px 10px; font-size: 12px; }
+  .hl-stack-note {
+    flex-basis: 100%;
+    min-width: unset;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+}
