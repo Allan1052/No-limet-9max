@@ -6342,3 +6342,20 @@ body {
 /* Gráfico semanal: chave (número da semana) 10px com tabular-nums —
    o "08", "12", "20" nunca dança ao lado dos rótulos vizinhos. */
 .pp-sw-key { font-size: 10px; font-variant-numeric: tabular-nums; opacity: 0.85; }
+
+/* ==========================================================================
+   PLANO v2 — polimento 390px (19/08). Micro-ajustes, só adição, nada removido.
+   - .anat-note: em mobile o rodapé app-seal já cobre a mensagem → sem repetir.
+   - .streak-banner.empty: um só foguinho (o do texto; o ícone extra some).
+   - .hub-chip-adv: no celular o chip avançado vira "Mais" (antes era só "…").
+   ========================================================================== */
+/* Base (desktop): o label "Mais" fica escondido; só as reticências aparecem. */
+.hub-chip-adv-label { display: none; }
+.hub-chip-adv-ellipsis { display: inline; }
+@media (max-width: 460px) {
+  .anat-note { display: none; }
+  .streak-banner.empty .streak-icon { display: none; }
+  /* No celular o chip avançado vira "Mais ⋯" — mais acessível que "…". */
+  .hub-chip-adv-label { display: inline; }
+  .hub-chip-adv-ellipsis { display: none; }
+}

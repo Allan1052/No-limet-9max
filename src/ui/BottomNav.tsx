@@ -149,7 +149,7 @@ export function HubSubNav({
               }
             }}
           >
-            ⋯
+            <span className="hub-chip-adv-label">Mais </span>⋯
           </button>
         )}
       </div>
