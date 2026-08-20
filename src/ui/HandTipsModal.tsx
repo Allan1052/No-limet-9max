@@ -82,6 +82,7 @@ export function HandTipsModal({
             heroAction: firstItem.heroAction,
             position: heroPosition ?? (firstItem as any).position,
             heroBB: heroBB ?? (firstItem as any).heroBB,
+            heroBetPct: (firstItem as any).betSizePct,
             rating: firstItem.rating,
             preflop: firstItem.street === "Pré-flop",
             icmPhase,

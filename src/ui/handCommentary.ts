@@ -40,6 +40,8 @@ export interface HandCommentCtx {
   icmPhase?: "early" | "bubble" | "itm";
   /** Board atual do spot (3+ cartas = flop aberto; vazio = não usado) */
   board?: Card[];
+  /** Tamanho da AÇÃO DO HERÓI neste spot em % do pote (só existe quando o herói aposta/raise). Bet fino <40%, normal 40-75%, grande 75-100%, overbet >100% */
+  heroBetPct?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +100,56 @@ export function texturePhrases(ctx: HandCommentCtx, tex: BoardFlavor): string[] 
   return [
     `${tex.label}: o jogo muda de figura — pares médios viram catchers, trips viram armadilhas e overpairs perdem valor. Cada aposta aqui tem peso de decisão.`,
     `Board pareado enquadra ranges: quem continua tem ou o overpair ou a espera do full. Pares médios sem kicker forte são mão de fold na frequência dominante${ctx.heroAction === "Fold" ? " — e o fold respeitou isso" : " — call barato é a exceção, não a regra"}.`,
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Sizing — a voz do coach comenta o TAMANHO da aposta do herói como um pro.
+// (fração do pote já calculada pelo motor em feedback/analyzer.ts)
+// ---------------------------------------------------------------------------
+/** Lê o sizing do herói no ctx. null quando o herói foldou/checkou ou não há dado. */
+export function readHeroSizing(ctx: HandCommentCtx): {
+  kind: "small" | "normal" | "big" | "overbet";
+  label: string;
+  pct: number;
+} | null {
+  if (ctx.heroBetPct === undefined || ctx.heroBetPct <= 0) return null;
+  // Pré-flop não recebe frase de sizing: o sizing do open é coberto pelas frases da própria categoria.
+  if (ctx.preflop) return null;
+  if (!/^(Raise|3-bet|Aposta|All-in)$/.test(ctx.heroAction ?? "")) return null;
+  const pct = Math.round(ctx.heroBetPct * 100);
+  if (ctx.heroBetPct > 1) return { kind: "overbet", label: `overbet (${pct}% do pote)`, pct };
+  if (ctx.heroBetPct >= 0.75) return { kind: "big", label: `aposta grande (${pct}% do pote)`, pct };
+  if (ctx.heroBetPct < 0.4) return { kind: "small", label: `bet fino (${pct}% do pote)`, pct };
+  return { kind: "normal", label: `aposta de ${pct}% do pote`, pct };
+}
+
+/**
+ * Frases de sizing — o coach comenta o tamanho da aposta do herói.
+ * Modo free = 0, modo técnico = 1.
+ */
+export function sizingPhrases(s: NonNullable<ReturnType<typeof readHeroSizing>>): string[] {
+  if (s.kind === "small") {
+    return [
+      `Apertou no tamanho: a aposta pequena gera fold de mãos frágil — barata pro vilão, mas protege o stack quando a mão não sustenta pote grande.`,
+      `Bet fino (~${s.pct}%): nega equity de graça com risco mínimo — a aposta mais barata que ainda cobra do draw. Em board seco, sizing assim maximiza o fold equity por ficha investida.`,
+    ];
+  }
+  if (s.kind === "big") {
+    return [
+      `Aposta pesada muda o preço: o vilão paga caro pra continuar e o pote cresce rápido. Quando a mão é o que aparenta ser, sizing grande converte vantagem em fichas de verdade.`,
+      `Bet grande (~${s.pct}%): pressiona o range de call — draw paga com preço errado e mão média dobra. Use quando a equity sustenta a agressividade; sem equity, é doar fichas com confiança.`,
+    ];
+  }
+  if (s.kind === "overbet") {
+    return [
+      `Overbet é polarização: quem joga assim tem a mão mais forte da rua ou está representando ela. Pote >100% força o vilão a decidir pela vida do torneio — a linha dos extremos.`,
+      `Overbet (~${s.pct}% do pote): nega totalmente o preço do draw e maximiza o valor de mãos monstruosas. Repare: overbet com mão média é um dos erros mais caros do poker — a conta só fecha no extremo do range.`,
+    ];
+  }
+  return [
+    `Sizing na medida certa: aposta média constrói o pote sem oferecer preço generoso — o equilíbrio que mantém o range difícil de ler.`,
+    `Bet de ~${s.pct}%: o tamanho padrão do valor — grande o bastante pra cobrar o draw, pequeno o bastante pra manter mãos fracas pagando. É nesse sizing que a equity vira fichas no longo prazo.`,
   ];
 }
 
@@ -596,6 +648,8 @@ export function getHandCommentary(ctx: HandCommentCtx, mode: "free" | "technical
       : cat.phrases(ctx);
   // Pós-flop com board aberto: a textura do flop entra na frase da mão.
   const tex = readTexture(ctx);
+  // Sizing: quando o herói apostou/raiseou, o coach comenta o tamanho.
+  const sizing = readHeroSizing(ctx);
   let line: string;
   if (tex && !ctx.preflop) {
     const base = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
@@ -603,8 +657,20 @@ export function getHandCommentary(ctx: HandCommentCtx, mode: "free" | "technical
     line = `${base} — ${texLine.charAt(0).toLowerCase() === "b" && texLine.startsWith("Board")
       ? `board ${texLine.slice(5).trim()}`
       : texLine}`;
+    if (sizing) {
+      const sizeLine = sizingPhrases(sizing)[mode === "technical" ? 1 : 0];
+      line = `${line} — ${sizeLine.charAt(0).toLowerCase() === "b" && sizeLine.startsWith("Bet")
+        ? `tamanho: ${sizeLine}`
+        : sizeLine}`;
+    }
   } else {
     line = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
+    if (sizing) {
+      const sizeLine = sizingPhrases(sizing)[mode === "technical" ? 1 : 0];
+      line = `${line} — ${sizeLine.charAt(0).toLowerCase() === "b" && sizeLine.startsWith("Bet")
+        ? `tamanho: ${sizeLine}`
+        : sizeLine}`;
+    }
   }
   const voice = pickPro(mode, ctx.rating);
   return {
