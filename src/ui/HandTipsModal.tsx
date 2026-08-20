@@ -24,6 +24,7 @@ export function HandTipsModal({
   userSubscriptionLevel,
   heroPosition,
   heroBB,
+  icmPhase,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
@@ -36,6 +37,8 @@ export function HandTipsModal({
   heroPosition?: string;
   /** Stack do herói em big blinds no momento da decisão */
   heroBB?: number;
+  /** Fase ICM do torneio — "bubble" perto da bolha, "itm" no dinheiro, "early" início/meio */
+  icmPhase?: "early" | "bubble" | "itm";
 }) {
   const { t } = useT();
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
@@ -77,6 +80,7 @@ export function HandTipsModal({
             heroBB: heroBB ?? (firstItem as any).heroBB,
             rating: firstItem.rating,
             preflop: firstItem.street === "Pré-flop",
+            icmPhase,
           },
           tipsMode,
         )

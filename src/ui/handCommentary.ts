@@ -35,6 +35,8 @@ export interface HandCommentCtx {
   rating?: string;
   /** É a rua pré-flop? */
   preflop?: boolean;
+  /** Fase ICM do torneio: "bubble" = perto da bolha, "itm" = no dinheiro, "early" = início/meio */
+  icmPhase?: "early" | "bubble" | "itm";
 }
 
 // ---------------------------------------------------------------------------
@@ -94,20 +96,20 @@ function trashPhrases(ctx: HandCommentCtx): string[] {
         pos
           ? `${pos}: esse ${ctx.heroAction === "Fold" ? "fold" : "call"} não é jogada, é sobrevivência. Mão assim só financia o stack de quem aperta.`
           : `Fold sem dó. Mãos assim só desperdiçam fichas — guarde as armas pra spots que valem.`,
-        `Quem joga ${ctx.heroAction === "Fold" ? "fold" : "call"} aqui está pagando pra ser explorado. O fold é a única linha que não sangra.`,
+        `Quem joga ${ctx.heroAction === "Fold" ? "fold" : "call"} aqui está pagando pra ser explorado. O fold é a linha dominante — é o que mais preserva seu stack no longo prazo.`,
       ];
     }
     return [
       pos
         ? `${pos}: ${ctx.heroAction === "Fold" ? "esse fold" : "esse raise"} define quem paga a conta${ctx.heroAction === "Fold" ? "" : " — quem joga assim financia o stack de quem aperta"}. De ${pos}, o range abre com menos de 20% das mãos — e essa nem chega perto.`
         : `${ctx.heroAction === "Fold" ? "Fold sem dó" : "Isso"} aqui é dinheiro na lixeira${ctx.heroAction === "Fold" ? ". Mãos assim só desperdiçam fichas" : " — nem em sonho"}.`,
-      `Sem par, sem carta alta, sem backdoor.${ctx.heroAction === "Fold" ? " O fold é a única linha que não sangra." : " Raise com isso é entregar fichas de mão beijada pro pote de quem abriu."}`,
+      `Sem par, sem carta alta, sem backdoor.${ctx.heroAction === "Fold" ? " O fold é a linha dominante: nada aqui justifica pagar." : " Raise com isso é entregar fichas de mão beijada pro pote de quem abriu."}`,
     ];
   }
   return [
     `Mão lixo${pos ? ` de ${pos}` : ""} + board que não ajudou = desistir. Ponto.`,
     `Carta alta nenhuma, draw nenhum. Continuar com essa mão é doar fichas — o fold é o que mantém você no torneio.`,
-    `Sem draw, equity de ~5-8% contra aposta de 55% do pote (~35% de preço): o call precisaria de ~27% e a mão oferece nada — a conta fecha com fold sempre.`,
+    `Sem draw, equity de ~5-8% contra aposta de 55% do pote (~35% de preço): o call precisaria de ~27% e a mão não oferece — a conta fecha com folde na esmagadora maioria dos casos.`,
   ];
 }
 
@@ -121,7 +123,7 @@ function premiumPairPhrases(ctx: HandCommentCtx): string[] {
       return [
         pos
           ? `${pos}: ${c.label} pede ação SEMPRE. Fez crescer o pote com a mão mais forte do range — é exatamente assim que se constrói valor.`
-          : `${c.label}: a melhor mão do pôquer. Abre sempre, de qualquer posição. O pote grande é SEU por direito.`,
+          : `${c.label}: a melhor mão do pôquer. Abre de qualquer posição e em qualquer stack: o pote grande é SEU por direito.`,
         `~85% de equity contra um range aleatório. Aumentou o pote com a mão certa — maximiza EV e obriga o vilão a pagar caro pra te ver.`,
       ];
     }
@@ -131,7 +133,7 @@ function premiumPairPhrases(ctx: HandCommentCtx): string[] {
     ];
   }
   if (isGood(ctx.rating)) {
-    return ["Par premium no board: valorize devagar, mas valorize sempre. Aposte por valor em cada rua."];
+    return ["Par premium no board: valorize — apostar por valor nas ruas onde sua mão é favorita é o padrão forte, sem inflar sem necessidade."];
   }
   return ["Par premium no pós-flop e a linha foi passiva? Overcards no board e vilão agressivo já são motivo de suspeita. Jogue rápido antes de virar segundo par."];
 }
@@ -142,7 +144,7 @@ function mediumPairPhrases(ctx: HandCommentCtx): string[] {
   if (ctx.preflop) {
     if (earlyPos(ctx)) {
       return [
-        `${posTag(ctx)}: ${c.label} de early position abre COM FORÇA${isGood(ctx.rating) ? " — e você abriu como manda" : ""}. De lá, não é mão de limpar: é raise ou fold.`,
+        `${posTag(ctx)}: ${c.label} de early position abre COM FORÇA${isGood(ctx.rating) ? " — e você abriu como manda" : ""}. De lá, a linha dominante é raise ou fold — não é mão de limpar.`,
         `${c.label} tem ~77% de equity contra um range aleatório e ~55% contra QQ+. De early, esse par merece raise: folda pra overpair+AK, mas abre contra o resto do range.`,
       ];
     }
@@ -199,7 +201,7 @@ function bigAcePhrases(ctx: HandCommentCtx): string[] {
     if (/^(Raise|3-bet)$/.test(ctx.heroAction ?? "")) {
       return [
         `AK${pos ? ` de ${pos}` : ""}: 50/50 contra par, mas equity direta${isGood(ctx.rating) ? " — jogou como arma" : " — e você a jogou como arma"}. AK domina a maioria dos ranges abertos.`,
-        `AK roda com ~46% de equity contra QQ+ e ~65% contra um range de open do BTN. Raise/3-bet sempre: o AK não quer ver flop — quer construir pote agora, quando ainda tem equity direta.`,
+        `AK roda com ~46% de equity contra QQ+ e ~65% contra um range de open do BTN. Raise/3-bet é a linha dominante: o AK não quer ver flop de graça — quer construir pote agora, quando ainda tem equity direta.`,
       ];
     }
     return [
@@ -225,7 +227,7 @@ function goodAcePhrases(ctx: HandCommentCtx): string[] {
     }
     return [
       `Ax${pos ? ` de ${pos}` : ""} é mão de UM Ás só: se o vilão já mostrou Ás na sua frente, o seu vira segundo${ctx.heroAction === "Fold" ? ". Foldou: correto" : "."}.`,
-      `Ax vs range de 3-bet de early (~9% = QQ+, AK) tem ~30% de equity: dominado em kicker e fora de posição. Fold é a única linha +EV no longo prazo.`,
+      `Ax vs range de 3-bet de early (~9% = QQ+, AK) tem ~30% de equity: dominado em kicker e fora de posição. Fold é a linha dominante — a que mais protege seu EV no longo prazo.`,
       `Vs open de BTN, AT-AJ roda ~44% de equity — paga 3-bet pequeno de posição, folda contra squeeze. Vs 4-bet, equity cai para ~38% e fold fecha a conta.`,
     ];
   }
@@ -244,32 +246,80 @@ function suitedAceMediumPhrases(ctx: HandCommentCtx): string[] {
       ];
     }
     return [`Ax suited${ctx.position ? ` de ${ctx.position}` : ""} de early position: fold limpo. O flush backdoor não paga a fila inicial.`,
-      `Ax suited de early roda ~38% de equity vs range de open de UTG (~15%) com kicker morto: raise ou fold, nunca call. A fila inicial não paga equity inversa.`];
+      `Ax suited de early roda ~38% de equity vs range de open de UTG (~15%) com kicker morto: raise ou fold na grande maioria dos casos — o call aqui raramente fecha a conta. A fila inicial não paga equity inversa.`];
   }
   return ["Ax suited pós-flop: sem Ás e sem flush draw, vira fold.",
     `Sem Ás no board, Ax vira kicker ~15% de vezes contra aposta de ~55% do pote: precisa ~35% de equity, tem ~20%. Fold fecha a conta.`];
 }
 
+/** Ás forte offsuit: AQo, AJo, AKo — top dos Ax off, NÃO é "Ax fraco" */
+function strongAcePhrases(ctx: HandCommentCtx): string[] {
+  const c = classify(ctx.heroHand) ?? { label: "AQo" };
+  const pos = posTag(ctx);
+  const stack = Math.round(ctx.heroBB ?? 100);
+  const icm = ctx.icmPhase;
+  if (ctx.preflop) {
+    if (ctx.heroAction === "Fold" && icm && icm !== "early") {
+      return [
+        icm === "bubble"
+          ? `🧊 Fase da bolha${pos ? ` de ${pos}` : ""}: com stacks menores que o seu na mesa, o empurrão tende a vir deles — não seu. Fold preserva prêmio, e prêmio é o que conta.`
+          : `💰 No dinheiro${pos ? ` de ${pos}` : ""}: sua sobrevivência já vale prêmio — cada chip preservado cresce em valor de ICM. Contra ação de early com essa mão, preservar > disputar. O fold aqui não é medo: é matemática de premiação.`,
+        `${c.label}${pos ? ` de ${pos}` : ""} vs 3-bet${stack ? ` com ${stack}bb` : ""}: perto da bolha, o valor das fichas deixa de ser linear — preservar supera margens apertadas. Essa foi defesa ICM, não timidez.`,
+      ];
+    }
+    if (/^(Raise|3-bet)$/.test(ctx.heroAction ?? "")) {
+      return [
+        `${c.label}${pos ? ` de ${pos}` : ""}: a parte nobre dos Ás offsuit — abre COM FORÇA${isGood(ctx.rating) ? " — e você abriu como manda" : ""}. Domina toda a faixa AJ/AT/KQ do campo.`,
+        `${c.label} roda ~44-46% de equity bruta vs range de 3-bet do BTN (QQ+, AK, AQs + blefes)${stack <= 50 ? ` — com ${stack}bb a equity realizada cai pra ~35-38% e o call não se paga` : ""}. De early, raise de 2.5x captura valor de Kx/Qx/par baixo sem inflar contra o topo.`,
+      ];
+    }
+    if (ctx.heroAction === "Fold") {
+      return [
+        `${c.label} dobrado${pos ? ` de ${pos}` : ""}: contra 3-bet de early (QQ+, AK) a equity cai pra ~30% — dominado em kicker e fora de posição. Folda${isGood(ctx.rating) ? " correto" : ""}. Contra 3-bet de BTN há espaço pra call seletivo ${stack >= 60 ? `(${stack}bb deep)` : ""}: a decisão vira %call/%fold, não absoluto.`,
+        `Vs 3-bet de early (~9%), ${c.label} tem ~30% de equity realizada${stack <= 40 ? ` — com ${stack}bb sobra pouca margem` : ""}: fold é a linha dominante. Vs 3-bet de BTN (~6% + blefes), ~40% de equity bruta deixa call marginal em stacks profundos — call vs 3-bet de early raramente fecha.`,
+      ];
+    }
+    return [`${c.label} vs 3-bet de early${pos ? ` de ${pos}` : ""}: call de domínio — você é o dominado aqui, com o kicker morto contra AK/AQs/QQ+. Fold é a linha dominante; vs 3-bet de BTN, call seletivo existe.`,
+      `O erro clássico de ${c.label}: parece forte porque domina o campo${stack >= 60 ? ` (${stack}bb deep)` : ""}, mas 60% do valor de quem 3-beta de early é AK/QQ+/AKs — que domina você. Call vs 3-bet de early = dominado e fora de posição.`,
+    ];
+  }
+  return ["Ás forte pós-flop sem Ás: dois overcards sem nada — fold. Não se apaixone com o Ás: é o kicker que paga o pote.",
+    `Sem Ás no board, ${c.label} tem ~22-25% de equity vs aposta de ~55% do pote (~35% de preço): a conta fecha com fold. Acertou o Ás? Valorize com moderação — o kicker decide.`];
+}
+
 /** Aces fracos off: A2o–A9o */
 function weakAcePhrases(ctx: HandCommentCtx): string[] {
+  const stack = Math.round(ctx.heroBB ?? 100);
+  const icm = ctx.icmPhase;
   if (ctx.preflop) {
+    if (ctx.heroAction === "Fold" && icm && icm !== "early") {
+      return [
+        icm === "bubble"
+          ? `🧊 Bolha${ctx.position ? ` de ${ctx.position}` : ""}: stacks menores que o seu vão se empurrar — você não precisa ser o carrasco. Preservar aqui vale mais que disputar um pote mediano.`
+          : `💰 No dinheiro${ctx.position ? ` de ${ctx.position}` : ""}: o Ax fraco é a mão perfeita pra soltar — quem paga com kicker morto é o recreativo; quem preserva entra na mesa final com stack inteiro.`,
+        `Perto do ITM, o valor do chip não é linear: cada ficha que você NÃO arrisca com Ax fraco cresce em valor de prêmio. Fold é defesa ICM — e ICM é o que separa o campo dos 5% que chegam lá.`,
+      ];
+    }
     if (ctx.heroAction === "Fold") {
       return [
         earlyPos(ctx)
           ? `Ax fraco${ctx.position ? ` de ${ctx.position}` : ""}: fold é a linha limpa${isGood(ctx.rating) ? " — o fold te leva à final" : ""}. Não confunda Ás com mão boa.`
-          : `Ax off baixo${ctx.position ? ` de ${ctx.position}` : ""}: quase sempre fold. Ás alto, kicker morto — receita de dominado.`
+          : `Ax off${ctx.position ? ` de ${ctx.position}` : ""}: sem flush draw, o Ás alto sozinho não paga ação — fold limpo${isGood(ctx.rating) ? "" : " era o esperado"}.`
       ];
     }
     if (/^(Raise|Call)$/.test(ctx.heroAction ?? "")) {
-      return [`Ax fraco${ctx.position ? ` de ${ctx.position}` : ""} só funciona suited e de posição — o flush backdoor é o verdadeiro valor dessa mão.`,
-        `Ax off baixo tem ~30% de equity contra qualquer Ax — kicker morto = dominado. Raise de early tem EV negativo até contra o range mais apertado: fold é a única linha +EV.`,
+      return [
+        earlyPos(ctx)
+          ? `Ax fraco${ctx.position ? ` de ${ctx.position}` : ""} de early não abre${ctx.heroAction === "Call" ? " — raise de early com essa mão tem EV negativo" : ""}: dominado por qualquer Ax alto, sem flush draw pra sonhar.`
+          : `Ax off${ctx.position ? ` de ${ctx.position}` : ""}: raise tem EV negativo até contra o range mais apertado${stack <= 25 ? ` — com ${stack}bb vira shove/fold, não raise` : ""}. Fold é a linha dominante.`,
+        `Ax off baixo tem ~30% de equity contra qualquer Ax — kicker morto = dominado, sem flush draw pra construir. Raise${ctx.position ? ` de ${ctx.position}` : ""}${earlyPos(ctx) ? " de early" : ""} sangra EV contra qualquer range real${stack <= 30 ? ` (${stack}bb short: push/fold range, não raise minúsculo)` : ""}.`,
       ];
     }
-    return ["Ax off baixo: quase sempre fold. Ás alto, kicker morto.",
-      `Ax off baixo tem ~30% de equity vs range de open de BTN e ~25% vs UTG: sem flush draw, não há equity implícita que pague o call de ~2.5bb.`];
+    return ["Ax off baixo: frequência dominante de fold. Ás alto sem flush draw não paga ação.",
+      `Ax off baixo tem ~28% de equity vs range de open de BTN e ~24% vs UTG${stack >= 60 ? ` — a ${stack}bb deep, a equity implícita raramente paga o call de ~2.5bb` : ` (${stack}bb: call quase nunca paga)`}: sem flush draw, a conta fecha com fold na grande maioria dos casos.`];
   }
   return ["Ax fraco pós-flop: sem Ás, sem flush draw — desiste rápido.",
-    `Kicker morto sem board de Ás: ~15% de equity vs aposta de 2/3 do pote (~33% de preço). Fold é a única linha que não sangra.`];
+    `Kicker morto sem board de Ás: ~15% de equity vs aposta de 2/3 do pote (~33% de preço). Fold é a linha dominante — a ficha guardada é ficha na final.`];
 }
 
 /** Suited connectors: 98s, 87s, 76s, 65s, 54s */
@@ -280,7 +330,7 @@ function suitedConnectorPhrases(ctx: HandCommentCtx): string[] {
     if (shortStack(ctx)) {
       return [
         `Suited connector${pos ? ` de ${pos}` : ""} com ${Math.round(ctx.heroBB ?? 0)}bb perde valor${ctx.heroAction === "Fold" ? " — foldou certo" : ""}. Essa mão PRECISA ver flop barato — e stack curto não deixa.`,
-        `Com ${Math.round(ctx.heroBB ?? 0)}bb, a equity implícita de ${scLabel} desaparece: flush (~11% no turn) e straight (~16% no open-end) não pagam um shove sem fold equity. Push/fold range decide: < 10bb shove com essa mão é aceitável, call nunca.`,
+        `Com ${Math.round(ctx.heroBB ?? 0)}bb, a equity implícita de ${scLabel} desaparece: flush (~11% no turn) e straight (~16% no open-end) não pagam um shove sem fold equity. Push/fold range decide: < 10bb shove com essa mão é aceitável, call quase nunca.`,
       ];
     }
     if (/^(Raise|Call)$/.test(ctx.heroAction ?? "")) {
@@ -327,8 +377,10 @@ function weakBroadwayPhrases(ctx: HandCommentCtx, c: HandShape = classify([0, 1]
       return [`${pos}: ${c.label} não era pra essa cadeira${ctx.heroAction === "Fold" ? " — mas foldou, e folded é melhor do que pagar caro" : ""}. Fichas guardadas são fichas pra final.`,
         `Dominada por AQ+ (~34% de equity) e jogada dominando nada: qualquer ação com essa mão de early é +EV negativo no longo prazo.`];
     }
-    return [`${pos}: ${c.label} — valor depende da cadeira: de early, folda; de late, abre. KQo de BTN é arma; de UTG, é peso morto.`,
-      `KQo entra em ~25% dos ranges de BTN e ~0% de UTG: a mesma mão vale ~+0.3bb/mão de late e ~-1.2bb/mão de early. A cadeira muda a conta.`];
+    const stack = Math.round(ctx.heroBB ?? 100);
+  return [`${pos}: ${c.label} — valor depende da cadeira: de early, folda; de late, abre. KQo de BTN é arma; de UTG, é peso morto.`,
+      `KQo entra em ~25% dos ranges de BTN e ~0% de UTG: a mesma mão vale ~+0.3bb/mão de late e ~-1.2bb/mão de early${stack >= 60 ? ` (${stack}bb deep: equity de ~43% vs open do CO ainda tolera call seletivo)` : ` (${stack}bb: raise/fold range — call com essa mão não se paga)`}. A cadeira muda a conta.`,
+      `${c.label} de CO/BTN${stack <= 30 ? ` com ${stack}bb` : ""} pode virar shove nos últimos estágios${stack <= 15 ? " — a fold equity de ~40-50% faz a matemática fechar" : ""}: shove de late é mais forte que raise de early.`];
   }
   return ["Broadway fraco pós-flop sem acertar: fold rápido. Carta alta não paga pote."];
 }
@@ -354,7 +406,9 @@ function mediumHandPhrases(ctx: HandCommentCtx, c: HandShape = classify([0, 1])!
       return [`${posTag(ctx)}: ${c.label} de early position: abre seletivo ou folda. O range de UTG não tem espaço pra mão de meio-termo.`,
         `De UTG o range abre ~15%: ${c.label} fica fora — call de early contra esse range tem equity de ~35% e zero fold equity. A conta não fecha.`];
     }
-    return [`${posTag(ctx)}: ${c.label} — valor depende da cadeira: de early, é fold; de late, abre com plano.`];
+    const stack = Math.round(ctx.heroBB ?? 100);
+  return [`${posTag(ctx)}: ${c.label} — valor depende da cadeira: de early, é fold; de late, abre com plano${stack >= 60 ? ` (${stack}bb deep: call seletivo contra raise de 2.2x existe)` : ` (${stack}bb: fold/raise, sem call)`}.`,
+      `${c.label} de CO/BTN entra em ~20% dos ranges${stack <= 20 ? ` — com ${stack}bb vira shove de ~10% de frequência, não raise` : ""}: a mão precisa de plano, nunca de impulso.`];
   }
   return [`${c.label} pós-flop: acertou algo? Joga. Errou? Fold sem drama.`];
 }
@@ -373,6 +427,7 @@ const CATEGORIES: Category[] = [
   { name: "smallPair", phrases: smallPairPhrases },
   { name: "bigAce", phrases: bigAcePhrases },
   { name: "goodAce", phrases: goodAcePhrases },
+  { name: "strongAce", phrases: strongAcePhrases },
   { name: "suitedConnector", phrases: suitedConnectorPhrases },
   { name: "weakBroadway", phrases: weakBroadwayPhrases },
   { name: "mediumHand", phrases: mediumHandPhrases },
@@ -410,6 +465,7 @@ function findCategory(c: HandShape): Category {
       if (c.rankLo >= 7) return CATEGORIES.find((x) => x.name === "goodAce")!;
       return CATEGORIES.find((x) => x.name === "suitedAceMedium")!;
     }
+    if (c.rankLo >= 11) return CATEGORIES.find((x) => x.name === "strongAce")!; // AKo/AQo/AJo: Ás forte offsuit
     return CATEGORIES.find((x) => x.name === "weakAce")!;
   }
   if (c.rankHi === 13 || c.rankHi === 12 || c.rankHi === 11) {

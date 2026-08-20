@@ -570,6 +570,14 @@ export function App() {
               ? (heroBBBefore(controller.lastHand, controller.lastHand.events.length) ?? undefined)
               : undefined
           }
+          icmPhase={(() => {
+            const tn = controller.tournament;
+            if (!tn) return undefined;
+            if (tn.bubbleBurst) return "itm";
+            const paid = tn.ladder.length;
+            const left = Math.round(tn.fieldRemaining);
+            return left <= paid * 2.5 && paid > 0 ? "bubble" : "early";
+          })()}
           onClose={() => setTipsOpen(false)}
         />
       ) : null}
