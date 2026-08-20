@@ -69,7 +69,11 @@ export function HandTipsModal({
   // Comentário PERSONALIZADO pela mão — voz anônima, estilo solver.
   // Só aparece quando há exatamente 2 cartas de herói e
   // há decisões avaliadas na rua atual.
-  const firstItem = displayItems.find((it) => it.rating) ?? displayItems[0];
+  // Âncora = último item com rating (a rua mais recente): o coach comenta a
+  // decisão atual, não o pré-flop.
+  let firstItem = displayItems.find((it) => it.rating) ?? displayItems[0];
+  const withRating = displayItems.filter((it) => it.rating);
+  if (withRating.length > 1) firstItem = withRating[withRating.length - 1];
   const handCmt =
     heroHand.length === 2 && firstItem
       ? getHandCommentary(
@@ -81,6 +85,7 @@ export function HandTipsModal({
             rating: firstItem.rating,
             preflop: firstItem.street === "Pré-flop",
             icmPhase,
+            board,
           },
           tipsMode,
         )

@@ -13,6 +13,7 @@
 // Modo Técnico  → Coach (técnico) com números
 // ---------------------------------------------------------------------------
 import { rankOf, type Card } from "../engine/cards";
+import { classifyBoard } from "../bots/boardTexture";
 
 export type ProVoice = "yuri" | "negreanu" | "hellmuth" | "polk";
 
@@ -37,6 +38,67 @@ export interface HandCommentCtx {
   preflop?: boolean;
   /** Fase ICM do torneio: "bubble" = perto da bolha, "itm" = no dinheiro, "early" = início/meio */
   icmPhase?: "early" | "bubble" | "itm";
+  /** Board atual do spot (3+ cartas = flop aberto; vazio = não usado) */
+  board?: Card[];
+}
+
+// ---------------------------------------------------------------------------
+// Textura do board — condiciona as frases pós-flop
+// (reusa a classificação do motor: src/bots/boardTexture.ts)
+// ---------------------------------------------------------------------------
+
+export interface BoardFlavor {
+  /** "seco" | "molhado" | "pareado" */
+  kind: "dry" | "wet" | "paired";
+  label: string; // ex. "board seco", "board molhado", "board pareado"
+  flushPossible: boolean;
+  connectedness: number;
+  wetness: number;
+}
+
+/** Lê a textura do board do ctx (null se ainda não há flop). */
+export function readTexture(ctx: HandCommentCtx): BoardFlavor | null {
+  if (!ctx.board || ctx.board.length < 3) return null;
+  const t = classifyBoard(ctx.board);
+  let kind: BoardFlavor["kind"] = "dry";
+  if (t.paired) kind = "paired";
+  else if (t.wetness >= 0.45) kind = "wet";
+  const labels: Record<BoardFlavor["kind"], string> = {
+    dry: "board seco",
+    wet: "board molhado",
+    paired: "board pareado",
+  };
+  return {
+    kind,
+    label: labels[kind],
+    flushPossible: t.flushPossible,
+    connectedness: t.connectedness,
+    wetness: t.wetness,
+  };
+}
+
+/**
+ * Frases de textura — a voz do coach explica o FLOP como um pro explica.
+ * Usadas quando a categoria não tem vocabulário próprio para aquele tipo
+ * de board, e como reforço da frase principal nas categorias pós-flop.
+ */
+export function texturePhrases(ctx: HandCommentCtx, tex: BoardFlavor): string[] {
+  if (tex.kind === "dry") {
+    return [
+      `${tex.label}: poucos projetos vivos — quem tem o melhor da mão agora quase sempre é favorito nas próximas ruas. Carta alta decide.`,
+      `Board seco pune quem calla sem plano: a equity de quem paga com draw raramente chega a ~20% e o preço de ~35% não fecha a conta na maioria das vezes.`,
+    ];
+  }
+  if (tex.kind === "wet") {
+    return [
+      `${tex.label}: muitos projetos vivos — equity muda a cada carta${tex.flushPossible ? ", inclusive o flush já está disponível" : ""}. Quem tem draw tem arma; quem tem só carta alta está nadando contra a correnteza.`,
+      `Em board molhado, a equity de um par seco cai ~20 pontos contra o range de quem paga: overcards e top fraco viram mão de fold quando o pote cresce — a disciplina aqui é o que separa quem preserva de quem entrega.`,
+    ];
+  }
+  return [
+    `${tex.label}: o jogo muda de figura — pares médios viram catchers, trips viram armadilhas e overpairs perdem valor. Cada aposta aqui tem peso de decisão.`,
+    `Board pareado enquadra ranges: quem continua tem ou o overpair ou a espera do full. Pares médios sem kicker forte são mão de fold na frequência dominante${ctx.heroAction === "Fold" ? " — e o fold respeitou isso" : " — call barato é a exceção, não a regra"}.`,
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -453,6 +515,7 @@ const TRASH_OFFSUIT_RANKS: [number, number][] = [
   [12, 8], [12, 7], [12, 6],
 ];
 
+
 function findCategory(c: HandShape): Category {
   if (c.pair) {
     if (c.rankHi >= 12) return CATEGORIES.find((x) => x.name === "premium")!;
@@ -531,7 +594,18 @@ export function getHandCommentary(ctx: HandCommentCtx, mode: "free" | "technical
     cat.name === "mediumHand" || cat.name === "weakBroadway"
       ? (cat.phrases as (x: HandCommentCtx, s?: HandShape) => string[])(ctx, c)
       : cat.phrases(ctx);
-  const line = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
+  // Pós-flop com board aberto: a textura do flop entra na frase da mão.
+  const tex = readTexture(ctx);
+  let line: string;
+  if (tex && !ctx.preflop) {
+    const base = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
+    const texLine = texturePhrases(ctx, tex)[mode === "technical" ? 1 : 0];
+    line = `${base} — ${texLine.charAt(0).toLowerCase() === "b" && texLine.startsWith("Board")
+      ? `board ${texLine.slice(5).trim()}`
+      : texLine}`;
+  } else {
+    line = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
+  }
   const voice = pickPro(mode, ctx.rating);
   return {
     handName: handNamePretty(ctx.heroHand),
