@@ -1,7 +1,7 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 20/08/2026 21:56 — 002d3a11 (frases de sizing: bet fino/normal/grande/overbet no comentário da mão) + 625b0ff6 (textura de board) — TUDO NO AR (bundle `main-DdT6MqiL.js`)
-### Atualização anterior: 20/08/2026 19:30 — b23b6729 (cards GTO: Ás forte separado do fraco, hiperboles em linguagem de frequência, vocabulário técnico 12x, frases ICM/bolha) + 48192f24 (master docs) + 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) — TUDO NO AR
+### Última atualização: 20/08/2026 22:31 — 7b22f03e (frases de spots de resposta 3-bet/call/4-bet por posição e stack + fix fluxo textura/sizing) — TUDO NO AR (bundle `main-CoBX1UkI.js`)
+### Histórico: 002d3a11 (sizing) + 625b0ff6 (textura) + 8d6b4f7f (master) + 20/08/2026 19:30 — b23b6729 (cards GTO: Ás forte separado do fraco, hiperboles em linguagem de frequência, vocabulário técnico 12x, frases ICM/bolha) + 48192f24 (master docs) + 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) — TUDO NO AR
 
 ---
 
@@ -284,6 +284,7 @@
 ---
 
 ## 📦 COMMITS RECENTES (20/08/2026 — todos LIVE em produção)
+- **7b22f03e** — **FRASES DE SPOTS DE RESPOSTA** (evolução #3 da auditoria 100k): `handCommentary.ts` ganha `readResponseSpot(ctx)` (detecta 3-bet / 4-bet / call-vs-3-bet / fold-vs-3-bet pelo `heroAction` + `preflop` do ctx), `posClass()` (early UTG/UTG1/MP vs late HJ/CO/BTN/SB/BB) e `responsePhrases()` (4 spots × free+técnico, condicionadas a posição e stack — squeeze de LP, "declaração de guerra" de EP, call defensivo com implied odds, fold = equity morta, push/fold em stack curto). Anexada no topo do `getHandCommentary` (comentário principal do modal, âncora = rua mais recente). Testes ajustados (3 existentes) + novos; vitest 3606/3606. Bundle no ar: `main-CoBX1UkI.js` (verificado: "arma de posição", "declaração de guerra", "linha dos extremos", "equity morta", "pune o roubo" + textura/sizing/ICM intactos).
 - **002d3a11** — **FRASES DE SIZING** (evolução #2 da auditoria 100k): `handCommentary.ts` ganha campo `heroBetPct` no ctx (do `betSizePct` do item da rua mais recente), `readHeroSizing()` (small <40% / normal 40-75% / big ≥75% / overbet >100%; ignora fold/check/pré-flop) e `sizingPhrases()` (~8 frases, free+técnico). Anexada à frase final após a textura, no formato "tamanho: ...". `HandTipsModal` passa `heroBetPct` no ctx. Testes unitários provaram os 4 tamanhos + fold + pré-flop ignorado. Bundle no ar verificado: "bet fino", "aposta grande", "overbet", "tamanho:" + textura e ICM intactos. Vitest 3599/3599, tsc limpo.
 
 - **625b0ff6** — **FRASES PÓS-FLOP POR TEXTURA DE BOARD** (evolução proposta na auditoria 100k): `handCommentary.ts` ganha `readTexture(ctx)` + `texturePhrases()` (3 texturas — board seco / molhado / pareado, ~3 frases cada, PT) e anexa a frase de textura a TODAS as frases pós-flop (modos simples e técnico) no formato "frase base — textura: ...". Pré-flop permanece sem textura. `HandTipsModal` passa `board` no ctx; **fix: âncora do comentário agora é o ÚLTIMO item com rating** (rua mais recente) — antes o coach comentava o pré-flop mesmo no showdown. Bundle no ar: `main-QwWGFxj6.js` (verificado: "board seco", "board molhado", "board pareado" + tudo da sessão anterior intacto). Vitest 3599/3599, tsc limpo.
