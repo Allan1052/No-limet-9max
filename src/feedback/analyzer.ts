@@ -46,6 +46,9 @@ export interface HeroAdvice {
   stageLabel?: string;
   /** Posição do herói (UTG, BTN, etc.) — pra contextualizar. */
   heroPosition?: string;
+  /** TAMANHO recomendado da aposta/raise: fração do pote (0..1) e valor em bb. */
+  betSizePct?: number;
+  betSizeBB?: number;
 }
 
 /**
@@ -100,6 +103,10 @@ export interface FeedbackItem {
   heroFam?: Family;
   /** Família da ação RECOMENDADA. */
   adviceFam?: Family;
+  /** TAMANHO recomendado da aposta/raise (quando o padrão é apostar/aumentar):
+   *  fração do pote (0..1) e valor em bb — pra dica "aposte ~⅔ (≈ 8bb)". */
+  betSizePct?: number;
+  betSizeBB?: number;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -232,6 +239,9 @@ function gradeCore(
     kind: advice.kind,
     heroFam: hf,
     adviceFam: af,
+    // Só carrega o tamanho quando o padrão é agressivo (apostar/aumentar).
+    betSizePct: af === "aggro" ? advice.betSizePct : undefined,
+    betSizeBB: af === "aggro" ? advice.betSizeBB : undefined,
   };
 
   // ----- All-in FUNDO quando o certo era um raise/3-bet NORMAL (não jam) -----

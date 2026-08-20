@@ -194,6 +194,9 @@ export function analyzePostflopStreets(
             effectiveBB: effBB,
             heroPosition: hero.position,
             mix: buildMix(advAction, rec.freq),
+            // Tamanho recomendado (só quando o padrão é apostar/aumentar).
+            betSizePct: rec.sizePct,
+            betSizeBB: rec.sizeBB,
           },
           { heroPosition: hero.position, heroBB: effBB },
         );

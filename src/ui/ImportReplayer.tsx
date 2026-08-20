@@ -503,6 +503,23 @@ export function ImportReplayer({
                   ) : null}
                 </>
               )}
+              {coachFb.betSizeBB && coachFb.betSizeBB > 0 ? (
+                <span
+                  className="ir-coach-size"
+                  style={{
+                    display: "inline-block",
+                    marginLeft: 8,
+                    padding: "1px 8px",
+                    borderRadius: 8,
+                    fontSize: "0.82em",
+                    fontWeight: 700,
+                    color: "#0b0f0d",
+                    background: "linear-gradient(180deg,#ecd07a,#c9a227)",
+                  }}
+                >
+                  💰 aposte ~{Math.round((coachFb.betSizePct ?? 0) * 100)}% do pote · ≈ {coachFb.betSizeBB}bb
+                </span>
+              ) : null}
               {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
             </span>
           </div>

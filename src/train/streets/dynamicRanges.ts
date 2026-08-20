@@ -639,15 +639,22 @@ export function heroBestAction(
   villainRange: Range,
   iterations = 500,
   rng?: () => number,
-): { action: string; freq: number; reason: string; equity: number } {
+): { action: string; freq: number; reason: string; equity: number; sizePct?: number; sizeBB?: number } {
   const hit = boardHit(handType, board);
   const price = facingBetBB > 0 ? facingBetBB / (potBB + facingBetBB) : 0;
   const neededEquity = facingBetBB > 0 ? price : 0;
   const equity = realEquity(handType, villainRange, board.cards, iterations, rng);
   const p = Math.round(equity * 100);
 
+  // Tamanho recomendado (fração do pote) → dá pra mostrar "aposte ~X% (≈ Y bb)".
+  const size = (pct: number) => ({ sizePct: pct, sizeBB: Math.round(potBB * pct * 10) / 10 });
+
   if (facingBetBB > 0) {
-    if (equity >= 0.66) return { action: "raise", freq: 0.8, reason: `equity ${p}%: valor forte`, equity };
+    // Raise de valor: ~3x a aposta enfrentada (limitado ao pote), em bb reais.
+    if (equity >= 0.66) {
+      const raiseBB = Math.round(Math.min(facingBetBB * 3, potBB + facingBetBB * 2) * 10) / 10;
+      return { action: "raise", freq: 0.8, reason: `equity ${p}%: valor forte — aumente para ~${raiseBB}bb`, equity, sizeBB: raiseBB, sizePct: (potBB > 0 ? raiseBB / potBB : undefined) as number };
+    }
     if (equity > neededEquity + 0.04) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço ${Math.round(neededEquity * 100)}%`, equity };
     if (equity > neededEquity - 0.03 && (hit.draw || texture.wetness > 0.5)) {
       return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto`, equity };
@@ -655,12 +662,16 @@ export function heroBestAction(
     return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço ${Math.round(neededEquity * 100)}%`, equity };
   }
   // Tamanho ideal pelo board: molhado → grande (~⅔+) pra cobrar projetos;
-  // seco → pequena (~⅓) pra manter as mãos piores pagando.
-  const wet = texture.wetness > 0.5;
-  const sizeTip = wet ? "aposta grande (~⅔ do pote) pra cobrar os projetos" : "aposta pequena (~⅓ do pote) pra manter as piores pagando";
-  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `valor forte (equity ${p}%): ${sizeTip}`, equity };
-  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%): aposta pequena (~⅓), extrai um pouco sem inflar`, equity };
-  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%): aposta pequena e barata — fold equity + você melhora quando bate`, equity };
+  // seco → pequena (~⅓) pra manter as mãos piores pagando. Par no board (travado)
+  // pede pequeno; board muito molhado pede maior.
+  const betPct = texture.paired ? 0.33 : texture.wetness > 0.6 ? 0.75 : texture.wetness > 0.4 ? 0.66 : 0.33;
+  const wet = betPct >= 0.5;
+  const sizeTip = wet
+    ? `aposta grande (~${Math.round(betPct * 100)}% do pote) pra cobrar os projetos`
+    : `aposta pequena (~${Math.round(betPct * 100)}% do pote) pra manter as piores pagando`;
+  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `valor forte (equity ${p}%): ${sizeTip}`, equity, ...size(betPct) };
+  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%): aposta pequena (~33%), extrai um pouco sem inflar`, equity, ...size(0.33) };
+  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%): aposta pequena (~${Math.round(betPct * 100)}%) — fold equity + você melhora quando bate`, equity, ...size(betPct) };
   return { action: "check", freq: 0.7, reason: `controle de pote (equity ${p}%): sem valor claro nem projeto forte, o check evita inflar o pote`, equity };
 }
 
