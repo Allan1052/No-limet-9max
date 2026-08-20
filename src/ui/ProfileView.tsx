@@ -15,7 +15,7 @@ import { SupportPix } from "./SupportPix";
 import { TopPrizesPanel } from "./TopPrizesPanel";
 import { TournamentCountPanel } from "./TournamentCountPanel";
 import { loadEliteWins, recordTournamentWin } from "../tournament/eliteUnlock";
-import { recordEliteWinCloud, syncEliteWins } from "../lib/eliteSync";
+import { recordEliteWinCloud, syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
 
 export function ProfileView({
@@ -45,7 +45,11 @@ export function ProfileView({
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [ruaUnlocked, setRuaUnlocked] = useState(isDevUnlocked("rua2026"));
-  const [eliteUnlocked, setEliteUnlocked] = useState<boolean>(() => !!loadEliteWins()["109"]);
+  const [eliteUnlocked, setEliteUnlocked] = useState<boolean>(() => {
+    // Local + espelho da nuvem: se a vitória existe em qualquer um dos dois,
+    // o $1.000 está destravado (loadAllEliteWins faz a união).
+    return !!loadAllEliteWins()["109"];
+  });
 
   // Sincroniza as vitórias de elite com a nuvem (anti-perda em limpezas de cache).
   useEffect(() => {
@@ -80,8 +84,8 @@ export function ProfileView({
     } else {
       // elite109: destrava o $1.000 registrando a vitória comprovada de $109
       // (o Allan já foi campeão de um torneio de $109 com 100+ jogadores —
-      // o registro local foi apagado em limpezas de cache).
-      if (v === "elite109") {
+      // o registro local foi apagado em limpezas de cache). Senha: 2026.
+      if (v === "2026") {
         recordTournamentWin(109, 100, "inicio");
         recordEliteWinCloud(109, getNickname());
         setEliteUnlocked(true);
@@ -293,7 +297,7 @@ export function ProfileView({
             </div>
             <div className="devpw-note">
               {pwMode === "elite109"
-                ? "Senha do dono: registra a vitória de $109 com 100+ jogadores e libera o $1.000."
+                ? "Já venceu um torneio de $109 com 100+ jogadores? A senha 2026 registra a vitória e libera o $1.000."
                 : t("profile.devTestNote")}
             </div>
             <input

@@ -46,6 +46,7 @@ const TIER_BUYINS: Record<string, string> = {
  * Conta torneios por faixa a partir de uma lista de registros.
  * Só TORNEIO = modo "circuito" conta para a trajetória (Treino Livre é treino,
  * exatamente como a regra do ranking: "só o Circuito pontua").
+ * Regra do Allan: conta TODOS os torneios disputados — premiados ou não.
  */
 function countByTier(records: TournamentResultRecord[]): TierCount[] {
   const byTier = new Map<string, { played: number; inMoney: number }>();
@@ -57,13 +58,22 @@ function countByTier(records: TournamentResultRecord[]): TierCount[] {
     if (r.inMoney) c.inMoney += 1;
     byTier.set(tier, c);
   }
-  return BUY_INS.map((b) => ({
-    tier: tierForBuyIn(b.value),
-    label: b.label,
-    buyins: TIER_BUYINS[tierForBuyIn(b.value)] ?? b.label,
-    played: byTier.get(tierForBuyIn(b.value))?.played ?? 0,
-    inMoney: byTier.get(tierForBuyIn(b.value))?.inMoney ?? 0,
-  }))
+  return buildTierCounts(byTier);
+}
+
+function buildTierCounts(
+  byTier: Map<string, { played: number; inMoney: number }>,
+): TierCount[] {
+  return BUY_INS.map((b) => {
+    const tier = tierForBuyIn(b.value);
+    return {
+      tier,
+      label: b.label,
+      buyins: TIER_BUYINS[tier] ?? b.label,
+      played: byTier.get(tier)?.played ?? 0,
+      inMoney: byTier.get(tier)?.inMoney ?? 0,
+    };
+  })
     .filter((c, i, arr) => arr.findIndex((x) => x.tier === c.tier) === i)
     .sort((a, b) => a.played + a.inMoney - (b.played + b.inMoney))
     .reverse();
@@ -101,28 +111,49 @@ export function TournamentCountPanel() {
       try {
         const entries = await fetchTournamentEntries(tiers, nick);
         if (cancelled) return;
-        const byTier = new Map<string, { played: number; inMoney: number }>();
+        // Nuvem: registros oficiais verified (só ITM grava no ranking — regra
+        // WSOP). O diário LOCAL grava todos os concluídos (ITM ou não).
+        // Merge: a nuvem domina; o local complementa com os não-ITM, dedup
+        // pela chave (buyIn + colocação + campo + modo) pra não contar duas
+        // vezes o mesmo torneio.
+        const cloudKeys = new Set<string>();
+        const cloudByTier = new Map<string, { played: number; inMoney: number }>();
         for (const e of entries) {
           if (e.player_key !== myKey) continue;
           const tier = tierForBuyIn(e.buy_in);
-          const c = byTier.get(tier) || { played: 0, inMoney: 0 };
+          const c = cloudByTier.get(tier) || { played: 0, inMoney: 0 };
           c.played += 1;
           if (e.finish_position <= (e.paid_places || 0)) c.inMoney += 1;
+          cloudByTier.set(tier, c);
+          // Chave de dedup: o mesmo torneio existe no diário local.
+          // (entrants não vem da nuvem — a chave é o torneio + colocação +
+          // jogador, que juntos identificam o mesmo resultado.)
+          cloudKeys.add(`${e.buy_in}:${e.finish_position}:${e.player_key}`);
+        }
+        const local = loadResults();
+        const byTier = new Map<string, { played: number; inMoney: number }>();
+        for (const r of local) {
+          if (r.mode !== "circuito") continue;
+          // Já contado pela nuvem (mesmo torneio)? Pula — não duplica.
+          const key = `${r.buyIn}:${r.finishPlace}:${myKey}`;
+          if (cloudKeys.has(key)) continue;
+          const tier = tierForBuyIn(r.buyIn);
+          const c = byTier.get(tier) || { played: 0, inMoney: 0 };
+          c.played += 1;
+          if (r.inMoney) c.inMoney += 1;
           byTier.set(tier, c);
         }
-        // Se a nuvem trouxe NADA para este jogador, mantém o local (ele pode
-        // ter jogado sem apelido no início).
+        // Soma nuvem + local complementar.
+        for (const [tier, c] of cloudByTier) {
+          const agg = byTier.get(tier) || { played: 0, inMoney: 0 };
+          agg.played += c.played;
+          agg.inMoney += c.inMoney;
+          byTier.set(tier, agg);
+        }
+        // Se nenhum dado existe (nem nuvem nem local), mantém o que já
+        // mostrava na fase 1 — nunca esconde a trajetória do jogador.
         if (byTier.size > 0) {
-          setCounts(
-            BUY_INS.map((b) => ({
-              tier: tierForBuyIn(b.value),
-              label: b.label,
-              buyins: TIER_BUYINS[tierForBuyIn(b.value)] ?? b.label,
-              played: byTier.get(tierForBuyIn(b.value))?.played ?? 0,
-              inMoney: byTier.get(tierForBuyIn(b.value))?.inMoney ?? 0,
-            }))
-              .filter((c, i, arr) => arr.findIndex((x) => x.tier === c.tier) === i),
-          );
+          setCounts(buildTierCounts(byTier));
           setLocalOnly(false);
         }
       } catch {
@@ -181,7 +212,7 @@ export function TournamentCountPanel() {
               </div>
               <div className="tc-body">
                 <div className="tc-nums">
-                  <span className="tc-played">{c.played} disputados</span>
+                  <span className="tc-played">{c.played} {c.played === 1 ? "disputado" : "disputados"}</span>
                   <span className="tc-inmoney">
                     {c.inMoney}{" "}
                     {c.inMoney === 1 ? "premiado" : c.inMoney === 0 ? "no dinheiro" : "premiados"}
