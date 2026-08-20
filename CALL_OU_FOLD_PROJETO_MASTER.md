@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 20/08/2026 05:35 — d78d3cc0 (Trajetória com todos os torneios + senha $1.000 → 2026) + 94317e8f + f9914b8b + 74a118b5 + Pixel dc7a6bdc — TUDO NO AR
+### Última atualização: 20/08/2026 11:00 — 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) + 51169346/8d6a70d1 (app: sizing + dicas tamanho) — TUDO NO AR
 
 ---
 
