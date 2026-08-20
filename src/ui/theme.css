@@ -6359,3 +6359,81 @@ body {
   .hub-chip-adv-label { display: inline; }
   .hub-chip-adv-ellipsis { display: none; }
 }
+
+/* ==========================================================================
+   MODO DESKTOP — experiência adaptada para computador (20/08)
+   Só ADIÇÃO. O mobile (<=860px) fica intocado: as regras anteriores
+   continuam no ar. Em telas largas, a mesa aproveita o monitor: mesa
+   grande horizontal, assentos/cartas/controles maiores e topbar com respiro.
+   ========================================================================== */
+@media (min-width: 861px) and (max-width: 1199px) {
+  .play { max-width: 1000px; margin: 0 auto; }
+  .table-wrap { aspect-ratio: 16 / 10; max-width: 900px; }
+  .seat { width: 104px; }
+  .seat .name { font-size: 13px; }
+  .seat .stack { font-size: 13px; }
+  .card { width: 36px; height: 52px; }
+  .card .rank { font-size: 16px; }
+  .card .suit { font-size: 13px; }
+  .controls { gap: 8px; }
+  .btn { padding: 11px 18px; font-size: 14px; }
+}
+@media (min-width: 1200px) {
+  /* Libera a largura da tela de jogo (antes travada em 620px). */
+  .play { max-width: 1420px; margin: 0 auto; }
+  .table-wrap { aspect-ratio: 16 / 10; max-width: 1200px; }
+  .tbl-rank { font-size: 30px; }
+  .tbl-blinds { font-size: 16px; }
+  /* Assentos maiores: nome, stack e badge precisam ler de longe. */
+  .seat { width: 122px; }
+  .seat .pod { padding: 7px 9px; }
+  .seat .name { font-size: 15px; }
+  .seat .arch { font-size: 11px; }
+  .seat .stack { font-size: 14px; }
+  .seat .hud { font-size: 11px; }
+  .seat .badge { font-size: 12px; padding: 2px 9px; }
+  .seat .hole { margin-top: 6px; }
+  .dealer-btn { width: 22px; height: 22px; font-size: 12px; }
+  .seat-bet { min-width: 46px; }
+  /* Cartas maiores no desktop. */
+  .card { width: 42px; height: 60px; }
+  .card .rank { font-size: 18px; }
+  .card .suit { font-size: 14px; }
+  .card.sm { width: 30px; height: 42px; }
+  .card.sm .rank { font-size: 14px; }
+  .card.sm .suit { font-size: 12px; }
+  /* Controles confortáveis. */
+  .controls { gap: 10px; padding: 12px; }
+  .btn { padding: 12px 22px; font-size: 15px; }
+  .btn.primary { padding: 14px 34px; font-size: 16px; }
+  .raise-btn { padding: 14px; font-size: 15px; }
+  .allin-btn { padding: 14px; font-size: 15px; }
+  .topbar { padding-bottom: 8px; }
+  .brand { font-size: 22px; }
+  .brand small { display: inline; }
+  /* Selo "sem dinheiro real" volta ao topo no desktop (espaço sobra). */
+  .disclaimer { display: inline-flex; }
+  .app-seal { display: none; }
+  .app-seal.on-play { display: none; }
+}
+
+/* Seat do herói: um pouco mais nobre e largo pra o nome não truncar. */
+@media (min-width: 1200px) {
+  .seat.hero { width: 140px; }
+  .seat.hero .name { overflow: visible; text-overflow: unset; }
+}
+@media (min-width: 861px) and (max-width: 1199px) {
+  .seat.hero { width: 120px; }
+  .seat.hero .name { overflow: visible; text-overflow: unset; }
+}
+
+/* FIX DESKTOP (20/08): o .felt tem overflow:hidden e os assentos absolutos
+   transbordam dele na mesa horizontal — cliques nos assentos dos cantos eram
+   cortados (Allan relatou que o range/stats "não abre"). No desktop o feltro
+   deixa os assentos "passarem" por cima; dentro dele ainda há chips/bets que
+   ficam contidos pelo feltro natural (borda 12px + sombra).
+   NOTA: o .seat também precisa z-index acima do feltro e pointer-events auto. */
+@media (min-width: 861px) {
+  .felt { overflow: visible; }
+  .seat { z-index: 8; pointer-events: auto; }
+}

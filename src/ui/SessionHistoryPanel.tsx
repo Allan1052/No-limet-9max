@@ -234,7 +234,10 @@ function cardLabel(card: Card): string {
 }
 
 function cardColor(card: Card): string {
-  return SUIT_RED[suitOf(card)] ? "#c0392b" : "#1c1c1c";
+  // Fundo escuro do painel (#0d0f0d): naipe preto NUNCA em preto (#1c1c1c
+  // sumia do card = a "carta fantasma" que o Allan relatou). Off-white para
+  // naipes pretos e vermelho vivo para os vermelhos.
+  return SUIT_RED[suitOf(card)] ? "#e55b4f" : "#e8e4d4";
 }
 
 function capitalize(s: string): string {

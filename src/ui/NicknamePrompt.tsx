@@ -73,6 +73,24 @@ export function NicknamePrompt({
       return;
     }
 
+    // Fallback offline: se o banco falhou por conexão, grava localmente e abre
+    // o torneio mesmo assim — o apelido é sincronizado com o banco na próxima
+    // abertura do app (restoreNickname). O fluxo NUNCA volta ao início em
+    // silêncio; o apelido continua único na comparação case-insensitive.
+    if (result.error === "conexao") {
+      try {
+        localStorage.setItem("cof-nickname", value);
+      } catch {
+        /* ignora — o torneio ainda abre */
+      }
+      setSaveError(
+        "Sem conexão para confirmar no servidor — seu apelido ficou salvo no aparelho e será registrado no ranking automaticamente quando voltar a conexão.",
+      );
+      // Abre o torneio mesmo assim: nada pior do que perder a vez de jogar.
+      onDone(value);
+      return;
+    }
+
     setConfirming(false);
     if (result.error === "em_uso") {
       setAvailability("em_uso");
