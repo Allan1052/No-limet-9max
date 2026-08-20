@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 20/08/2026 11:00 — 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) + 51169346/8d6a70d1 (app: sizing + dicas tamanho) — TUDO NO AR
+### Última atualização: 20/08/2026 19:30 — b23b6729 (cards GTO: Ás forte separado do fraco, hiperboles em linguagem de frequência, vocabulário técnico 12x, frases ICM/bolha) + 48192f24 (master docs) + 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) — TUDO NO AR
 
 ---
 

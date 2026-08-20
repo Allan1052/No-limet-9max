@@ -1,0 +1,32 @@
+[
+  [
+    "Ax off baixo vs qualquer Ax (weakAce)",
+    0.3,
+    59.2375,
+    "DIVERGE"
+  ],
+  [
+    "AQo vs range 3-bet BTN",
+    0.36,
+    65.08749999999999,
+    "DIVERGE"
+  ],
+  [
+    "22 vs range de open",
+    0.27,
+    52.38125,
+    "DIVERGE"
+  ],
+  [
+    "22 vs open shove/fold < 20bb",
+    0.3,
+    53.387499999999996,
+    "DIVERGE"
+  ],
+  [
+    "suited connector de BTN vs range de open (~30%)",
+    0.44,
+    53.53125,
+    "OK"
+  ]
+]
