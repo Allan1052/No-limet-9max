@@ -479,6 +479,9 @@ function shortHandName(ht: string): string {
  * KQ, pares médios como 88"). Pega o range que sobrou e traduz em exemplos.
  */
 function nameContinuingHands(range: Range, board: BoardState): string {
+  // No RIVER não existe projeto (não há mais carta pra vir) — um "draw" ali é
+  // mão feita ou é ar. Não listamos o balde "projetos" no river.
+  const isRiver = board.cards.length >= 5;
   const groups: Record<string, string[]> = { forte: [], topPar: [], projeto: [], parMedio: [] };
   const seen: Record<string, boolean> = {};
   const entries = Object.entries(range).sort((a, b) => b[1] - a[1]);
@@ -487,8 +490,11 @@ function nameContinuingHands(range: Range, board: BoardState): string {
     let bucket: string | null = null;
     if (hit.made === "trips+" || hit.made === "twoPairOrBetter" || hit.made === "overPair") bucket = "forte";
     else if (hit.made === "topPair") bucket = "topPar";
-    else if (hit.draw) bucket = "projeto";
-    else if (hit.made === "middlePair" || hit.made === "bottomPair" || hit.made === "weakPair") bucket = "parMedio";
+    else if (hit.draw && !isRiver) bucket = "projeto";
+    // No river o classificador às vezes rotula carta-alta (ex.: KQ) como par
+    // fraco. Quem pagou 3 ruas até o river tem mão feita de verdade — par de topo
+    // ou melhor — então não listamos o balde "pares médios" aqui.
+    else if ((hit.made === "middlePair" || hit.made === "bottomPair" || hit.made === "weakPair") && !isRiver) bucket = "parMedio";
     if (!bucket) continue;
     const name = shortHandName(ht);
     if (seen[name]) continue;
@@ -513,20 +519,29 @@ function buildNarration(
   const round = Math.round(percent);
   const hands = nameContinuingHands(range, board);
   const comOsQuais = hands ? ` — tipo ${hands}` : "";
+  // No RIVER a leitura muda: não há projeto (é showdown), então quem continua tem
+  // MÃO FEITA (par ou melhor) ou está blefando — nada de "projetos".
+  const isRiver = board.cards.length >= 5;
   if (action === "fold") {
-    return `O que ele DESISTIU: o fundo do range — carta alta sem hit e sem projeto. ${round}% do range largou.`;
+    return `O que ele DESISTIU: o fundo do range — ${isRiver ? "carta alta / mão que não conecta" : "carta alta sem hit e sem projeto"}. ${round}% do range largou.`;
   }
   if (action === "call") {
-    let line = `Ele pagou e o range encolheu para ~${round}%. Quem paga aqui continua com hit ou projeto${comOsQuais}. O lixo sai.`;
+    let line = isRiver
+      ? `Ele pagou e o range encolheu para ~${round}%. No river quem paga tem mão feita — par ou melhor${comOsQuais}. Blefe e ar largam.`
+      : `Ele pagou e o range encolheu para ~${round}%. Quem paga aqui continua com hit ou projeto${comOsQuais}. O lixo sai.`;
     if (texture.highCardPresent) line += " A carta alta no board pesa: quem tem esse hit domina o topo.";
     return line;
   }
   if (action === "check") {
-    return `Ele deu check → range ~${round}%: mão média querendo controle, projeto ou armadilha${comOsQuais}. Topo e fundo saíram.`;
+    return isRiver
+      ? `Ele deu check → range ~${round}%: mão média de showdown ou desistiu da mão${comOsQuais}. Topo aposta, fundo já largou.`
+      : `Ele deu check → range ~${round}%: mão média querendo controle, projeto ou armadilha${comOsQuais}. Topo e fundo saíram.`;
   }
   if (action === "betSmall") {
-    let line = `Aposta pequena (~${round}%): valores médios, projetos e alguns blefes${comOsQuais}.`;
-    if (texture.wetness > 0.5) line += " Board molhado = mais projetos no mix.";
+    let line = isRiver
+      ? `Aposta pequena (~${round}%): valor fino e alguns blefes${comOsQuais}.`
+      : `Aposta pequena (~${round}%): valores médios, projetos e alguns blefes${comOsQuais}.`;
+    if (texture.wetness > 0.5 && !isRiver) line += " Board molhado = mais projetos no mix.";
     return line;
   }
   return `Aposta forte (~${round}%): mão feita (dois pares+, trinca) ou blefe polar${comOsQuais}. A periferia saiu.`;

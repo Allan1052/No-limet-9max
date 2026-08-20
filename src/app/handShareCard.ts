@@ -563,10 +563,18 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   y += sH + 12;
 
   // ── pote + sua aposta ──
-  const poteBB = data.finalPotBB ?? (data.potByStreet ? Object.values(data.potByStreet).slice(-1)[0] : undefined);
+  const potVals = data.potByStreet ? Object.values(data.potByStreet) : [];
+  const poteBB = data.finalPotBB ?? (potVals.length ? potVals[potVals.length - 1] : undefined);
   const betM = /([\d.,]+)\s*bb/i.exec(data.heroAction) ?? /([\d.,]+)\s*bb/i.exec(data.context);
   const betBB = betM ? parseFloat(betM[1].replace(",", ".")) : undefined;
-  const pctPot = betBB && poteBB ? Math.round((betBB / poteBB) * 100) : undefined;
+  // % da aposta = aposta ÷ pote ANTES da aposta (é assim que se mede tamanho de
+  // aposta). O pote final (poteBB) já inclui a sua aposta + o call do vilão — por
+  // isso dava 30% em vez de 75% (bug pego pelo Allan). O pote-antes é o registro
+  // da rua ANTERIOR no potByStreet; se faltar, deduz do final (−aposta −call).
+  const potIntoBet =
+    potVals.length >= 2 ? potVals[potVals.length - 2]
+    : (betBB && poteBB && poteBB - 2 * betBB > 0 ? poteBB - 2 * betBB : poteBB);
+  const pctPot = betBB && potIntoBet ? Math.round((betBB / potIntoBet) * 100) : undefined;
   const bW = (W - 112 - 10) / 2, bH = 62;
   panel(56, y, bW * 0.82, bH, 13, "rgba(230,196,84,0.05)", GLINE);
   ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("POTE", 78, y + bH / 2);
