@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 19/08/2026 — Meta Pixel INSTALADO (dc7a6bdc) + polimento 390px 100% CONCLUÍDO: 23c76711, 401d1604, 31c7201d, 2dfe5422, 09ee7331 e dc7a6bdc — TUDO NO AR
+### Última atualização: 20/08/2026 — 74a118b5 NO AR (desktop grande + apelido offline-proof + cartas fantasmas) e Meta Pixel (dc7a6bdc) + polimento 390px 100% CONCLUÍDO
 
 ---
 
@@ -39,7 +39,7 @@
 ### Site — calloufold.com.br
 - Domínio ativo
 - Tracking: **Umami** (cloud.umami.is) — instalado e funcionando
-- **Meta Pixel ID `2895094507517479` — INSTALADO 19/08 (commit dc7a6bdc)**. Conjunto "www.calloufold.com.br", conta "Ligue ou Fold.sonho" (portfólio) no Meta Business. Script no `<head>` de index.html; noscript movido para o `<body>` (parser do build rejeita `<noscript>` no head). Status no Gerenciador de Eventos: criado, aguardando primeiros PageView.
+- **Meta Pixel ID `2895094507517479` — INSTALADO 19/08 (commit dc7a6bdc)**. Conjunto "www.calloufold.com.br", conta "Ligue ou Fold.sonho" (portfólio) no Meta Business. Script no `<head>` de index.html; noscript movido para o `<body>` (parser do build rejeita `<noscript>` no head). Status no Gerenciador de Eventos: criado, aguardando primeiros PageView. Verificado funcionando 20/08 (fbq PageView dispara, endpoints HTTP 200).
 - Open Graph card: `og.png` (1200x630, preto/dourado com logo CF) + tags OG/Twitter já presentes no index.html — card bonito ao compartilhar no WhatsApp/Instagram/Facebook
 - `public/sitemap.xml` + `public/robots.txt` — publicados e no ar (19/08)
 - Conta Umami: calloufold.sonho@gmail.com
@@ -1223,3 +1223,5 @@ Somente `src/ui/theme.css` editado (nenhuma classe renomeada/removida, nenhuma l
 - **Rodada 3 (commit 2dfe5422, NO AR)**: modal "Sua Evolução" — estado vazio premium (.pp-empty): ícone central + "Jogue algumas mãos para ver sua evolução aqui." + dica itálica + fechar dourado (antes: linha seca "— / 0 decisões"); chave do gráfico semanal com 10px + tabular-nums. CSS: bloco .pp-empty no fim de theme.css; ProgressPanel.tsx ganhou ramo empty (sem remover classes). Varredura de números da mesa concluída: pote 15px gold, arch 10px (fix mobile), labels secundárias permanecem dim. Prints: /tmp/rodada3-empty.png, /tmp/cmp-evolucao.png.
 - Script de captura CDP 390px: /tmp/render-rodada1b.py (padrão audit-tabs: sem Page.enable, sleeps 3s, .bn-item/.hub-chip). Prints 780xNNN (2x).
 - Regra: rodar tsc + vitest (3599) + build + visual + curl verify antes de todo commit; git pull --rebase; nunca force-push.
+
+- **Commit 74a118b5 (20/08, NO AR)**: (1) MODO DESKTOP — tema.css: @media >=860px, mesa grande com feltro e trilho ampliados, assentos e cartas maiores, seat do herói sem truncar nome, controles ampliados; .felt/.table-wrap com overflow visible no desktop — corrigiu cliques nos assentos de cima/baixo que não abriam stats/ranges (relatado pelo Allan: "range de mouse não abre no desktop"); nada alterado abaixo de 860px (celular intacto). (2) APELIDO OFFLINE-PROOF — NicknamePrompt: se claimNickname falhar por rede, grava local (cof-nickname) e abre o torneio direto em vez de voltar ao início (relatado: "confirma apelido no $109 e volta ao início"). (3) CARTAS FANTASMAS — SessionHistoryPanel: cartas de naipes pretos eram #1c1c1c (invisíveis no fundo escuro); agora off-white #e8e4d4 e vermelhas vivas #e55b4f (relatado com print do histórico). vitest limpo; deploy verificado: assets/theme-Dc9ofEyF.css HTTP 200 em produção.
