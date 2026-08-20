@@ -38,9 +38,15 @@ export function HandActions({
     // na ordem em que aconteceram — conta a mão inteira, não só o último lance.
     const byStreet = new Map<string, FeedbackItem>();
     for (const it of feedback) byStreet.set(it.street, it);
+    // Rótulo REAL da última ação do herói em cada rua (ex.: "Aposta 3.3bb",
+    // "Raise 2bb", "Call 20bb"). O it.heroAction é a família crua do motor
+    // ("raise") e marcava uma APOSTA como "Raise" no card — bug pego pelo Allan.
+    // Usamos o mesmo rótulo do gameController (que já distingue aposta × raise).
+    const heroStreetLabel = new Map<string, string>();
+    for (const ev of hand.events) if (ev.isHero) heroStreetLabel.set(ev.street, ev.actionLabel);
     const decisions = [...byStreet.values()].map((it) => ({
       street: it.street,
-      action: it.heroAction,
+      action: heroStreetLabel.get(it.street) ?? it.heroAction,
       correct: it.rating === "boa" || it.rating === "ok",
     }));
 

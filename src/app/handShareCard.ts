@@ -535,16 +535,30 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   } else { y = 540; }
 
   // ── timeline: posição + ruas ──
+  // POSIÇÃO + TODAS as ruas jogadas (até 4: pré/flop/turn/river). Antes cortava
+  // em 3 (slice(0,3)) e o RIVER sumia — bug pego pelo Allan. Nº de caixas é
+  // dinâmico (4 ou 5) e a fonte encolhe pra caber o rótulo ("Aposta 3.3bb").
   const steps: { k: string; v: string }[] = [{ k: "POSIÇÃO", v: `${data.position} · ${data.stackBB}` }];
-  for (const d of (data.decisions ?? []).slice(0, 3)) steps.push({ k: d.street.toUpperCase(), v: d.action });
+  for (const d of (data.decisions ?? []).slice(0, 4)) steps.push({ k: d.street.toUpperCase(), v: d.action });
   while (steps.length < 4) steps.push({ k: "", v: "" });
-  const sN = 4, sGap = 10, sW = (W - 112 - sGap * (sN - 1)) / sN, sH = 66;
+  const sN = steps.length, sGap = 10, sW = (W - 112 - sGap * (sN - 1)) / sN, sH = 66;
+  const fitFont = (text: string, maxW: number, start: number): number => {
+    let px = start;
+    ctx.font = `800 ${px}px Georgia, serif`;
+    while (ctx.measureText(text).width > maxW && px > 13) {
+      px -= 1;
+      ctx.font = `800 ${px}px Georgia, serif`;
+    }
+    return px;
+  };
   for (let i = 0; i < sN; i++) {
     const sx = 56 + i * (sW + sGap);
     if (!steps[i].k) continue;
     panel(sx, y, sW, sH, 12, "rgba(230,196,84,0.04)", GLINE, 1.5);
-    ctx.fillStyle = GSOFT; ctx.font = "800 17px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText(steps[i].k, sx + sW / 2, y + 22);
-    ctx.fillStyle = CREAM; ctx.font = "800 23px Georgia, serif"; ctx.fillText(steps[i].v, sx + sW / 2, y + 46);
+    ctx.fillStyle = GSOFT; ctx.textAlign = "center";
+    ctx.font = `800 ${fitFont(steps[i].k, sW - 14, 17)}px Georgia, serif`; ctx.fillText(steps[i].k, sx + sW / 2, y + 22);
+    ctx.fillStyle = CREAM;
+    ctx.font = `800 ${fitFont(steps[i].v, sW - 14, 23)}px Georgia, serif`; ctx.fillText(steps[i].v, sx + sW / 2, y + 46);
   }
   y += sH + 12;
 
