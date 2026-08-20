@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 20/08/2026 — f9914b8b (hint all-in, carimbo Perfil, forceUpdate PWA) + 74a118b5 (desktop, apelido offline-proof, cartas fantasmas) + Pixel dc7a6bdc — TUDO NO AR
+### Última atualização: 20/08/2026 05:35 — d78d3cc0 (Trajetória com todos os torneios + senha $1.000 → 2026) + 94317e8f + f9914b8b + 74a118b5 + Pixel dc7a6bdc — TUDO NO AR
 
 ---
 
@@ -283,6 +283,8 @@
 ---
 
 ## 📦 COMMITS RECENTES (20/08/2026 — todos LIVE em produção)
+- **d78d3cc0** — **Trajetória no Circuito conta TODOS os torneios disputados** (não só ITM): `TournamentCountPanel` agora mergeia o diário local completo (`loadResults` do Trophy Room, dedup por chave `buyIn:finishPlace:player_key`) com os resultados verified da nuvem; topo do painel mostra "X torneios disputados · Y vezes no dinheiro" com faixas separadas ($5/$11/$22/$55/$109/$1.000+) e badge ☁️ oficial quando a nuvem confirma. Gramática singular corrigida ("1 disputado"). **Cadeado do $1.000**: senha do gate elite109 trocada para **"2026"** (ProfileView + eliteSync); o destravar grava `recordTournamentWin(109,100,"inicio")` + `recordEliteWinCloud` e persiste em `cof-elite-wins`/`cof-elite-cloud`; `loadAllEliteWins()` faz união local+nuvem (anti-perda em limpeza de cache). Bug do espelho na Supabase corrigido (`buy_in_level` vs coluna errada) e **vitória de $109 do Allan JÁ registrada na nuvem** (ele nunca mais precisará de senha). Testado: unlock persiste após reload, faixa $1.000 abre direto, $10.300 continua 🔒.
+- **94317e8f** — MASTER atualizado com commits recentes + nota ICM fold
 - **f9914b8b** — `src/app/App.tsx`: hint da mesa quando vilão está all-in e a linha base recomenda raise → mostra **"All-in por cima"** (troca UI-only, motor intocado; detecção `Player.status === "allin"` + `canCall && callAmount>0`); **ProfileView**: card de versão agora mostra data E hora completa da última atualização ("Atualizado em DD/MM/AAAA HH:MM"); banner "Atualizar" do PWA usa **forceUpdate** (desregistra SW + limpa caches + recarrega da rede) — eficaz contra cache preso (queixa do Allan: versão antiga persistia mesmo após clicar em Atualizar)
 - **74a118b5** — Modo desktop (>=860px, só adição CSS; celular intacto): mesa grande centralizada, assentos/cartas maiores, seat do herói maior; `.felt/.table-wrap` overflow visible no desktop (feltro cortava assentos de cima/baixo → stats e ranges não abriam neles); NicknamePrompt offline-proof (torneio abre direto mesmo sem conexão — "volta ao início" corrigido); SessionHistoryPanel: cartas de naipes pretos em off-white (#e8e4d4) e vermelhas vivas (#e55b4f) — antes #1c1c1c invisível no fundo escuro ("cartas fantasmas")
 - **dc7a6bdc** — Meta Pixel 2895094507517479 instalado + og.png + sitemap/robots (19/08)
