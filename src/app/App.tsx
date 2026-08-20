@@ -310,7 +310,17 @@ export function App() {
 
   // Dica opcional: o que a linha de base recomendaria na sua vez.
   const advice = heroTurn ? controller.computeHeroAdvice() : null;
-  const hint = advice ? tr("hint.baseline", { action: adviceLabel(advice.action) }) : undefined;
+  // 20/08: quando o vilão JÁ ESTÁ all-in, a dica "raise/3-bet" não faz sentido
+  // (não existe raise contra all-in — só pagar, desistir ou ir all-in por cima).
+  // O texto da dica é ajustado aqui (camada de exibição, sem tocar no motor).
+  let adviceText = advice ? adviceLabel(advice.action) : undefined;
+  if (advice && (advice.action === "raise" || advice.action === "3bet")) {
+    const villainAllIn = t.players.some((p) => !p.isHero && p.status === "allin");
+    if (villainAllIn && la.canCall && la.callAmount > 0) {
+      adviceText = "All-in por cima";
+    }
+  }
+  const hint = adviceText ? tr("hint.baseline", { action: adviceText }) : undefined;
 
   // 17/08: splash NÃO-BLOQUEANTE — o app já monta por baixo enquanto a logo
   // aparece; o splash é só um overlay que some com fade (sem early return).
@@ -321,7 +331,7 @@ export function App() {
       {updateReady ? (
         <div className="update-banner">
           <span>✨ {tr("update.available")}</span>
-          <button className="btn primary" onClick={applyUpdate}>
+          <button className="btn primary" onClick={() => void forceUpdate()}>
             {tr("update.button")}
           </button>
         </div>
@@ -385,6 +395,7 @@ export function App() {
           onOpenAchievements={() => setAchievementsOpen(true)}
           onOpenHistory={() => setHistoryLogOpen(true)}
           buildLabel={formatBuild(__BUILD_ID__)}
+          fullBuildLabel={formatBuildFull(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}
         /></Suspense>
       ) : view === "importar" ? (
@@ -675,6 +686,17 @@ function formatBuild(iso: string): string {
   const p = (n: number) => String(n).padStart(2, "0");
   // Curto (DD/MM/AA) para caber na mesma linha do Simples/Técnico + idiomas.
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`;
+}
+
+/**
+ * Versão completa (DD/MM/AAAA HH:MM) do carimbo de versão — usada no Perfil
+ * para o jogador saber exatamente QUANDO o app foi atualizado pela última vez.
+ */
+function formatBuildFull(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 /**

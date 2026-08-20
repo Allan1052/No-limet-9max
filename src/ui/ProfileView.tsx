@@ -27,6 +27,7 @@ export function ProfileView({
   onOpenAchievements,
   onOpenHistory,
   buildLabel,
+  fullBuildLabel,
   onCheckUpdate,
 }: {
   gameVariant: "holdem" | "omaha";
@@ -37,6 +38,7 @@ export function ProfileView({
   onOpenAchievements: () => void;
   onOpenHistory: () => void;
   buildLabel: string;
+  fullBuildLabel: string;
   onCheckUpdate: () => void;
 }) {
   const { t } = useT();
@@ -254,6 +256,7 @@ export function ProfileView({
           <button className="btn tiny" onClick={onCheckUpdate}>
             🔄 {buildLabel}
           </button>
+          <span className="ps-note">Atualizado em {fullBuildLabel}</span>
         </div>
 
         <div className="profile-help">

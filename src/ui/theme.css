@@ -4237,6 +4237,7 @@ body {
   padding: 3px 0; min-height: 34px;
 }
 .profile-setting .ps-label { font-size: 14px; font-weight: 600; color: var(--ink, #ece7d6); }
+.profile-setting .ps-note { display: block; font-size: 12px; color: var(--gold, #c9a227); margin-top: 4px; }
 /* A linha "Instalar app" só faz sentido quando há botão de instalar. Quando o
    navegador não oferece instalação (ou o app já está instalado), o InstallButton
    não renderiza nada — aí colapsamos a linha pra não sobrar espaço vazio. */
