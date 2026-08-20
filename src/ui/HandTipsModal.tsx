@@ -159,6 +159,24 @@ export function HandTipsModal({
                     ? ")"
                     : ""}
               </div>
+              {it.betSizeBB && it.betSizeBB > 0 ? (
+                <div
+                  className="fb-size"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 6,
+                    padding: "2px 10px",
+                    borderRadius: 9,
+                    fontSize: "0.85em",
+                    fontWeight: 700,
+                    color: "#0b0f0d",
+                    background: "linear-gradient(180deg,#ecd07a,#c9a227)",
+                  }}
+                >
+                  💰 aposte ~{Math.round((it.betSizePct ?? 0) * 100)}% do pote · ≈ {it.betSizeBB}bb
+                  {(it.betSizePct ?? 0) > 1 ? " (overbet)" : ""}
+                </div>
+              ) : null}
               {tecnico && mixText(it.mix) ? (
                 <div className="fb-mix">
                   {t("panel.strategyLabel")}: {mixText(it.mix)}

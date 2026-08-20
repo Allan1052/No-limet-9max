@@ -661,17 +661,32 @@ export function heroBestAction(
     }
     return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço ${Math.round(neededEquity * 100)}%`, equity };
   }
-  // Tamanho ideal pelo board: molhado → grande (~⅔+) pra cobrar projetos;
-  // seco → pequena (~⅓) pra manter as mãos piores pagando. Par no board (travado)
-  // pede pequeno; board muito molhado pede maior.
-  const betPct = texture.paired ? 0.33 : texture.wetness > 0.6 ? 0.75 : texture.wetness > 0.4 ? 0.66 : 0.33;
-  const wet = betPct >= 0.5;
-  const sizeTip = wet
-    ? `aposta grande (~${Math.round(betPct * 100)}% do pote) pra cobrar os projetos`
-    : `aposta pequena (~${Math.round(betPct * 100)}% do pote) pra manter as piores pagando`;
-  if (equity >= 0.6) return { action: "betSmall", freq: 0.85, reason: `valor forte (equity ${p}%): ${sizeTip}`, equity, ...size(betPct) };
-  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%): aposta pequena (~33%), extrai um pouco sem inflar`, equity, ...size(0.33) };
-  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%): aposta pequena (~${Math.round(betPct * 100)}%) — fold equity + você melhora quando bate`, equity, ...size(betPct) };
+  // TAMANHO — não é só o board. Combina 3 coisas (como um solver faz na direção):
+  //   1) Textura: seco/travado → pequeno (~⅓); molhado → grande (~⅔/¾) pra cobrar
+  //      projetos.
+  //   2) FORÇA da sua mão vs o range dele (equity real): mão que esmaga o range
+  //      libera tamanho maior — e OVERBET quando o board é dinâmico/river, porque
+  //      aí o vilão ainda paga com 2º melhor e projetos ("ele te ocupa").
+  //   3) Board SECO com mão nuts → NÃO overbeta: aposta média, senão espanta as
+  //      piores e ninguém te paga.
+  const dryBase = texture.paired || texture.wetness <= 0.4;
+  let betPct = texture.paired ? 0.33 : texture.wetness > 0.6 ? 0.75 : texture.wetness > 0.4 ? 0.66 : 0.33;
+  const monster = hit.made === "trips+" || hit.made === "twoPairOrBetter";
+  const crushing = equity >= 0.8 || monster; // esmagando o range do vilão
+
+  if (equity >= 0.6) {
+    // Valor forte. Se está esmagando o range, sobe o tamanho conforme o board.
+    if (crushing) betPct = dryBase ? 0.66 : 1.25; // board seco → médio; dinâmico/river → OVERBET
+    const over = betPct > 1;
+    const tip = over
+      ? `dá pra OVERBET (~${Math.round(betPct * 100)}% do pote) — mão muito forte num board que paga: ele segue com 2º melhor e projetos`
+      : betPct >= 0.5
+        ? `aposta grande (~${Math.round(betPct * 100)}% do pote) pra cobrar os projetos e extrair valor`
+        : `aposta pequena (~${Math.round(betPct * 100)}% do pote) pra manter as piores pagando`;
+    return { action: "betSmall", freq: 0.85, reason: `valor forte (equity ${p}%): ${tip}`, equity, ...size(betPct) };
+  }
+  if (equity >= 0.5) return { action: "betSmall", freq: 0.55, reason: `valor fino + proteção (equity ${p}%): aposta pequena (~33%), extrai um pouco sem inflar (mão marginal não quer pote grande)`, equity, ...size(0.33) };
+  if (hit.draw && equity >= 0.34) return { action: "betSmall", freq: 0.65, reason: `semi-blefe com projeto (equity ${p}%): aposta ~${Math.round(betPct * 100)}% (mesmo tamanho do valor, pra equilibrar) — fold equity + você melhora quando bate`, equity, ...size(betPct) };
   return { action: "check", freq: 0.7, reason: `controle de pote (equity ${p}%): sem valor claro nem projeto forte, o check evita inflar o pote`, equity };
 }
 

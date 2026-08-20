@@ -976,6 +976,12 @@ export class GameController {
         ? (d.equity * (ctx.potSize + ctx.toCall) - ctx.toCall) / bb
         : undefined;
     const positionLabels = ["BB", "SB", "BTN", "CO", "HJ", "LJ", "MP", "UTG1", "UTG"];
+    // Tamanho recomendado (fração do pote → bb reais), quando o padrão é apostar
+    // ou aumentar. O motor já calcula por textura + polarização + overbet (river
+    // nos extremos). Aqui só o traduzimos em bb pra dica "aposte ~X% (≈ Ybb)".
+    const aggro = d.action === "bet" || d.action === "raise";
+    const betSizePct = aggro ? d.sizeToPot : undefined;
+    const betSizeBB = aggro && d.sizeToPot ? Math.round((d.sizeToPot * ctx.potSize / bb) * 10) / 10 : undefined;
     return {
       kind: "postflop",
       action: d.action,
@@ -987,6 +993,8 @@ export class GameController {
       evBB,
       stageLabel: this.tournament?.stage ?? undefined,
       heroPosition: positionLabels[seat % 9],
+      betSizePct,
+      betSizeBB,
     };
   }
 
