@@ -109,7 +109,7 @@ describe("handCommentary — classificação por mão", () => {
       { heroHand: hands.T9s, heroAction: "Fold", position: "UTG", preflop: true, rating: "boa" },
       "free",
     );
-    expect(c!.lines[0]).toMatch(/fold sem culpa|luxo|aceitável/i);
+    expect(c!.lines[0]).toMatch(/fold sem culpa|luxo|aceitável|equity morta/i);
   });
 
   it("KQo de UTG fold profundo: fold limpo", () => {
@@ -117,7 +117,7 @@ describe("handCommentary — classificação por mão", () => {
       { heroHand: hands.KQo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
       "free",
     );
-    expect(c!.lines[0]).toMatch(/fold limpo|o range tem que ser nobre/i);
+    expect(c!.lines[0]).toMatch(/não é covardia|equity morta/i);
   });
 
   it("A5s de BTN: abre com backdoor", () => {
@@ -133,7 +133,7 @@ describe("handCommentary — classificação por mão", () => {
       { heroHand: hands.A7o, heroAction: "Fold", position: "CO", preflop: true },
       "free",
     );
-    expect(c!.lines[0]).toMatch(/quase sempre fold|Ás alto/i);
+    expect(c!.lines[0]).toMatch(/quase sempre fold|Ás alto|não é covardia/i);
   });
 
   it("mão com <2 cartas: null", () => {
@@ -147,6 +147,64 @@ describe("handCommentary — classificação por mão", () => {
       "free",
     );
     expect(c!.lines[0]).toMatch(/pós-flop|desistir|sem Ás/i);
+  });
+});
+
+describe("handCommentary — spots de resposta pré-flop", () => {
+  it("3-bet de LP: punição ao roubo", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.A5s, heroAction: "3-bet", position: "BTN", heroBB: 100, preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/pune o roubo|imprime|squeeze/i);
+  });
+  it("3-bet de UTG: declaração de guerra", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.AKs, heroAction: "3-bet", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+      "technical",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/declaração de guerra|QQ\+, AK|~46% de equity/i);
+  });
+  it("4-bet: linha dos extremos", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.AA, heroAction: "4-bet", position: "CO", heroBB: 100, preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/linha dos extremos|AA\/KK\/AK/i);
+  });
+  it("call de 3-bet: arma de posição", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.KQo, heroAction: "Call", position: "BTN", heroBB: 100, preflop: true, rating: "ok" },
+      "free",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/arma de posição|TT\/AJs\/KQs/i);
+  });
+  it("fold a 3-bet de early: aritmética", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.KJo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+      "technical",
+    );
+    expect(c).not.toBeNull();
+    expect(c!.lines[0]).toMatch(/não é covardia|equity morta|66%|abre em ~100% do range/i);
+  });
+  it("stack curto muda a resposta", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.A5s, heroAction: "3-bet", position: "BTN", heroBB: 12, preflop: true, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/stack curto|push\/fold/i);
+  });
+  it("pós-flop ignora o branch de resposta", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.KJo, heroAction: "Call", position: "BTN", preflop: false, rating: "boa" },
+      "free",
+    );
+    expect(c!.lines[0]).not.toMatch(/linha dos extremos|arma de posição/i);
+    expect(c!.lines[0]).toMatch(/pós-flop|sem Ás/i);
   });
 });
 

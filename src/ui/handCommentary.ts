@@ -154,6 +154,71 @@ export function sizingPhrases(s: NonNullable<ReturnType<typeof readHeroSizing>>)
 }
 
 // ---------------------------------------------------------------------------
+// Spots de RESPOSTA pré-flop — 3-bet / 4-bet / call de 3-bet / fold a 3-bet
+// (UI-only, não toca no motor. Derivado do rótulo da ação + posição + stack.)
+// ---------------------------------------------------------------------------
+/** Lê o spot de resposta pré-flop do ctx. null fora de spot de resposta. */
+export function readResponseSpot(ctx: HandCommentCtx): "3bet" | "4bet" | "call3bet" | "fold3bet" | null {
+  if (!ctx.preflop) return null;
+  const act = (ctx.heroAction ?? "").trim();
+  if (act === "3-bet") return "3bet";
+  if (act === "4-bet") return "4bet";
+  if (act === "Call") return "call3bet"; // call pré-flop = face a aposta do vilão
+  if (act === "Fold") return "fold3bet";
+  return null;
+}
+/** Posição do herói em classes: early (UTG/UTG1/MP) ou late (HJ/CO/BTN/SB/BB). */
+function posClass(pos?: string): "early" | "late" {
+  const p = (pos ?? "").trim().toUpperCase();
+  if (p.startsWith("UTG") || p === "MP") return "early";
+  return "late";
+}
+/**
+ * Frases de spots de resposta pré-flop — condicionadas à posição do agressor
+ * (herói early vs late) e à profundidade de stack.
+ * Modo free = 0, modo técnico = 1.
+ */
+export function responsePhrases(
+  spot: "3bet" | "4bet" | "call3bet" | "fold3bet",
+  pos: ReturnType<typeof posClass>,
+  effBB: number,
+): string[] {
+  const deep = effBB >= 40;
+  const stackNote = deep ? "" : " stack curto — a decisão vira push/fold";
+  // ---- Herói 3-betou (respondeu a um open) ----
+  if (spot === "3bet") {
+    if (pos === "late") {
+      return [
+        `3-bet de posição tardia pune o roubo: o campo abre demais de BTN/CO e um 3-bet aqui imprime — squeeze com range amplo que não precisa de carta.${stackNote}`,
+        `3-bet de BTN/CO (squeeze): a frequência correta é agressiva porque o range de open tardio é largo — polariza entre valor (QQ+, AK) e blefe com bloqueadores (A5s, K9s). Em <20bb o squeeze vira shove puro; com ${Math.round(effBB)}bb ainda existe fold equity pós-flop.`,
+      ];
+    }
+    return [
+      `3-bet de posição cedo é declaração de guerra: de UTG/MP só continua com o topo absoluto — QQ+, AK.${stackNote}`,
+      `3-bet de UTG/MP: range linear de valor (QQ+, AKs) porque a posição anterior garante respeito. Em ~20bb ou menos (${Math.round(effBB)}bb agora), o 3-bet vira push/fold — sem espaço pra jogar pós-flop.`,
+    ];
+  }
+  // ---- Herói 4-betou (respondeu a um 3-bet) ----
+  if (spot === "4bet") {
+    return [
+      `4-bet é a linha dos extremos: AA/KK/AK de valor, A5s-A2s de blefe — e quase nada no meio. Quem 4-beta com mãos médias convida o shove do vilão.${stackNote}`,
+      `4-bet (matriz polarizada): valor = AA/KK/AQs+/AKo; blefe = Ax suited fracos que bloqueiam as mãos de call do vilão. Com ${Math.round(effBB)}bb, o 4-bet vira shove — call pós-flop com stack comprimido é jogar a vida em coin flip.`,
+    ];
+  }
+  // ---- Herói pagou um 3-bet ----
+  if (spot === "call3bet") {
+    return [
+      `Call de 3-bet é arma de posição: TT/AJs/KQs pagam de BTN/CO porque jogam bem o pós-flop com iniciativa do vilão — mãos que flopmam bem e escondem força.${stackNote}`,
+      `Call vs 3-bet (chamada defensiva): de posição tardia funciona com suited que flopmam forte (TT, AJs, KQs) — implied odds e disfarce. De UTG contra 3-bet de UTG, o call é quase sempre errado: 4-bet ou fold.${deep ? "" : ` Com ${Math.round(effBB)}bb, o call perde implied odds — shove ou fold.`}`,
+    ];
+  }
+  // ---- Herói foldou frente a um 3-bet ----
+  return [
+    `Fold frente a 3-bet de posição cedo não é covardia — é aritmética: o range de 3-bet de UTG é tão forte que KJo/AQo viram equity morta na hora.${stackNote}`,
+    `Fold vs 3-bet (defesa de fold da matriz): de early, o vilão precisa de ~66% de fold equity pra lucrar — mãos marginais (KJo, ATo, QJ) devem largar. ${deep ? "Com stack fundo, o fold preserva fichas pro spot certo." : `Com ${Math.round(effBB)}bb, a matemática muda: shove ou call com odds diretas pode superar o fold.`}`,
+  ];
+}
+// ---------------------------------------------------------------------------
 // Classificação da mão
 // ---------------------------------------------------------------------------
 
@@ -651,7 +716,12 @@ export function getHandCommentary(ctx: HandCommentCtx, mode: "free" | "technical
   // Sizing: quando o herói apostou/raiseou, o coach comenta o tamanho.
   const sizing = readHeroSizing(ctx);
   let line: string;
-  if (tex && !ctx.preflop) {
+  // Spot de resposta pré-flop: o coach comenta a linha de resposta escolhida.
+  const resp = readResponseSpot(ctx);
+  if (resp && ctx.preflop) {
+    const respLine = responsePhrases(resp, posClass(ctx.position), ctx.heroBB ?? 100)[mode === "technical" ? 1 : 0];
+    line = mode === "technical" ? (rawLines[1] ?? respLine) : respLine;
+  } else if (tex && !ctx.preflop) {
     const base = mode === "technical" ? (rawLines[1] ?? rawLines[0]) : rawLines[0];
     const texLine = texturePhrases(ctx, tex)[mode === "technical" ? 1 : 0];
     line = `${base} — ${texLine.charAt(0).toLowerCase() === "b" && texLine.startsWith("Board")
