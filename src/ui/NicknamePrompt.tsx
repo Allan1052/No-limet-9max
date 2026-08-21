@@ -69,6 +69,10 @@ export function NicknamePrompt({
     setSaving(false);
 
     if (result.success && result.nickname) {
+      // Rastreia o "cadastro" (escolha do apelido) no Umami
+      import("../app/analytics").then(({ trackEvent }) => {
+        trackEvent("signup", { nickname: result.nickname });
+      });
       onDone(result.nickname);
       return;
     }

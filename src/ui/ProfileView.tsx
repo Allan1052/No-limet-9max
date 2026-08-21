@@ -122,6 +122,7 @@ export function ProfileView({
     typeof window !== "undefined" ? window.location.origin : "https://calloufold.com.br";
   const shareApp = () => {
     const text = t("profile.shareText");
+    import("../app/analytics").then(({ trackEvent }) => trackEvent("share_app"));
     if (typeof navigator !== "undefined" && navigator.share) {
       navigator.share({ title: "Call ou Fold", text, url: appUrl }).catch(() => {});
     } else {
@@ -130,6 +131,7 @@ export function ProfileView({
   };
   const inviteFriend = () => {
     const text = t("profile.inviteText");
+    import("../app/analytics").then(({ trackEvent }) => trackEvent("invite_friend"));
     window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${appUrl}`)}`, "_blank");
   };
 
@@ -267,7 +269,13 @@ export function ProfileView({
           <div className="profile-help-title">🤝 {t("profile.helpTitle")}</div>
           <div className="profile-help-note">{t("profile.helpNote")}</div>
           <div className="profile-help-row">
-            <button className="btn profile-help-btn" onClick={() => window.open(INSTAGRAM_URL, "_blank")}>
+            <button
+              className="btn profile-help-btn"
+              onClick={() => {
+                import("../app/analytics").then(({ trackEvent }) => trackEvent("click_instagram"));
+                window.open(INSTAGRAM_URL, "_blank");
+              }}
+            >
               📸 {t("profile.follow")}
             </button>
             <button className="btn profile-help-btn" onClick={shareApp}>
