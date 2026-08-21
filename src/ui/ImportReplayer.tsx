@@ -429,13 +429,16 @@ export function ImportReplayer({
       const seat = hand.seats.find((s) => s.name === nm)?.seat;
       if (seat !== undefined && cards.length > 0) holeCards[seat] = cards;
     }
+    const bbChips = hand.bb || 1;
     const events = hand.actions.map((a: ParsedAction) => {
       const seat = hand.seats.find((s) => s.name === a.player)?.seat ?? 0;
       const isHero = a.player === (hand.heroName ?? "Você");
       const type = String(a.type);
       let label = ACTION_PT[type] ?? type;
-      if (a.amount > 0 && (type === "bet" || type === "raise" || type === "allin")) {
-        label = `${label} ${Math.round(a.amount)}`;
+      // Valores em BB (o parser guarda FICHAS) — senão o card mostra "Aposta 300"
+      // em vez de "Aposta 3.5bb". Vale pra aposta/raise/all-in/call.
+      if (a.amount > 0 && (type === "bet" || type === "raise" || type === "allin" || type === "call")) {
+        label = `${label} ${fmtBB(a.amount, bbChips)}`;
       }
       if (a.allIn && type !== "allin") label = `${label} (all-in)`;
       return {
@@ -449,11 +452,30 @@ export function ImportReplayer({
         pot: a.amount,
       };
     });
+
+    // POTE FINAL real (em fichas) — o card usa isso pra mostrar "POTE Xbb" e pra
+    // calcular o % da aposta. Antes ia zerado (pots:[{amount:0}]) e o pote sumia.
+    let potChips = 0;
+    let comm: Record<string, number> = {};
+    let curSt: string | null = null;
+    for (const a of hand.actions) {
+      if (a.street !== curSt) { comm = {}; curSt = a.street; }
+      if (a.type === "sb" || a.type === "bb" || a.type === "ante" || a.type === "call" || a.type === "bet") {
+        potChips += a.amount;
+        comm[a.player] = (comm[a.player] ?? 0) + a.amount;
+      } else if (a.type === "raise") {
+        const delta = Math.max(0, a.amount - (comm[a.player] ?? 0));
+        potChips += delta;
+        comm[a.player] = a.amount;
+      } else if (a.type === "uncalled") {
+        potChips = Math.max(0, potChips - a.amount);
+      }
+    }
     const showdown: any =
       Object.keys(hand.shownCards ?? {}).length > 0 || (hand.winners ?? []).length > 0
         ? {
             showdown: true,
-            pots: [{ amount: 0 }],
+            pots: [{ amount: potChips }],
             winningsBySeat: (hand.winners ?? []).reduce<Record<string, number>>((o, nm) => {
               const seat = hand.seats.find((s) => s.name === nm)?.seat;
               if (seat !== undefined) o[String(seat)] = 1;
@@ -648,16 +670,6 @@ export function ImportReplayer({
                   💰 aposte ~{Math.round((coachFb.betSizePct ?? 0) * 100)}% do pote · ≈ {coachFb.betSizeBB}bb
                 </span>
               ) : null}
-              {/* Botão Gerar card (versão compacta/erro): só aparece se for erro/imprecisa para não poluir a barra em acertos. */}
-              {(!good || alt) && (
-                <button
-                  className="ir-card-btn-pill"
-                  onClick={handleShareCard}
-                  title="Gerar card deste erro"
-                >
-                  🃏 Gerar card
-                </button>
-              )}
               {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
             </span>
           </div>

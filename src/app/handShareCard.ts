@@ -455,15 +455,29 @@ export function shareDataFromHand(
     : undefined;
   if (effectiveBB !== undefined) contextParts.push(`Stack: ${effectiveBB}bb`);
 
+  // Chave de rua canônica: os eventos usam "flop"/"turn" e o feedback usa
+  // "Flop"/"Pré-flop" — sem normalizar, o rótulo com valor ("Aposta 3.5bb") não
+  // casava e o card mostrava só "Aposta" (e o % lia o stack). Aqui alinhamos.
+  const normStreet = (s: string): string => {
+    const t = (s || "").toLowerCase();
+    if (t.startsWith("pr")) return "preflop";
+    if (t.startsWith("fl")) return "flop";
+    if (t.startsWith("tu")) return "turn";
+    if (t.startsWith("ri")) return "river";
+    return t;
+  };
   const byStreet = new Map<string, (typeof feedback)[0]>();
   for (const it of feedback) byStreet.set(it.street, it);
   const heroStreetLabel = new Map<string, string>();
-  for (const ev of hand.events) if (ev.isHero) heroStreetLabel.set(ev.street, ev.actionLabel);
+  for (const ev of hand.events) if (ev.isHero) heroStreetLabel.set(normStreet(ev.street), ev.actionLabel);
   const decisions = [...byStreet.values()].map((it) => ({
     street: it.street,
-    action: heroStreetLabel.get(it.street) ?? it.heroAction,
+    action: heroStreetLabel.get(normStreet(it.street)) ?? it.heroAction,
     correct: it.rating === "boa" || it.rating === "ok",
   }));
+  // Ação do herói na ÚLTIMA rua COM o valor (ex.: "Aposta 20bb") — o card usa
+  // isso pra "SUA AÇÃO" e pro % da aposta; sem o valor, o % pegava o stack.
+  const lastHeroLabel = heroStreetLabel.get(normStreet(lastItem.street));
 
   const streetCorrect = new Map<string, boolean>();
   for (const it of feedback) streetCorrect.set(it.street, it.rating === "boa" || it.rating === "ok");
@@ -511,7 +525,7 @@ export function shareDataFromHand(
   return {
     heroCards,
     board: hand.finalBoard,
-    heroAction: lastItem.heroAction.toUpperCase(),
+    heroAction: (lastHeroLabel ?? lastItem.heroAction).toUpperCase(),
     coachAction: lastItem.advice.toUpperCase(),
     rating: lastItem.rating as HandShareData["rating"],
     coachTip: lastItem.text,
@@ -699,9 +713,13 @@ async function drawDecisionCard(
   // aposta). O pote final (poteBB) já inclui a sua aposta + o call do vilão — por
   // isso dava 30% em vez de 75% (bug pego pelo Allan). O pote-antes é o registro
   // da rua ANTERIOR no potByStreet; se faltar, deduz do final (−aposta −call).
+  // Preferimos deduzir do pote FINAL (aposta + call do vilão): pote-antes =
+  // final − 2×aposta. É robusto pros dois caminhos (jogo e import), onde o
+  // potByStreet tem semânticas diferentes. Fallbacks: penúltimo registro; pote.
   const potIntoBet =
-    potVals.length >= 2 ? potVals[potVals.length - 2]
-    : (betBB && poteBB && poteBB - 2 * betBB > 0 ? poteBB - 2 * betBB : poteBB);
+    betBB && poteBB && poteBB - 2 * betBB > 0.5 ? poteBB - 2 * betBB
+    : potVals.length >= 2 ? potVals[potVals.length - 2]
+    : poteBB;
   const pctPot = betBB && potIntoBet ? Math.round((betBB / potIntoBet) * 100) : undefined;
   const bW = (W - 112 - 10) / 2, bH = 62;
   panel(56, y, bW * 0.82, bH, 13, "rgba(230,196,84,0.05)", GLINE);
