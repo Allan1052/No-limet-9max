@@ -648,13 +648,16 @@ export function ImportReplayer({
                   💰 aposte ~{Math.round((coachFb.betSizePct ?? 0) * 100)}% do pote · ≈ {coachFb.betSizeBB}bb
                 </span>
               ) : null}
-              <button
-                className="ir-card-btn"
-                onClick={handleShareCard}
-                title="Gerar card da mão (com o veredito do coach)"
-              >
-                🃏 Gerar card
-              </button>
+              {/* Botão Gerar card (versão compacta/erro): só aparece se for erro/imprecisa para não poluir a barra em acertos. */}
+              {(!good || alt) && (
+                <button
+                  className="ir-card-btn-pill"
+                  onClick={handleShareCard}
+                  title="Gerar card deste erro"
+                >
+                  🃏 Gerar card
+                </button>
+              )}
               {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
             </span>
           </div>
@@ -738,17 +741,24 @@ export function ImportReplayer({
                   {report?.situation ? (
                     <div className="ir-situ">{report.situation}</div>
                   ) : null}
-                  {session ? (
+                  <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                     <button
                       className="btn primary"
-                      style={{ marginTop: 14, width: "100%" }}
-                      onClick={() => setShowDiag(true)}
+                      style={{ flex: 1, background: "linear-gradient(180deg, #c9a227, #b08d1f)", color: "#000" }}
+                      onClick={handleShareCard}
                     >
-                      {isLastHand
-                        ? "🏁 Ver diagnóstico da sessão"
-                        : "🏁 Diagnóstico da sessão (pontos fortes e fracos)"}
+                      🃏 Gerar card da mão
                     </button>
-                  ) : null}
+                    {session ? (
+                      <button
+                        className="btn primary"
+                        style={{ flex: 1 }}
+                        onClick={() => setShowDiag(true)}
+                      >
+                        {isLastHand ? "🏁 Diagnóstico" : "🏁 Ver diagnóstico"}
+                      </button>
+                    ) : null}
+                  </div>
                 </>
               );
             })()}
