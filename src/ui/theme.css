@@ -552,6 +552,54 @@ body {
 .play { max-width: 620px; margin: 0 auto; }
 .play .controls { margin-top: 10px; }
 
+/* Desktop adjustments */
+@media (min-width: 900px) {
+  body {
+    background: radial-gradient(circle at 50% 50%, #1a2e24 0%, var(--bg) 85%);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  #root {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  .app {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+    flex: 0 1 auto;
+    padding-bottom: 20px;
+  }
+  .play {
+    max-width: 980px;
+    width: 100%;
+  }
+  .table-wrap {
+    aspect-ratio: 16 / 9;
+    max-height: 65vh;
+  }
+  .felt {
+    border-radius: 46% / 75%;
+    inset: 2% 6%;
+  }
+  .tbl-center-col {
+    top: 45%;
+  }
+  .center {
+    top: 45%;
+  }
+  .controls {
+    margin-top: 0;
+    position: relative;
+    z-index: 10;
+  }
+}
+
 /* ---- Mesa ---- */
 .table-wrap {
   position: relative;
