@@ -70,10 +70,68 @@
       }
     }
     </script>
-  <script type="module" crossorigin src="/assets/main-DTlVXVlo.js"></script>
+  <script>
+    // Definição contra cache preso do in-app browser (Instagram/WhatsApp):
+    // o WebView do Instagram segura o HTML por dias. Este script:
+    // 1) pede o sw.js mais novo da rede (ignora o cache do WebView) e registra
+    //    — se houver SW novo, ele troca o precache (inclui o index.html novo);
+    // 2) se o SW ativo for antigo, envia SKIP_WAITING para assumir de imediato;
+    // 3) se o main.js do <head> der 404 (HTML antigo + servidor novo), faz
+    //    hard reload com ?u= agora, limpando SW/caches antes.
+    (function() {
+      try {
+        if ('serviceWorker' in navigator) {
+          fetch('/sw.js', { cache: 'no-store' }).then(function(res) {
+            if (!res.ok) return;
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }).catch(function() {});
+          }).catch(function() {});
+        }
+        // verifica se o bundle do head existe no servidor (prova de que o HTML é atual)
+        var mod = document.querySelector('script[type="module"]');
+        if (mod && mod.src) {
+          fetch(mod.src, { method: 'HEAD' }).then(function(res) {
+            if (!res.ok) location.reload();
+          }).catch(function() { /* rede instável: deixa o script de error handler cuidar */ });
+        }
+        // in-app browser (Instagram/WhatsApp): o HTML pode estar preso no
+        // precache do SW. Pede o index.html da REDE (ignora cache) e compara
+        // o bundle que ele referencia: se for diferente do atual, o HTML é
+        // velho — limpa tudo e recarrega com cache-buster.
+        if (mod && mod.src) {
+          var currentBundle = mod.src.split('/').pop();
+          fetch('/index.html', { cache: 'no-store', headers: { 'Accept': 'text/html' } })
+            .then(function(res) {
+              if (!res.ok) return;
+              return res.text().then(function(html) {
+                var m = html.match(/\/assets\/main-[A-Za-z0-9_-]+\.js/);
+                if (m && m[0].split('/').pop() !== currentBundle) {
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                      regs.forEach(function(r) { r.unregister(); });
+                    });
+                  }
+                  if (typeof caches !== 'undefined') {
+                    try {
+                      caches.keys().then(function(keys) {
+                        keys.forEach(function(k) { caches.delete(k); });
+                      });
+                    } catch (e) { /* ignorar */ }
+                  }
+                  location.href = '/?u=' + Date.now();
+                }
+              });
+            })
+            .catch(function() { /* rede instável: sem ação */ });
+        }
+      } catch (e) { /* ignorar */ }
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/main-5GvHoB1r.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-core-BjM7MxLi.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-CI47-K9F.js">
-  <link rel="modulepreload" crossorigin href="/assets/theme-WPDDLTyl.js">
+  <link rel="modulepreload" crossorigin href="/assets/theme-ZYyX5oI8.js">
   <link rel="stylesheet" crossorigin href="/assets/theme-DNgW3P3i.css">
   <link rel="stylesheet" crossorigin href="/assets/main-RmRA6gsZ.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -125,16 +183,22 @@ não-bloqueante por cima do app já montando. -->
         if (e.filename && e.filename.includes('/assets/')) {
           // Provavelmente um bundle antigo que não existe mais no servidor
           console.warn('Bundle antigo não encontrado, fazendo hard reload...');
-          if ('serviceWorker' in navigator) {
+          // limpeza síncrona + redirecionamento com cache-buster (resolve
+          // HTML/bundle antigos presos no cache do in-app browser)
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ALL' });
             navigator.serviceWorker.getRegistrations().then(function(regs) {
               regs.forEach(function(r) { r.unregister(); });
             });
           }
           if (typeof caches !== 'undefined') {
-            caches.keys().then(function(keys) {
-              keys.forEach(function(k) { caches.delete(k); });
-            });
+            try {
+              caches.keys().then(function(keys) {
+                keys.forEach(function(k) { caches.delete(k); });
+              });
+            } catch (err2) { /* ignorar */ }
           }
+          localStorage.removeItem('cof-sw-version');
           var url = location.href;
           if (url.indexOf('?u=') === -1) {
             location.href = url + (url.indexOf('?') === -1 ? '?' : '&') + 'u=' + Date.now();
