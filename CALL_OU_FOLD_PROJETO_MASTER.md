@@ -1,6 +1,6 @@
 # 🃏 CALL OU FOLD — PROJETO MASTER
 ## Documento de Contexto Permanente
-### Última atualização: 21/08/2026 — 9c75a046 (chip de sizing ao vivo "💰 coach: ~Xbb" na mesa + botão "🃏 Gerar card" no replayer com modo erro "O ERRO QUE CUSTOU FICHAS"/"APOSTA CERTA ~Xbb") — TUDO NO AR (bundle `main-IN9VtTlt.js` verificado em produção)
+### Última atualização: 21/08/2026 — 8606ccc5 (fix cache-busting contra in-app browser do Instagram: fetch no-store do sw.js + comparação do bundle principal com o da rede + reload forçado com limpeza de SW/caches; bundle atual main-Bs46kgyR.js) — TUDO NO AR
 ### Histórico: 002d3a11 (sizing) + 625b0ff6 (textura) + 8d6b4f7f (master) + 20/08/2026 19:30 — b23b6729 (cards GTO: Ás forte separado do fraco, hiperboles em linguagem de frequência, vocabulário técnico 12x, frases ICM/bolha) + 48192f24 (master docs) + 56e5b551 (landing pública alinhada: SEO/OG + features novas + planos 100% grátis) + 268c3442 (landing + polimento CSS abas) — TUDO NO AR
 
 ---
