@@ -24,9 +24,12 @@ interface ControlsProps {
   isOmaha?: boolean; // Indica se é Omaha (PLO)
   /** Valor sugerido para o slider começar (pré-flop: abertura padrão + limpers). */
   defaultRaiseTo?: number;
+  /** Tamanho de aposta recomendado pelo coach neste spot (em bb), quando a linha
+   * certa é agressiva. Renderiza o chip dourado "💰 ~Xbb" ao vivo na mesa. */
+  coachBetSize?: number;
 }
 
-export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false, defaultRaiseTo }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false, defaultRaiseTo, coachBetSize }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
@@ -133,6 +136,24 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         />
         <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
       </div>
+      {active && coachBetSize && coachBetSize > 0 ? (
+        <div className="coach-size-hint">
+          <span
+            style={{
+              display: "inline-block",
+              padding: "4px 12px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#0b0f0d",
+              background: "linear-gradient(180deg,#ecd07a,#c9a227)",
+            }}
+            title="Tamanho sugerido pelo coach para esta rua"
+          >
+            💰 coach: ~{Math.round(coachBetSize)}bb
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

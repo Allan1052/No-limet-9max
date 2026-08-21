@@ -483,6 +483,19 @@ export function App() {
               onAction={heroAct}
               isOmaha={t.variant === "omaha"}
               defaultRaiseTo={controller.suggestedRaiseTo()}
+              coachBetSize={(() => {
+                // Sizing ao vivo: o coach mostra o tamanho certo ANTES da decisão.
+                // Pós-flop vem do advice (bet/raise); pré-flop, do suggestedRaiseTo.
+                const adv = controller.computeHeroAdvice();
+                const bb = t.bigBlind || 1;
+                const aggro = adv && ["bet", "raise", "3bet", "jam"].includes(adv.action);
+                if (aggro && adv && adv.betSizeBB && adv.betSizeBB > 0) return adv.betSizeBB;
+                if (aggro && adv && adv.kind === "preflop") {
+                  const to = controller.suggestedRaiseTo();
+                  return to ? Math.round((to / bb) * 10) / 10 : undefined;
+                }
+                return undefined;
+              })()}
             />
                     )}
         </div>

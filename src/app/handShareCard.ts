@@ -7,7 +7,8 @@
 // Modo "tecnico": com matemática — equity, potOdds, evBB (só se existirem).
 // ---------------------------------------------------------------------------
 import { rankOf, suitOf, RANKS, makeCard, type Card } from "../engine/cards";
-import type { Rating } from "../feedback/analyzer";
+import type { HandHistory, ReplayEvent } from "../app/replay";
+import type { FeedbackItem, Rating } from "../feedback/analyzer";
 import { LOGO_CF_BASE64 } from "./logoCfBase64";
 import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
 import { buildHandStory } from "./handNarrative";
@@ -31,7 +32,7 @@ export type ShareCardMode = "simples" | "tecnico";
 /** Tipo de card: "decisao" = card da mão/decisão (padrão, simétrico ao modo
  *  simples/técnico); "historico" = card com o histórico completo da mão, rua por
  *  rua, com os valores apostados — feito para postar em carrossel no Instagram. */
-export type ShareCardType = "decisao" | "historico" | "narrativa";
+export type ShareCardType = "decisao" | "historico" | "narrativa" | "erro";
 
 export interface ShareCardOptions {
   mode?: ShareCardMode;
@@ -219,6 +220,10 @@ export interface HandShareData {
   potByStreet?: Record<string, number>;
   /** Pote total da mão (em big blinds) — usado quando não há rua específica. */
   finalPotBB?: number;
+  /** CARD DO ERRO (modo "erro"): o coach destaca o tamanho de aposta certo da rua
+   *  em que o herói errou (ex.: "O certo era ~9bb"). Quando presente, o card mostra
+   *  o badge "O CERTO ERA..." e a caixa "APOSTA CERTA" em vez do RESULTADO comum. */
+  mistakeFixBB?: number;
   /** SHOWDOWN: a mão revelada de cada jogador que mostrou as cartas.
    *  O herói entra com isHero: true. `won` indica se aquele jogador levou o pote. */
   showdown?: { name: string; cards: Card[]; isHero: boolean; won: boolean }[];
@@ -422,14 +427,121 @@ export async function drawHandShareCard(
 ): Promise<Blob | null> {
   if (cardType === "historico") return drawHistoryCard(data);
   if (cardType === "narrativa") return drawNarrativeCard(data);
-  return drawDecisionCard(data, mode);
+  // Card do erro: disparado pelo modo explícito OU quando há um sizing-correção
+  // (mistakeFixBB) e a nota NÃO é boa/ok ("ruim" ou "imprecisa").
+  const notGood = data.rating !== "boa" && data.rating !== "ok";
+  return drawDecisionCard(data, mode, cardType === "erro" || (!!data.mistakeFixBB && notGood));
+}
+
+/** Builder reutilizável de HandShareData a partir de uma mão (HandHistory) e o
+ *  feedback do analyzer — usado pelo painel HandActions e também pelo replayer
+ *  de importação (que pode marcar a rua do erro com mistakeFixBB: o sizing que
+ *  o coach mandaria, ex.: "~9bb" no 3-bet). */
+export function shareDataFromHand(
+  hand: HandHistory,
+  feedback: FeedbackItem[],
+  opts?: { mistakeFixBB?: number },
+): HandShareData | null {
+  if (feedback.length === 0) return null;
+  const lastItem = feedback[feedback.length - 1];
+  const heroCards = hand.holeCards[hand.heroSeat] ?? [];
+
+  const contextParts: string[] = [];
+  if (lastItem.equity !== undefined) contextParts.push(`Equity: ${Math.round(lastItem.equity * 100)}%`);
+  if (lastItem.potOdds !== undefined) contextParts.push(`Preço: ${Math.round(lastItem.potOdds * 100)}%`);
+  if (lastItem.evBB !== undefined) contextParts.push(`EV call: ${lastItem.evBB.toFixed(1)}bb`);
+  const effectiveBB = hand.startingStacks?.[hand.heroSeat]
+    ? Math.round(hand.startingStacks[hand.heroSeat] / hand.bigBlind)
+    : undefined;
+  if (effectiveBB !== undefined) contextParts.push(`Stack: ${effectiveBB}bb`);
+
+  const byStreet = new Map<string, (typeof feedback)[0]>();
+  for (const it of feedback) byStreet.set(it.street, it);
+  const heroStreetLabel = new Map<string, string>();
+  for (const ev of hand.events) if (ev.isHero) heroStreetLabel.set(ev.street, ev.actionLabel);
+  const decisions = [...byStreet.values()].map((it) => ({
+    street: it.street,
+    action: heroStreetLabel.get(it.street) ?? it.heroAction,
+    correct: it.rating === "boa" || it.rating === "ok",
+  }));
+
+  const streetCorrect = new Map<string, boolean>();
+  for (const it of feedback) streetCorrect.set(it.street, it.rating === "boa" || it.rating === "ok");
+  const actionLog: ActionLogEntry[] = hand.events.map((ev: ReplayEvent) => ({
+    who: ev.isHero ? "Você" : (ev.name ?? "Vilão"),
+    action: ev.actionLabel,
+    street: ev.street,
+    isHero: ev.isHero,
+    correct: ev.isHero ? streetCorrect.get(ev.street) : undefined,
+  }));
+
+  // Pote por rua: soma das ações de bet/raise da rua (aproximação do replay).
+  const potByStreet: Record<string, number> = {};
+  for (const ev of hand.events) {
+    if (ev.actionType !== "bet" && ev.actionType !== "raise") continue;
+    const v = Math.round((ev.pot / Math.max(1, hand.bigBlind)) * 10) / 10;
+    potByStreet[ev.street] = Math.round(((potByStreet[ev.street] ?? 0) + v) * 10) / 10;
+  }
+  let finalPotBB: number | undefined;
+  if (hand.result) {
+    const total = hand.result.pots.reduce((s, p) => s + p.amount, 0);
+    if (total > 0) finalPotBB = Math.round((total / hand.bigBlind) * 10) / 10;
+  }
+
+  let showdown: HandShareData["showdown"];
+  if (hand.result?.showdown === true && hand.result.winningsBySeat) {
+    const shown = hand.result.handValueBySeat;
+    const reachedShowdown = (seat: number) =>
+      !shown || Object.keys(shown).length === 0 || shown[seat] !== undefined;
+    showdown = Object.entries(hand.holeCards)
+      .filter(([seatStr]) => reachedShowdown(Number(seatStr)))
+      .map(([seatStr, cards]) => {
+        const seat = Number(seatStr);
+        const won = ((hand.result?.winningsBySeat as Record<string, number> | undefined)?.[seatStr] ?? 0) > 0;
+        return {
+          name: hand.names?.[seat] ?? (seat === hand.heroSeat ? "Você" : "Vilão"),
+          cards,
+          isHero: seat === hand.heroSeat,
+          won,
+        };
+      })
+      .filter((p) => p.cards.length > 0);
+  }
+
+  return {
+    heroCards,
+    board: hand.finalBoard,
+    heroAction: lastItem.heroAction.toUpperCase(),
+    coachAction: lastItem.advice.toUpperCase(),
+    rating: lastItem.rating as HandShareData["rating"],
+    coachTip: lastItem.text,
+    street: lastItem.street,
+    tournamentInfo: "Call ou Fold · Simulador grátis",
+    context: contextParts.length > 0 ? contextParts.join(" · ") : "",
+    position: hand.heroPosition ?? "MP",
+    stackBB: effectiveBB !== undefined ? `${effectiveBB}bb` : "100bb",
+    stage: hand.tournamentStage,
+    equity: lastItem.equity,
+    potOdds: lastItem.potOdds,
+    evBB: lastItem.evBB,
+    decisions,
+    actionLog,
+    potByStreet,
+    finalPotBB,
+    showdown,
+    mistakeFixBB: opts?.mistakeFixBB,
+  };
 }
 
 // ── Card da DECISÃO — "SHOWDOWN" premium preto/ouro (1080×1350). Usa os dados
 // REAIS da mão: herói × vilão (se houve showdown), board, timeline, pote+aposta,
 // equity, resultado e a explicação Simples | Técnica. Robusto a dados faltando
 // (sem showdown → só a mão do herói; sem board → pula; sem equity → oculta).
-async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Promise<Blob | null> {
+async function drawDecisionCard(
+  data: HandShareData,
+  _mode: ShareCardMode,
+  isMistake = false,
+): Promise<Blob | null> {
   const W = 1080, H = 1350;
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
@@ -492,11 +604,24 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   for (const s of seg) { ctx.font = s.f; ctx.fillText(s.t, wx, wy); wx += ctx.measureText(s.t).width; }
   ctx.font = "800 23px Georgia, serif"; ctx.fillStyle = GSOFT;
   const subtitle = data.showdown?.some((p) => !p.isHero && p.cards.length >= 2) ? "SHOWDOWN" : "A JOGADA";
-  const swW = spaced(subtitle, W / 2, 250, 11);
-  ctx.strokeStyle = GSOFT; ctx.lineWidth = 2;
-  const lgap = swW / 2 + 26;
-  ctx.beginPath(); ctx.moveTo(W / 2 - lgap - 56, 250); ctx.lineTo(W / 2 - lgap, 250); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W / 2 + lgap, 250); ctx.lineTo(W / 2 + lgap + 56, 250); ctx.stroke();
+  // Card do erro: o "A JOGADA" é SUBSTITUÍDO pelo pill vermelho
+  // "O ERRO QUE CUSTOU FICHAS" na mesma faixa (nunca empilhar os dois).
+  if (isMistake) {
+    const badgeTxt = "O ERRO QUE CUSTOU FICHAS";
+    ctx.font = "800 21px Georgia, serif";
+    const bwM = ctx.measureText(badgeTxt).width + 36;
+    const bx0 = W / 2 - bwM / 2, byM = 250 - 15;
+    roundRect(ctx, bx0, byM, bwM, 30, 15);
+    ctx.fillStyle = "rgba(224,123,107,0.14)"; ctx.fill();
+    ctx.strokeStyle = "#e07b6b"; ctx.lineWidth = 1.5; roundRect(ctx, bx0, byM, bwM, 30, 15); ctx.stroke();
+    ctx.fillStyle = "#e89686"; ctx.textAlign = "center"; ctx.fillText(badgeTxt, W / 2, byM + 16);
+  } else {
+    const swW = spaced(subtitle, W / 2, 250, 11);
+    ctx.strokeStyle = GSOFT; ctx.lineWidth = 2;
+    const lgap = swW / 2 + 26;
+    ctx.beginPath(); ctx.moveTo(W / 2 - lgap - 56, 250); ctx.lineTo(W / 2 - lgap, 250); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W / 2 + lgap, 250); ctx.lineTo(W / 2 + lgap + 56, 250); ctx.stroke();
+  }
 
   // ── matchup: herói × vilão (se showdown) ──
   // Vilão a mostrar: prioriza QUEM VENCEU o pote (pra "você perdeu" mostrar quem
@@ -505,6 +630,9 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
     data.showdown?.find((p) => !p.isHero && p.won && p.cards.length >= 2) ??
     data.showdown?.find((p) => !p.isHero && p.cards.length >= 2);
   const heroWon = data.showdown?.find((p) => p.isHero)?.won;
+  // Escopo da decisão: usado pela caixa RESULTADO e pela história SIMPLES.
+  const correct = data.rating === "boa" || data.rating === "ok";
+  const made = madeHand(data.heroCards);
   const drawPlayer = (px: number, pw: number, tag: string, cards: Card[], made: string) => {
     panel(px, 286, pw, 206, 16, "rgba(230,196,84,0.05)", GLINE);
     ctx.fillStyle = GOLD; ctx.font = "800 22px Georgia, serif"; spaced(tag, px + pw / 2, 314, 5);
@@ -596,13 +724,18 @@ async function drawDecisionCard(data: HandShareData, _mode: ShareCardMode): Prom
   else { ctx.fillStyle = DIM; ctx.font = "900 40px Georgia, serif"; ctx.fillText("—", 56 + rW1 / 2, y + 62); }
   const r2x = 56 + rW1 + 12;
   panel(r2x, y, rW2, rH, 14, "rgba(230,196,84,0.07)", GLINE);
-  ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("RESULTADO", r2x + 20, y + 26);
-  const correct = data.rating === "boa" || data.rating === "ok";
-  const resTxt = heroWon === undefined ? (correct ? "Jogada certa" : "Dá pra melhorar") : (heroWon ? "Você venceu" : "Você perdeu");
-  ctx.fillStyle = (heroWon === undefined ? correct : heroWon) ? GREEN : "#e07b6b";
-  ctx.font = "900 30px Georgia, serif"; ctx.fillText(resTxt, r2x + 20, y + 54);
-  const made = madeHand(data.heroCards);
-  if (made) { ctx.fillStyle = DIM; ctx.font = "700 20px Georgia, serif"; ctx.fillText(`Sua mão: ${made}`, r2x + 20, y + 78); }
+  if (isMistake && data.mistakeFixBB) {
+    // Caixa "APOSTA CERTA": o tamanho que o coach mandaria nesta rua
+    ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("APOSTA CERTA", r2x + 20, y + 26);
+    ctx.fillStyle = goldGrad(y + 34, 52); ctx.font = "900 56px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText(`~${Math.round(data.mistakeFixBB)}bb`, r2x + 20, y + 64);
+    ctx.fillStyle = DIM; ctx.font = "700 17px Georgia, serif"; ctx.fillText("o tamanho que nega equity", r2x + 20, y + 82);
+  } else {
+    ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("RESULTADO", r2x + 20, y + 26);
+    const resTxt = heroWon === undefined ? (correct ? "Jogada certa" : "Dá pra melhorar") : (heroWon ? "Você venceu" : "Você perdeu");
+    ctx.fillStyle = (heroWon === undefined ? correct : heroWon) ? GREEN : "#e07b6b";
+    ctx.font = "900 30px Georgia, serif"; ctx.fillText(resTxt, r2x + 20, y + 54);
+    if (made) { ctx.fillStyle = DIM; ctx.font = "700 20px Georgia, serif"; ctx.fillText(`Sua mão: ${made}`, r2x + 20, y + 78); }
+  }
   y += rH + 12;
 
   // ── simples | técnica ──

@@ -12,6 +12,23 @@ import type { FeedbackItem } from "../feedback/analyzer";
 import type { SessionReport } from "../import/analyzeSession";
 import { analyzePostflopStreets } from "../import/analyzePostflop";
 import { SessionDiagnosis } from "./SessionDiagnosis";
+import { drawHandShareCard, shareDataFromHand } from "../app/handShareCard";
+
+/** Junta o feedback pré-flop (report.feedback) com os feedbacks pós-flop por
+ *  rua num único array, na ordem da mão — o formato que shareDataFromHand
+ *  espera pra desenhar o card com a rua certa e o veredito do coach. */
+function streetFbToFeedback(
+  streetFb: Record<string, FeedbackItem>,
+  preflop?: FeedbackItem,
+): FeedbackItem[] {
+  const out: FeedbackItem[] = [];
+  if (preflop) out.push(preflop);
+  for (const street of ["flop", "turn", "river"] as const) {
+    const it = streetFb[street];
+    if (it) out.push(it);
+  }
+  return out;
+}
 
 const POS_SHORT: Record<string, string> = {
   UTG: "UTG",
@@ -330,7 +347,7 @@ export function ImportReplayer({
   // vem em report.feedback.
   const streetFb = useMemo(() => analyzePostflopStreets(hand, "free"), [hand]);
 
-  // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
+    // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
   // IMPORTANTE: este return fica DEPOIS de todos os hooks (senão o React
   // renderiza menos hooks ao abrir o diagnóstico e o app trava).
   if (showDiag && session) {
@@ -364,20 +381,131 @@ export function ImportReplayer({
     return n >= 5 ? "river" : n === 4 ? "turn" : n >= 3 ? "flop" : "preflop";
   };
 
-  // No passo de RESULTADO revelamos as cartas do vilão e destacamos o vencedor.
+    // No passo de RESULTADO revelamos as cartas do vilão e destacamos o vencedor.
   const revealing = step.actionIdx === -3;
 
   // Dica do coach da RUA ATUAL. IMPORTANTE: cada rua mostra APENAS a nota da
   // decisão daquela rua. No pré-flop, a nota pré-flop; no flop/turn/river, só a
-  // nota pós-flop DAQUELA rua. Sem fallback pro pré-flop nas ruas pós-flop —
-  // senão, quando a mão já foi all-in antes (turn/river viram só "corrida", sem
-  // decisão), a nota do pré-flop vazava com o rótulo errado ("RIVER · 3-BET",
-  // "RIVER · FOLD/CALL"). Numa corrida não há o que avaliar: barra some.
+  // nota pós-flop DAQUELA rua.
   const curStreet = streetOfStep();
   const coachFb =
     curStreet === "flop" || curStreet === "turn" || curStreet === "river"
       ? streetFb[curStreet]
       : fb;
+  const mistakeFixBB = useMemo(() => {
+    // Mesma regra visual da barra do coach: errado = nota não é boa/ok E a ação
+    // do herói não é a mesma família da recomendação (ex.: CALL vs RAISE).
+    const isBad = (it: FeedbackItem) => {
+      const good = it.rating === "boa" || it.rating === "ok";
+      const matched = !!it.heroAction && famOf(it.heroAction) === famOf(it.advice);
+      return !good && !matched;
+    };
+    const worst: { bb: number } = { bb: 0 };
+    for (const street of ["flop", "turn", "river"] as const) {
+      const it = streetFb[street];
+      if (it && isBad(it) && (it.betSizeBB ?? 0) > worst.bb) {
+        worst.bb = it.betSizeBB ?? 0;
+      }
+    }
+    if (coachFb && isBad(coachFb) && (coachFb.betSizeBB ?? 0) > worst.bb) {
+      worst.bb = coachFb.betSizeBB ?? 0;
+    }
+    return worst.bb > 0 ? worst.bb : undefined;
+  }, [streetFb, coachFb]);
+
+  // Converte o ParsedHand (importado) num HandHistory mínimo — o formato que
+  // o builder do card espera. Robusto a dados faltando: só o essencial.
+  const toHistory = useMemo(() => {
+    const heroSeat = hand.seats.find((s) => s.isHero)?.seat ?? 0;
+    const names: Record<number, string> = {};
+    const startingStacks: Record<number, number> = {};
+    const holeCards: Record<number, import("../engine/cards").Card[]> = {};
+    for (const s of hand.seats) {
+      names[s.seat] = s.name;
+      startingStacks[s.seat] = s.stack;
+    }
+    if (hand.heroCards.length >= 2) holeCards[heroSeat] = hand.heroCards;
+    for (const [nm, cards] of Object.entries(hand.shownCards ?? {})) {
+      const seat = hand.seats.find((s) => s.name === nm)?.seat;
+      if (seat !== undefined && cards.length > 0) holeCards[seat] = cards;
+    }
+    const events = hand.actions.map((a: ParsedAction) => {
+      const seat = hand.seats.find((s) => s.name === a.player)?.seat ?? 0;
+      const isHero = a.player === (hand.heroName ?? "Você");
+      const type = String(a.type);
+      let label = ACTION_PT[type] ?? type;
+      if (a.amount > 0 && (type === "bet" || type === "raise" || type === "allin")) {
+        label = `${label} ${Math.round(a.amount)}`;
+      }
+      if (a.allIn && type !== "allin") label = `${label} (all-in)`;
+      return {
+        street: a.street,
+        seat,
+        name: a.player,
+        isHero,
+        actionLabel: label,
+        actionType: type === "allin" ? "allin" : type === "bet" ? "bet" : type,
+        board: hand.board,
+        pot: a.amount,
+      };
+    });
+    const showdown: any =
+      Object.keys(hand.shownCards ?? {}).length > 0 || (hand.winners ?? []).length > 0
+        ? {
+            showdown: true,
+            pots: [{ amount: 0 }],
+            winningsBySeat: (hand.winners ?? []).reduce<Record<string, number>>((o, nm) => {
+              const seat = hand.seats.find((s) => s.name === nm)?.seat;
+              if (seat !== undefined) o[String(seat)] = 1;
+              return o;
+            }, {}),
+            handValueBySeat: hand.shownCards ?? {},
+          }
+        : undefined;
+    return {
+      events,
+      holeCards,
+      names,
+      heroSeat,
+      finalBoard: hand.board,
+      buttonSeat: hand.buttonSeat,
+      bigBlind: hand.bb,
+      startingStacks,
+      result: showdown,
+      heroPosition: hand.seats.find((s) => s.isHero)?.position,
+    };
+  }, [hand]);
+
+  // ── CARD DA MÃO (modo "erro" quando o herói errou): o coach destaca a rua
+  // do erro e a aposta certa (ex.: "O certo era ~9bb"). O sizing da aposta
+  // certa vem do feedback pós-flop com nota "ruim" de maior prejuízo (ou do
+  // feedback da rua atual, se for erro), quando o coach mandava apostar.
+  // Gera o card (canvas PNG) da mão atual: abre em nova aba E baixa o arquivo,
+  // no mesmo padrão do botão de compartilhar do jogo ao vivo.
+  const handleShareCard = async () => {
+    try {
+      // O card mostra a DECISÃO DA RUA ATUAL (a que está na mesa), não a última
+      // item da lista — senão o pré-flop sempre dominaria o veredito do card.
+      const ruaFb: FeedbackItem[] = coachFb ? [coachFb] : [];
+      const data = shareDataFromHand(
+        toHistory,
+        ruaFb.length > 0 ? ruaFb : streetFbToFeedback(streetFb, fb),
+        mistakeFixBB !== undefined ? { mistakeFixBB } : undefined,
+      );
+      if (!data) return;
+      const blob = await drawHandShareCard(data, "simples", "decisao");
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `calloufold-mao-${handIdx + 1}.png`;
+      a.click();
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+      console.error("[ImportReplayer] falha ao gerar card", e);
+    }
+  };
 
   return (
     <div className="import-replayer ir-fullscreen">
@@ -520,6 +648,13 @@ export function ImportReplayer({
                   💰 aposte ~{Math.round((coachFb.betSizePct ?? 0) * 100)}% do pote · ≈ {coachFb.betSizeBB}bb
                 </span>
               ) : null}
+              <button
+                className="ir-card-btn"
+                onClick={handleShareCard}
+                title="Gerar card da mão (com o veredito do coach)"
+              >
+                🃏 Gerar card
+              </button>
               {curStreet !== "preflop" ? <span className="ir-coach-est">estimativa</span> : null}
             </span>
           </div>
