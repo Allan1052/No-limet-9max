@@ -6642,8 +6642,13 @@ body {
    ficam contidos pelo feltro natural (borda 12px + sombra).
    NOTA: o .seat também precisa z-index acima do feltro e pointer-events auto. */
 @media (min-width: 861px) {
-  .felt { overflow: visible; }
-  .seat { z-index: 8; pointer-events: auto; }
+  /* O feltro é PURA decoração (a oval verde). No desktop ele ficou maior e
+     passou a cobrir a área dos assentos, "comendo" o clique — por isso o range/
+     stats não abria ao clicar no jogador. pointer-events:none faz o clique
+     atravessar o feltro e chegar no assento (que fica por cima, z-index alto).
+     O pote/board/botões ficam em camadas próprias, não são afetados. */
+  .felt { overflow: visible; pointer-events: none; }
+  .seat { z-index: 14; pointer-events: auto; }
 }
 
 /* ==========================================================================
