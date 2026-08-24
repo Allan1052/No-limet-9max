@@ -555,7 +555,12 @@ body {
 /* Desktop adjustments */
 @media (min-width: 900px) {
   body {
-    background: radial-gradient(circle at 50% 50%, #1a2e24 0%, var(--bg) 85%);
+    /* Feltro VIVO no desktop: um brilho verde atrás da mesa que ilumina o
+       ambiente em vez de sumir no preto (o Allan sentia "muito escuro"). Vai do
+       verde de feltro no centro pra um verde escuro nas bordas — nada de preto
+       morto. */
+    background:
+      radial-gradient(ellipse 115% 90% at 50% 40%, #274d39 0%, #172c21 48%, #0d1712 100%);
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -570,18 +575,18 @@ body {
   }
   .app {
     width: 100%;
-    max-width: 1100px;
+    max-width: 1180px;
     margin: 0 auto;
     flex: 0 1 auto;
     padding-bottom: 20px;
   }
   .play {
-    max-width: 1100px;
+    max-width: 1180px;
     width: 100%;
   }
   .table-wrap {
     aspect-ratio: 16 / 9;
-    max-height: 70vh;
+    max-height: 78vh;
     margin: 0 auto;
   }
   .felt {
