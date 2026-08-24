@@ -188,9 +188,12 @@ export function ImportView() {
         <div className="import-actions">
           <label className="btn">
             📎 {t("import.chooseFile")}
+            {/* SEM filtro de accept: alguns celulares (Android) "apagam" o
+                arquivo do GG no seletor quando o accept não bate com a extensão/
+                MIME dele. A gente detecta o tipo (zip vs texto) pelo conteúdo,
+                então aceita qualquer arquivo e resolve internamente. */}
             <input
               type="file"
-              accept=".txt,.zip,text/plain,application/zip,application/x-zip-compressed"
               style={{ display: "none" }}
               onChange={(e) => onFile(e.target.files?.[0])}
             />
