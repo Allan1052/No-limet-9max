@@ -121,7 +121,7 @@ export function ProfileView({
   // WhatsApp de suporte pro botão "Reportar um problema". Coloque só os dígitos
   // com DDI+DDD (ex.: "5511999998888"). Enquanto estiver vazio, o botão cai no
   // Instagram (DM) — nada quebra.
-  const REPORT_WHATSAPP = ""; // TODO: número do WhatsApp Business do Allan
+  const REPORT_WHATSAPP = "5531972698694"; // WhatsApp Business do Allan (DDI 55 + DDD 31)
   const reportProblem = () => {
     const msg =
       "Olá! Encontrei algo no Call ou Fold que quero reportar 🃏\n\n" +
