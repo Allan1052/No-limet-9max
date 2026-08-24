@@ -570,18 +570,19 @@ body {
   }
   .app {
     width: 100%;
-    max-width: 980px;
+    max-width: 1100px;
     margin: 0 auto;
     flex: 0 1 auto;
     padding-bottom: 20px;
   }
   .play {
-    max-width: 980px;
+    max-width: 1100px;
     width: 100%;
   }
   .table-wrap {
     aspect-ratio: 16 / 9;
-    max-height: 65vh;
+    max-height: 70vh;
+    margin: 0 auto;
   }
   .felt {
     border-radius: 46% / 75%;
@@ -6568,8 +6569,8 @@ body {
    grande horizontal, assentos/cartas/controles maiores e topbar com respiro.
    ========================================================================== */
 @media (min-width: 861px) and (max-width: 1199px) {
-  .play { max-width: 1000px; margin: 0 auto; }
-  .table-wrap { aspect-ratio: 16 / 10; max-width: 900px; }
+  /* Largura/aspecto da mesa vêm do bloco único de desktop (min-width:900).
+     Aqui só os TAMANHOS de assento/carta (complementam, não conflitam). */
   .seat { width: 104px; }
   .seat .name { font-size: 13px; }
   .seat .stack { font-size: 13px; }
@@ -6580,9 +6581,10 @@ body {
   .btn { padding: 11px 18px; font-size: 14px; }
 }
 @media (min-width: 1200px) {
-  /* Libera a largura da tela de jogo (antes travada em 620px). */
-  .play { max-width: 1420px; margin: 0 auto; }
-  .table-wrap { aspect-ratio: 16 / 10; max-width: 1200px; }
+  /* Largura/aspecto da mesa vêm do bloco único de desktop (min-width:900) —
+     antes o .play 1420px/16:10 daqui SOBRESCREVIA o layout centralizado e a
+     mesa voltava a espalhar. Aqui ficam só os TAMANHOS (assentos/cartas/botões)
+     maiores pra ler de longe. */
   .tbl-rank { font-size: 30px; }
   .tbl-blinds { font-size: 16px; }
   /* Assentos maiores: nome, stack e badge precisam ler de longe. */
