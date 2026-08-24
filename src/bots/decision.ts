@@ -257,9 +257,17 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
         `Equity ${pct(equity)} paga o preço de ${pct(required)}: paga.${icmNote}`);
     }
 
-    // Sem preço direto: considerar aumento de blefe/semi-blefe (só com projeto).
+    // Sem preço direto: considerar aumento de SEMI-BLEFE — mas SÓ com projeto de
+    // verdade. Antes o código não checava o projeto, então uma mão FEITA sem
+    // saída (ex.: top pair sem flush/straight draw) virava "raise semi-blefe com
+    // projeto" — conselho errado que o Allan pegou (A♦T♥ no 7♠7♥T♠4♠). Sem
+    // projeto, uma mão abaixo do preço folda; não blefa-raise no vazio.
+    const drawForBluff = streetIdx < 2 && ctx.variant !== "omaha"
+      ? detectDraw(ctx.hand, ctx.board)
+      : { strength: 0 };
+    const hasRealDraw = drawForBluff.strength > 0.5;
     const semibluffProb = ctx.profile.bluffFactor * 0.18 * texture.wetness;
-    if (!isAllInCall && effEquity >= required * 0.7 && rng() < semibluffProb) {
+    if (!isAllInCall && hasRealDraw && effEquity >= required * 0.7 && rng() < semibluffProb) {
       return decision("raise", size, equity, required, texture, villainPct, mix,
         `Semi-blefe: equity ${pct(equity)} com projeto em board molhado (perfil ${ctx.profile.archetype}).`);
     }
