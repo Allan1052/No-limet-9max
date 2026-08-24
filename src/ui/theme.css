@@ -1671,7 +1671,10 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .import-how summary { cursor: pointer; color: var(--gold-soft); padding: 4px 0; }
 .import-how ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.6; }
 
-.import-input { display: flex; flex-direction: column; gap: 10px; }
+.import-input { display: flex; flex-direction: column; gap: 10px; border-radius: 12px; transition: box-shadow 0.2s ease; }
+/* Realce ao arrastar um arquivo (.txt/.zip) sobre a área de importação. */
+.import-input.import-dragover { box-shadow: 0 0 0 2px var(--gold-bright), 0 0 18px rgba(230, 196, 84, 0.35); }
+.import-input.import-dragover .import-textarea { border-color: var(--gold-bright); }
 .import-textarea {
   width: 100%;
   min-height: 150px;

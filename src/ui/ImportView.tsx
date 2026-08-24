@@ -9,6 +9,7 @@ import { useT } from "../i18n";
 import { CardView } from "./Card";
 import { cardsFromString } from "../engine/cards";
 import { parseHandHistory, type ParsedHand } from "../import/handHistory";
+import { looksLikeZip, unzipTextFiles } from "../import/zip";
 import { ImportReplayer } from "./ImportReplayer";
 import { analyzeSession, type SessionReport, type HandReport } from "../import/analyzeSession";
 import { UserSubscriptionLevel } from "../app/gameController";
@@ -108,15 +109,44 @@ export function ImportView() {
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    // PokerStars exporta o histórico em ISO-8859-1; file.text() decodifica como
-    // UTF-8 e corrompe os acentos (vira U+FFFD). Detecta e reinterpreta.
+    setError(null);
     const buf = await file.arrayBuffer();
-    const asUtf8 = new TextDecoder("utf-8", { fatal: false }).decode(buf);
-    const content = asUtf8.includes("\uFFFD")
-      ? new TextDecoder("windows-1252").decode(buf)
-      : asUtf8;
-    setText(content);
-    run(content);
+    const isZip = looksLikeZip(buf) || /\.zip$/i.test(file.name);
+    try {
+      let content: string;
+      if (isZip) {
+        // GGPoker (e \u00E0s vezes o PokerStars) entrega o hist\u00F3rico DENTRO de um
+        // .zip. A gente abre pra voc\u00EA e l\u00EA os .txt de dentro \u2014 sem precisar
+        // extrair na m\u00E3o.
+        content = await unzipTextFiles(buf);
+        if (!content.trim()) {
+          setError(t("import.errorZipEmpty"));
+          return;
+        }
+      } else {
+        // PokerStars exporta em ISO-8859-1; decodificar como UTF-8 corrompe os
+        // acentos (vira U+FFFD). Detecta e reinterpreta.
+        const asUtf8 = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+        content = asUtf8.includes("\uFFFD")
+          ? new TextDecoder("windows-1252").decode(buf)
+          : asUtf8;
+      }
+      setText(content);
+      run(content);
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message.includes("navegador")
+          ? e.message
+          : t("import.errorZip"),
+      );
+    }
+  };
+
+  const [dragOver, setDragOver] = useState(false);
+  const onDrop = (ev: React.DragEvent) => {
+    ev.preventDefault();
+    setDragOver(false);
+    onFile(ev.dataTransfer.files?.[0]);
   };
 
   return (
@@ -137,7 +167,15 @@ export function ImportView() {
         </details>
       </div>
 
-      <div className="import-input">
+      <div
+        className={`import-input${dragOver ? " import-dragover" : ""}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+      >
         <textarea
           className="import-textarea"
           value={text}
@@ -150,7 +188,7 @@ export function ImportView() {
             📎 {t("import.chooseFile")}
             <input
               type="file"
-              accept=".txt,text/plain"
+              accept=".txt,.zip,text/plain,application/zip,application/x-zip-compressed"
               style={{ display: "none" }}
               onChange={(e) => onFile(e.target.files?.[0])}
             />
