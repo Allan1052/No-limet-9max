@@ -122,7 +122,13 @@ export function preflopContextFor(
   // Pote disputável (side pot): cada oponente contribui só até o total do herói;
   // o excedente vira pote lateral que o herói não pode ganhar. Fichas mortas de
   // quem foldou também entram (capadas). Nº de oponentes = quem vai ao showdown.
-  let contestable = 0;
+  //
+  // IMPORTANTE: começa com o que o PRÓPRIO herói JÁ investiu antes do call
+  // (p.totalCommitted). Essas fichas fazem parte do pote que ele ganha de volta —
+  // deixá-las de fora inflava o "preço" e fazia mão premium foldar pro all-in
+  // depois de 3-betar (bug pego pelo Allan: QQ foldando com equity 63% "< preço
+  // 69%"). Sem o próprio investido, o denominador do preço fica pequeno demais.
+  let contestable = p.totalCommitted; // o herói ganha de volta o que já pôs
   let numContesting = 0;
   for (const o of t.players) {
     if (o.seat === seat) continue;
