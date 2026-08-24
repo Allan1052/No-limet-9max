@@ -449,7 +449,14 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // em QUALQUER profundidade, não só no push/fold: era o bug de o bot "não
     // enxergar o all-in" com 30-40bb e tratar o shove como uma abertura normal
     // (re-agredindo/pagando solto). Agora todo shove entra por aqui.
-    const callIsAllIn = (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9;
+    // Enfrentando all-in = decisão de PREÇO (call/fold), não 3-bet-ou-fold. Dois
+    // casos: (a) o shove cobre ~todo o meu stack; (b) HÁ um vilão all-in na frente
+    // — mesmo que curto e barato de pagar. O bug do Allan era o (b): O Certinho
+    // shovou 3.6bb, o herói tinha 51.8bb, então "3.6 >= 90% de 51.8" dava falso e
+    // o motor tratava o all-in como um raise normal, foldando QTs a 1.6bb pra
+    // ganhar 7.9bb (preço ~17%). Não dá pra re-raise quem já está all-in: é preço.
+    const callIsAllIn =
+      (ctx.openSizeBB ?? 0) >= ctx.effectiveBB * 0.9 || (ctx.allInsAhead ?? 0) >= 1;
     if (callIsAllIn) {
       // PILAR 1: com os dados da mesa, decide por EQUITY REAL vs range + side pot.
       const eq = equityAllinCall(ctx, handType);
