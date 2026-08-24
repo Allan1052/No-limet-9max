@@ -118,6 +118,20 @@ export function ProfileView({
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
   const INSTAGRAM_URL = "https://instagram.com/calloufold.sonho";
+  // WhatsApp de suporte pro botão "Reportar um problema". Coloque só os dígitos
+  // com DDI+DDD (ex.: "5511999998888"). Enquanto estiver vazio, o botão cai no
+  // Instagram (DM) — nada quebra.
+  const REPORT_WHATSAPP = ""; // TODO: número do WhatsApp Business do Allan
+  const reportProblem = () => {
+    const msg =
+      "Olá! Encontrei algo no Call ou Fold que quero reportar 🃏\n\n" +
+      "• O que aconteceu:\n• Em qual tela/aba:\n• (se puder, manda um print)\n";
+    import("../app/analytics").then(({ trackEvent }) => trackEvent("report_problem"));
+    const url = REPORT_WHATSAPP
+      ? `https://wa.me/${REPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`
+      : INSTAGRAM_URL;
+    window.open(url, "_blank");
+  };
   const appUrl =
     typeof window !== "undefined" ? window.location.origin : "https://calloufold.com.br";
   const shareApp = () => {
@@ -287,6 +301,26 @@ export function ProfileView({
           </div>
           <button className="btn profile-support-btn" onClick={() => setSupportOpen(true)}>
             💚 {t("support.button")}
+          </button>
+        </div>
+
+        {/* Reportar um problema — transparência + canal de feedback. */}
+        <div
+          className="profile-report"
+          style={{
+            marginTop: 14,
+            padding: "14px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(230,196,84,0.22)",
+            background: "rgba(230,196,84,0.05)",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ margin: "0 0 10px", fontSize: 13.5, lineHeight: 1.5, color: "var(--text-dim, #cfc8b0)" }}>
+            O Call ou Fold é feito por um jogador recreativo, <b>sozinho</b>, com a ajuda de uma IA — e está <b>sempre melhorando</b>. 🃏 Achou algum erro? Me conta que eu conserto rápido.
+          </p>
+          <button className="btn profile-help-btn" onClick={reportProblem}>
+            🛠️ Reportar um problema
           </button>
         </div>
 
