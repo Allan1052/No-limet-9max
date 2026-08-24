@@ -208,6 +208,10 @@ export interface GameSnapshot {
   /** Todas as decisões não-"boa" (ok/imprecisa/ruim) do torneio, p/ o painel de
    *  revisão bater com os contadores após retomar um torneio salvo. */
   sessionReview?: FeedbackItem[];
+  /** Anatomia (Fold/Call/Raise/Re-raise) e detalhe p/ o ranking — precisam
+   *  sobreviver ao retomar, senão o raio-X e o ranking subcontam. */
+  sessionDecisions?: Array<{ heroAction: string }>;
+  sessionDecisionDetails?: Array<{ hand: string; action: string; position: string }>;
   sessionFeedbackFree: FeedbackItem[];
   sessionFeedbackTechnical: FeedbackItem[];
   tournamentResult: "eliminado" | "campeao" | null;
@@ -1123,6 +1127,8 @@ export class GameController {
       heroRatings: { ...this.heroRatings },
       sessionMistakes: this.sessionMistakes,
       sessionReview: this.sessionReview,
+      sessionDecisions: this.sessionDecisions,
+      sessionDecisionDetails: this.sessionDecisionDetails,
       sessionFeedbackFree: this.feedbackFree,
       sessionFeedbackTechnical: this.feedbackTechnical,
       tournamentResult: this.tournamentResult,
@@ -1165,6 +1171,8 @@ export class GameController {
     this.heroRatings = snap.heroRatings;
     this.sessionMistakes = snap.sessionMistakes;
     this.sessionReview = snap.sessionReview ?? [];
+    this.sessionDecisions = snap.sessionDecisions ?? [];
+    this.sessionDecisionDetails = snap.sessionDecisionDetails ?? [];
     this.feedbackFree = snap.sessionFeedbackFree ?? [];
     this.feedbackTechnical = snap.sessionFeedbackTechnical ?? [];
     this.tournamentResult = snap.tournamentResult;
