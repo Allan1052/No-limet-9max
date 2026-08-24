@@ -17,6 +17,7 @@
 
 import { allHandTypes, comboCount, handTypeCombos, rangeCombos, type Range } from "../../ranges/types";
 import { buildTopRange } from "../../ranges/build";
+import { postflopRequiredEquity } from "../../ranges/postflopMath";
 import { handRank, handScore } from "../../ranges/handStrength";
 import { equityHandVsRange } from "../../engine/equity";
 import { seededRng, type Card } from "../../engine/cards";
@@ -641,8 +642,7 @@ export function heroBestAction(
   rng?: () => number,
 ): { action: string; freq: number; reason: string; equity: number; sizePct?: number; sizeBB?: number } {
   const hit = boardHit(handType, board);
-  const price = facingBetBB > 0 ? facingBetBB / (potBB + facingBetBB) : 0;
-  const neededEquity = facingBetBB > 0 ? price : 0;
+  const streetIdx = board.cards.length >= 5 ? 2 : board.cards.length === 4 ? 1 : 0;
   const equity = realEquity(handType, villainRange, board.cards, iterations, rng);
   const p = Math.round(equity * 100);
 
@@ -650,16 +650,29 @@ export function heroBestAction(
   const size = (pct: number) => ({ sizePct: pct, sizeBB: Math.round(potBB * pct * 10) / 10 });
 
   if (facingBetBB > 0) {
+    // Limiar de call disciplinado — MESMA conta do motor da mesa (fonte única em
+    // postflopRequiredEquity). Antes o coach pagava com só ~4 pontos acima do
+    // preço cru, aprovando calls frouxos que os bots foldariam.
+    const required = postflopRequiredEquity({
+      potBB,
+      toCall: facingBetBB,
+      streetIdx,
+      // Coach não personifica ninguém → stickiness neutra (0.5); herói tem stack
+      // fundo o bastante pra crédito de implied odds em projeto forte.
+      drawStrength: hit.draw ? 0.6 : 0,
+      heroStackBehind: potBB * 3,
+    });
+    const rq = Math.round(required * 100);
     // Raise de valor: ~3x a aposta enfrentada (limitado ao pote), em bb reais.
-    if (equity >= 0.66) {
+    if (equity >= Math.max(0.66, required + 0.14)) {
       const raiseBB = Math.round(Math.min(facingBetBB * 3, potBB + facingBetBB * 2) * 10) / 10;
       return { action: "raise", freq: 0.8, reason: `equity ${p}%: valor forte — aumente para ~${raiseBB}bb`, equity, sizeBB: raiseBB, sizePct: (potBB > 0 ? raiseBB / potBB : undefined) as number };
     }
-    if (equity > neededEquity + 0.04) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço ${Math.round(neededEquity * 100)}%`, equity };
-    if (equity > neededEquity - 0.03 && (hit.draw || texture.wetness > 0.5)) {
-      return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto`, equity };
+    if (equity >= required) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço com disciplina ${rq}%`, equity };
+    if (hit.draw && streetIdx < 2 && equity >= required - 0.05) {
+      return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto que ganha valor extra quando bate`, equity };
     }
-    return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço ${Math.round(neededEquity * 100)}%`, equity };
+    return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço com disciplina ${rq}%`, equity };
   }
   // TAMANHO — não é só o board. Combina 3 coisas (como um solver faz na direção):
   //   1) Textura: seco/travado → pequeno (~⅓); molhado → grande (~⅔/¾) pra cobrar

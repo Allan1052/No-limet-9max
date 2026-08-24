@@ -31,6 +31,7 @@ import { buildTopRange } from "../ranges/build";
 import { omahaPreflopScore } from "../ranges/omahaPreflop";
 import { rangeCombos } from "../ranges/types";
 import { requiredEquityToCall, type IcmSpot } from "../ranges/icm";
+import { postflopRequiredEquity } from "../ranges/postflopMath";
 import { classifyBoard, type BoardTexture } from "./boardTexture";
 
 export type PostflopAct = "check" | "bet" | "call" | "raise" | "fold";
@@ -187,35 +188,23 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       }
     }
 
-    // Disciplina para pagar. Uma aposta representa força e há reverse implied
-    // odds, então paga-se com MAIS equity que as pot odds cruas — e cada perfil
-    // no seu estilo: o disciplinado (nit/ABC) larga fácil, o calling station
-    // gruda. Ruas mais adiantadas (turn/river) exigem ainda mais. Não vale para
-    // all-in (que já respeita o ICM acima).
+    // Disciplina para pagar. A conta é a MESMA do coach/revisão — fonte única em
+    // postflopRequiredEquity (paga com mais equity que o preço cru; ruas
+    // adiantadas exigem mais; perfil grudento exige menos; projeto forte ganha
+    // implied odds). Não vale para all-in (que já respeita o ICM acima).
     if (!isAllInCall) {
-      const streetPenalty = [0.04, 0.12, 0.2][streetIdx];
-      const discipline = (0.5 - ctx.profile.stickiness) * 0.7; // nit +, station − (0.7: meio-termo — sem over-fold, mas o nit volta a ter disciplina)
-      const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1)); // alguém pode ter mão
-      required = Math.min(0.80, Math.max(0.13, required + 0.11 + streetPenalty + discipline + multiwayPenalty));
-
-      // IMPLIED ODDS (Frente #3): um PROJETO forte ganha fichas EXTRAS quando
-      // completa (apostas das ruas seguintes), então paga com um pouco MENOS de
-      // equity que o preço cru pede. A equity crua (runout completo) já conta a
-      // chance de completar; este crédito é só o dinheiro EXTRA de quando bate.
-      // Só no flop/turn (river não tem projeto), fora de all-in (não há rua
-      // seguinte pra pagar), escalado pelo stack ATRÁS (fundo = mais implied) e
-      // com cap pequeno — nunca vira call-station.
-      if (streetIdx < 2 && ctx.variant !== "omaha") {
-        const draw = detectDraw(ctx.hand, ctx.board);
-        if (draw.strength > 0.5) {
-          const behind = Math.max(0, ctx.heroStack - ctx.toCall);
-          const spr = behind / Math.max(1, ctx.potSize + ctx.toCall);
-          const depth = clamp(spr / 4, 0, 1); // ~0 raso, 1 fundo (SPR≥4)
-          const streetsLeft = streetIdx === 0 ? 1 : 0.6; // flop rende mais que turn
-          const impliedCredit = Math.min(0.09, draw.strength * 0.11 * depth * streetsLeft);
-          required = Math.max(0.13, required - impliedCredit);
-        }
-      }
+      const draw = streetIdx < 2 && ctx.variant !== "omaha"
+        ? detectDraw(ctx.hand, ctx.board)
+        : { strength: 0 };
+      required = postflopRequiredEquity({
+        potBB: ctx.potSize,
+        toCall: ctx.toCall,
+        streetIdx,
+        stickiness: ctx.profile.stickiness,
+        numOpp,
+        drawStrength: draw.strength,
+        heroStackBehind: Math.max(0, ctx.heroStack - ctx.toCall),
+      });
     }
 
     // ----- Estratégia mista quando enfrentamos aposta -----
