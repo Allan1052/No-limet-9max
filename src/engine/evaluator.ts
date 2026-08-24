@@ -53,6 +53,62 @@ export function categoryOf(value: number): number {
   return Math.floor(value / (BASE * BASE * BASE * BASE * BASE));
 }
 
+/** Decodifica um valor em [categoria, t1, t2, t3, t4, t5]. */
+function decode(value: number): { cat: number; tb: number[] } {
+  let v = value;
+  const tb: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    tb.unshift(v % BASE);
+    v = Math.floor(v / BASE);
+  }
+  return { cat: v, tb };
+}
+
+// Nome do rank pra descrição (depois de "de/até"): faces no plural natural do
+// pôquer BR, números baixos como se fala na mesa ("par de seis", "trinca de dez").
+const RANK_PT: Record<number, string> = {
+  14: "ases", 13: "reis", 12: "damas", 11: "valetes", 10: "dez",
+  9: "noves", 8: "oitos", 7: "setes", 6: "seis", 5: "cincos",
+  4: "quatros", 3: "três", 2: "dois",
+};
+// Nome singular (pra sequência/flush "até o X", carta alta).
+const RANK_PT_1: Record<number, string> = {
+  14: "Ás", 13: "Rei", 12: "Dama", 11: "Valete", 10: "Dez",
+  9: "Nove", 8: "Oito", 7: "Sete", 6: "Seis", 5: "Cinco",
+  4: "Quatro", 3: "Três", 2: "Dois",
+};
+
+/**
+ * Descrição em PT da MELHOR mão de 5 formada pelas cartas dadas (5 a 7 cartas),
+ * calculada pelo NOSSO avaliador — não pelo texto do site importado (que às
+ * vezes vem confuso ou noutro idioma). Ex.: "Full house de reis com noves".
+ */
+export function describeHandPt(cards: Card[]): string {
+  const { cat, tb } = decode(evaluate(cards));
+  const p = (r: number) => RANK_PT[r] ?? String(r);
+  const s = (r: number) => RANK_PT_1[r] ?? String(r);
+  switch (cat) {
+    case Category.StraightFlush:
+      return tb[0] === 14 ? "Royal flush" : `Straight flush até o ${s(tb[0])}`;
+    case Category.Quads:
+      return `Quadra de ${p(tb[0])}`;
+    case Category.FullHouse:
+      return `Full house de ${p(tb[0])} com ${p(tb[1])}`;
+    case Category.Flush:
+      return `Flush de ${s(tb[0])} alto`;
+    case Category.Straight:
+      return tb[0] === 5 ? "Sequência (a roda, do Ás ao Cinco)" : `Sequência até o ${s(tb[0])}`;
+    case Category.Trips:
+      return `Trinca de ${p(tb[0])}`;
+    case Category.TwoPair:
+      return `Dois pares, ${p(tb[0])} e ${p(tb[1])}`;
+    case Category.Pair:
+      return `Par de ${p(tb[0])}`;
+    default:
+      return `Carta alta: ${s(tb[0])}`;
+  }
+}
+
 /**
  * Dado um vetor `present[rank]` (2..14), devolve o rank mais alto que fecha uma
  * sequência de 5, ou 0 se não houver. Trata o Ás-baixo (A-2-3-4-5, a "roda").

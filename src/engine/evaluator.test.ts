@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { cardsFromString } from "./cards";
-import { evaluate, categoryOf, Category, CATEGORY_NAMES_PT } from "./evaluator";
+import { evaluate, categoryOf, Category, CATEGORY_NAMES_PT, describeHandPt as describeHandPtImport } from "./evaluator";
 
 function val(hand: string): number {
   return evaluate(cardsFromString(hand));
@@ -69,5 +69,27 @@ describe("evaluator — nomes das categorias", () => {
   it("mapeia categoria para nome em pt-BR", () => {
     expect(CATEGORY_NAMES_PT[Category.FullHouse]).toBe("Full house");
     expect(CATEGORY_NAMES_PT[Category.StraightFlush]).toBe("Straight flush");
+  });
+});
+
+describe("describeHandPt — descrição própria (não o texto do site)", () => {
+  const d = (s: string) => describeHandPtImport(cardsFromString(s));
+  it("nomeia full house corretamente (não como trinca)", () => {
+    // KsKhKd 9s9h + board → full de reis com noves
+    expect(d("KsKhKd9s9h")).toBe("Full house de reis com noves");
+  });
+  it("quadra, trinca, dois pares, par, carta alta", () => {
+    expect(d("7s7h7d7c2h")).toBe("Quadra de setes");
+    expect(d("QsQhQd4c9h")).toBe("Trinca de damas");
+    expect(d("AsAhKsKh2d")).toBe("Dois pares, ases e reis");
+    expect(d("AsAh7d4c9h")).toBe("Par de ases");
+    expect(d("AsKhQdJc9h")).toBe("Carta alta: Ás");
+  });
+  it("sequência, flush, straight flush, royal", () => {
+    expect(d("5s6h7d8c9h")).toBe("Sequência até o Nove");
+    expect(d("As2h3d4c5s")).toBe("Sequência (a roda, do Ás ao Cinco)");
+    expect(d("2s5s8s9sKs")).toBe("Flush de Rei alto");
+    expect(d("5s6s7s8s9s")).toBe("Straight flush até o Nove");
+    expect(d("TsJsQsKsAs")).toBe("Royal flush");
   });
 });

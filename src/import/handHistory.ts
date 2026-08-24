@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------
 
 import { cardFromString, type Card } from "../engine/cards";
+import { describeHandPt } from "../engine/evaluator";
 import type { Position } from "../ranges/types";
 
 export type Site = "PokerStars" | "GGPoker" | "desconhecido";
@@ -364,6 +365,17 @@ export function parseHandBlock(block: string): ParsedHand | null {
   }
 
   if (seats.length < 2 || bb <= 0) return null;
+
+  // DESCRIÇÃO DA MÃO NO SHOWDOWN — calculada pelo NOSSO avaliador, não pelo texto
+  // do site (que às vezes vem confuso, noutro idioma, ou como "trinca" quando é
+  // full house). Só quando dá: hold'em (2 cartas) + board com 3+ cartas. O texto
+  // do site fica de reserva quando não conseguimos calcular.
+  if (board.length >= 3) {
+    for (const nm of Object.keys(shownCards)) {
+      const cs = shownCards[nm];
+      if (cs.length === 2) handDesc[nm] = describeHandPt([...cs, ...board]);
+    }
+  }
 
   // Marca o herói e atribui posições.
   if (heroName) {
