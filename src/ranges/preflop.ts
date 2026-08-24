@@ -244,6 +244,29 @@ function blockerBluffFreq(profile: BotProfile, icmFactor: number, base: number):
   return Math.max(0, Math.min(0.62, base * profile.bluffFactor * icmFactor));
 }
 
+/**
+ * Uma mão SUITED serve de 3-bet de BLEFE? Só as que têm valor de blocker OU
+ * jogabilidade — não o lixo (K3s, Q6s…). Antes o motor 3-betava esses dregs de
+ * blefe porque os BONS blockers (A5s-A2s, broadways) eram engolidos pela
+ * defendRange e, numa posição que não flata (SB OOP), viravam fold. Bons blefes:
+ *   • qualquer Ás suited (bloqueia AA/AK, roda de nut-flush): A2s..AKs;
+ *   • broadway suited (as duas cartas T+): KJs, KTs, QJs, QTs, JTs;
+ *   • conectores/1-2 gappers suited de 54s pra cima: 54s, 65s, 76s, 87s, T9s…
+ * Fica de fora o Kx/Qx suited raggy (K8s−, Q9s−) e offsuit.
+ */
+const RANK_ORDER = "23456789TJQKA";
+function isGood3betBluff(handType: string): boolean {
+  if (!isSuited(handType)) return false;
+  const hi = handType[0];
+  const lo = handType[1];
+  if (hi === "A") return true; // qualquer Ás suited: blocker de nut
+  const broadway = "AKQJT".includes(hi) && "AKQJT".includes(lo);
+  if (broadway) return true; // KJs/KTs/QJs/QTs/JTs
+  const gap = RANK_ORDER.indexOf(hi) - RANK_ORDER.indexOf(lo);
+  const loEnough = RANK_ORDER.indexOf(lo) >= RANK_ORDER.indexOf("4"); // 54s+
+  return gap <= 2 && loEnough; // conectores e 1-2 gappers com jogabilidade
+}
+
 // Parâmetros de defesa (call/3bet) ao enfrentar UMA abertura, antes de perfil e
 // ICM. defendPct = fração total que continua; value3betPct = fatia do topo que
 // 3-beta por valor; bluffExtraPct = largura extra (fora do defend) de onde saem
@@ -521,8 +544,13 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const defendRange = buildTopRangeWithBonus(defendPct, defendSpecBonus);
     const value3betRange = buildTopRange(value3betPct);
     const wider = buildTopRange(defendPct + bluffPct);
-    const bluffZone = rangeSubtract(wider, defendRange);
     const callsOutOfPosition = ctx.profile.coldCallFactor >= 1.5;
+    // Posição que FLATA (BB, em posição, ou cold-caller) tira a defendRange do
+    // pool de blefe (essas mãos são pagas). Posição que NÃO flata (SB OOP) tira
+    // só a range de VALOR — assim os bons blockers (A5s-A2s, broadways), que a
+    // defendRange engoliria e mandaria foldar, ficam livres pra 3-bet de blefe.
+    const flatsThisPosition = p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition;
+    const bluffZone = rangeSubtract(wider, flatsThisPosition ? defendRange : value3betRange);
 
     const openSize = ctx.openSizeBB ?? BASE_OPEN_BB;
 
@@ -666,7 +694,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     }
 
     if (freqIn(defendRange, handType) > 0) {
-      if (p.inPosition || ctx.heroPosition === "BB" || callsOutOfPosition) {
+      if (flatsThisPosition) {
         return {
           action: "call",
           sizeBB: openSize,
@@ -675,16 +703,20 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
           mix: bandMix("call", defendPct, handType),
         };
       }
-      return {
-        action: "fold",
-        sizeBB: 0,
-        reason: `${handType}: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.`,
-        handType,
-        mix: bandMix("call", defendPct, handType),
-      };
+      // OOP sem flat: as boas mãos de blocker (A5s-A2s, broadways) NÃO foldam
+      // aqui — caem pro 3-bet de blefe abaixo. Só o resto (offsuit/raggy) folda.
+      if (!isGood3betBluff(handType)) {
+        return {
+          action: "fold",
+          sizeBB: 0,
+          reason: `${handType}: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.`,
+          handType,
+          mix: bandMix("call", defendPct, handType),
+        };
+      }
     }
 
-    if (isSuited(handType) && freqIn(bluffZone, handType) > 0 && !sd.pushFold) {
+    if (isGood3betBluff(handType) && freqIn(bluffZone, handType) > 0 && !sd.pushFold) {
       const bf = blockerBluffFreq(ctx.profile, icmFactor, 0.5);
       const mix = [{ action: "3bet", freq: bf }, { action: "fold", freq: 1 - bf }];
       if (fireBluff(ctx, bf)) {
