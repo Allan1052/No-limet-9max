@@ -4,7 +4,7 @@
 // mão a mão, usando o mesmo motor do simulador.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "../i18n";
 import { CardView } from "./Card";
 import { cardsFromString } from "../engine/cards";
@@ -43,6 +43,7 @@ export function ImportView() {
   const [onlyProblems, setOnlyProblems] = useState(false);
   const [replay, setReplay] = useState(false);
   const [parsed, setParsed] = useState<ParsedHand[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Reabre automaticamente o ÚLTIMO histórico importado (pedido do Allan 18/08:
   // não perder a sessão ao atualizar/sair do app). O texto cru fica no
@@ -177,6 +178,7 @@ export function ImportView() {
         onDrop={onDrop}
       >
         <textarea
+          ref={textareaRef}
           className="import-textarea"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -193,8 +195,20 @@ export function ImportView() {
               onChange={(e) => onFile(e.target.files?.[0])}
             />
           </label>
-          <button className="btn primary" disabled={!text.trim()} onClick={() => run(text)}>
-            🎬 {t("import.analyze")}
+          <button
+            className="btn primary"
+            onClick={() => {
+              // Botão SEMPRE aceso (converte melhor). Se estiver vazio, em vez de
+              // ficar "morto", dá um empurrãozinho: foca a caixa e mostra a dica.
+              if (!text.trim()) {
+                setError(t("import.emptyHint"));
+                textareaRef.current?.focus();
+                return;
+              }
+              run(text);
+            }}
+          >
+            🔍 {t("import.analyze")}
           </button>
           {text ? (
             <button
