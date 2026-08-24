@@ -205,6 +205,9 @@ export interface GameSnapshot {
   payouts?: number[];
   heroRatings: Record<Rating, number>;
   sessionMistakes: FeedbackItem[];
+  /** Todas as decisões não-"boa" (ok/imprecisa/ruim) do torneio, p/ o painel de
+   *  revisão bater com os contadores após retomar um torneio salvo. */
+  sessionReview?: FeedbackItem[];
   sessionFeedbackFree: FeedbackItem[];
   sessionFeedbackTechnical: FeedbackItem[];
   tournamentResult: "eliminado" | "campeao" | null;
@@ -1119,6 +1122,7 @@ export class GameController {
       payouts: this.payouts,
       heroRatings: { ...this.heroRatings },
       sessionMistakes: this.sessionMistakes,
+      sessionReview: this.sessionReview,
       sessionFeedbackFree: this.feedbackFree,
       sessionFeedbackTechnical: this.feedbackTechnical,
       tournamentResult: this.tournamentResult,
@@ -1160,6 +1164,7 @@ export class GameController {
     this.payouts = snap.payouts;
     this.heroRatings = snap.heroRatings;
     this.sessionMistakes = snap.sessionMistakes;
+    this.sessionReview = snap.sessionReview ?? [];
     this.feedbackFree = snap.sessionFeedbackFree ?? [];
     this.feedbackTechnical = snap.sessionFeedbackTechnical ?? [];
     this.tournamentResult = snap.tournamentResult;
