@@ -760,7 +760,8 @@ function heroIpVsThreeBettor(hero: Position, threeBettor: Position): boolean {
 // Núcleos vs 3-bet (Hold'em). É apertado por natureza — a maioria FOLDA.
 const VS3BET_VALUE = new Set(["AA", "KK", "QQ", "AKs", "AKo"]); // 4-bet sempre
 const VS3BET_BLUFF = new Set(["A5s", "A4s"]); // bloqueadores de ás — 4-bet de blefe fino
-const VS3BET_IP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs", "ATs"]); // flat só EM POSIÇÃO
+const VS3BET_IP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs", "ATs", "KJs", "AQo"]); // flat EM POSIÇÃO (leque maior)
+const VS3BET_OOP_CALL = new Set(["JJ", "TT", "99", "AQs", "AJs", "KQs"]); // flat FORA de posição (mais apertado, mas existe!)
 
 /**
  * PILAR 1 (parte 2) — decide a re-agressão NÃO all-in (4-bet/5-bet) por EQUITY
@@ -855,6 +856,22 @@ function holdemVsThreeBet(
   // ela ainda leva as fichas pro meio pelo peso do pote morto já acumulado.
   const eq = equityReraise(ctx, handType, { short, inPos, openSize, fourBetSize, icmFactor });
   if (eq) {
+    // PISO DE CALL vs 3-bet (betLevel 2, stack jogável): o motor era 4-bet-ou-fold
+    // e largava mãos fortes demais pra soltar — AQs/AJs/KQs/99 foldavam pro 3-bet
+    // (over-fold que o Allan viu: "eu 3-beto e o vilão folda"). Agora, se a conta
+    // mandaria FOLDAR mas a mão está no leque de defesa (mais largo em posição,
+    // mais apertado OOP — mas EXISTE OOP), ela PAGA pelo preço/jogabilidade.
+    if (betLevel <= 2 && eq.action === "fold" && !short) {
+      const callSet = inPos ? VS3BET_IP_CALL : VS3BET_OOP_CALL;
+      if (callSet.has(handType)) {
+        return {
+          action: "call",
+          sizeBB: openSize,
+          reason: `${handType}: forte demais pra largar o 3-bet — paga pelo preço${inPos ? " (em posição)" : " (fora de posição, defesa apertada)"}.`,
+          handType,
+        };
+      }
+    }
     if (betLevel >= 3 && eq.action === "fold" && VS3BET_VALUE.has(handType)) {
       return {
         action: "3bet",
@@ -918,9 +935,11 @@ function holdemVsThreeBet(
     };
   }
 
-  // Pagar: só EM POSIÇÃO e com um leque estreito de broadways/pares.
-  if (inPos && VS3BET_IP_CALL.has(handType)) {
-    return { action: "call", sizeBB: openSize, reason: `${handType}: paga o 3-bet em posição.`, handType };
+  // Pagar: leque maior em posição, mais apertado fora de posição — mas OOP TEM
+  // range de call (antes era só IP, e OOP largava JJ/TT/AQs pro 3-bet).
+  const callSet = inPos ? VS3BET_IP_CALL : VS3BET_OOP_CALL;
+  if (callSet.has(handType)) {
+    return { action: "call", sizeBB: openSize, reason: `${handType}: paga o 3-bet${inPos ? " em posição" : " (forte demais pra largar OOP)"}.`, handType };
   }
 
   // Todo o resto folda — contra a re-agressão, a maioria das mãos não continua.

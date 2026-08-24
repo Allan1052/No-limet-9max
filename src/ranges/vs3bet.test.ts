@@ -24,7 +24,7 @@ describe("spotRangeGrid — enfrentando 3-bet (herói abriu)", () => {
     expect(g["J4s"].category).toBe("fold");
   });
 
-  it("fora de posição (CO vs 3-bet do BTN) é 4-bet ou fold — quase sem call", () => {
+  it("fora de posição (CO vs 3-bet do BTN): defesa APERTADA, mas com range de call real", () => {
     const g = spotRangeGrid({
       heroPosition: "CO",
       effectiveBB: 40,
@@ -34,7 +34,11 @@ describe("spotRangeGrid — enfrentando 3-bet (herói abriu)", () => {
       threeBet: true,
     });
     const calls = Object.values(g).filter((c) => c.category === "call").length;
-    expect(calls).toBe(0);
+    // OOP defende mais apertado que IP, mas NÃO é 4-bet-ou-fold: mãos fortes
+    // demais pra largar (JJ/TT/99/AQs/AJs/KQs) pagam pelo preço/jogabilidade.
+    // Antes o motor foldava tudo isso (over-fold) — bug pego pelo Allan.
+    expect(calls).toBeGreaterThan(0);
+    expect(calls).toBeLessThan(10); // ainda apertado (não vira call-station OOP)
   });
 
   it("em posição (BTN abriu, BB deu 3-bet) pode PAGAR algumas mãos", () => {
