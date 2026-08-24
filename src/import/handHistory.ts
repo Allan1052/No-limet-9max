@@ -72,6 +72,10 @@ export interface ParsedHand {
   handDesc?: Record<string, string>;
   /** Quem levou (parte do) pote no showdown. */
   winners?: string[];
+  /** Horário da mão (epoch ms), lido do cabeçalho — usado para ordenar. */
+  date?: number;
+  /** Sequência numérica derivada do handId (desempate de ordem). */
+  seq?: number;
   /** Ordem original das linhas, guardada para depuração/replay futuro. */
   raw: string;
 }
@@ -184,6 +188,16 @@ export function parseHandBlock(block: string): ParsedHand | null {
     (header.match(/#(\d{8,})/)?.[1]) ??
     "";
   const tournamentId = header.match(/Tournament\s+#(\w+)/i)?.[1] || header.match(/Torneio\s+#(\w+)/i)?.[1];
+  // Horário da mão (GG/Stars: "YYYY/MM/DD HH:MM:SS"), para ordenar cronologicamente.
+  // O GG exporta as mãos em ordem INVERSA (a mais nova primeiro); sem ordenar, o
+  // torneio "roda de trás pra frente" e os stacks pulam sem ação do herói.
+  const dtM = header.match(/(\d{4})\/(\d{2})\/(\d{2})[ T](\d{1,2}):(\d{2}):(\d{2})/);
+  const date = dtM
+    ? Date.UTC(+dtM[1], +dtM[2] - 1, +dtM[3], +dtM[4], +dtM[5], +dtM[6])
+    : undefined;
+  // Sequência numérica do handId (desempate quando não há data).
+  const seqM = handId.match(/(\d{5,})/);
+  const seq = seqM ? Number(seqM[1]) : undefined;
   // Blinds: primeiro grupo "(X/Y)" no cabeçalho (nível ou stakes).
   const blindMatch = header.match(/\(\s*([\d.,]+)\s*\/\s*([\d.,]+)/);
   const sb = blindMatch ? num(blindMatch[1]) : 0;
@@ -400,13 +414,30 @@ export function parseHandBlock(block: string): ParsedHand | null {
     shownCards: Object.keys(shownCards).length ? shownCards : undefined,
     handDesc: Object.keys(handDesc).length ? handDesc : undefined,
     winners: winners.size ? [...winners] : undefined,
+    date,
+    seq,
     raw: block,
   };
 }
 
 /** Interpreta um arquivo/colagem inteiro com várias mãos. */
 export function parseHandHistory(text: string): ParsedHand[] {
-  return splitHands(text)
+  const hands = splitHands(text)
     .map(parseHandBlock)
     .filter((h): h is ParsedHand => h != null);
+
+  // ORDENA CRONOLOGICAMENTE. O GG exporta a mão mais nova primeiro; sem isto o
+  // torneio roda de trás pra frente (mãos fora de ordem, stacks pulando sem ação
+  // do herói). Ordena por horário e, no empate/ausência, pela sequência do
+  // handId — mantendo estável a ordem original quando não há como saber.
+  return hands
+    .map((h, i) => ({ h, i }))
+    .sort((a, b) => {
+      const da = a.h.date, db = b.h.date;
+      if (da != null && db != null && da !== db) return da - db;
+      const sa = a.h.seq, sb = b.h.seq;
+      if (sa != null && sb != null && sa !== sb) return sa - sb;
+      return a.i - b.i;
+    })
+    .map((x) => x.h);
 }

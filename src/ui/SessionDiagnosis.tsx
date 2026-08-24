@@ -147,12 +147,14 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Section({ title, color, items }: { title: string; color: string; items: string[] }) {
+function Section({ title, color, items }: { title: string; color: string; items?: string[] }) {
+  const list = items ?? [];
+  if (list.length === 0) return null;
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ fontSize: 16, fontWeight: 800, color, marginBottom: 8 }}>{title}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {items.map((it, i) => (
+        {list.map((it, i) => (
           <div
             key={i}
             style={{

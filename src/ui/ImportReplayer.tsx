@@ -347,31 +347,6 @@ export function ImportReplayer({
   // vem em report.feedback.
   const streetFb = useMemo(() => analyzePostflopStreets(hand, "free"), [hand]);
 
-    // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
-  // IMPORTANTE: este return fica DEPOIS de todos os hooks (senão o React
-  // renderiza menos hooks ao abrir o diagnóstico e o app trava).
-  if (showDiag && session) {
-    return (
-      <div className="import-replayer">
-        <div className="ir-head">
-          <button className="btn tiny" onClick={() => setShowDiag(false)}>
-            ◀ Voltar ao replay
-          </button>
-          <span className="ir-counter">🏁 Diagnóstico</span>
-          <span />
-        </div>
-        <SessionDiagnosis
-          report={session}
-          onReview={() => {
-            setShowDiag(false);
-            setHandIdx(0);
-            setStepIdx(0);
-          }}
-          onTrain={onBack}
-        />
-      </div>
-    );
-  }
   const fb = report?.feedback;
 
   // Rua do passo atual pela QUANTIDADE de cartas no board (robusto): assim que
@@ -497,6 +472,33 @@ export function ImportReplayer({
       heroPosition: hand.seats.find((s) => s.isHero)?.position,
     };
   }, [hand]);
+
+  // ── DIAGNÓSTICO DA SESSÃO — o raio-x do treinador ao fim da revisão ──
+  // CRÍTICO: este early-return TEM que ficar DEPOIS de TODOS os hooks acima.
+  // Se voltar pra cima dos useMemo (mistakeFixBB/toHistory), o React renderiza
+  // menos hooks ao abrir o diagnóstico e o app trava (erro #300 → "Ops travou").
+  if (showDiag && session) {
+    return (
+      <div className="import-replayer">
+        <div className="ir-head">
+          <button className="btn tiny" onClick={() => setShowDiag(false)}>
+            ◀ Voltar ao replay
+          </button>
+          <span className="ir-counter">🏁 Diagnóstico</span>
+          <span />
+        </div>
+        <SessionDiagnosis
+          report={session}
+          onReview={() => {
+            setShowDiag(false);
+            setHandIdx(0);
+            setStepIdx(0);
+          }}
+          onTrain={onBack}
+        />
+      </div>
+    );
+  }
 
   // ── CARD DA MÃO (modo "erro" quando o herói errou): o coach destaca a rua
   // do erro e a aposta certa (ex.: "O certo era ~9bb"). O sizing da aposta
