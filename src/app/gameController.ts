@@ -88,6 +88,11 @@ export interface GameOptions {
   onChampion?: (d: { entrants: number; cash: number }) => void;
   /** Variante do jogo: "holdem" (padrão) ou "omaha" (PLO). */
   variant?: "holdem" | "omaha";
+  /**
+   * Fonte de aleatoriedade. Default Math.random (produção). Testes passam uma
+   * rng semeada (seededRng) para tornar a partida 100% determinística.
+   */
+  rng?: () => number;
 
   // ---- Disciplina / progressão ----
   /** Fold pré-flop correto (para VPIP e badges). */
@@ -302,6 +307,7 @@ export class GameController {
 
 
   constructor(opts: GameOptions = {}) {
+    if (opts.rng) this.rng = opts.rng;
     this.userSubscriptionLevel = opts.userSubscriptionLevel ?? 'free';
     const stack = opts.startingStack ?? 3000;
     this.payouts = opts.payouts;
@@ -689,7 +695,7 @@ export class GameController {
     this.updateTiltAfterHand();
     // Baralho verdadeiramente aleatório a cada mão (sem semente fixa — senão
     // toda sessão repetiria a mesma sequência de cartas e o mesmo vencedor).
-    startHand(this.table, freshShuffledDeck());
+    startHand(this.table, freshShuffledDeck(this.rng));
     // Congela o stack inicial de cada jogador (stack + o que já foi para o pote,
     // ex. blinds/ante) — usado no range por profundidade ao revisar a mão.
     this.handStartStacks = {};

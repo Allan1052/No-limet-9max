@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { GameController } from "./gameController";
+import { seededRng } from "../engine/cards";
 
 // Teste headless do chip de sizing ao vivo: prova que, quando a recomendação
 // do coach é apostar (bet/raise), o advice traz betSizeBB > 0 — o que o UI
@@ -9,7 +10,8 @@ import { GameController } from "./gameController";
 // O teste precisa avançar a mesa manualmente.
 describe("sizing ao vivo na mesa (chip do coach)", () => {
   it("pós-flop: quando a recomendação é apostar, advice traz betSizeBB > 0", () => {
-    const g = new GameController();
+    // Semente FIXA → partida 100% determinística (sem flakiness de Monte Carlo).
+    const g = new GameController({ rng: seededRng(20240824) });
     let found: { street: string; action: string; bb: number } | null = null;
     let hands = 0;
     while (!found && hands++ < 300 && !g.tournamentOver) {
