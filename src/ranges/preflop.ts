@@ -16,7 +16,7 @@
 
 import type { Card } from "../engine/cards";
 import type { BotProfile } from "../bots/profiles";
-import { buildTopRange, rangeSubtract } from "./build";
+import { buildTopRange, buildTopRangeWithBonus, rangeSubtract } from "./build";
 import { omahaPreflopDecision } from "./omahaPreflop";
 import { rfiRange, RFI_BASE_PERCENT } from "./charts/rfi";
 import { stackDepthAdjust } from "./stackDepth";
@@ -259,14 +259,20 @@ interface FacingParams {
 // Defesa do BIG BLIND por posição do abridor (fecha a ação, melhores odds).
 // Ajustado para evitar defender lixo vs early positions (HJ, MP).
 const BB_DEFEND: Partial<Record<Position, { defend: number; v3b: number }>> = {
-  UTG: { defend: 0.14, v3b: 0.04 },
-  UTG1: { defend: 0.15, v3b: 0.045 },
-  MP: { defend: 0.16, v3b: 0.05 },
-  LJ: { defend: 0.20, v3b: 0.055 },
-  HJ: { defend: 0.24, v3b: 0.06 },
-  CO: { defend: 0.30, v3b: 0.07 },
-  BTN: { defend: 0.38, v3b: 0.08 },
-  SB: { defend: 0.44, v3b: 0.09 },
+  // Defesa do BB — o BB FECHA a ação pagando barato (grande preço: ~3.5:1 vs um
+  // open de 2bb), então defende MUITO mais largo do que "top X% linear" sugeria.
+  // Antes esta tabela era nit (16% vs MP), foldando defesas padrão como 65s pelo
+  // preço (leak que o Allan pegou em vários spots). Agora nos níveis reais: mais
+  // largo vs abridor tardio (range solto), um pouco menos vs abridor cedo (range
+  // forte, mais domínio). A FORMA (conectores suited etc.) vem do bônus abaixo.
+  UTG: { defend: 0.27, v3b: 0.04 },
+  UTG1: { defend: 0.30, v3b: 0.045 },
+  MP: { defend: 0.40, v3b: 0.05 },
+  LJ: { defend: 0.44, v3b: 0.055 },
+  HJ: { defend: 0.48, v3b: 0.06 },
+  CO: { defend: 0.52, v3b: 0.07 },
+  BTN: { defend: 0.56, v3b: 0.08 },
+  SB: { defend: 0.62, v3b: 0.09 },
 };
 
 function facingRaiseParams(hero: Position, raiser: Position): FacingParams {
@@ -500,7 +506,12 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     value3betPct = Math.min(value3betPct, defendPct);
     defendPct = Math.max(defendPct, value3betPct);
 
-    const defendRange = buildTopRange(defendPct);
+    // Defesa com FORMA de defesa (não top-X% linear): conectores suited e pares
+    // entram na frente de mãos offsuit marginais — 65s/54s/76s são defesas
+    // padrão pelo preço/jogabilidade, mas o ranking linear os enterrava. Bônus
+    // maior no BB (fecha a ação barato, joga muitos flops).
+    const defendSpecBonus = ctx.heroPosition === "BB" ? 0.07 : 0.05;
+    const defendRange = buildTopRangeWithBonus(defendPct, defendSpecBonus);
     const value3betRange = buildTopRange(value3betPct);
     const wider = buildTopRange(defendPct + bluffPct);
     const bluffZone = rangeSubtract(wider, defendRange);
