@@ -16,6 +16,21 @@ import { buildHandStory } from "./handNarrative";
 const SUIT_SYMBOL = ["♣", "♦", "♥", "♠"]; // ordem de SUITS = "cdhs"
 const SUIT_RED = [false, true, true, false];
 
+// Posições tradicionais dos pips. A carta continua sendo desenhada de forma
+// determinística no canvas, mas agora preserva a leitura de um baralho completo
+// (5 tem cinco símbolos, 8 tem oito, 10 tem dez etc.).
+const PIP_POSITIONS: Record<number, [number, number][]> = {
+  2: [[0.5, 0.24], [0.5, 0.76]],
+  3: [[0.5, 0.20], [0.5, 0.50], [0.5, 0.80]],
+  4: [[0.32, 0.24], [0.68, 0.24], [0.32, 0.76], [0.68, 0.76]],
+  5: [[0.32, 0.23], [0.68, 0.23], [0.5, 0.50], [0.32, 0.77], [0.68, 0.77]],
+  6: [[0.32, 0.20], [0.68, 0.20], [0.32, 0.50], [0.68, 0.50], [0.32, 0.80], [0.68, 0.80]],
+  7: [[0.32, 0.18], [0.68, 0.18], [0.32, 0.39], [0.68, 0.39], [0.5, 0.50], [0.32, 0.82], [0.68, 0.82]],
+  8: [[0.32, 0.17], [0.68, 0.17], [0.32, 0.39], [0.68, 0.39], [0.32, 0.61], [0.68, 0.61], [0.32, 0.83], [0.68, 0.83]],
+  9: [[0.32, 0.16], [0.68, 0.16], [0.32, 0.37], [0.68, 0.37], [0.5, 0.50], [0.32, 0.63], [0.68, 0.63], [0.32, 0.84], [0.68, 0.84]],
+  10: [[0.32, 0.14], [0.68, 0.14], [0.32, 0.32], [0.68, 0.32], [0.32, 0.50], [0.68, 0.50], [0.32, 0.68], [0.68, 0.68], [0.32, 0.86], [0.68, 0.86]],
+};
+
 // Cores da marca
 const COLOR_BG_DARK = "#0a1410";
 const COLOR_BG_FELT = "#0d1f16";
@@ -107,12 +122,23 @@ function drawCardOnCanvas(
   drawIndex();
   ctx.restore();
 
-  // Pip central grande
+  // Face tradicional: números usam todos os pips; figuras e ás recebem uma
+  // marca central grande, mantendo o índice completo nos dois cantos.
   ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `${h * 0.4}px Georgia, serif`;
-  ctx.fillText(suit, x + w / 2, y + h * 0.55);
+  if (PIP_POSITIONS[r]) {
+    ctx.font = `${Math.max(12, h * 0.13)}px Georgia, serif`;
+    for (const [px, py] of PIP_POSITIONS[r]) ctx.fillText(suit, x + w * px, y + h * py);
+  } else if (r === 14) {
+    ctx.font = `${h * 0.42}px Georgia, serif`;
+    ctx.fillText(suit, x + w / 2, y + h * 0.54);
+  } else {
+    ctx.font = `900 ${h * 0.31}px Georgia, serif`;
+    ctx.fillText(rank, x + w / 2, y + h * 0.48);
+    ctx.font = `${h * 0.19}px Georgia, serif`;
+    ctx.fillText(suit, x + w / 2, y + h * 0.72);
+  }
 }
 
 /** Carrega a logo oficial em base64 e a desenha no topo do card. */
@@ -243,6 +269,31 @@ export function cleanCoachText(raw: string): string {
   return cleaned.trim();
 }
 
+function isAllInLabel(label: string): boolean {
+  return /all[\s-]?in/i.test(label);
+}
+
+function normalizeCardStreet(street: string): string {
+  const t = (street || "").toLowerCase();
+  if (t.includes("pré") || t.includes("pre")) return "preflop";
+  if (t.includes("flop")) return "flop";
+  if (t.includes("turn")) return "turn";
+  return "river";
+}
+
+function lastVillainCallAmount(data: HandShareData): number | undefined {
+  const target = normalizeCardStreet(data.street);
+  const label = [...(data.actionLog ?? [])]
+    .reverse()
+    .find((entry) => !entry.isHero && normalizeCardStreet(entry.street) === target && /call|paga/i.test(entry.action))?.action;
+  const match = /([\d.,]+)\s*bb/i.exec(label ?? "");
+  return match ? parseFloat(match[1].replace(",", ".")) : undefined;
+}
+
+function formatBB(value: number): string {
+  return value.toFixed(1).replace(/\.0$/, "").replace(".", ",");
+}
+
 /** Categoria da mão com artigo, minúscula, p/ frase natural: "um par", "uma trinca". */
 function madeArticle(made: string): string {
   const m = made.toLowerCase();
@@ -268,9 +319,15 @@ function buildCardStory(
   coachAction: string,
   equity?: number,
   potOdds?: number,
+  allInCallBB?: number,
 ): string {
   const hand = heroMade ? `você tinha ${madeArticle(heroMade)}` : "você jogou sua mão";
   const t = heroAction.toLowerCase();
+  const allInNote = isAllInLabel(heroAction)
+      ? allInCallBB !== undefined
+        ? ` O vilão tinha só ${formatBB(allInCallBB)}bb para continuar; um sizing normal nessa situação já o deixaria comprometido.`
+        : " O all-in representa o restante disponível, não necessariamente um overbet."
+    : "";
   const past = /call|pag/.test(t) ? "pagou" : /rais|bet|apost|jam|all/.test(t) ? "apostou" : "jogou";
   const verb = /call|pag/.test(t) ? "pagar" : /rais|bet|apost|jam|all/.test(t) ? "apostar" : "jogar";
   const conta = equity !== undefined && potOdds !== undefined ? ` (${Math.round(equity * 100)}% × ${Math.round(potOdds * 100)}%)` : "";
@@ -279,12 +336,12 @@ function buildCardStory(
   if (villainMade && heroWon !== undefined) {
     if (heroWon) {
       return correct
-        ? `${cap(hand)} e levou o pote — o vilão tinha ${madeArticle(villainMade)}. Jogada certa e resultado certo. É assim que a stack cresce.`
-        : `${cap(hand)} e levou o pote do vilão (${madeArticle(villainMade)}). Deu certo, mas pela conta foi arriscado.`;
+        ? `${cap(hand)} e levou o pote — o vilão tinha ${madeArticle(villainMade)}. O resultado foi positivo e a decisão foi avaliada como alinhada ao padrão.${allInNote}`
+        : `${cap(hand)} e levou o pote do vilão (${madeArticle(villainMade)}). Deu certo no resultado, mas a decisão merece revisão.${allInNote}`;
     }
-    return correct
-      ? `${cap(hand)} e ${past} pela conta certa${conta}. O vilão escondia ${madeArticle(villainMade)} — decisão boa, resultado ruim. No longo prazo, ${verb} assim dá lucro.`
-      : `${cap(hand)} e o vilão tinha ${madeArticle(villainMade)}. Aqui dava pra largar e economizar fichas — o certo era ${coachAction.toLowerCase()}.`;
+      return correct
+        ? `${cap(hand)} e ${past} pela conta certa${conta}. O vilão escondia ${madeArticle(villainMade)} — decisão alinhada, apesar do resultado ruim. No longo prazo, ${verb} assim pode dar lucro.${allInNote}`
+        : `${cap(hand)} e o vilão tinha ${madeArticle(villainMade)}. Aqui dava pra largar e economizar fichas — o certo era ${coachAction.toLowerCase()}.${allInNote}`;
   }
   return correct
     ? `${cap(hand)} e jogou no ponto certo. Disciplina é isso: entrar bem e largar na hora.`
@@ -735,9 +792,10 @@ async function drawDecisionCard(
     betBB && poteBB && poteBB - 2 * betBB > 0.5 ? poteBB - 2 * betBB
     : potVals.length >= 2 ? potVals[potVals.length - 2]
     : poteBB;
-  // % do pote só faz sentido pra aposta/raise normal. Num all-in (sobretudo com
-  // vilão coberto) o "% do pote" engana — mostramos "all-in" em vez do número.
-  // E descartamos % implausível (fora de ~5%–300%) que denuncia dado ruim.
+  // % do pote só faz sentido para aposta/raise normal. Num all-in, o card não
+  // inventa um sizing a partir do stack e mostra o valor que o vilão precisou
+  // colocar, quando o histórico o registra.
+  const villainCallBB = isAllInAct ? lastVillainCallAmount(data) : undefined;
   const rawPct = !isAllInAct && betBB && potIntoBet ? Math.round((betBB / potIntoBet) * 100) : undefined;
   const pctPot = rawPct !== undefined && rawPct >= 5 && rawPct <= 300 ? rawPct : undefined;
   const bW = (W - 112 - 10) / 2, bH = 62;
@@ -749,9 +807,11 @@ async function drawDecisionCard(
   ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("SUA AÇÃO", hx + 22, y + bH / 2);
   ctx.textAlign = "right";
   ctx.fillStyle = GOLD; ctx.font = "900 30px Georgia, serif";
-  const actTxt = betBB !== undefined
-    ? `${betBB} bb${isAllInAct ? " · all-in" : pctPot ? ` · ${pctPot}%` : ""}`
-    : (data.heroAction || "—");
+  const actTxt = isAllInAct
+    ? `All-in${villainCallBB !== undefined ? ` · vilão paga ${formatBB(villainCallBB)}bb` : ""}`
+    : betBB !== undefined
+      ? `${betBB} bb${pctPot ? ` · ${pctPot}%` : ""}`
+      : (data.heroAction || "—");
   ctx.fillText(actTxt, W - 56 - 22, y + bH / 2);
   y += bH + 12;
 
@@ -813,9 +873,15 @@ async function drawDecisionCard(
   if (data.equity !== undefined) tecParts.push(`Equity ${Math.round(data.equity * 100)}%`);
   if (data.potOdds !== undefined) tecParts.push(`preço ${Math.round(data.potOdds * 100)}%`);
   if (data.evBB !== undefined) tecParts.push(`EV ${data.evBB > 0 ? "+" : ""}${Math.round(data.evBB * 10) / 10}bb`);
-  const tecnica = tecParts.length ? `${tecParts.join(" · ")}. Coach: ${data.coachAction}.` : `Coach recomenda: ${data.coachAction}.`;
+  const decisionLabel = correct ? "Decisão: alinhada ao padrão" : "Decisão: revisar";
+  const allInContext = isAllInAct && villainCallBB !== undefined
+    ? ` All-in no river: o vilão tinha ${formatBB(villainCallBB)}bb para continuar.`
+    : "";
+  const tecnica = tecParts.length
+    ? `${tecParts.join(" · ")}. ${decisionLabel}. Coach: ${data.coachAction}.${allInContext}`
+    : `${decisionLabel}. Coach recomenda: ${data.coachAction}.${allInContext}`;
   const villainMade = villain ? madeFull(villain.cards) : undefined;
-  const simples = buildCardStory(made, villainMade, heroWon, correct, data.heroAction, data.coachAction, data.equity, data.potOdds);
+  const simples = buildCardStory(made, villainMade, heroWon, correct, data.heroAction, data.coachAction, data.equity, data.potOdds, villainCallBB);
   drawCol(56, "SIMPLES", simples);
   drawCol(56 + colW, "TÉCNICA", tecnica);
 

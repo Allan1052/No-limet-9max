@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { rankOf, suitOf, type Card } from "../engine/cards";
-import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
+import { describeHandPt } from "../engine/evaluator";
 import type { HandShareData } from "./handShareCard";
 import {
   preflopOpenRange,
@@ -147,7 +147,7 @@ export function buildHandNarrative(data: HandShareData): NarrativeStreet[] {
       if (heroHt) {
         const best = heroBestAction(heroHt, board, 0, potBB || 6, texture, villainRange, 300);
         const hit = boardHit(heroHt, board);
-        const madeTxt = hit.made === "trips+" ? "trinca+" : hit.made === "twoPairOrBetter" ? "dois pares+" : hit.made === "overPair" || hit.made === "topPair" ? "par de topo" : hit.draw ? "projeto" : "carta alta";
+        const madeTxt = hit.made === "trips+" ? "trinca+" : hit.made === "twoPairOrBetter" ? "dois pares+" : hit.made === "overPair" ? "overpair" : hit.made === "topPair" ? "par de topo" : hit.draw ? "projeto" : "carta alta";
         heroLine = `${heroActionLabel(heroAct ?? best.action)}${madeTxt ? ` — ${madeTxt}` : ""}. ${best.reason}`;
         heroShort = `${heroActionLabel(heroAct ?? best.action)} · ${madeTxt}`;
       }
@@ -159,13 +159,13 @@ export function buildHandNarrative(data: HandShareData): NarrativeStreet[] {
           heroStackBB: effBB, villainStackBB: effBB, potBB: potBB || 6, facedBetBB: 4,
         });
         villainRange = snap.range;
-        villainLine = snap.narration;
+        villainLine = `Leitura didática: ${snap.narration}`;
         const va = toVillainAction(vAct);
         const verb = va === "fold" ? "larga" : va === "call" ? "paga" : va === "check" ? "check" : "aposta";
         const names = [...new Set(snap.topHands.map((h) => shortHandName(h.handType)))].slice(0, 4).join(", ");
         villainShort = va === "fold" ? "larga o lixo" : `${verb} → ${names || "range apertado"}`;
       } else {
-        villainLine = "Vilão não agiu nesta rua.";
+        villainLine = "Leitura didática: o vilão não agiu nesta rua.";
         villainShort = "—";
       }
     }
@@ -208,7 +208,20 @@ function actionPhrase(action: string): string {
 /** Categoria da mão do herói AVALIADA no board da rua (real, não heurística). */
 function heroMadeAt(heroCards: Card[], boardCards: Card[]): string {
   if (boardCards.length < 3 || heroCards.length < 2) return "";
-  try { return CATEGORY_NAMES_PT[categoryOf(evaluate([...heroCards, ...boardCards]))] ?? ""; } catch { return ""; }
+  try {
+    const described = describeHandPt([...heroCards, ...boardCards]);
+    // No flop, um pocket pair acima de todas as cartas comunitárias é um
+    // overpair. O avaliador continua informando a categoria real (par), mas a
+    // narrativa precisa ensinar a relação com o board.
+    if (boardCards.length === 3) {
+      const hit = boardHit(cardsToHandType(heroCards), { street: "flop", cards: boardCards });
+      if (hit.made === "overPair") {
+        const pairRank = described.match(/^Par de (.+)$/i)?.[1];
+        return pairRank ? `Overpair de ${pairRank}` : `Overpair (${described})`;
+      }
+    }
+    return described;
+  } catch { return ""; }
 }
 
 /** Mão com artigo p/ frase natural: "um par", "uma trinca", "dois pares". */
