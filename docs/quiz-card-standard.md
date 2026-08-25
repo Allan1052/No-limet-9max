@@ -4,7 +4,7 @@
 
 **Asset principal:** `public/instagram/quiz-padrao-bb-shove-15bb.png`
 
-**Reel padrão:** `public/instagram/quiz-padrao-bb-shove-15bb-reel.mp4` — 8 segundos, 720×1280, 24 fps, sem áudio.
+**Reel padrão:** `public/instagram/quiz-padrao-bb-shove-15bb-reel.mp4` — 12 segundos, 720×1280, 24 fps, sem áudio.
 
 ## Conceito
 
