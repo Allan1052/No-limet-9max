@@ -65,12 +65,16 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "Na prática: do BTN você pode jogar mais mãos, porque age depois de todos nas rodadas seguintes. De UTG (primeiro a falar), jogue só mãos fortes — qualquer decisão errada sua será explorada pelos 8 jogadores que falam depois.",
       "Regra para começar: posição inicial = mãos fortes; botão = mãos variadas. Se a dúvida apertar, foldar cedo dói menos do que foldar caro depois.",
     ],
+    examples: [
+      { label: "Forte de qualquer cadeira", hero: "AhKh", note: "AK vale de UTG ao botão — mão premium não depende de posição." },
+      { label: "Só no botão", hero: "9s8s", note: "9♠8♠ é lixo de UTG (8 falam depois de você), mas do botão abre fácil — a posição libera mãos médias." },
+    ],
     quiz: [
       { question: "Qual posição age por último em todas as ruas pós-flop?", choices: ["UTG", "Small blind", "Botão (BTN)", "Cutoff"], answer: 2 },
       { question: "Por que UTG deve jogar menos mãos que o BTN?", choices: ["Porque UTG aposta mais caro", "Porque todos os outros jogadores ainda vão falar depois", "Porque UTG tem menos fichas", "Não há diferença"], answer: 1 },
       { question: "Você está no botão e ninguém aumentou antes. O que isso permite?", choices: ["Abrir com mais mãos", "Só abrir com AA", "Fazer all-in sempre", "Nada"], answer: 0 },
       { question: "O que a posição oferece de vantagem?", choices: ["Cartas melhores", "Mais fichas", "Informação sobre as ações dos adversários", "Nenhuma"], answer: 2 },
-      { question: "De UTG com 7♦ 2♠, qual a melhor decisão na maioria dos casos?", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
+      { question: "De UTG com esta mão, qual a melhor decisão na maioria dos casos?", hero: "7d2s", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
     ],
   },
   {
@@ -82,6 +86,10 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "Na abertura sem aumento antes (RFI), profissionais seguem larguras por posição: UTG abre cerca de 15% das mãos (só as fortes: pares grandes, Ax forte, cartas altas do mesmo naipe), enquanto o botão abre cerca de 42% (mãos médias também entram).",
       "Por quê? Porque de UTG ainda há 8 jogadores para falar — mão média vira dor de cabeça. No botão, só os blinds respondem, então dá para abrir mais.",
       "No nosso app, a aba Rua por Rua mostra exatamente isso: toque na grade para ver quais mãos entram, call e aposta em cada posição. Treinar range de abertura é o treino mais importante de um iniciante.",
+    ],
+    examples: [
+      { label: "Dentro do range de UTG", hero: "AsKs", note: "Ases fortes e pares grandes: a base do range apertado de quem fala primeiro." },
+      { label: "Só entra do botão", hero: "7h6h", note: "76 suited não abre de UTG, mas do botão sim — mão média que a posição justifica." },
     ],
     quiz: [
       { question: "O que é um 'range' no poker?", choices: ["A distância entre as fichas", "O conjunto de mãos possíveis numa situação", "O valor do pote", "A posição do jogador"], answer: 1 },
@@ -101,6 +109,9 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "Regra prática para novatos: contra aposta pequena (metade do pote ou menos), você pode pagar com mais mãos. Contra aposta grande (pote inteiro ou mais), só continue com mãos realmente fortes ou projetos com muitas cartas de saída (outs).",
       "E lembre: foldar não é perder fichas — é GUARDAR fichas para chegar na final. Quem dobra demais para defender orgulho quebra no meio do torneio.",
     ],
+    examples: [
+      { label: "Projeto forte (9 outs)", hero: "Ah7h", board: "Kh8h2c", note: "Duas copas na mão + duas no board: 9 cartas te dão o flush. Projeto com muitas saídas tolera pagar um preço." },
+    ],
     quiz: [
       { question: "Pote de 100, adversário aposta 50. Quanto você precisa pagar para continuar?", choices: ["25", "50", "100", "150"], answer: 1 },
       { question: "Se você paga 50 num pote que valerá 200, quantas vezes precisa ganhar para a conta fechar?", choices: ["1 em cada 2", "1 em cada 3", "1 em cada 5", "Sempre"], answer: 1 },
@@ -119,9 +130,13 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "Mãos de exemplo que pedem fold sem pensar: 7-2, 8-3, cartas baixas desconectadas de posições iniciais. Guardar essas fichas vale mais do que tentar 'ver o flop com qualquer coisa'.",
       "O coach do app vai te dizer quando o fold é a linha principal — se ele disser isso de uma mão ruim, é padrão, não erro. Não espere aplauso por fazer o óbvio: espere resultado no final do torneio.",
     ],
+    examples: [
+      { label: "Fold sem pensar", hero: "7s2c", note: "7-2 offsuit: a pior mão do poker. De qualquer posição, vai pro lixo." },
+      { label: "Fold sem pensar", hero: "8h3d", note: "Cartas baixas e desconectadas: guardar a ficha vale mais que 'ver o flop com qualquer coisa'." },
+    ],
     quiz: [
       { question: "Por que o fold é tão importante em torneios?", choices: ["Porque é divertido", "Porque cada aposta errada custa fichas preciosas ao longo do torneio", "Porque acelera o jogo", "Não é importante"], answer: 1 },
-      { question: "Você está de UTG com 7♠ 2♣. Qual a decisão padrão?", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
+      { question: "Você está de UTG com esta mão. Qual a decisão padrão?", hero: "7s2c", choices: ["Aumentar", "Pagar", "Foldar", "All-in"], answer: 2 },
       { question: "Foldar uma mão ruim significa:", choices: ["Fraqueza", "Erro de leitura", "Guardar fichas para decisões melhores", "Desistir do torneio"], answer: 2 },
       { question: "O que separa quem chega na final de quem 'quase' chegou?", choices: ["Sorte nas cartas", "Foldar cedo o que não merece fichas", "Jogar todas as mãos", "Apostar mais"], answer: 1 },
       { question: "Quando o coach diz que o fold é 'a linha principal' de uma mão fraca, isso é:", choices: ["Um erro do coach", "O padrão correto — não espere aplauso pelo óbvio", "Motivo para pagar", "Sinal de blefe"], answer: 1 },
@@ -136,6 +151,10 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "No pós-flop, a leitura continua: quem paga uma aposta num board com A no topo provavelmente tem algo com A ou uma mão que aguenta pressão. Quem aposta de novo no turn geralmente mostra força real.",
       "Padrões ajudam: jogador que só aumenta com mãos enormes é previsível; jogador que aumenta com qualquer carta vai errar muitas vezes — espere ele exagerar e pague com mão forte.",
       "No Rua por Rua do app, você toca no jogador para ver o range dele atualizado a cada ação — exatamente como os profissionais constroem a leitura rua a rua. Treine isso: adivinhar o range do vilão antes de decidir é o hábito que mais acelera evolução.",
+    ],
+    examples: [
+      { label: "Aumento de UTG = forte", hero: "AsKs", note: "Quando alguém abre lá do começo, pense em mãos assim: pares grandes, AK, ases fortes. Dê respeito." },
+      { label: "Aumento do botão = largo", hero: "Ts9c", note: "Do botão o range abre — até T9 entra. Não dê tanto respeito: pague e reaja com mais mãos." },
     ],
     quiz: [
       { question: "Um aumento de UTG geralmente indica:", choices: ["Range largo com qualquer mão", "Range forte (pares grandes, Ax)", "Um blefe garantido", "Nada específico"], answer: 1 },
@@ -154,6 +173,10 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "No meio (blinds subindo), o jogo acelera: quem não rouba blinds morre aos poucos. Comece a abrir mais do botão e do cutoff, e defenda seus blinds com mais frequência.",
       "No fim (stack curto, bolha chegando), vale a matemática do push-or-fold: com 10-15 blinds, a decisão vira 'dou all-in ou foldo?'. Mãos como qualquer par, Ax e cartas altas conectadas viram all-in de UTG com stack curto — esperar AA que não vem é morrer devagar.",
       "O coach do app mostra o veredito considerando o estágio do torneio e seu stack em blinds. Jogue torneios de treino aqui no app (sem dinheiro real) até a bolha deixar de dar medo — depois é só repetir no circuito.",
+    ],
+    examples: [
+      { label: "All-in com stack curto (~12bb)", hero: "Ad9c", note: "Com 10-15bb, A9 vira all-in de UTG — esperar o AA que não vem é morrer devagar." },
+      { label: "All-in com stack curto (~12bb)", hero: "6s6d", note: "Qualquer par crava com stack curto: você quase nunca está muito atrás de quem paga." },
     ],
     quiz: [
       { question: "Qual a estratégia correta no início do torneio (stacks profundos)?", choices: ["All-in com qualquer mão", "Jogo sólido: mãos fortes e fold sem culpa", "Roubar blinds sem parar", "Pagar todos os aumentos"], answer: 1 },
