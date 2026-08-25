@@ -42,6 +42,16 @@ export interface HandCommentCtx {
   board?: Card[];
   /** Tamanho da AÇÃO DO HERÓI neste spot em % do pote (só existe quando o herói aposta/raise). Bet fino <40%, normal 40-75%, grande 75-100%, overbet >100% */
   heroBetPct?: number;
+  /**
+   * Nível de aposta ENFRENTADO pelo herói ANTES de decidir (pré-flop):
+   * 0 = pote não reagredido (RFI/limp/BB pode abrir ou dar check),
+   * 1 = enfrentando uma abertura simples,
+   * 2 = enfrentando um 3-bet (herói está num spot de 4-bet),
+   * 3+ = enfrentando 4-bet ou mais.
+   * É a chave que distingue "fold de abertura" de "fold FRENTE a um 3-bet" —
+   * sem ela a narração pescava a mensagem errada (bug do Allan, 25/08/2026).
+   */
+  betLevelFaced?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -157,14 +167,43 @@ export function sizingPhrases(s: NonNullable<ReturnType<typeof readHeroSizing>>)
 // Spots de RESPOSTA pré-flop — 3-bet / 4-bet / call de 3-bet / fold a 3-bet
 // (UI-only, não toca no motor. Derivado do rótulo da ação + posição + stack.)
 // ---------------------------------------------------------------------------
-/** Lê o spot de resposta pré-flop do ctx. null fora de spot de resposta. */
-export function readResponseSpot(ctx: HandCommentCtx): "3bet" | "4bet" | "call3bet" | "fold3bet" | null {
+/**
+ * Lê o spot de RESPOSTA pré-flop do ctx (3-bet/4-bet/call-de-3bet/fold-a-3bet).
+ * null fora de um spot de resposta.
+ *
+ * A CHAVE é `betLevelFaced` — quanta re-agressão havia na frente do herói:
+ *  - No jogo ao vivo o open do herói vem rotulado "Raise" (não "3-bet") e todo
+ *    Fold/Call pré-flop caía como "fold3bet"/"call3bet". Resultado: um simples
+ *    open-fold de K5s exibia "Fold FRENTE a 3-bet" — a mensagem errada.
+ *  - Só é spot de resposta quando de fato houve aposta antes (betLevelFaced≥1);
+ *    e a narração de "vs 3-bet" (passiva) só quando há 3-bet+ na frente (≥2).
+ */
+export function readResponseSpot(
+  ctx: HandCommentCtx,
+): "3bet" | "4bet" | "call3bet" | "fold3bet" | null {
   if (!ctx.preflop) return null;
   const act = (ctx.heroAction ?? "").trim();
-  if (act === "3-bet") return "3bet";
-  if (act === "4-bet") return "4bet";
-  if (act === "Call") return "call3bet"; // call pré-flop = face a aposta do vilão
-  if (act === "Fold") return "fold3bet";
+  const lvl = ctx.betLevelFaced;
+  // Sem o nível enfrentado, não dá pra saber se houve re-agressão: não
+  // arriscamos uma narração de resposta canned — as frases da categoria assumem.
+  // Exceção: rótulos inequívocos de re-raise do próprio herói (só o import gera).
+  if (lvl === undefined) {
+    if (act === "3-bet") return "3bet";
+    if (act === "4-bet") return "4bet";
+    return null;
+  }
+  // Nível 0 = pote não reagredido (RFI / limp / BB): nunca é spot de resposta.
+  if (lvl <= 0) return null;
+  // Herói foi AGRESSIVO por cima de uma aposta → 3-bet (lvl 1) ou 4-bet (lvl≥2).
+  if (act === "Raise" || act === "3-bet" || act === "4-bet") {
+    return lvl >= 2 ? "4bet" : "3bet";
+  }
+  // Respostas PASSIVAS só ganham a narração de "vs 3-bet" quando há de fato um
+  // 3-bet (ou mais) na frente — pagar/foldar um open simples NÃO é spot de 3-bet.
+  if (lvl >= 2) {
+    if (act === "Call") return "call3bet";
+    if (act === "Fold") return "fold3bet";
+  }
   return null;
 }
 /** Posição do herói em classes: early (UTG/UTG1/MP) ou late (HJ/CO/BTN/SB/BB). */

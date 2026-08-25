@@ -112,12 +112,15 @@ describe("handCommentary — classificação por mão", () => {
     expect(c!.lines[0]).toMatch(/fold sem culpa|luxo|aceitável|equity morta/i);
   });
 
-  it("KQo de UTG fold profundo: fold limpo", () => {
+  it("KQo de UTG open-fold profundo: fold de ABERTURA, não de 3-bet", () => {
+    // Sem re-agressão na frente (betLevelFaced 0): é um open-fold. A narração
+    // NÃO pode falar de "3-bet" — tem que ser a frase de abertura da categoria.
     const c = getHandCommentary(
-      { heroHand: hands.KQo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+      { heroHand: hands.KQo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 0 },
       "free",
     );
-    expect(c!.lines[0]).toMatch(/não é covardia|equity morta/i);
+    expect(c!.lines[0]).toMatch(/fold limpo|nobre/i);
+    expect(c!.lines[0]).not.toMatch(/3-bet|frente a 3-bet/i);
   });
 
   it("A5s de BTN: abre com backdoor", () => {
@@ -175,17 +178,17 @@ describe("handCommentary — spots de resposta pré-flop", () => {
     expect(c).not.toBeNull();
     expect(c!.lines[0]).toMatch(/linha dos extremos|AA\/KK\/AK/i);
   });
-  it("call de 3-bet: arma de posição", () => {
+  it("call de 3-bet: arma de posição (betLevelFaced 2)", () => {
     const c = getHandCommentary(
-      { heroHand: hands.KQo, heroAction: "Call", position: "BTN", heroBB: 100, preflop: true, rating: "ok" },
+      { heroHand: hands.KQo, heroAction: "Call", position: "BTN", heroBB: 100, preflop: true, rating: "ok", betLevelFaced: 2 },
       "free",
     );
     expect(c).not.toBeNull();
     expect(c!.lines[0]).toMatch(/arma de posição|TT\/AJs\/KQs/i);
   });
-  it("fold a 3-bet de early: aritmética", () => {
+  it("fold a 3-bet de early: aritmética (betLevelFaced 2)", () => {
     const c = getHandCommentary(
-      { heroHand: hands.KJo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa" },
+      { heroHand: hands.KJo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 2 },
       "technical",
     );
     expect(c).not.toBeNull();
@@ -197,6 +200,43 @@ describe("handCommentary — spots de resposta pré-flop", () => {
       "free",
     );
     expect(c!.lines[0]).toMatch(/stack curto|push\/fold/i);
+  });
+  it("REGRESSÃO (bug Allan): open-fold de K5s em UTG+1 NÃO fala de 3-bet", () => {
+    // Cenário do print: UTG+1, K♥5♥, ninguém aumentou (betLevelFaced 0) e o
+    // herói foldou a abertura. A narração jamais pode mencionar 3-bet.
+    const K5s = [card(13, 2), card(5, 2)];
+    for (const mode of ["free", "technical"] as const) {
+      const c = getHandCommentary(
+        { heroHand: K5s, heroAction: "Fold", position: "UTG1", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 0 },
+        mode,
+      );
+      expect(c).not.toBeNull();
+      expect(c!.lines[0]).not.toMatch(/3-bet|frente a 3-bet|KJo\/AQo/i);
+    }
+  });
+  it("fold a um OPEN simples (betLevelFaced 1) não é fold-a-3bet", () => {
+    // Enfrentou só uma abertura, não um 3-bet: sem narração de "vs 3-bet".
+    const c = getHandCommentary(
+      { heroHand: hands.KJo, heroAction: "Fold", position: "UTG", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 1 },
+      "free",
+    );
+    expect(c!.lines[0]).not.toMatch(/frente a 3-bet|declaração de guerra/i);
+  });
+  it("herói 3-beta um open (Raise + betLevelFaced 1): narração de 3-bet", () => {
+    // No jogo ao vivo o 3-bet do herói vem rotulado "Raise"; betLevelFaced 1
+    // é o que revela que foi re-agressão por cima de uma abertura.
+    const c = getHandCommentary(
+      { heroHand: hands.AKs, heroAction: "Raise", position: "BTN", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 1 },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/pune o roubo|squeeze|imprime/i);
+  });
+  it("herói 4-beta um 3-bet (Raise + betLevelFaced 2): linha dos extremos", () => {
+    const c = getHandCommentary(
+      { heroHand: hands.AA, heroAction: "Raise", position: "CO", heroBB: 100, preflop: true, rating: "boa", betLevelFaced: 2 },
+      "free",
+    );
+    expect(c!.lines[0]).toMatch(/linha dos extremos|AA\/KK\/AK/i);
   });
   it("pós-flop ignora o branch de resposta", () => {
     const c = getHandCommentary(

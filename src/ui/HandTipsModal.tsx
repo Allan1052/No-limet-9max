@@ -85,6 +85,7 @@ export function HandTipsModal({
             heroBetPct: (firstItem as any).betSizePct,
             rating: firstItem.rating,
             preflop: firstItem.street === "Pré-flop",
+            betLevelFaced: (firstItem as any).betLevelFaced,
             icmPhase,
             board,
           },

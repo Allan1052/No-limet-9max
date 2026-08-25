@@ -49,6 +49,9 @@ export interface HeroAdvice {
   /** TAMANHO recomendado da aposta/raise: fração do pote (0..1) e valor em bb. */
   betSizePct?: number;
   betSizeBB?: number;
+  /** Nível de aposta ENFRENTADO no pré-flop (0=RFI, 1=open, 2=3-bet, 3=4-bet).
+   *  Só p/ a narração do coach saber se foi resposta a um 3-bet ou abertura. */
+  betLevelFaced?: number;
 }
 
 /**
@@ -107,6 +110,9 @@ export interface FeedbackItem {
    *  fração do pote (0..1) e valor em bb — pra dica "aposte ~⅔ (≈ 8bb)". */
   betSizePct?: number;
   betSizeBB?: number;
+  /** Nível de aposta ENFRENTADO no pré-flop (0=RFI, 1=open, 2=3-bet, 3=4-bet).
+   *  Repassado à narração do coach para distinguir open-fold de fold-a-3bet. */
+  betLevelFaced?: number;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -242,6 +248,7 @@ function gradeCore(
     // Só carrega o tamanho quando o padrão é agressivo (apostar/aumentar).
     betSizePct: af === "aggro" ? advice.betSizePct : undefined,
     betSizeBB: af === "aggro" ? advice.betSizeBB : undefined,
+    betLevelFaced: advice.betLevelFaced,
   };
 
   // ----- All-in FUNDO quando o certo era um raise/3-bet NORMAL (não jam) -----
