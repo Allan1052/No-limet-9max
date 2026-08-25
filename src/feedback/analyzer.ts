@@ -428,12 +428,42 @@ function gradeCore(
 
 
 
+/**
+ * Limpa o "reason" técnico do motor para o modo SIMPLES: tira equity/preço/%
+ * e comparações, deixando só a linguagem plana. Tamanho em bb (ex.: "5.0bb") é
+ * preservado — é concreto e útil; só o jargão de equity/preço sai. Assim o
+ * recreativo lê "não valia o preço, folda" em vez de "equity 33% < preço 42%".
+ */
+export function plainReason(reason: string): string {
+  let r = reason ?? "";
+  // Parênteses técnicos: "(equity 33% vs range premium)" some; "(5.0bb)" fica.
+  r = r.replace(/\s*\([^)]*\)/g, (m) => (/equity|%|preço|EV|\brange\b/i.test(m) ? "" : m));
+  // Comparações de equity/preço.
+  r = r.replace(/\bequity\s*\d+%\s*[<>]?\s*(?:preço\s*\d+%)?/gi, "");
+  r = r.replace(/\bpreço\s*\d+%/gi, "");
+  r = r.replace(/\b\d+%/g, ""); // qualquer % solto
+  // Conectivos órfãos deixados pra trás.
+  r = r.replace(/\s*[<>]\s*/g, " ");
+  r = r.replace(/\bvs\.?\s+(?=e\b|\.|,|$)/gi, "");
+  // Colapsa pontuação/espaços resultantes.
+  r = r.replace(/:\s+(?=e\b)/gi, " ");   // "folda:  e não" -> "folda e não"
+  r = r.replace(/:\s*(?=[:.,])/g, "");   // ": :" / ": ." / ": ,"
+  r = r.replace(/\s{2,}/g, " ");
+  r = r.replace(/\s+([.,:;])/g, "$1");
+  r = r.replace(/[\s:—-]+$/, "").trim();
+  if (r && !/[.!?]$/.test(r)) r += ".";
+  return r;
+}
+
 function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: string, vars: Record<string, any>): string {
   const heroAction = vars.heroAction ? actionLabel(vars.heroAction) : '';
   const mainLabel = vars.mainLabel ? actionLabel(vars.mainLabel) : '';
   const adviceAction = vars.adviceAction ? actionLabel(vars.adviceAction) : '';
   const equity = vars.equity !== undefined ? pc(vars.equity) : 'alta';
   const odds = vars.odds !== undefined ? pc(vars.odds) : '';
+  // No SIMPLES (free) o "reason" do motor sai sem jargão técnico; nos modos
+  // Técnico/Ultra fica cru (com os números), que é onde eles fazem sentido.
+  const reasonText = level === 'free' ? plainReason(vars.reason ?? '') : (vars.reason ?? '');
 
   const heroFreq = vars.heroFreq !== undefined ? pc(vars.heroFreq) : '';
   const surplus = vars.surplus !== undefined ? vars.surplus.toFixed(1) : '';
@@ -457,9 +487,9 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Jogada certa. ${heroAction} é a linha principal do spot — segue nesse ritmo.`,
         ],
         aligned: [
-          `Boa! Você fez o que um jogador experiente faria. ${vars.reason}`,
-          `Jogada sólida. ${vars.reason}`,
-          `Correto — foi o que um jogador experiente faria. ${vars.reason}`,
+          `Boa! Você fez o que um jogador experiente faria. ${reasonText}`,
+          `Jogada sólida. ${reasonText}`,
+          `Correto — foi o que um jogador experiente faria. ${reasonText}`,
         ],
       },
       ok: {
@@ -517,9 +547,9 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Aqui sua mão estava no range de ${adviceAction} — foldar foi deixar fichas boas na mão.`,
         ],
         differentPattern: [
-          `Diferente do padrão. O que um jogador experiente faria aqui é ${adviceAction}. ${vars.reason}`,
-          `O padrão aqui é ${adviceAction}. ${vars.reason}`,
-          `Saiu da linha padrão: o que um jogador experiente faria é ${adviceAction}. ${vars.reason}`,
+          `Diferente do padrão. O que um jogador experiente faria aqui é ${adviceAction}. ${reasonText}`,
+          `O padrão aqui é ${adviceAction}. ${reasonText}`,
+          `Saiu da linha padrão: o que um jogador experiente faria é ${adviceAction}. ${reasonText}`,
         ],
       },
       ruim: {
@@ -540,8 +570,8 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Jogada ótima — você seguiu a frequência principal (${heroFreq}) da estratégia mista.`,
         ],
         aligned: [
-          `Alinhado com o padrão. ${vars.reason}`,
-          `Boa jogada, alinhada ao padrão. ${vars.reason}`,
+          `Alinhado com o padrão. ${reasonText}`,
+          `Boa jogada, alinhada ao padrão. ${reasonText}`,
         ],
       },
       ok: {
@@ -588,8 +618,8 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Sua mão estava no range de ${adviceAction} — foldar foi apertar demais para a posição.`,
         ],
         differentPattern: [
-          `Diferente do padrão (${adviceAction}). ${vars.reason}`,
-          `Desvio do padrão (${adviceAction}). ${vars.reason}`,
+          `Diferente do padrão (${adviceAction}). ${reasonText}`,
+          `Desvio do padrão (${adviceAction}). ${reasonText}`,
         ],
       },
       ruim: {
@@ -610,8 +640,8 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Optimal play: alinhado à frequência (${heroFreq}) da estratégia mista, maximizando EV.`,
         ],
         aligned: [
-          `Optimal play. ${vars.reason}`,
-          `Linha GTO. ${vars.reason}`,
+          `Optimal play. ${reasonText}`,
+          `Linha GTO. ${reasonText}`,
         ],
       },
       ok: {
@@ -658,8 +688,8 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
           `Mão no range de ${adviceAction}: foldar perdeu EV e desbalanceou o range.`,
         ],
         differentPattern: [
-          `Desvio do padrão GTO (${adviceAction}). ${vars.reason}`,
-          `Fora do padrão GTO (${adviceAction}). ${vars.reason}`,
+          `Desvio do padrão GTO (${adviceAction}). ${reasonText}`,
+          `Fora do padrão GTO (${adviceAction}). ${reasonText}`,
         ],
       },
       ruim: {

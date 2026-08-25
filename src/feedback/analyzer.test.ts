@@ -1,5 +1,44 @@
 import { describe, it, expect } from "vitest";
-import { gradeDecision, type HeroAdvice } from "./analyzer";
+import { gradeDecision, plainReason, type HeroAdvice } from "./analyzer";
+
+describe("plainReason — limpa jargão técnico no modo Simples", () => {
+  it("tira equity/preço mas mantém a frase", () => {
+    const out = plainReason("87s: folda: equity 33% < preço 42% e não domina o range de all-in.");
+    expect(out).not.toMatch(/equity|preço|%|</);
+    expect(out).toMatch(/folda/);
+    expect(out).toMatch(/não domina o range de all-in/);
+  });
+  it("remove parênteses técnicos, preserva a frase", () => {
+    const out = plainReason("KQo: folda: fora de posição e sem valor de all-in (equity 33% vs range premium).");
+    expect(out).not.toMatch(/equity|%/);
+    expect(out).toMatch(/fora de posição e sem valor de all-in/);
+  });
+  it("preserva sizing em bb (não é jargão)", () => {
+    const out = plainReason("AJs: abre isolando 3 limpers — raise maior (5.0bb) para cobrar quem quer flop barato.");
+    expect(out).toMatch(/5\.0bb/);
+    expect(out).toMatch(/isolando 3 limpers/);
+  });
+  it("não mexe em reason já limpo", () => {
+    const r = "97s está fora da range de abertura de UTG.";
+    expect(plainReason(r)).toBe(r);
+  });
+  it("no modo Simples a dica de acerto não vaza equity/preço", () => {
+    const item = gradeDecision("Pré-flop", "free", "fold", {
+      kind: "preflop", action: "fold",
+      reason: "KQo: folda: fora de posição e sem valor de all-in (equity 33% vs range premium).",
+      heroPosition: "CO",
+    });
+    expect(item.text).not.toMatch(/equity|%/);
+  });
+  it("no modo Técnico a dica mantém os números", () => {
+    const item = gradeDecision("Pré-flop", "technical", "fold", {
+      kind: "preflop", action: "fold",
+      reason: "KQo: folda: sem valor de all-in (equity 33% vs range premium).",
+      heroPosition: "CO",
+    });
+    expect(item.text).toMatch(/33%|equity/);
+  });
+});
 
 // Um advice de pós-flop com estratégia mista (frequências).
 function advice(mix: { action: string; freq: number }[], over: Partial<HeroAdvice> = {}): HeroAdvice {
