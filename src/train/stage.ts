@@ -77,7 +77,7 @@ export interface HandAnalysis {
 }
 
 /** Traduz a ação do motor pro rótulo exibido ao jogador. */
-function analyze(ctx: PreflopContext, hand: Card[]): FeedbackItem {
+function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; action: string } {
   void hand;
   const d = preflopDecision(ctx);
   const advice = {
@@ -87,7 +87,17 @@ function analyze(ctx: PreflopContext, hand: Card[]): FeedbackItem {
     mix: d.mix,
     effectiveBB: ctx.effectiveBB,
   };
-  return gradeDecision("Pré-flop", "free", d.action, advice);
+  // Devolve TAMBÉM a ação real do motor — o badge e as vozes têm que vir daqui,
+  // não de reparsear o texto do feedback (que gerava badge RAISE com texto Call).
+  return { item: gradeDecision("Pré-flop", "free", d.action, advice), action: d.action };
+}
+
+/** Ação do motor → categoria do badge/voz (fold | call | raise | allin). */
+function recommendedFrom(action: string): string {
+  if (action === "fold") return "fold";
+  if (action === "call") return "call";
+  if (action === "jam" || action === "allin") return "allin";
+  return "raise"; // raise / 3bet / 4bet / 5bet
 }
 
 /**
@@ -110,14 +120,9 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     betLevelFaced: spec.situation === "vs3bet" ? 2 : undefined,
   };
 
-  const item = analyze(ctx, spec.hand);
-  const recommended = item.text.toLowerCase().includes("all-in")
-    ? "allin"
-    : item.text.toLowerCase().startsWith("fold")
-      ? "fold"
-      : item.text.toLowerCase().startsWith("call")
-        ? "call"
-        : "raise";
+  const { item, action } = analyze(ctx, spec.hand);
+  // O badge e as vozes vêm da DECISÃO REAL do motor — não de parsear o texto.
+  const recommended = recommendedFrom(action);
 
   const stageCtx = stageContext(spec, handType, sd.pushFold);
   const simple = simpleVoice(recommended, handType, spec, stageCtx);

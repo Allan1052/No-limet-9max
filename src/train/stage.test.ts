@@ -57,6 +57,24 @@ describe("HandLab — analyzeHand", () => {
     expect(["allin", "raise", "fold"]).toContain(a.recommended);
   });
 
+  it("badge, veredito e voz batem com a decisão do motor (bug do Allan: RAISE+texto Call)", () => {
+    // Em vários spots, a AÇÃO do badge (recommended) tem que ser a MESMA que a
+    // voz Simples anuncia ("Era RAISE/CALL/FOLD/ALL-IN"). Antes o badge vinha de
+    // reparsear o texto e divergia (badge RAISE com verdict "Call é o que...").
+    const spots: HandLabSpec[] = [
+      spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsopen", stage: "meio", stackBB: 20, hand: parseHand("As7s")! }),
+      spec({ heroPosition: "BTN", situation: "open", stage: "early", stackBB: 100, hand: parseHand("Ah4d")! }),
+      spec({ heroPosition: "CO", situation: "open", stage: "early", stackBB: 40, hand: parseHand("Ts9s")! }),
+      spec({ heroPosition: "CO", situation: "open", stage: "late", stackBB: 10, hand: parseHand("Ks9s")! }),
+    ];
+    for (const s of spots) {
+      const a = analyzeHand(s);
+      const word = a.recommended === "allin" ? "ALL-IN" : a.recommended.toUpperCase();
+      // A voz Simples sempre abre com "Era <AÇÃO>" — tem que ser a do badge.
+      expect(a.simple).toContain(`Era ${word}`);
+    }
+  });
+
   it("devolve contexto legível com posição e stack", () => {
     const a = analyzeHand(spec());
     expect(a.context).toContain("BTN");
