@@ -31,6 +31,15 @@ export interface ScenarioSpec {
   openSizeBB?: number;
   icmSpot?: IcmSpot;
   variant?: "holdem" | "omaha";
+  /** Mão FIXA (ex.: a que o jogador montou na aba "Sua Mão"). Quando presente,
+   *  o cenário abre com ESSAS cartas em vez de sortear — pra treinar/mostrar a
+   *  ação real daquela mão específica no 1×1. */
+  fixedHand?: Card[];
+  /** Nível de aposta enfrentado (0=RFI,1=open,2=3-bet) — pra a decisão do 1×1
+   *  bater com a análise (vs 3-bet etc.). */
+  betLevelFaced?: number;
+  /** O herói abriu e enfrenta um 3-bet. */
+  threeBet?: boolean;
 }
 
 export interface TrainAction {
@@ -151,7 +160,8 @@ function actionsFor(spec: ScenarioSpec): TrainAction[] {
 
 /** Monta um cenário a partir de um spec já definido (usado no treino 1×1 Ultra). */
 export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Scenario {
-  const hand = randomHand(rng, spec.variant);
+  // Mão fixa (a que o jogador montou) tem prioridade; senão sorteia.
+  const hand = spec.fixedHand && spec.fixedHand.length >= 2 ? spec.fixedHand : randomHand(rng, spec.variant);
   const ctx: PreflopContext = {
     heroPosition: spec.heroPosition,
     hand,
@@ -159,6 +169,8 @@ export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Sc
     profile: BASELINE_PROFILE,
     raiserPosition: spec.raiserPosition,
     openSizeBB: spec.openSizeBB,
+    betLevelFaced: spec.betLevelFaced,
+    threeBet: spec.threeBet,
     icmSpot: spec.icmSpot,
     variant: spec.variant || "holdem",
   };

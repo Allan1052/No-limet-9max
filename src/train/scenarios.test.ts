@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { seededRng } from "../engine/cards";
-import { MODULES, buildScenario, evaluateChoice, isCorrect } from "./scenarios";
+import { seededRng, makeCard } from "../engine/cards";
+import { MODULES, buildScenario, buildScenarioFromSpec, evaluateChoice, isCorrect } from "./scenarios";
 import { recordResult, moduleView, type MasteryState } from "./mastery";
 
 describe("Módulos de Maestria — cenários", () => {
@@ -12,6 +12,16 @@ describe("Módulos de Maestria — cenários", () => {
       expect(s.advice.kind).toBe("preflop");
       expect(["fold", "raise", "call", "3bet", "jam"]).toContain(s.advice.action);
     }
+  });
+
+  it("fixedHand: o 1×1 abre com as cartas montadas (não sorteia)", () => {
+    const hand = [makeCard(14, 3), makeCard(7, 3)]; // A♠ 7♠ (a mão do Allan)
+    const sc = buildScenarioFromSpec(
+      { heroPosition: "BB", effectiveBB: 20, raiserPosition: "BTN", openSizeBB: 2.3, fixedHand: hand },
+      Math.random,
+    );
+    expect(sc.hand).toEqual(hand);
+    expect(sc.advice.kind).toBe("preflop");
   });
 
   it("push/fold oferece Fold e All-in (não raise pequeno)", () => {

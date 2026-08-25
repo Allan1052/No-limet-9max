@@ -54,6 +54,11 @@ export function UltraTrainer() {
           effectiveBB: s.stackBB,
           raiserPosition: s.situation === "open" ? undefined : s.villainPosition,
           openSizeBB: s.situation === "vsopen" ? 2.3 : s.situation === "vs3bet" ? 6 : undefined,
+          // Abre o 1×1 JÁ com as cartas que o jogador montou + o nível de aposta,
+          // pra mostrar a ação real DAQUELA mão (não uma aleatória).
+          fixedHand: Array.isArray(s.hand) ? s.hand : undefined,
+          betLevelFaced: s.situation === "vs3bet" ? 2 : undefined,
+          threeBet: s.situation === "vs3bet",
         } as ScenarioSpec;
       } catch {
         return null;

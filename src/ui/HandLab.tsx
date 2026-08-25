@@ -45,6 +45,19 @@ export function HandLab() {
   const [stage, setStage] = useState<StageKey>("early");
   const [customBB, setCustomBB] = useState<number | null>(null);
   const [villainBB, setVillainBB] = useState<number | null>(null);
+  // Conversor "por fichas": a pessoa manda a mão em fichas + o valor do big
+  // blind; o app calcula o stack em bb (15bb ≠ 20bb pode mudar a decisão).
+  const [chipsStr, setChipsStr] = useState("");
+  const [bbSizeStr, setBbSizeStr] = useState("");
+  const applyChips = (chips: string, bbSize: string) => {
+    setChipsStr(chips);
+    setBbSizeStr(bbSize);
+    const c = parseFloat(chips.replace(/[.,\s]/g, "")); // "15.000" → 15000
+    const b = parseFloat(bbSize.replace(/[.,\s]/g, ""));
+    if (Number.isFinite(c) && Number.isFinite(b) && b > 0) {
+      setCustomBB(Math.max(1, Math.round(c / b)));
+    }
+  };
   const [rank1, setRank1] = useState("K");
   const [suit1, setSuit1] = useState("s");
   const [rank2, setRank2] = useState("Q");
@@ -249,15 +262,77 @@ export function HandLab() {
             <button
               key={bb}
               className={`hl-stack-btn${customBB === bb ? " on" : ""}`}
-              onClick={() => setCustomBB(bb)}
+              onClick={() => {
+                setCustomBB(bb);
+                setChipsStr("");
+                setBbSizeStr("");
+              }}
             >
               {bb}bb
             </button>
           ))}
-          <span className="hl-stack-note">
-            O estágio define o padrão ({stackBB}bb). Escolha um valor fixo para
-            ajustar.
+          {/* Campo pra DIGITAR o valor exato (ex.: 15bb) — destaque dourado. */}
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            className="hl-stack-input"
+            placeholder={`${STAGE_BB[stage]}`}
+            value={customBB ?? ""}
+            onChange={(e) => {
+              const v = Math.round(parseFloat(e.target.value));
+              setCustomBB(Number.isFinite(v) && v > 0 ? v : null);
+              setChipsStr("");
+              setBbSizeStr("");
+            }}
+            style={{
+              width: 72,
+              padding: "8px 10px",
+              borderRadius: 10,
+              border: "2px solid #e6c454",
+              background: "rgba(230,196,84,0.10)",
+              color: "#f0e9d2",
+              fontWeight: 800,
+              fontSize: 15,
+              textAlign: "center",
+            }}
+            aria-label="Digite o stack exato em bb"
+          />
+          <span className="hl-stack-note" style={{ color: "#e6c454" }}>
+            ✍️ digite o valor exato em bb
           </span>
+        </div>
+
+        {/* Conversor por fichas: fichas ÷ big blind = stack em bb. */}
+        <div
+          className="hl-chips-row"
+          style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}
+        >
+          <span style={{ color: "#b8b29a", fontSize: 13 }}>ou por fichas:</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            className="hl-chips-input"
+            placeholder="fichas"
+            value={chipsStr}
+            onChange={(e) => applyChips(e.target.value, bbSizeStr)}
+            style={{ width: 96, padding: "8px 10px", borderRadius: 10, border: "1px solid #7a5f1e", background: "rgba(255,255,255,0.04)", color: "#f0e9d2", fontWeight: 700, textAlign: "center" }}
+            aria-label="Quantidade de fichas"
+          />
+          <span style={{ color: "#b8b29a" }}>÷ BB</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            className="hl-chips-input"
+            placeholder="big blind"
+            value={bbSizeStr}
+            onChange={(e) => applyChips(chipsStr, e.target.value)}
+            style={{ width: 96, padding: "8px 10px", borderRadius: 10, border: "1px solid #7a5f1e", background: "rgba(255,255,255,0.04)", color: "#f0e9d2", fontWeight: 700, textAlign: "center" }}
+            aria-label="Valor do big blind em fichas"
+          />
+          {chipsStr && bbSizeStr && customBB ? (
+            <span style={{ color: "#57b06a", fontWeight: 800 }}>= {customBB}bb</span>
+          ) : null}
         </div>
 
         <label className="hl-label">Stack do vilão (bb)</label>
