@@ -527,9 +527,17 @@ function buildNarration(
     return `O que ele DESISTIU: o fundo do range — ${isRiver ? "carta alta / mão que não conecta" : "carta alta sem hit e sem projeto"}. ${round}% do range largou.`;
   }
   if (action === "call") {
-    let line = isRiver
-      ? `Ele pagou e o range encolheu para ~${round}%. No river quem paga tem mão feita — par ou melhor${comOsQuais}. Blefe e ar largam.`
-      : `Ele pagou e o range encolheu para ~${round}%. Quem paga aqui continua com hit ou projeto${comOsQuais}. O lixo sai.`;
+    // Frase diferente por rua — antes flop e turn saíam idênticos (só mudava o
+    // %), o que fazia a leitura parecer "copia e cola" (pego pela análise).
+    const isTurn = board.cards.length === 4;
+    let line: string;
+    if (isRiver) {
+      line = `Ele pagou e o range encolheu para ~${round}%. No river quem paga tem mão feita — par ou melhor${comOsQuais}. Blefe e ar largam.`;
+    } else if (isTurn) {
+      line = `Pagou de novo no turn → range ~${round}%. Quem segue aqui já carrega valor ou projeto forte${comOsQuais}; o meio-termo foi ficando pra trás.`;
+    } else {
+      line = `Ele pagou e o range encolheu para ~${round}%. Quem paga no flop continua com hit ou projeto${comOsQuais}. O lixo sai.`;
+    }
     if (texture.highCardPresent) line += " A carta alta no board pesa: quem tem esse hit domina o topo.";
     return line;
   }

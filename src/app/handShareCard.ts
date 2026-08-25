@@ -10,7 +10,7 @@ import { rankOf, suitOf, RANKS, makeCard, type Card } from "../engine/cards";
 import type { HandHistory, ReplayEvent } from "../app/replay";
 import type { FeedbackItem, Rating } from "../feedback/analyzer";
 import { LOGO_CF_BASE64 } from "./logoCfBase64";
-import { evaluate, categoryOf, CATEGORY_NAMES_PT } from "../engine/evaluator";
+import { describeHandPt } from "../engine/evaluator";
 import { buildHandStory } from "./handNarrative";
 
 const SUIT_SYMBOL = ["♣", "♦", "♥", "♠"]; // ordem de SUITS = "cdhs"
@@ -246,10 +246,12 @@ export function cleanCoachText(raw: string): string {
 /** Categoria da mão com artigo, minúscula, p/ frase natural: "um par", "uma trinca". */
 function madeArticle(made: string): string {
   const m = made.toLowerCase();
-  if (m.startsWith("dois")) return m; // "dois pares"
-  if (m === "carta alta") return "só carta alta";
-  if (m === "trinca" || m === "quadra" || m === "sequência") return "uma " + m;
-  return "um " + m; // par, full house, flush, straight flush
+  // Aceita tanto o nome curto ("dois pares") quanto o completo ("dois pares,
+  // reis e cincos" / "trinca de reis" / "sequência até o dez").
+  if (m.startsWith("dois")) return m;
+  if (m.startsWith("carta alta")) return "só carta alta";
+  if (m.startsWith("trinca") || m.startsWith("quadra") || m.startsWith("sequência")) return "uma " + m;
+  return "um " + m; // par, full house, flush, straight/royal flush
 }
 
 /**
@@ -592,9 +594,11 @@ async function drawDecisionCard(
     if (cur) lines.push(cur);
     return lines;
   };
-  const madeHand = (cards: Card[]): string => {
+  // Nome COMPLETO com os ranks ("Dois pares, reis e cincos") — desambigua o
+  // showdown: dois "Dois pares" iguais pareciam empate/bug (pego pela análise).
+  const madeFull = (cards: Card[]): string => {
     if (data.board.length < 3 || cards.length < 2) return "";
-    try { return CATEGORY_NAMES_PT[categoryOf(evaluate([...cards, ...data.board]))] ?? ""; } catch { return ""; }
+    try { return describeHandPt([...cards, ...data.board]); } catch { return ""; }
   };
 
   // ── fundo ──
@@ -646,23 +650,31 @@ async function drawDecisionCard(
   const heroWon = data.showdown?.find((p) => p.isHero)?.won;
   // Escopo da decisão: usado pela caixa RESULTADO e pela história SIMPLES.
   const correct = data.rating === "boa" || data.rating === "ok";
-  const made = madeHand(data.heroCards);
+  const made = madeFull(data.heroCards);
   const drawPlayer = (px: number, pw: number, tag: string, cards: Card[], made: string) => {
     panel(px, 286, pw, 206, 16, "rgba(230,196,84,0.05)", GLINE);
     ctx.fillStyle = GOLD; ctx.font = "800 22px Georgia, serif"; spaced(tag, px + pw / 2, 314, 5);
     const cw = 90, ch = 116, cg = 12, cx0 = px + pw / 2 - (cw * 2 + cg) / 2;
     if (cards[0]) drawCardOnCanvas(ctx, cards[0], cx0, 330, cw, ch);
     if (cards[1]) drawCardOnCanvas(ctx, cards[1], cx0 + cw + cg, 330, cw, ch);
-    if (made) { ctx.fillStyle = DIM; ctx.font = "700 21px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText(made, px + pw / 2, 472); }
+    if (made) {
+      ctx.fillStyle = DIM; ctx.textAlign = "center";
+      // Encolhe a fonte até o nome completo caber no painel (nomes com ranks
+      // são mais longos que só "Dois pares").
+      let fs = 21;
+      ctx.font = `700 ${fs}px Georgia, serif`;
+      while (ctx.measureText(made).width > pw - 24 && fs > 13) { fs -= 1; ctx.font = `700 ${fs}px Georgia, serif`; }
+      ctx.fillText(made, px + pw / 2, 472);
+    }
   };
   if (villain) {
     const pw = 400;
-    drawPlayer(56, pw, "HERÓI", data.heroCards, madeHand(data.heroCards));
-    drawPlayer(W - 56 - pw, pw, "VILÃO", villain.cards, madeHand(villain.cards));
+    drawPlayer(56, pw, "HERÓI", data.heroCards, madeFull(data.heroCards));
+    drawPlayer(W - 56 - pw, pw, "VILÃO", villain.cards, madeFull(villain.cards));
     ctx.fillStyle = goldGrad(360, 70); ctx.font = "900 60px Georgia, serif"; ctx.textAlign = "center"; ctx.fillText("VS", W / 2, 388);
   } else {
     const pw = 470;
-    drawPlayer((W - pw) / 2, pw, "SUA MÃO", data.heroCards, madeHand(data.heroCards));
+    drawPlayer((W - pw) / 2, pw, "SUA MÃO", data.heroCards, madeFull(data.heroCards));
   }
 
   // ── board ──
@@ -761,7 +773,13 @@ async function drawDecisionCard(
     const resTxt = heroWon === undefined ? (correct ? "Jogada certa" : "Dá pra melhorar") : (heroWon ? "Você venceu" : "Você perdeu");
     ctx.fillStyle = (heroWon === undefined ? correct : heroWon) ? GREEN : "#e07b6b";
     ctx.font = "900 30px Georgia, serif"; ctx.fillText(resTxt, r2x + 20, y + 54);
-    if (made) { ctx.fillStyle = DIM; ctx.font = "700 20px Georgia, serif"; ctx.fillText(`Sua mão: ${made}`, r2x + 20, y + 78); }
+    if (made) {
+      const madeShow = madeFull(data.heroCards) || made;
+      ctx.fillStyle = DIM; let fs = 20; ctx.font = `700 ${fs}px Georgia, serif`;
+      const label = `Sua mão: ${madeShow}`;
+      while (ctx.measureText(label).width > rW2 - 40 && fs > 13) { fs -= 1; ctx.font = `700 ${fs}px Georgia, serif`; }
+      ctx.fillText(label, r2x + 20, y + 78);
+    }
   }
   y += rH + 12;
 
@@ -796,7 +814,7 @@ async function drawDecisionCard(
   if (data.potOdds !== undefined) tecParts.push(`preço ${Math.round(data.potOdds * 100)}%`);
   if (data.evBB !== undefined) tecParts.push(`EV ${data.evBB > 0 ? "+" : ""}${Math.round(data.evBB * 10) / 10}bb`);
   const tecnica = tecParts.length ? `${tecParts.join(" · ")}. Coach: ${data.coachAction}.` : `Coach recomenda: ${data.coachAction}.`;
-  const villainMade = villain ? madeHand(villain.cards) : undefined;
+  const villainMade = villain ? madeFull(villain.cards) : undefined;
   const simples = buildCardStory(made, villainMade, heroWon, correct, data.heroAction, data.coachAction, data.equity, data.potOdds);
   drawCol(56, "SIMPLES", simples);
   drawCol(56 + colW, "TÉCNICA", tecnica);
@@ -864,7 +882,7 @@ async function drawNarrativeCard(data: HandShareData): Promise<Blob | null> {
   spaced("A MÃO, CONTADA", W / 2, 210, 7);
 
   // ── sua mão (contexto) ──
-  const made = (() => { try { return data.board.length >= 3 ? CATEGORY_NAMES_PT[categoryOf(evaluate([...data.heroCards, ...data.board]))] : ""; } catch { return ""; } })();
+  const made = (() => { try { return data.board.length >= 3 ? describeHandPt([...data.heroCards, ...data.board]) : ""; } catch { return ""; } })();
   const handStr = data.heroCards.map((c) => RANKS[rankOf(c) - 2] + ["♣", "♦", "♥", "♠"][suitOf(c)]).join(" ");
   ctx.font = "700 23px Georgia, serif"; ctx.textAlign = "center"; ctx.fillStyle = DIM;
   ctx.fillText(`${data.position} · ${data.stackBB} · sua mão ${handStr}${made ? ` (${made})` : ""}`, W / 2, 248);
@@ -876,7 +894,7 @@ async function drawNarrativeCard(data: HandShareData): Promise<Blob | null> {
     data.showdown?.find((p) => !p.isHero && p.cards.length >= 2);
   const heroWon = data.showdown?.find((p) => p.isHero)?.won;
   const correct = data.rating === "boa" || data.rating === "ok";
-  const villainMade = villain ? (() => { try { return CATEGORY_NAMES_PT[categoryOf(evaluate([...villain.cards, ...data.board]))]; } catch { return ""; } })() : "";
+  const villainMade = villain ? (() => { try { return describeHandPt([...villain.cards, ...data.board]); } catch { return ""; } })() : "";
   const lx = 70, rx = W - 70, colW = rx - lx;
 
   // Bloco de desfecho (showdown + lição) — desenhado por último, altura reservada.
