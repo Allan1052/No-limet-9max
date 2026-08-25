@@ -111,7 +111,7 @@ function recommendedFrom(action: string): string {
  * já sabe usar ICM (requiredEquityToCall/icmFactor) — o HandLab é que não
  * estava passando esse dado (bug pego pelo Allan).
  */
-function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
+export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
   if (stage !== "late") return undefined;
   const e = Math.max(1, effBB);
   // Pressão MODERADA de mesa final (calibrada): o preço exigido sobe o bastante

@@ -24,6 +24,15 @@ describe("Módulos de Maestria — cenários", () => {
     expect(sc.advice.kind).toBe("preflop");
   });
 
+  it("facingAllin: 1×1 oferece só Fold/Call e decide por equity", () => {
+    const sc = buildScenarioFromSpec(
+      { heroPosition: "BB", effectiveBB: 15, raiserPosition: "BTN", facingAllin: true, fixedHand: [makeCard(10, 3), makeCard(10, 2)] },
+      Math.random,
+    );
+    expect(sc.actions.map((a) => a.key).sort()).toEqual(["call", "fold"]);
+    expect(sc.advice.action).toBe("call"); // TT paga o shove de 15bb
+  });
+
   it("push/fold oferece Fold e All-in (não raise pequeno)", () => {
     const pf = MODULES.find((m) => m.id === "push_fold")!;
     const s = buildScenario(pf, seededRng(7));

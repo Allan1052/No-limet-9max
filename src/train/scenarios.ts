@@ -40,6 +40,9 @@ export interface ScenarioSpec {
   betLevelFaced?: number;
   /** O herói abriu e enfrenta um 3-bet. */
   threeBet?: boolean;
+  /** O vilão deu ALL-IN na frente — a decisão vira call/fold por equity vs
+   *  range + pot odds (e ICM via icmSpot). Só oferece Fold/Call. */
+  facingAllin?: boolean;
 }
 
 export interface TrainAction {
@@ -132,6 +135,13 @@ export function moduleById(id: string): TrainModule {
 
 /** Ações disponíveis para o usuário, conforme o spot. */
 function actionsFor(spec: ScenarioSpec): TrainAction[] {
+  // Vilão all-in: contra um shove só existe pagar ou largar.
+  if (spec.facingAllin) {
+    return [
+      { key: "fold", labelKey: "ctrl.fold" },
+      { key: "call", labelKey: "ctrl.call" },
+    ];
+  }
   const pushFold = spec.effectiveBB <= 12;
   if (spec.raiserPosition) {
     if (pushFold) {
@@ -162,17 +172,28 @@ function actionsFor(spec: ScenarioSpec): TrainAction[] {
 export function buildScenarioFromSpec(spec: ScenarioSpec, rng: () => number): Scenario {
   // Mão fixa (a que o jogador montou) tem prioridade; senão sorteia.
   const hand = spec.fixedHand && spec.fixedHand.length >= 2 ? spec.fixedHand : randomHand(rng, spec.variant);
+  const eff = spec.effectiveBB;
   const ctx: PreflopContext = {
     heroPosition: spec.heroPosition,
     hand,
-    effectiveBB: spec.effectiveBB,
+    effectiveBB: eff,
     profile: BASELINE_PROFILE,
     raiserPosition: spec.raiserPosition,
-    openSizeBB: spec.openSizeBB,
-    betLevelFaced: spec.betLevelFaced,
+    openSizeBB: spec.facingAllin ? eff : spec.openSizeBB,
+    betLevelFaced: spec.facingAllin ? 1 : spec.betLevelFaced,
     threeBet: spec.threeBet,
     icmSpot: spec.icmSpot,
     variant: spec.variant || "holdem",
+    // Vilão all-in: call/fold por equity vs range + pot odds (herói no BB já
+    // pôs 1bb; paga o resto). Com side pot heads-up simples.
+    ...(spec.facingAllin
+      ? {
+          allInsAhead: 1,
+          numContesting: 1,
+          callAmountBB: Math.max(0.5, eff - 1),
+          contestablePotBB: eff + 0.5,
+        }
+      : {}),
   };
   const d = preflopDecision(ctx);
   const advice: HeroAdvice = { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: spec.effectiveBB };

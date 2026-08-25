@@ -13,9 +13,9 @@ import { useT } from "../i18n";
 import { HoodedFace, VILLAINS, pickVillain, type Villain } from "./UltraTrainerFaces";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
-import type { HandLabSpec } from "../train/stage";
+import { buildStageIcm, type HandLabSpec } from "../train/stage";
 import { BASELINE_PROFILE } from "../bots/profiles";
-import { comboToHandType, type Position } from "../ranges/types";
+import { comboToHandType } from "../ranges/types";
 import {
   buildScenarioFromSpec,
   evaluateChoice,
@@ -47,16 +47,20 @@ export function UltraTrainer() {
       if (!raw) return null;
       try {
         const s = JSON.parse(raw) as HandLabSpec;
+        const facingAllin = s.situation === "vsallin";
         return {
           heroPosition: s.heroPosition,
           effectiveBB: s.stackBB,
           raiserPosition: s.situation === "open" ? undefined : s.villainPosition,
-          openSizeBB: s.situation === "vsopen" ? 2.3 : s.situation === "vs3bet" ? 6 : undefined,
+          openSizeBB: s.situation === "vsopen" ? 2.3 : s.situation === "vs3bet" ? 6 : facingAllin ? s.stackBB : undefined,
           // Abre o 1×1 JÁ com as cartas que o jogador montou + o nível de aposta,
           // pra mostrar a ação real DAQUELA mão (não uma aleatória).
           fixedHand: Array.isArray(s.hand) ? s.hand : undefined,
-          betLevelFaced: s.situation === "vs3bet" ? 2 : undefined,
+          betLevelFaced: s.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
           threeBet: s.situation === "vs3bet",
+          facingAllin,
+          // Fase final aplica ICM (mesma pressão da análise).
+          icmSpot: buildStageIcm(s.stackBB, s.stage),
         } as ScenarioSpec;
       } catch {
         return null;
@@ -77,40 +81,31 @@ export function UltraTrainer() {
     return () => window.removeEventListener("cof-open-ultra", onOpenUltra);
   }, []);
 
+  const [scenario, setScenario] = useState<Scenario | null>(null);
+  // Spot ativo (o que veio da "Sua Mão"): guardado pra as próximas mãos manterem
+  // posição/stack/all-in/ICM — só a mão varia.
+  const [activeSpec, setActiveSpec] = useState<ScenarioSpec | null>(null);
+  const [result, setResult] = useState<FeedbackItem | null>(null);
+  const [session, setSession] = useState({ correct: 0, total: 0 });
+  const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
+
   useEffect(() => {
     if (!prefill) return;
-    // A mão pré-configurada vira uma sessão 1×1 determinística (mesmo spot).
-    setHeroPos(prefill.heroPosition);
-    // Se há aberta, a posição do vilão vem do spec; senão mantém a atual (CO).
-    setVillainPos((cur) => (prefill.raiserPosition != null ? prefill.raiserPosition! : cur));
-    setFacing(prefill.raiserPosition != null);
-    setEffBB(prefill.effectiveBB);
+    setActiveSpec(prefill);
     setVillain(pickVillain());
+    setSession({ correct: 0, total: 0 });
+    setResult(null);
+    // 1ª mão = a que o jogador montou (fixedHand); a decisão é a ação real.
     setScenario(buildScenarioFromSpec(prefill, Math.random));
     setPrefill(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
 
-  const [heroPos, setHeroPos] = useState<Position>("BTN");
-  const [facing, setFacing] = useState(true); // true = vilão abre; false = você abre
-  const [villainPos, setVillainPos] = useState<Position>("CO");
-  const [effBB, setEffBB] = useState(40);
-
-  const [scenario, setScenario] = useState<Scenario | null>(null);
-  const [result, setResult] = useState<FeedbackItem | null>(null);
-  const [session, setSession] = useState({ correct: 0, total: 0 });
-  const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
-
-  const specFrom = (): ScenarioSpec => ({
-    heroPosition: heroPos,
-    effectiveBB: effBB,
-    raiserPosition: facing ? villainPos : undefined,
-    openSizeBB: facing ? 2.3 : undefined,
-  });
-
   const next = () => {
     setResult(null);
-    setScenario(buildScenarioFromSpec(specFrom(), Math.random));
+    if (!activeSpec) return;
+    // Próximas mãos: mesmo spot (posição/stack/all-in/ICM), mão nova.
+    setScenario(buildScenarioFromSpec({ ...activeSpec, fixedHand: undefined }, Math.random));
   };
   const back = () => {
     setScenario(null);
@@ -213,9 +208,11 @@ export function UltraTrainer() {
   const potBB = Math.round((1.5 + (s.raiserPosition ? openSize : 0)) * 10) / 10;
   // Nota de contexto do pote: mostra o que compõe o valor exibido,
   // evitando a dúvida "cadê o call que faltou?".
-  const potNote = s.raiserPosition
-    ? t("ultra.potNote.raised", { size: openSize })
-    : t("ultra.potNote.waiting");
+  const potNote = s.facingAllin
+    ? `Vilão deu all-in de ${Math.round(openSize)}bb — pague ou largue.`
+    : s.raiserPosition
+      ? t("ultra.potNote.raised", { size: openSize })
+      : t("ultra.potNote.waiting");
   return (
     <div className="train-view">
       <div className="panel">
@@ -259,7 +256,11 @@ export function UltraTrainer() {
                 <CardBack small />
               </div>
               <div className={`duel-badge ${s.raiserPosition ? "aggro" : "wait"}`}>
-                {s.raiserPosition ? t("ultra.opened", { size: openSize }) : t("ultra.waiting")}
+                {s.facingAllin
+                  ? `🔥 ALL-IN ${Math.round(openSize)}bb`
+                  : s.raiserPosition
+                    ? t("ultra.opened", { size: openSize })
+                    : t("ultra.waiting")}
               </div>
             </div>
 
