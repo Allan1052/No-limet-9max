@@ -11,14 +11,24 @@
 //   - Regra de progresso: responder o quiz com ≥ 60% destrava a próxima.
 // ---------------------------------------------------------------------------
 
+/** Exemplo VISUAL com cartas de verdade (mão do herói + board) e uma legenda. */
+export interface LearnExample {
+  label: string;   // rótulo da mão formada, ex.: "Dois pares"
+  hero?: string;   // cartas da mão, ex.: "Ks9h"
+  board?: string;  // cartas da mesa, ex.: "Kc7s2h4d9c"
+  note?: string;   // frase curta explicando o que as cartas formam
+}
+
 export interface LearnLesson {
   id: string;
   title: string;
   icon: string;
   /** Corpo da lição: parágrafos curtos, voz de amigo, sem jargão pesado. */
   body: string[];
-  /** Perguntas de verificação (5 por lição). */
-  quiz: { question: string; choices: string[]; answer: number }[];
+  /** Exemplos visuais (cartas) mostrados na leitura — ensina vendo, não lendo. */
+  examples?: LearnExample[];
+  /** Perguntas de verificação (5 por lição). Podem trazer cartas pra ilustrar. */
+  quiz: { question: string; choices: string[]; answer: number; hero?: string; board?: string }[];
 }
 
 export const LEARN_LESSONS: LearnLesson[] = [
@@ -32,11 +42,16 @@ export const LEARN_LESSONS: LearnLesson[] = [
       "Exemplo prático: se o board tem um A e você tem um A na mão, você tem um par de ases — quanto maior o par, melhor. E se o board traz 5 cartas do mesmo naipe, quem tiver a carta mais alta desse naipe ganha.",
       "Dica de ouro: não decore só o nome das mãos — decore o que BATE com o board. Par no board não é par na mão. Quem enxerga isso primeiro toma decisões melhores.",
     ],
+    examples: [
+      { label: "Dois pares", hero: "Ks9h", board: "Kc7s2h4d9c", note: "Seu K casa com o K do board e seu 9 com o 9 — dois pares (reis e noves)." },
+      { label: "Sequência", hero: "5d6c", board: "4h7s8c2d9s", note: "5-6-7-8-9 seguidos formam sequência, mesmo com naipes diferentes." },
+      { label: "Flush", hero: "Ah3h", board: "Kh8h2h9c4s", note: "5 cartas de copas usando as suas — flush, e o seu Ás é o mais alto." },
+    ],
     quiz: [
-      { question: "Você tem K♦ 9♠ e o board é K♣ 7♠ 2♥ 4♦ 9♣. O que você tem?", choices: ["Par de reis", "Dois pares (reis e noves)", "Sequência", "Carta alta"], answer: 1 },
+      { question: "Com esta mão e este board, o que você tem?", hero: "Kd9s", board: "Kc7s2h4d9c", choices: ["Par de reis", "Dois pares (reis e noves)", "Sequência", "Carta alta"], answer: 1 },
       { question: "Qual mão é mais forte?", choices: ["Flush", "Sequência", "Trinca", "Full house"], answer: 3 },
       { question: "O board tem 5 cartas de copas e você tem A♥ na mão. O que isso significa?", choices: ["Você tem flush com a carta mais alta", "Você perdeu", "Você tem par de ases", "Nada — o flush não conta"], answer: 0 },
-      { question: "Você tem 5♦ 6♣ e o board é 4♥ 7♠ 8♣ 2♦ 9♠. O que você formou?", choices: ["Par", "Sequência de 4 a 8", "Sequência de 5 a 9", "Flush"], answer: 2 },
+      { question: "Com esta mão e este board, o que você formou?", hero: "5d6c", board: "4h7s8c2d9s", choices: ["Par", "Sequência de 4 a 8", "Sequência de 5 a 9", "Flush"], answer: 2 },
       { question: "Quantas cartas compõem a melhor mão no Hold'em?", choices: ["2", "4", "5", "7"], answer: 2 },
     ],
   },

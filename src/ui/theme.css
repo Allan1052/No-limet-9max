@@ -5914,6 +5914,26 @@ body {
   margin: 0 0 14px;
   line-height: 1.4;
 }
+/* Exemplos VISUAIS com cartas (Aprenda do Zero) — ensina vendo, não lendo. */
+.learn-examples { display: flex; flex-direction: column; gap: 12px; margin: 6px 0 4px; }
+.learn-example {
+  background: rgba(230, 196, 84, 0.05);
+  border: 1px solid rgba(230, 196, 84, 0.18);
+  border-radius: 12px;
+  padding: 12px 12px 14px;
+}
+.learn-ex-label {
+  font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold-bright); margin-bottom: 10px;
+}
+.learn-ex-cards { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.learn-ex-group { display: flex; flex-direction: column; gap: 4px; }
+.learn-ex-cap {
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim);
+}
+.learn-cards { display: inline-flex; gap: 4px; }
+.learn-ex-note { font-size: 13px; line-height: 1.5; color: var(--text); margin-top: 10px; }
+.learn-question + .learn-ex-cards { margin: 0 0 14px; }
 .learn-choices { display: flex; flex-direction: column; gap: 8px; }
 .learn-choice {
   text-align: left;

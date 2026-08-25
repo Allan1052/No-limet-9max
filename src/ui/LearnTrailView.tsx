@@ -8,6 +8,47 @@
 // ---------------------------------------------------------------------------
 import { useMemo, useState } from "react";
 import { useT } from "../i18n";
+import { CardView } from "./Card";
+import { cardsFromString } from "../engine/cards";
+
+/** Renderiza uma string de cartas ("Ks9h") como cartas de verdade. */
+function Cards({ str, small }: { str?: string; small?: boolean }) {
+  if (!str) return null;
+  let cards: number[] = [];
+  try {
+    cards = cardsFromString(str);
+  } catch {
+    return null;
+  }
+  return (
+    <span className="learn-cards">
+      {cards.map((c, i) => (
+        <CardView key={i} card={c} small={small} />
+      ))}
+    </span>
+  );
+}
+
+/** Bloco "sua mão / board" com cartas (usado na leitura e no quiz). */
+function HandBoard({ hero, board }: { hero?: string; board?: string }) {
+  if (!hero && !board) return null;
+  return (
+    <div className="learn-ex-cards">
+      {hero ? (
+        <div className="learn-ex-group">
+          <span className="learn-ex-cap">sua mão</span>
+          <Cards str={hero} small />
+        </div>
+      ) : null}
+      {board ? (
+        <div className="learn-ex-group">
+          <span className="learn-ex-cap">board</span>
+          <Cards str={board} small />
+        </div>
+      ) : null}
+    </div>
+  );
+}
 import {
   LEARN_LESSONS,
   loadLearn,
@@ -156,6 +197,17 @@ function LessonRead({
         {lesson.body.map((p, i) => (
           <p key={i} className="learn-para">{p}</p>
         ))}
+        {lesson.examples && lesson.examples.length > 0 ? (
+          <div className="learn-examples">
+            {lesson.examples.map((ex, i) => (
+              <div key={i} className="learn-example">
+                <div className="learn-ex-label">{ex.label}</div>
+                <HandBoard hero={ex.hero} board={ex.board} />
+                {ex.note ? <div className="learn-ex-note">{ex.note}</div> : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
       <button className="btn primary" onClick={onQuiz} style={{ marginTop: 16, width: "100%" }}>
         {t("learn.startQuiz")}
@@ -206,6 +258,7 @@ function LessonQuiz({
       </div>
       <div className="learn-body">
         <p className="learn-question">{item.question}</p>
+        <HandBoard hero={item.hero} board={item.board} />
         <div className="learn-choices">
           {item.choices.map((c, i) => {
             const isAnswer = i === item.answer;
