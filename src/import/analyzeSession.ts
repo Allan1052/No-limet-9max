@@ -99,6 +99,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
   let openSizeBB: number | undefined;
   let raiserAllIn = false; // a abertura/reraise que o herói enfrenta é all-in?
   let betLevel = 0;        // nº de raises antes do herói (1=open, 2=3-bet, …)
+  let limpers = 0;         // nº de limps (call em pote não aberto) antes do herói
   let heroActed: { type: string; allIn: boolean } | undefined;
   // Fichas no pote e a pagar ANTES da ação voluntária do herói — para a conta de
   // all-in (preço × equity via facingAllinDecision).
@@ -134,6 +135,8 @@ export function analyzeHand(h: ParsedHand): HandReport {
       potChipsBefore += Math.max(0, a.amount - (committed[a.player] ?? 0));
       committed[a.player] = a.amount;
     } else if (a.type === "call" || a.type === "bet") {
+      // Call num pote AINDA não aberto (betLevel 0) = LIMP. Conta pra decisão do BB.
+      if (betLevel === 0 && a.type === "call") limpers += 1;
       potChipsBefore += a.amount;
       committed[a.player] = (committed[a.player] ?? 0) + a.amount;
     }
@@ -146,13 +149,14 @@ export function analyzeHand(h: ParsedHand): HandReport {
   const facingRaise = raiserPosition != null;
   const mapped = mapHeroAction(heroActed.type, facingRaise, heroActed.allIn);
 
-  // BB sem abertura (pote limpado/andado): jogada padrão, fora do escopo v1.
-  if (hero.position === "BB" && !facingRaise) {
+  // BB sem NINGUÉM aberto E sem limpers = WALK (todo mundo desistiu, você ganha o
+  // blind). Aí não há decisão a avaliar — mas mostra uma nota, não fica vazio.
+  if (hero.position === "BB" && !facingRaise && limpers === 0) {
     return {
       ...base,
       heroActionLabel: mapped.label,
-      situation: "BB, pote não aberto",
-      skipped: "Spot de BB em pote limpado — fora do escopo da análise pré-flop.",
+      situation: "BB, todos desistiram (walk)",
+      skipped: "Walk: todo mundo desistiu e você levou os blinds sem precisar decidir. Nada a corrigir.",
       vpip: heroActed.type === "call" || heroActed.type === "raise",
       pfr: heroActed.type === "raise",
     };
@@ -173,6 +177,7 @@ export function analyzeHand(h: ParsedHand): HandReport {
       profile: BASELINE_PROFILE,
       raiserPosition,
       openSizeBB,
+      limpers,
       variant: h.variant ?? "holdem",
       ...(facingReraise
         ? {

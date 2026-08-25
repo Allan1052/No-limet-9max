@@ -321,7 +321,7 @@ export function ImportReplayer({
   _previewStep,
 }: {
   hands: ParsedHand[];
-  reports: { handId: string; feedback?: FeedbackItem; heroCardsText: string; effectiveBB: number; situation: string }[];
+  reports: { handId: string; feedback?: FeedbackItem; heroCardsText: string; effectiveBB: number; situation: string; skipped?: string }[];
   /** Sessão completa — habilita o diagnóstico final (nota + fortes/fracos/ajustes). */
   session?: SessionReport;
   startIndex?: number;
@@ -676,7 +676,17 @@ export function ImportReplayer({
             </span>
           </div>
         );
-      })() : null}
+      })() : (curStreet === "preflop" && report?.skipped ? (
+        // Sem decisão a avaliar (walk / mão sem ação voluntária): mostra uma nota
+        // neutra em vez de barra vazia, pra nunca ficar "sem dica nenhuma".
+        <div className="ir-coach c-note">
+          <span className="ir-coach-badge">ℹ️</span>
+          <span className="ir-coach-txt">
+            <b className="ir-coach-street">{STREET_PT.preflop}</b>
+            {" · "}{report.skipped}
+          </span>
+        </div>
+      ) : null)}
 
       {/* Aviso de pote coletado / devolvido */}
       {step.pot && step.actionIdx !== -3 ? (
