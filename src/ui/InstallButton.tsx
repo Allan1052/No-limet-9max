@@ -7,6 +7,7 @@
 // manual. Se o app já está instalado (rodando em standalone), o botão some.
 import { useEffect, useState } from "react";
 import { useT } from "../i18n";
+import { trackEvent } from "../app/analytics";
 
 // Get the base URL from the manifest or default to '/'
 function getBasePath(): string {
@@ -65,11 +66,14 @@ export function InstallButton() {
   if (!deferred && !isIos) return null;
 
   const onClick = async () => {
+    trackEvent("install_prompt_opened", { platform: isIos ? "ios" : deferred ? "browser" : "fallback" });
     if (deferred) {
       await deferred.prompt();
-      await deferred.userChoice.catch(() => undefined);
+      const choice = await deferred.userChoice.catch(() => ({ outcome: "dismissed" as const }));
+      trackEvent("install_prompt_result", { outcome: choice.outcome });
       setDeferred(null);
     } else if (isIos || !deferred) { // Se for iOS ou se o navegador não disparou o evento PWA (fallback para Android/Desktop)
+      trackEvent("install_help_opened", { platform: isIos ? "ios" : "fallback" });
       setShowIosHelp(true);
     }
   };

@@ -17,6 +17,7 @@ import { TournamentCountPanel } from "./TournamentCountPanel";
 import { loadEliteWins, recordTournamentWin } from "../tournament/eliteUnlock";
 import { recordEliteWinCloud, syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
+import { trackEvent } from "../app/analytics";
 
 export function ProfileView({
   gameVariant,
@@ -118,6 +119,7 @@ export function ProfileView({
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
   const INSTAGRAM_URL = "https://instagram.com/calloufold.sonho";
+  const UMAMI_SITE_URL = "https://cloud.umami.is/analytics/us/websites/5324592f-e1ca-4954-8539-4ebb5e9f98c1";
   // WhatsApp de suporte pro botão "Reportar um problema". Coloque só os dígitos
   // com DDI+DDD (ex.: "5511999998888"). Enquanto estiver vazio, o botão cai no
   // Instagram (DM) — nada quebra.
@@ -233,6 +235,44 @@ export function ProfileView({
             {eliteUnlocked ? "🟢 Destravado" : "🔒 Destravar ($109)"}
           </button>
         </div>
+
+        {ruaUnlocked ? (
+          <div
+            className="profile-analytics-box"
+            style={{
+              margin: "12px 0",
+              padding: "14px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(92,190,141,0.35)",
+              background: "rgba(92,190,141,0.08)",
+            }}
+          >
+            <div style={{ fontWeight: 800, color: "var(--gold)", marginBottom: 5 }}>📈 Métricas do projeto</div>
+            <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.45, marginBottom: 10 }}>
+              Atalhos privados para acompanhar visitas, eventos, funil e origem do tráfego no Umami.
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {[
+                ["Visão geral", `${UMAMI_SITE_URL}?date=30day`, "metrics_overview_opened"],
+                ["Eventos", `${UMAMI_SITE_URL}/events?date=30day`, "metrics_events_opened"],
+                ["Funis", `${UMAMI_SITE_URL}/funnels?date=30day`, "metrics_funnels_opened"],
+                ["UTMs", `${UMAMI_SITE_URL}/utm?date=30day`, "metrics_utm_opened"],
+              ].map(([label, href, event]) => (
+                <a
+                  key={event}
+                  className="btn tiny"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent(event)}
+                  style={{ textDecoration: "none" }}
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="profile-setting">
           <span className="ps-label">{t("profile.variant")}</span>

@@ -823,8 +823,16 @@
 </footer>
 
 <script>
+  // Analytics da landing: falha silenciosa para não prejudicar a experiência.
+  function trackCof(name, data) {
+    try {
+      if (window.umami && window.umami.track) window.umami.track(name, data);
+    } catch (e) {}
+  }
+
   /* ---- Compartilhar (topo) ---- */
   function shareSite() {
+    trackCof('landing_share_clicked');
     var url = "https://calloufold.com.br";
     var text = "Call ou Fold — poker de estudo grátis, sem dinheiro real. Vem treinar:";
     if (navigator.share) {
@@ -843,6 +851,7 @@
         if (answered) return;
         answered = true;
         var call = b.dataset.a === "call";
+        trackCof('landing_demo_answered', { answer: b.dataset.a });
         verdict.className = "verdict show";
         verdict.innerHTML = call
           ? '<span class="tag ok">✓ Boa decisão!</span> K♠Q♠ parece forte demais — mas UTG é o primeiro a falar na mesa. Quando ele dá 3x, quase sempre tem <b>AA, KK ou AK</b>. Contra esse range, KQ♠ perde em 3 de 4 vezes. Dobrar a aposta (fold ou 3-bet) é o que pro faz — o recreativo paga e perde ficha. No app você vê o porquê em números.'
@@ -865,6 +874,7 @@
         tabs.forEach(function(t) { t.classList.remove("on"); });
         tab.classList.add("on");
         var plan = tab.dataset.plan;
+        trackCof('landing_plan_selected', { plan: plan });
         Object.values(panels).forEach(function(p) { if (p) p.classList.remove("on"); });
         if (panels[plan]) panels[plan].classList.add("on");
       });
@@ -940,6 +950,7 @@
         '<button id="banner-install" style="background:#d4af37;color:#0d0f0d;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>' +
         '<button id="banner-close" style="background:transparent;color:#9a9686;border:1px solid #3f4332;padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;">✕</button></div>';
       document.body.appendChild(banner);
+      trackCof('pwa_install_banner_shown');
 
       // Animation
       var style = document.createElement('style');
@@ -947,16 +958,19 @@
       document.head.appendChild(style);
 
       document.getElementById('banner-close').addEventListener('click', function() {
+        trackCof('pwa_install_banner_dismissed');
         banner.style.transform = 'translateY(100%)';
         setTimeout(function() { banner.remove(); }, 300);
         localStorage.setItem('cf_install_banner_seen', '1');
       });
 
       document.getElementById('banner-install').addEventListener('click', function() {
+        trackCof('pwa_install_banner_clicked');
         if (deferredPrompt) {
           deferredPrompt.prompt();
           deferredPrompt.userChoice.then(function(choiceResult) {
             banner.remove();
+            trackCof('pwa_install_result', { outcome: choiceResult.outcome, origin: 'banner' });
             if (choiceResult.outcome === 'accepted') {
               if (umami) umami.track('pwa_installed_banner');
             }
@@ -964,6 +978,7 @@
           });
         } else {
           var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+          trackCof('pwa_install_help_opened', { platform: isIOS ? 'ios' : 'other', origin: 'banner' });
           var msg = isIOS
             ? 'Para instalar: toque em Compartilhar (ícone de seta) → "Adicionar à Tela de Início"'
             : 'Para instalar: toque nos 3 pontos (⋮) → "Adicionar à tela inicial"';
@@ -996,9 +1011,11 @@
     // Fallback button
     if (installBtn) {
       installBtn.addEventListener('click', function() {
+        trackCof('pwa_install_button_clicked');
         if (deferredPrompt) {
           deferredPrompt.prompt();
           deferredPrompt.userChoice.then(function(choiceResult) {
+            trackCof('pwa_install_result', { outcome: choiceResult.outcome, origin: 'footer_button' });
             if (choiceResult.outcome === 'accepted') {
               installBtn.textContent = '✅ Instalado!';
               if (umami) umami.track('pwa_installed');
@@ -1007,6 +1024,7 @@
           });
         } else {
           var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+          trackCof('pwa_install_help_opened', { platform: isIOS ? 'ios' : 'other', origin: 'footer_button' });
           var msg = isIOS
             ? 'Para instalar: toque em Compartilhar (ícone de seta) → "Adicionar à Tela de Início"'
             : 'Para instalar: toque nos 3 pontos (⋮) → "Adicionar à tela inicial"';

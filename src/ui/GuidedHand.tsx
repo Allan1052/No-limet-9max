@@ -9,6 +9,7 @@
 // Estilo visual: dourado + feltro, marca Call ou Fold.
 // ---------------------------------------------------------------------------
 import { useState, useEffect, useCallback, useRef } from "react";
+import { trackEvent } from "../app/analytics";
 
 const LS_KEY = "cof-guided-hand-done";
 
@@ -115,6 +116,10 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
   const [skipping, setSkipping] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    trackEvent("guided_hand_started");
+  }, []);
+
   const currentStep = STEPS[step] ?? STEPS[STEPS.length - 1];
 
   const advance = useCallback(() => {
@@ -137,6 +142,7 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
   }, [step, currentStep.delayMs, advance]);
 
   const skip = () => {
+    trackEvent("guided_hand_skipped", { step });
     setSkipping(true);
     markGuidedHandDone();
     setTimeout(onDone, 400);
@@ -369,6 +375,7 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
         {currentStep.isFinal && (
           <button
             onClick={() => {
+              trackEvent("guided_hand_cta_clicked");
               markGuidedHandDone();
               onDone();
             }}

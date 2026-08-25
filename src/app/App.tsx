@@ -65,6 +65,7 @@ import { useT } from "../i18n";
 import { useSettings } from "./settings";
 import { createLeakDrillSession, planForLeak } from "../train/leakTraining";
 import { isDevUnlocked } from "../lib/devLock";
+import { trackEvent } from "./analytics";
 import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
 import { addTournamentResult } from "./resultsLog";
@@ -185,6 +186,11 @@ export function App() {
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
+
+  // Funil de ativação: registra a tela visitada sem identificar o jogador.
+  useEffect(() => {
+    trackEvent("view_opened", { view });
+  }, [view]);
 
   // Navegação programática via evento customizado (ex: banners clicáveis)
   useEffect(() => {
@@ -440,7 +446,7 @@ export function App() {
 
           {handOver ? (
             <div className="controls action-row">
-              <button className="btn primary" onClick={() => { if (controller.tournamentOver) dismissSummary(); newHand(); }}>
+              <button className="btn primary" onClick={() => { trackEvent("new_hand_started"); if (controller.tournamentOver) dismissSummary(); newHand(); }}>
                 {tr("btn.newHand")}
               </button>
               <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
@@ -480,7 +486,10 @@ export function App() {
               active={heroTurn}
               pot={controller.pot}
               bigBlind={t.bigBlind}
-              onAction={heroAct}
+              onAction={(action) => {
+                trackEvent("hero_action_submitted", { action });
+                heroAct(action);
+              }}
               isOmaha={t.variant === "omaha"}
               defaultRaiseTo={controller.suggestedRaiseTo()}
               coachBetSize={(() => {
@@ -629,11 +638,12 @@ export function App() {
 
       {/* Onboarding: mostra na primeira vez que abre o app */}
       {!onboarded ? (
-        <Onboarding onClose={() => { setOnboarded(true); markFirstOpen(); }} />
+        <Onboarding onClose={() => { trackEvent("onboarding_completed"); setOnboarded(true); markFirstOpen(); }} />
       ) : null}
       {/* Mão guiada: primeira vez que o usuário entra no jogo (após onboarding) */}
       {onboarded && !guidedDone ? (
         <GuidedHand onDone={() => {
+          trackEvent("guided_hand_completed");
           markGuidedHandDone();
           setGuidedDone(true);
         }} />

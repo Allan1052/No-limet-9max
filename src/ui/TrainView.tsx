@@ -29,6 +29,7 @@ import { recordDecision } from "../train/decisionStats";
 import { DailyHand } from "./DailyHand";
 import { StreakBanner } from "./StreakBanner";
 import type { FeedbackItem } from "../feedback/analyzer";
+import { trackEvent } from "../app/analytics";
 
 export function TrainView() {
   const { t } = useT();
@@ -40,6 +41,7 @@ export function TrainView() {
   // Gera um desafio aleatório e compartilha (imagem + link) — cada convite
   // é uma porta de entrada para novos usuários.
   const onChallenge = async () => {
+    trackEvent("challenge_share_started");
     setChallengeMsg(null);
     const { scenario: sc, url } = makeRandomChallenge();
     const s = sc.spec;
@@ -51,6 +53,7 @@ export function TrainView() {
       footer: t("challenge.imgFooter"),
     });
     const res = await shareSpot(img, url, t("challenge.shareText"), t("disclaimer"));
+    trackEvent("challenge_shared", { result: res });
     if (res === "copied") setChallengeMsg(t("challenge.copied"));
     else if (res === "failed") setChallengeMsg(t("challenge.failed"));
   };
@@ -63,6 +66,7 @@ export function TrainView() {
   };
 
   const start = (m: TrainModule) => {
+    trackEvent("training_module_started", { module: m.id });
     setModuleId(m.id);
     setSession({ correct: 0, total: 0 });
     setResult(null);
@@ -88,13 +92,16 @@ export function TrainView() {
       question: t("share.hitQuestion"),
       footer: t("share.hitFooter"),
     });
-    await shareSpot(img, appUrl, t("share.hitText"), t("disclaimer"));
+    trackEvent("training_hit_share_clicked", { module: moduleId });
+    const result = await shareSpot(img, appUrl, t("share.hitText"), t("disclaimer"));
+    trackEvent("training_hit_shared", { module: moduleId, result });
   };
 
   const choose = (key: "fold" | "call" | "raise" | "allin") => {
     if (!scenario || result || !moduleId) return;
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
+    trackEvent("training_choice_submitted", { module: moduleId, action: key, correct: ok });
     setResult(item);
     markActiveToday();
     recordDecision(key);
@@ -156,7 +163,7 @@ export function TrainView() {
     <div className="train-view">
       <div className="panel">
         <div className="ss-head">
-          <button className="btn tiny" onClick={() => setModuleId(null)}>
+          <button className="btn tiny" onClick={() => { trackEvent("training_module_finished", { module: moduleId, correct: session.correct, total: session.total }); setModuleId(null); }}>
             {t("train.back")}
           </button>
           <span className="train-session">{t("train.session", { c: session.correct, t: session.total })}</span>
