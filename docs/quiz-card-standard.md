@@ -6,6 +6,10 @@
 
 **Reel padrão:** `public/instagram/quiz-padrao-bb-shove-15bb-reel.mp4` — 12 segundos, 720×1280, 24 fps, sem áudio.
 
+**Lote editorial:** `public/instagram/quizzes/quiz-01-fold.png` até `quiz-10-fold.png`/`quiz-10-*.png`.
+
+**Comentários pós-resposta:** `docs/quiz-comments-10-spots.md`.
+
 ## Conceito
 
 Este é o padrão visual dos quizzes de decisão do Call ou Fold. A peça deve parecer uma ferramenta séria de estudo criada por um recreativo, e não uma propaganda de cassino ou uma interface genérica de inteligência artificial.
