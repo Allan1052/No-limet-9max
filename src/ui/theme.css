@@ -6484,8 +6484,11 @@ body {
   .ir-fullscreen .ir-brand {
     position: static;
     transform: none;
-    width: 132px;
-    min-width: 120px;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 13px;
     letter-spacing: 0.2px;
     white-space: nowrap;
@@ -6497,21 +6500,16 @@ body {
     letter-spacing: 0.5px;
     white-space: nowrap;
   }
+  /* Marca em fluxo (não mais absoluta): padding pequeno, senão os botões de
+     navegação (inclusive a 🏁) transbordam e ficam cortados na direita. */
   .ir-fullscreen .ir-head {
-    padding-left: 56px;
-    padding-right: 56px;
+    padding-left: 4px;
+    padding-right: 4px;
+    gap: 4px;
   }
-  /* Botões de navegação SEMPRE por cima do título em caso de sobreposição. */
-  .ir-fullscreen .ir-head .ir-nav {
-    position: relative;
-    z-index: 3;
-  }
-  .ir-fullscreen .ir-head .ir-exit {
-    position: relative;
-    z-index: 3;
-  }
-  /* O título nunca invade a área dos botões. */
-  .ir-fullscreen .ir-head { padding-left: 40px; padding-right: 40px; }
+  .ir-fullscreen .ir-head .ir-nav { position: relative; z-index: 3; gap: 4px; }
+  .ir-fullscreen .ir-head .ir-exit { position: relative; z-index: 3; }
+  .ir-fullscreen .ir-head .btn.tiny { padding: 6px 8px; }
 }
 
 /* ==========================================================================
