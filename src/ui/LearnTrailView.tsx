@@ -51,6 +51,7 @@ function HandBoard({ hero, board }: { hero?: string; board?: string }) {
 }
 import {
   LEARN_LESSONS,
+  HAND_RANKINGS,
   loadLearn,
   saveLearn,
   isLessonUnlocked,
@@ -62,7 +63,8 @@ import {
 type View =
   | { kind: "map" }
   | { kind: "read"; index: number }
-  | { kind: "quiz"; index: number };
+  | { kind: "quiz"; index: number }
+  | { kind: "ranking" };
 
 export function LearnTrailView() {
   const { t } = useT();
@@ -76,6 +78,14 @@ export function LearnTrailView() {
   };
 
   const stats = useMemo(() => learnStats(progress), [progress]);
+
+  if (view.kind === "ranking") {
+    return (
+      <div className="train-view">
+        <HandRankingView onBack={() => setView({ kind: "map" })} />
+      </div>
+    );
+  }
 
   if (view.kind !== "map") {
     const lesson = LEARN_LESSONS[view.index];
@@ -123,6 +133,15 @@ export function LearnTrailView() {
             {t("learn.progress", { done: stats.done, total: stats.total })}
           </span>
         </div>
+        {/* Consulta rápida: a tabela de força das mãos, sempre à mão. */}
+        <button className="learn-ref-btn" onClick={() => setView({ kind: "ranking" })}>
+          <span className="learn-ref-ic">🃏</span>
+          <span className="learn-ref-txt">
+            <b>Todas as mãos do poker</b>
+            <span>Da mais forte à mais fraca — com as cartas</span>
+          </span>
+          <span className="learn-ref-go">▶</span>
+        </button>
         {/* Lições como cards de missão (padrão do hub) */}
         <div className="missions-list">
           {LEARN_LESSONS.map((lesson, i) => {
@@ -282,6 +301,37 @@ function LessonQuiz({
           {q + 1 < total ? t("learn.next") : t("learn.finish")}
         </button>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tabela de FORÇA das mãos — referência visual (consulta rápida, sempre à mão).
+// ---------------------------------------------------------------------------
+function HandRankingView({ onBack }: { onBack: () => void }) {
+  const { t } = useT();
+  return (
+    <div className="panel">
+      <div className="ss-head">
+        <button className="btn tiny" onClick={onBack}>{t("learn.back")}</button>
+        <span className="train-session">🃏 Todas as mãos do poker</span>
+      </div>
+      <p className="learn-para" style={{ marginTop: 10 }}>
+        Da mais forte (1ª) à mais fraca (10ª). Quando duas pessoas têm a mesma
+        mão, ganha quem tiver a carta mais alta dentro dela.
+      </p>
+      <div className="hr-list">
+        {HAND_RANKINGS.map((h) => (
+          <div key={h.rank} className="hr-row">
+            <div className="hr-rank">{h.rank}º</div>
+            <div className="hr-main">
+              <div className="hr-name">{h.name}</div>
+              <Cards str={h.cards} small />
+              <div className="hr-note">{h.note}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

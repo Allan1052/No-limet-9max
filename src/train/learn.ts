@@ -31,6 +31,27 @@ export interface LearnLesson {
   quiz: { question: string; choices: string[]; answer: number; hero?: string; board?: string }[];
 }
 
+/** Tabela de FORÇA das mãos — referência visual (da mais forte à mais fraca). */
+export interface HandRank {
+  rank: number;   // 1 = mais forte
+  name: string;
+  cards: string;  // 5 cartas de exemplo, ex.: "ThJhQhKhAh"
+  note: string;   // uma linha explicando
+}
+
+export const HAND_RANKINGS: HandRank[] = [
+  { rank: 1, name: "Royal Flush", cards: "Th Jh Qh Kh Ah", note: "A maior de todas: do 10 ao Ás, todas do mesmo naipe." },
+  { rank: 2, name: "Straight Flush", cards: "5c 6c 7c 8c 9c", note: "Sequência inteira do mesmo naipe." },
+  { rank: 3, name: "Quadra", cards: "9s 9h 9d 9c Ks", note: "Quatro cartas do mesmo valor." },
+  { rank: 4, name: "Full House", cards: "Ks Kh Kd 9c 9s", note: "Uma trinca + um par juntos." },
+  { rank: 5, name: "Flush", cards: "Ad Jd 8d 5d 2d", note: "Cinco cartas do mesmo naipe (sem estar em sequência)." },
+  { rank: 6, name: "Sequência", cards: "5d 6s 7h 8c 9d", note: "Cinco cartas em ordem, naipes variados." },
+  { rank: 7, name: "Trinca", cards: "Qs Qh Qd 7c 2s", note: "Três cartas do mesmo valor." },
+  { rank: 8, name: "Dois Pares", cards: "Ks Kh 9d 9c 4s", note: "Dois pares diferentes na mesma mão." },
+  { rank: 9, name: "Par", cards: "As Ah Kd 7c 2s", note: "Duas cartas do mesmo valor." },
+  { rank: 10, name: "Carta Alta", cards: "As Jh 8d 5c 2s", note: "Nenhuma combinação — vale a carta mais alta." },
+];
+
 export const LEARN_LESSONS: LearnLesson[] = [
   {
     id: "maos",
