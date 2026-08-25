@@ -15,7 +15,7 @@ import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
 import type { HandLabSpec } from "../train/stage";
 import { BASELINE_PROFILE } from "../bots/profiles";
-import { POSITIONS, comboToHandType, type Position } from "../ranges/types";
+import { comboToHandType, type Position } from "../ranges/types";
 import {
   buildScenarioFromSpec,
   evaluateChoice,
@@ -28,8 +28,6 @@ import { recordDecision } from "../train/decisionStats";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
-
-const STACK_PRESETS = [10, 20, 40, 60, 100];
 
 // O "carrasco": o vilão que faz suas fichas sangrarem. Um é sorteado por sessão
 // e vira o seu terror pessoal do heads-up. Só flavor — não muda a matemática.
@@ -110,12 +108,6 @@ export function UltraTrainer() {
     openSizeBB: facing ? 2.3 : undefined,
   });
 
-  const start = () => {
-    setResult(null);
-    setSession({ correct: 0, total: 0 });
-    setVillain(pickVillain()); // novo carrasco a cada sessão de treino
-    setScenario(buildScenarioFromSpec(specFrom(), Math.random));
-  };
   const next = () => {
     setResult(null);
     setScenario(buildScenarioFromSpec(specFrom(), Math.random));
@@ -183,60 +175,28 @@ export function UltraTrainer() {
     });
   }, [scenario]);
 
-  // ---------- Configuração ----------
+  // ---------- Espera (dedicado à "Sua Mão") ----------
+  // O 1×1 só entra em ação com a mão que o jogador monta na aba "Sua Mão"
+  // (via "Treinar esse spot"). Sem uma mão vinda de lá, mostra o caminho —
+  // nada de spot aleatório aqui.
   if (!scenario) {
     return (
       <div className="train-view">
         <div className="panel ultra-panel">
           <div className="ultra-badge">✨ {t("ultra.badge")}</div>
           <h3>{t("ultra.title")}</h3>
-          <p className="ultra-sub">{t("ultra.subtitle")}</p>
-
-          <label className="ultra-field">
-            <span>{t("ultra.heroPos")}</span>
-            <select value={heroPos} onChange={(e) => setHeroPos(e.target.value as Position)}>
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="ultra-field">
-            <span>{t("ultra.situation")}</span>
-            <select value={facing ? "vs" : "rfi"} onChange={(e) => setFacing(e.target.value === "vs")}>
-              <option value="vs">{t("ultra.vs")}</option>
-              <option value="rfi">{t("ultra.rfi")}</option>
-            </select>
-          </label>
-
-          {facing ? (
-            <label className="ultra-field">
-              <span>{t("ultra.villainPos")}</span>
-              <select value={villainPos} onChange={(e) => setVillainPos(e.target.value as Position)}>
-                {POSITIONS.filter((p) => p !== "BB").map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          <div className="ultra-field">
-            <span>{t("ultra.stack", { bb: effBB })}</span>
-            <div className="ultra-stacks">
-              {STACK_PRESETS.map((s) => (
-                <button
-                  key={s}
-                  className={`btn size ${effBB === s ? "primary" : ""}`}
-                  onClick={() => setEffBB(s)}
-                >
-                  {s}bb
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button className="btn primary ultra-start" onClick={start}>
-            {t("ultra.start")}
+          <p className="ultra-sub" style={{ marginBottom: 18 }}>
+            O 1×1 treina <b>a mão que você monta</b> na aba <b>Sua Mão</b>. Monte o
+            spot lá (posição, cartas, stacks), toque em <b>Analisar minha mão</b> e
+            depois em <b>🎯 Treinar esse spot</b> — a mão abre aqui já com a ação real.
+          </p>
+          <button
+            className="btn primary ultra-start"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("nav-to", { detail: "suamao" }))
+            }
+          >
+            ✍️ Ir para a aba Sua Mão
           </button>
         </div>
       </div>

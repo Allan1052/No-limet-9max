@@ -92,6 +92,9 @@ export function HandLab() {
     [rank1, suit1, rank2, suit2],
   );
   const stackBB = customBB ?? STAGE_BB[stage];
+  // Stack EFETIVO do confronto = o menor dos dois. Se o vilão é mais curto, é o
+  // stack dele que manda na ação (por isso digitar o vilão deixa mais verdadeiro).
+  const effectiveBB = villainBB != null ? Math.min(stackBB, villainBB) : stackBB;
 
   const analyze = () => {
     setErr(null);
@@ -106,7 +109,7 @@ export function HandLab() {
         villainPosition: villain,
         situation,
         stage,
-        stackBB,
+        stackBB: effectiveBB,
         hand,
       }),
     );
@@ -346,9 +349,33 @@ export function HandLab() {
               {bb}bb
             </button>
           ))}
-          <span className="hl-stack-note">
-            Informativo — aparece no resumo do spot. O stack efetivo do confronto
-            já é calculado pelo menor dos dois stacks.
+          {/* Campo pra DIGITAR o stack exato do vilão (deixa o spot verdadeiro). */}
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            className="hl-stack-input"
+            placeholder="—"
+            value={villainBB ?? ""}
+            onChange={(e) => {
+              const v = Math.round(parseFloat(e.target.value));
+              setVillainBB(Number.isFinite(v) && v > 0 ? v : null);
+            }}
+            style={{
+              width: 72,
+              padding: "8px 10px",
+              borderRadius: 10,
+              border: "2px solid #e6c454",
+              background: "rgba(230,196,84,0.10)",
+              color: "#f0e9d2",
+              fontWeight: 800,
+              fontSize: 15,
+              textAlign: "center",
+            }}
+            aria-label="Digite o stack do vilão em bb"
+          />
+          <span className="hl-stack-note" style={{ color: "#e6c454" }}>
+            ✍️ digite o stack do vilão. O efetivo do confronto é o menor dos dois.
           </span>
         </div>
 
