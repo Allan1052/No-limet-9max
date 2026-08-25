@@ -77,6 +77,12 @@ export function ImportView() {
     setReplay(true);
     const sessionReport = analyzeSession(hands);
     setReport(sessionReport);
+    // Sobe pro topo: o resultado abre em tela cheia, sem precisar rolar.
+    try {
+      window.scrollTo({ top: 0 });
+    } catch {
+      // ignora
+    }
 
     // Importação nova (não veio do storage): guarda o histórico p/ reabrir depois.
     if (!opts.fromStorage) {
@@ -150,8 +156,15 @@ export function ImportView() {
     onFile(ev.dataTransfer.files?.[0]);
   };
 
+  // Quando o resultado (replay) está aberto, escondemos a intro + a caixa de
+  // texto pra ele ocupar a tela inteira — senão o usuário tinha que rolar lá
+  // pra baixo, depois da caixa, pra ver a análise. Volta pela "Importar outra
+  // sessão" dentro do replay.
+  const showingReplay = replay && parsed.length > 0;
+
   return (
     <div className="import-view">
+      {!showingReplay && (
       <div className="import-intro">
         <h2>📥 {t("import.title")}</h2>
         <p>{t("import.subtitle")}</p>
@@ -167,7 +180,9 @@ export function ImportView() {
           </ul>
         </details>
       </div>
+      )}
 
+      {!showingReplay && (
       <div
         className={`import-input${dragOver ? " import-dragover" : ""}`}
         onDragOver={(e) => {
@@ -235,8 +250,9 @@ export function ImportView() {
         </div>
         {error ? <div className="import-error">{error}</div> : null}
       </div>
+      )}
 
-      {replay && parsed.length > 0 ? (
+      {showingReplay ? (
         <ImportReplayer
           hands={parsed}
           reports={report ? report.hands : []}
