@@ -42,6 +42,10 @@ export interface HeroAdvice {
   effectiveBB?: number;
   /** Rótulo do raise pelo nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
   nBet?: string;
+  /** Pote (em big blinds) no momento da decisão — pós-flop. Usado p/ medir se um
+   *  all-in é DE FATO um overbet (stack fundo vs pote) ou só um shove normal
+   *  (vilão coberto/short → o all-in É o tamanho normal). */
+  potBB?: number;
   /** Estágio do torneio (inicio/meio/bolha/mesa_final) — pra contextualizar a dica. */
   stageLabel?: string;
   /** Posição do herói (UTG, BTN, etc.) — pra contextualizar. */
@@ -256,13 +260,22 @@ function gradeCore(
   // as mãos piores foldarem e só é pago por mãos melhores — jogada perdedora.
   // O all-in só equivale ao raise em stack CURTO (push/fold), quando o próprio
   // conselho recomenda jam. Sem isso, o app dava "excelente" pra qualquer jam.
+  // Um all-in só é "overbet errado" quando SOBRA stack fundo em relação ao que
+  // já está em jogo — aí um bet/raise normal seria bem menor que o shove. Com
+  // stack efetivo curto vs o pote (vilão coberto/short), o all-in É o tamanho
+  // normal e NÃO deve ser punido (bug pego pelo Allan: KK top two pair, 69% de
+  // equity, shove contra vilão short vinha rotulado "imprecisa/arriscado").
+  // Pós-flop temos o pote → mede por SPR; pré-flop, mantém o proxy de stack fundo.
+  const effStk = advice.effectiveBB ?? 100;
+  const isOverbetShove =
+    advice.potBB && advice.potBB > 0 ? effStk > advice.potBB * 1.3 : effStk > 30;
   if (
     heroAction === "allin" &&
     advice.action !== "jam" &&
     family(advice.action) === "aggro" &&
-    (advice.effectiveBB ?? 100) > 30
+    isOverbetShove
   ) {
-    const eff = Math.round(advice.effectiveBB ?? 0);
+    const eff = Math.round(effStk);
     const deep = eff >= 50;
     const fctx: FeedbackContext = {
       heroBB: eff,

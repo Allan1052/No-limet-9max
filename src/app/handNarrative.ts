@@ -250,7 +250,30 @@ export function buildHandStory(data: HandShareData): HandStoryStreet[] {
     // apertando. No pré-flop, a leitura é a mão inicial.
     let read = "";
     if (key === "preflop") {
-      read = `Você começou com ${data.heroCards.map(cardStr).join(" ")} — mão de abertura.`;
+      // O papel REAL do herói no pré-flop — não é sempre "abertura". Conta os
+      // aumentos ANTES da ação dele: 0 = abertura, 1 = 3-bet, 2+ = 4-bet; e se
+      // ele só pagou, diz o que pagou. (Antes cravava "mão de abertura" mesmo
+      // num 3-bet — inconsistente com o ledger; bug pego pelo Allan.)
+      const pre = log.filter((e) => streetKey(e.street) === "preflop");
+      let raisesBeforeHero = 0;
+      let heroPhrase = "";
+      for (const e of pre) {
+        const ph = actionPhrase(e.action);
+        if (e.isHero) { heroPhrase = ph; break; }
+        if (/aumenta|all-in/.test(ph)) raisesBeforeHero++;
+      }
+      const handTxt = data.heroCards.map(cardStr).join(" ");
+      const isRaise = /aumenta|all-in/.test(heroPhrase);
+      const isCall = /paga/.test(heroPhrase);
+      let role: string;
+      if (isRaise) {
+        role = raisesBeforeHero >= 2 ? "4-bet" : raisesBeforeHero === 1 ? "3-bet" : "abertura";
+      } else if (isCall) {
+        role = raisesBeforeHero >= 2 ? "pagou o 3-bet" : raisesBeforeHero === 1 ? "pagou a abertura" : "limp";
+      } else {
+        role = "entrou no pote";
+      }
+      read = `Você começou com ${handTxt} — ${role}.`;
     } else {
       const made = heroMadeAt(data.heroCards, data.board.slice(0, BOARD_LEN[key]));
       const heroRead = made ? `Você tinha ${madeWithArticle(made)}.` : "";

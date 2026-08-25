@@ -707,7 +707,10 @@ async function drawDecisionCard(
   // ── pote + sua aposta ──
   const potVals = data.potByStreet ? Object.values(data.potByStreet) : [];
   const poteBB = data.finalPotBB ?? (potVals.length ? potVals[potVals.length - 1] : undefined);
-  const betM = /([\d.,]+)\s*bb/i.exec(data.heroAction) ?? /([\d.,]+)\s*bb/i.exec(data.context);
+  // Tamanho da aposta SÓ do rótulo da AÇÃO — nunca do contexto, que carrega o
+  // "Stack: 47bb" e virava betBB=47 num all-in, gerando "· 1%" (bug do Allan).
+  const isAllInAct = /all[\s-]?in/i.test(data.heroAction);
+  const betM = /([\d.,]+)\s*bb/i.exec(data.heroAction);
   const betBB = betM ? parseFloat(betM[1].replace(",", ".")) : undefined;
   // % da aposta = aposta ÷ pote ANTES da aposta (é assim que se mede tamanho de
   // aposta). O pote final (poteBB) já inclui a sua aposta + o call do vilão — por
@@ -720,7 +723,11 @@ async function drawDecisionCard(
     betBB && poteBB && poteBB - 2 * betBB > 0.5 ? poteBB - 2 * betBB
     : potVals.length >= 2 ? potVals[potVals.length - 2]
     : poteBB;
-  const pctPot = betBB && potIntoBet ? Math.round((betBB / potIntoBet) * 100) : undefined;
+  // % do pote só faz sentido pra aposta/raise normal. Num all-in (sobretudo com
+  // vilão coberto) o "% do pote" engana — mostramos "all-in" em vez do número.
+  // E descartamos % implausível (fora de ~5%–300%) que denuncia dado ruim.
+  const rawPct = !isAllInAct && betBB && potIntoBet ? Math.round((betBB / potIntoBet) * 100) : undefined;
+  const pctPot = rawPct !== undefined && rawPct >= 5 && rawPct <= 300 ? rawPct : undefined;
   const bW = (W - 112 - 10) / 2, bH = 62;
   panel(56, y, bW * 0.82, bH, 13, "rgba(230,196,84,0.05)", GLINE);
   ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("POTE", 78, y + bH / 2);
@@ -730,7 +737,9 @@ async function drawDecisionCard(
   ctx.fillStyle = GSOFT; ctx.font = "800 19px Georgia, serif"; ctx.textAlign = "left"; ctx.fillText("SUA AÇÃO", hx + 22, y + bH / 2);
   ctx.textAlign = "right";
   ctx.fillStyle = GOLD; ctx.font = "900 30px Georgia, serif";
-  const actTxt = betBB !== undefined ? `${betBB} bb${pctPot ? ` · ${pctPot}%` : ""}` : (data.heroAction || "—");
+  const actTxt = betBB !== undefined
+    ? `${betBB} bb${isAllInAct ? " · all-in" : pctPot ? ` · ${pctPot}%` : ""}`
+    : (data.heroAction || "—");
   ctx.fillText(actTxt, W - 56 - 22, y + bH / 2);
   y += bH + 12;
 

@@ -34,6 +34,25 @@ describe("all-in fundo quando o certo era raise (overbet)", () => {
     });
     expect(item.rating).toBe("boa");
   });
+  it("pós-flop: shove de valor com stack efetivo CURTO vs pote NÃO é overbet (bug Allan)", () => {
+    // KK top two pair, 69% equity, all-in de ~9.8bb efetivos num pote de ~63bb:
+    // não sobra stack fundo → o shove É o tamanho normal. Antes: 'imprecisa'.
+    const item = gradeDecision("River", "free", "allin", {
+      kind: "postflop", action: "bet", reason: "valor",
+      mix: [{ action: "bet", freq: 0.85 }, { action: "check", freq: 0.15 }],
+      equity: 0.69, effectiveBB: 9.8, potBB: 63,
+    });
+    expect(item.rating).toBe("boa");
+  });
+  it("pós-flop: all-in FUNDO (SPR alto) quando cabia bet normal ainda é punido", () => {
+    // Stack efetivo 90bb num pote de 20bb: shove = overbet gigante → imprecisa/ruim.
+    const item = gradeDecision("Flop", "free", "allin", {
+      kind: "postflop", action: "bet", reason: "valor",
+      mix: [{ action: "bet", freq: 0.8 }, { action: "check", freq: 0.2 }],
+      equity: 0.7, effectiveBB: 90, potBB: 20,
+    });
+    expect(item.rating).not.toBe("boa");
+  });
 });
 
 describe("nota por frequência (estratégia mista)", () => {

@@ -995,6 +995,13 @@ export class GameController {
     const aggro = d.action === "bet" || d.action === "raise";
     const betSizePct = aggro ? d.sizeToPot : undefined;
     const betSizeBB = aggro && d.sizeToPot ? Math.round((d.sizeToPot * ctx.potSize / bb) * 10) / 10 : undefined;
+    // Stack EFETIVO (o que ainda pode entrar) = min(herói, maior oponente ativo).
+    // É o que decide se um all-in é overbet (fundo vs pote) ou shove normal.
+    const heroBehind = this.table.players[seat].stack;
+    const oppBehind = this.table.players
+      .filter((p) => p.seat !== seat && p.status === "active")
+      .map((p) => p.stack);
+    const effChips = oppBehind.length ? Math.min(heroBehind, Math.max(...oppBehind)) : heroBehind;
     return {
       kind: "postflop",
       action: d.action,
@@ -1004,6 +1011,8 @@ export class GameController {
       villainRangePct: d.villainRangePct,
       mix: d.mix,
       evBB,
+      effectiveBB: effChips / bb,
+      potBB: ctx.potSize / bb,
       stageLabel: this.tournament?.stage ?? undefined,
       heroPosition: positionLabels[seat % 9],
       betSizePct,
