@@ -23,6 +23,7 @@ import { buildTopRange } from "../ranges/build";
 import { rangeCombos, type Range } from "../ranges/types";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
+import type { IcmSpot } from "../ranges/icm";
 import { stackDepthAdjust } from "../ranges/stackDepth";
 import { comboToHandType, type Position } from "../ranges/types";
 import { gradeDecision, type FeedbackItem } from "../feedback/analyzer";
@@ -46,12 +47,14 @@ export const STAGE_LABEL: Record<StageKey, string> = {
 export type SituationKey =
   | "open" // ninguém abriu: você é o primeiro a agir
   | "vsopen" // um vilão abriu antes de você
-  | "vs3bet"; // um vilão 3-betou (open + raise)
+  | "vs3bet" // um vilão 3-betou (open + raise)
+  | "vsallin"; // um vilão deu all-in na sua frente (call/fold por equity + ICM)
 
 export const SITUATION_LABEL: Record<SituationKey, string> = {
   open: "Ninguém abriu — você age primeiro",
   vsopen: "Um vilão abriu antes de você",
   vs3bet: "Um vilão 3-betou você",
+  vsallin: "Um vilão deu all-in na sua frente",
 };
 
 export interface HandLabSpec {
@@ -101,23 +104,61 @@ function recommendedFrom(action: string): string {
 }
 
 /**
+ * ICM representativo da FASE FINAL — pra a decisão sentir a pressão de mesa
+ * final (arriscar o torneio custa mais que dobrar). É uma aproximação: mesa
+ * final de 5 com prêmios escalonados e o herói no stack efetivo do spot. Só o
+ * estágio "late" usa; "early"/"meio" jogam em fichas puras (chip-EV). O motor
+ * já sabe usar ICM (requiredEquityToCall/icmFactor) — o HandLab é que não
+ * estava passando esse dado (bug pego pelo Allan).
+ */
+function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
+  if (stage !== "late") return undefined;
+  const e = Math.max(1, effBB);
+  // Pressão MODERADA de mesa final (calibrada): o preço exigido sobe o bastante
+  // pra mãos marginais (AJo, KQs, A7s) largarem um all-in, mas mãos fortes (TT+)
+  // ainda pagam. Aperta demais (herói bustável na bolha) faria até TT foldar —
+  // agressivo e contra-intuitivo pro estudo.
+  return {
+    stacks: [e * 2.5, e * 2, e * 1.5, e, e * 1.2],
+    payouts: [30, 25, 20, 14, 11],
+    hero: 0,
+    villain: 3,
+    chips: e,
+  };
+}
+
+/**
  * Analisa a mão reconstruída pelo jogador e devolve o veredito nas duas vozes.
  */
 export function analyzeHand(spec: HandLabSpec): HandAnalysis {
   const handType = comboToHandType(spec.hand[0], spec.hand[1]);
   const sd = stackDepthAdjust(spec.stackBB);
   const openSize = 2.3;
+  const eff = spec.stackBB;
+  const icmSpot = buildStageIcm(eff, spec.stage);
+  const facingAllin = spec.situation === "vsallin";
 
   const ctx: PreflopContext = {
     heroPosition: spec.heroPosition,
     hand: spec.hand,
-    effectiveBB: spec.stackBB,
+    effectiveBB: eff,
     profile: BASELINE_PROFILE,
     variant: "holdem",
     raiserPosition: spec.situation === "open" ? undefined : spec.villainPosition,
-    openSizeBB: openSize,
+    openSizeBB: facingAllin ? eff : openSize,
     threeBet: spec.situation === "vs3bet",
-    betLevelFaced: spec.situation === "vs3bet" ? 2 : undefined,
+    betLevelFaced: spec.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
+    icmSpot,
+    // Vilão deu all-in: a decisão vira call/fold por EQUITY vs range + pot odds
+    // (e ICM na fase final). Herói no BB já pôs 1bb; paga o resto.
+    ...(facingAllin
+      ? {
+          allInsAhead: 1,
+          numContesting: 1,
+          callAmountBB: Math.max(0.5, eff - 1),
+          contestablePotBB: eff + 0.5,
+        }
+      : {}),
   };
 
   const { item, action } = analyze(ctx, spec.hand);
@@ -165,6 +206,14 @@ function simpleVoice(
   _ctx: string,
 ): string {
   const pos = spec.heroPosition;
+  // Vilão deu all-in: é call/fold puro por equity (e ICM na fase final).
+  if (spec.situation === "vsallin") {
+    const icm = spec.stage === "late" ? " Na fase final ainda pesa o ICM: quebrar aqui custa prêmio, então o padrão aperta." : "";
+    if (action === "fold") {
+      return `Era FOLD. O vilão foi com tudo e ${hand} não tem chance suficiente pra pagar — você perde mais vezes do que a conta paga.${icm} Guarda as fichas.`;
+    }
+    return `Era CALL. ${hand} tem equity de sobra contra o range de all-in dele — no longo prazo você ganha mais do que arrisca.${icm ? " Mesmo com o ICM, a mão paga." : ""} Bota as fichas.`;
+  }
   if (action === "fold") {
     if (spec.situation === "vs3bet") {
       return `Era FOLD. Quando alguém 3-beta, a mão dele é muito forte — ${hand} perde pra quase tudo ali. Solta e espera a sua. Não é covardia, é paciência.`;
@@ -195,6 +244,15 @@ function technicalVoice(
 ): string {
   const depth = depthTalk(spec.stackBB);
   const stageTalk = stageTechnicalTalk(spec);
+  // Vilão all-in: call/fold por equity vs range de shove + pot odds; na fase
+  // final, a equity exigida sobe pelo ICM (requiredEquityToCall).
+  if (spec.situation === "vsallin") {
+    const decision =
+      action === "fold"
+        ? `${hand} fica abaixo da equity exigida vs o range de all-in${spec.stage === "late" ? " ajustada por ICM (o risco de quebrar vale mais que dobrar)" : " pelas pot odds"}. Fold é a linha de maior EV${spec.stage === "late" ? " de torneio" : ""}.`
+        : `${hand} bate a equity exigida vs o range de all-in${spec.stage === "late" ? ", mesmo com o ICM apertando o preço" : " pelas pot odds"}. Call é +EV: você realiza mais do que arrisca.`;
+    return `${buildContext(spec)}. ${stageTalk} ${depth} ${decision}`.trim();
+  }
   const openTalk =
     spec.situation === "vsopen"
       ? `A abertura de ${spec.villainPosition} representa uma range ampla, mas quando você só pode foldar, pagar ou re-agir sem valor, a frequência de call tende a zero.`

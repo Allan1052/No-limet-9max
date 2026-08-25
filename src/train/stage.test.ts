@@ -75,6 +75,26 @@ describe("HandLab — analyzeHand", () => {
     }
   });
 
+  it("vsallin: mão premium paga o all-in em qualquer estágio", () => {
+    for (const stage of ["early", "meio", "late"] as const) {
+      const a = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: 15, hand: parseHand("TsTh")! }));
+      expect(a.recommended).toBe("call");
+    }
+  });
+
+  it("vsallin: ICM da fase final aperta — AJo paga no meio mas folda no late", () => {
+    const meio = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("AsJh")! }));
+    const late = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "late", stackBB: 15, hand: parseHand("AsJh")! }));
+    expect(meio.recommended).toBe("call");
+    expect(late.recommended).toBe("fold"); // ICM: preservar prêmio > flip marginal
+    expect(late.simple).toMatch(/ICM|prêmio/i);
+  });
+
+  it("vsallin: a decisão é call ou fold (nunca raise contra all-in)", () => {
+    const a = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 20, hand: parseHand("As7s")! }));
+    expect(["call", "fold"]).toContain(a.recommended);
+  });
+
   it("devolve contexto legível com posição e stack", () => {
     const a = analyzeHand(spec());
     expect(a.context).toContain("BTN");
