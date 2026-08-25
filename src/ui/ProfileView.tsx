@@ -45,6 +45,9 @@ export function ProfileView({
   const { t } = useT();
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [umamiExcluded, setUmamiExcluded] = useState(() =>
+    typeof window !== "undefined" && localStorage.getItem("umami.disabled") === "1",
+  );
   const [ruaUnlocked, setRuaUnlocked] = useState(isDevUnlocked("rua2026"));
   const [eliteUnlocked, setEliteUnlocked] = useState<boolean>(() => {
     // Local + espelho da nuvem: se a vitória existe em qualquer um dos dois,
@@ -133,6 +136,19 @@ export function ProfileView({
       ? `https://wa.me/${REPORT_WHATSAPP}?text=${encodeURIComponent(msg)}`
       : INSTAGRAM_URL;
     window.open(url, "_blank");
+  };
+  const toggleUmamiExclusion = () => {
+    try {
+      if (umamiExcluded) {
+        localStorage.removeItem("umami.disabled");
+        setUmamiExcluded(false);
+      } else {
+        localStorage.setItem("umami.disabled", "1");
+        setUmamiExcluded(true);
+      }
+    } catch {
+      /* storage indisponível */
+    }
   };
   const appUrl =
     typeof window !== "undefined" ? window.location.origin : "https://calloufold.com.br";
@@ -271,6 +287,9 @@ export function ProfileView({
                 </a>
               ))}
             </div>
+            <button className="btn tiny" onClick={toggleUmamiExclusion} style={{ marginTop: 10 }}>
+              {umamiExcluded ? "✓ Este navegador está fora das métricas" : "Não contar meus testes neste navegador"}
+            </button>
           </div>
         ) : null}
 
