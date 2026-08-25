@@ -2,7 +2,8 @@
 // Contexto de idioma (i18n).
 //
 // Fornece `useT()` → { t, lang, setLang }. O idioma inicial vem do localStorage
-// (se o usuário já escolheu) ou do idioma do navegador; senão, português.
+// (se o usuário já escolheu); para novos visitantes, português é o padrão do produto.
+// Espanhol pode ser detectado automaticamente e inglês continua disponível no seletor.
 // A escolha é persistida e também refletida no atributo lang do <html>.
 // ---------------------------------------------------------------------------
 
@@ -20,7 +21,6 @@ function detectLang(): Lang {
   }
   const nav = (typeof navigator !== "undefined" ? navigator.language : "pt").toLowerCase();
   if (nav.startsWith("es")) return "es";
-  if (nav.startsWith("en")) return "en";
   return "pt";
 }
 

@@ -278,20 +278,21 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
       {/* Balão do coach */}
       <div
         style={{
-          maxWidth: 420,
+          maxWidth: 460,
           width: "100%",
-          padding: "18px 22px",
+          padding: "20px 24px",
           background: currentStep.isAha
-            ? "linear-gradient(135deg, #1a3a2a, #123a2a)"
+            ? "linear-gradient(135deg, #245f40, #17452f)"
             : currentStep.isFinal
               ? "linear-gradient(135deg, #2a2010, #1a1508)"
-              : "linear-gradient(135deg, #1a1a1a, #141414)",
+              : "linear-gradient(135deg, #173d2a, #10271c)",
+          boxShadow: "0 14px 34px #00000066",
           borderRadius: 16,
           border: currentStep.isAha
             ? "2px solid #5cbe8d"
             : currentStep.isFinal
               ? "2px solid #d4af37"
-              : "1px solid #d4af3733",
+              : "1px solid #5cbe8d66",
           animation: currentStep.isAha ? "ahaGlow 1s ease forwards" : undefined,
           position: "relative",
         }}
@@ -307,7 +308,7 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
             height: 0,
             borderLeft: "10px solid transparent",
             borderRight: "10px solid transparent",
-            borderBottom: `10px solid ${currentStep.isAha ? "#1a3a2a" : currentStep.isFinal ? "#2a2010" : "#1a1a1a"}`,
+            borderBottom: `10px solid ${currentStep.isAha ? "#245f40" : currentStep.isFinal ? "#2a2010" : "#173d2a"}`,
           }}
         />
 
@@ -315,8 +316,8 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
           <div
             style={{
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               borderRadius: "50%",
               background: "linear-gradient(135deg, #d4af37, #e6c454)",
               display: "flex",
@@ -335,7 +336,7 @@ export function GuidedHand({ onDone }: { onDone: () => void }) {
         <p
           style={{
             margin: 0,
-            fontSize: 15,
+            fontSize: 16,
             lineHeight: 1.5,
             color: currentStep.isAha ? "#e8f5e9" : currentStep.isFinal ? "#f5e6c0" : "#e8e6dc",
             fontWeight: currentStep.isAha ? 700 : 400,

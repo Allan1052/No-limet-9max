@@ -17,8 +17,8 @@
   /* Cores Premium Atualizadas - Alinhadas com os Vídeos */
   --bg: #0a0d0a;
   --bg2: #0f1410;
-  --felt-1: #1a4a3a;  /* Verde mais profundo e premium */
-  --felt-2: #0d2820;  /* Verde escuro mais intenso */
+  --felt-1: #2f9e69;  /* Feltro vivo aprovado: centro com mais vida */
+  --felt-2: #12603d;  /* Feltro profundo aprovado: borda verde */
   --rail: #2a2d22;    /* Borda dourada mais proeminente */
   --gold: #e6c454;    /* Dourado mais brilhante */
   --gold-soft: #d4af37;
@@ -51,7 +51,7 @@ html, body { overflow-x: hidden; }
 
 body {
   margin: 0;
-  background: radial-gradient(1200px 700px at 50% 20%, #1a1d14 0%, var(--bg) 70%);
+  background: radial-gradient(1200px 700px at 50% 20%, #2f855a 0%, #1a4c34 58%, #0d2a1c 100%);
   color: var(--text);
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
@@ -206,7 +206,7 @@ body {
   transition: all 0.2s ease;
 }
 .variant-btn.active {
-  background: linear-gradient(180deg, #1a4a3a 0%, #0d2820 100%);
+  background: linear-gradient(180deg, var(--felt-1) 0%, var(--felt-2) 100%);
   color: var(--gold);
   border-color: var(--gold-dim);
 }
@@ -560,7 +560,7 @@ body {
        verde de feltro no centro pra um verde escuro nas bordas — nada de preto
        morto. */
     background:
-      radial-gradient(ellipse 115% 90% at 50% 40%, #274d39 0%, #172c21 48%, #0d1712 100%);
+      radial-gradient(ellipse 115% 90% at 50% 40%, #2f855a 0%, #1a4c34 58%, #0d2a1c 100%);
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -583,6 +583,10 @@ body {
   .play {
     max-width: 1180px;
     width: 100%;
+  }
+  /* A mesa é o protagonista no desktop; usa o monitor sem espalhar controles. */
+  .play .table-wrap {
+    width: min(100%, 900px);
   }
   .table-wrap {
     aspect-ratio: 16 / 9;
@@ -855,11 +859,11 @@ body {
   position: absolute;
   inset: 6%;
   border-radius: 46% / 60%;
-  background: radial-gradient(120% 120% at 50% 35%, #1a2e24 0%, #0a140f 100%);
+  background: radial-gradient(120% 120% at 50% 35%, var(--felt-1) 0%, var(--felt-2) 100%);
   border: 12px solid var(--rail);
   box-shadow:
     0 0 0 2px var(--gold-dim),
-    inset 0 0 100px rgba(0, 0, 0, 0.8),
+    inset 0 0 100px rgba(0, 0, 0, 0.45),
     0 30px 60px rgba(0, 0, 0, 0.7);
   overflow: hidden;
 }
