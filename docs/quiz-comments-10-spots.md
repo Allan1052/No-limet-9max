@@ -1,6 +1,6 @@
-# Pacote de comentários — Quizzes Call ou Fold
+# Comentários pós-resposta — Quizzes Call ou Fold
 
-As imagens da série mostram apenas a pergunta. As respostas abaixo são para publicar nos comentários depois da participação do público.
+As imagens da série são apenas a pergunta. Publique a resposta nos comentários depois da participação do público.
 
 ## Card 01 — 9♠ 7♠ NO UTG
 **Resposta:** FOLD.
