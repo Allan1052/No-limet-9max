@@ -120,8 +120,14 @@ def draw_card(img: Image.Image, x: int, y: int, rank: str, suit: str, w: int = 3
     else:
         draw.text((x + w // 2, y + h // 2 - 30), rank, font=F(SERIF_BOLD, 128), fill=color, anchor="mm")
         draw.text((x + w // 2, y + h // 2 + 90), symbol, font=F(SERIF_BOLD, 60), fill=color, anchor="mm")
-    draw.text((x + w - 30, y + h - 108), symbol, font=suit_font, fill=color, anchor="ra")
-    draw.text((x + w - 28, y + h - 20), rank, font=rank_font, fill=color, anchor="rb")
+    # Real-card style lower-right index: draw rank and suit in separate rows,
+    # then rotate the complete index. This prevents any glyph collision.
+    index = Image.new("RGBA", (126, 158), (0, 0, 0, 0))
+    index_draw = ImageDraw.Draw(index)
+    index_draw.text((4, 0), rank, font=rank_font, fill=color)
+    index_draw.text((13, 78), symbol, font=suit_font, fill=color)
+    index = index.rotate(180, resample=Image.Resampling.BICUBIC)
+    img.alpha_composite(index, (x + w - 132, y + h - 166))
 
 
 @dataclass(frozen=True)
