@@ -42,6 +42,8 @@ function isStandalone(): boolean {
  */
 export function initAnalytics(): void {
   if (typeof window === "undefined") return;
+  const standalone = isStandalone();
+  trackEvent("app_opened", { mode: standalone ? "standalone" : "browser" });
   window.addEventListener("appinstalled", () => trackEvent("install"));
-  if (isStandalone()) trackEvent("pwa_open");
+  if (standalone) trackEvent("pwa_open");
 }
