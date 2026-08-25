@@ -16,6 +16,12 @@ import { facingAllinDecision } from "../ranges/facingAllin";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { gradeDecision, actionLabel, type FeedbackItem, type Rating } from "../feedback/analyzer";
 import { cardsToString } from "../engine/cards";
+import { comboToHandType } from "../ranges/types";
+
+// Range que CONTINUA (4-bet jam / call) quando o herói está COLD contra um 3-bet
+// (abriram e re-3-betaram ANTES dele agir). Dois já mostraram força, então é bem
+// mais apertado que "defender a própria abertura": fora daqui, folda.
+const COLD_VS_3BET_CONTINUE = new Set(["AA", "KK", "QQ", "JJ", "TT", "AKs", "AKo", "AQs"]);
 import type { Position } from "../ranges/types";
 import type { ParsedHand } from "./handHistory";
 
@@ -152,6 +158,14 @@ export function analyzeHand(h: ParsedHand): HandReport {
     };
   }
 
+    // Enfrentando um 3-BET+ (abrir + re-raise antes do herói), NÃO é "defesa vs
+    // abertura" — é bem mais apertado. Sem avisar o motor, ele tratava um 3-bet
+    // como open e mandava pagar mão dominada (ex.: A7s no BB vs 3-bet a 16bb).
+    // betLevel>=2 = há reraise; passa threeBet + nível + pote pro caminho vs-3bet.
+    // (O all-in é tratado à parte, logo abaixo, por preço × equity.)
+    const facingReraise = !raiserAllIn && betLevel >= 2;
+    const callAmtBB =
+      openSizeBB != null ? Math.max(0, openSizeBB - heroBlindChips / h.bb) : undefined;
     const dec = preflopDecision({
       heroPosition: hero.position,
       hand: h.heroCards,
@@ -160,6 +174,14 @@ export function analyzeHand(h: ParsedHand): HandReport {
       raiserPosition,
       openSizeBB,
       variant: h.variant ?? "holdem",
+      ...(facingReraise
+        ? {
+            threeBet: true,
+            betLevelFaced: betLevel,
+            potBB: potChipsBefore / h.bb,
+            callAmountBB: callAmtBB,
+          }
+        : {}),
     });
 
   let advAction = dec.action;
@@ -188,6 +210,20 @@ export function analyzeHand(h: ParsedHand): HandReport {
         ? `Contra o all-in, a conta é preço × equity: ${fa.reason} Pagar pelo preço é o certo.`
         : `Contra o all-in, a conta é preço × equity: ${fa.reason}`;
     advMix = [{ action: fa.action, freq: 1 }];
+  }
+
+  // COLD contra um 3-BET (abriram e re-3-betaram antes de o herói agir — ex.: A7s
+  // no BB depois de open + 3-bet). O motor "vs 3-bet" assume que o HERÓI abriu e
+  // pode restealar (mandava jam A7s); cold é bem mais apertado. Fora das premium,
+  // o padrão é FOLDAR. (Não vale pra all-in, tratado acima por preço × equity.)
+  if (facingReraise && h.heroCards.length >= 2) {
+    const ht = comboToHandType(h.heroCards[0], h.heroCards[1]);
+    if (!COLD_VS_3BET_CONTINUE.has(ht)) {
+      advAction = "fold";
+      advReason =
+        "Cold contra um 3-bet: abriram e re-3-betaram antes de você — dois já mostraram força. Fora das premium (QQ+/AK/AQs), o padrão é foldar; mãos como essa ficam dominadas.";
+      advMix = [{ action: "fold", freq: 1 }];
+    }
   }
 
   const feedback = gradeDecision("Pré-flop", 'free', mapped.engine, {
