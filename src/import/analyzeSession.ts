@@ -12,6 +12,7 @@
 // ---------------------------------------------------------------------------
 
 import { preflopDecision } from "../ranges/preflop";
+import { facingAllinDecision } from "../ranges/facingAllin";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { gradeDecision, actionLabel, type FeedbackItem, type Rating } from "../feedback/analyzer";
 import { cardsToString } from "../engine/cards";
@@ -91,25 +92,44 @@ export function analyzeHand(h: ParsedHand): HandReport {
   let raiserPosition: Position | undefined;
   let openSizeBB: number | undefined;
   let raiserAllIn = false; // a abertura/reraise que o herói enfrenta é all-in?
+  let betLevel = 0;        // nº de raises antes do herói (1=open, 2=3-bet, …)
   let heroActed: { type: string; allIn: boolean } | undefined;
+  // Fichas no pote e a pagar ANTES da ação voluntária do herói — para a conta de
+  // all-in (preço × equity via facingAllinDecision).
+  const committed: Record<string, number> = {};
+  let potChipsBefore = 0;
+  let heroBlindChips = 0;
+  let heroCallChips = 0;
 
   for (const a of h.actions) {
     if (a.street !== "preflop") break;
-    if (a.type === "sb" || a.type === "bb" || a.type === "ante") continue;
+    if (a.type === "sb" || a.type === "bb" || a.type === "ante") {
+      potChipsBefore += a.amount;
+      committed[a.player] = (committed[a.player] ?? 0) + a.amount;
+      if (a.player === h.heroName && (a.type === "sb" || a.type === "bb")) heroBlindChips += a.amount;
+      continue;
+    }
 
     if (a.player === h.heroName) {
       if (a.type === "fold" || a.type === "check" || a.type === "call" || a.type === "raise") {
         heroActed = { type: a.type, allIn: !!a.allIn };
+        if (a.type === "call") heroCallChips = a.amount;
         break;
       }
       continue;
     }
-    // Ação de vilão antes do herói: registra a abertura mais recente.
+    // Ação de vilão antes do herói: registra a abertura mais recente e soma o pote.
     if (a.type === "raise") {
       const seat = h.seats.find((s) => s.name === a.player);
       raiserPosition = seat?.position;
       openSizeBB = a.amount / h.bb;
       raiserAllIn = !!a.allIn;
+      betLevel += 1;
+      potChipsBefore += Math.max(0, a.amount - (committed[a.player] ?? 0));
+      committed[a.player] = a.amount;
+    } else if (a.type === "call" || a.type === "bet") {
+      potChipsBefore += a.amount;
+      committed[a.player] = (committed[a.player] ?? 0) + a.amount;
     }
   }
 
@@ -142,19 +162,32 @@ export function analyzeHand(h: ParsedHand): HandReport {
       variant: h.variant ?? "holdem",
     });
 
-  // Enfrentando um ALL-IN no pré-flop não existe 3-bet/abertura — só dá pra
-  // PAGAR ou FOLDAR. Se o motor recomendou agressão (3bet/jam/raise) contra um
-  // shove, a jogada EXIBIDA vira CALL (pagar o all-in é como "botar as fichas").
-  // Isso NÃO altera o motor GTO (preflopDecision continua igual, selo intacto) —
-  // só corrige o rótulo da dica, que mostrava "recomendava 3-BET" contra um
-  // all-in (impossível). Fold e call seguem como estão.
   let advAction = dec.action;
   let advReason = dec.reason;
   let advMix = dec.mix?.map((m) => ({ action: m.action, freq: m.freq }));
-  if (raiserAllIn && (advAction === "3bet" || advAction === "jam" || advAction === "raise")) {
-    advAction = "call";
-    advReason = "Contra um all-in não dá pra aumentar — a decisão é PAGAR ou FOLDAR. Com essa mão o padrão é pagar o shove.";
-    advMix = [{ action: "call", freq: 1 }];
+
+  // Enfrentando um ALL-IN no pré-flop, NÃO existe 3-bet/abertura — a decisão é
+  // PAGAR ou FOLDAR, e por PREÇO × EQUITY (não pela range de "abertura normal",
+  // que ignora o preço do pote e mandava foldar mãos que pagam pelo preço, ex.:
+  // 65s no BB contra um shove curto). Recalcula com facingAllinDecision. O stack
+  // do shover (≈ tamanho do all-in) estima a largura do range dele.
+  if (raiserAllIn && openSizeBB != null && h.heroCards.length >= 2) {
+    const callBB =
+      heroCallChips > 0 ? heroCallChips / h.bb : Math.max(0, openSizeBB - heroBlindChips / h.bb);
+    const fa = facingAllinDecision({
+      hero: h.heroCards,
+      betLevelFaced: Math.max(1, betLevel),
+      numContesting: 1,
+      contestablePotBB: potChipsBefore / h.bb,
+      callBB,
+      effectiveBB: openSizeBB,
+    });
+    advAction = fa.action;
+    advReason =
+      fa.action === "call"
+        ? `Contra o all-in, a conta é preço × equity: ${fa.reason} Pagar pelo preço é o certo.`
+        : `Contra o all-in, a conta é preço × equity: ${fa.reason}`;
+    advMix = [{ action: fa.action, freq: 1 }];
   }
 
   const feedback = gradeDecision("Pré-flop", 'free', mapped.engine, {
