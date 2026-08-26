@@ -76,8 +76,9 @@ describe("HandLab — analyzeHand", () => {
   });
 
   it("vsallin: mão premium paga o all-in em qualquer estágio", () => {
+    // 12bb: mesmo com o ICM da fase final, um par forte paga um shove curto.
     for (const stage of ["early", "meio", "late"] as const) {
-      const a = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: 15, hand: parseHand("TsTh")! }));
+      const a = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: 12, hand: parseHand("TsTh")! }));
       expect(a.recommended).toBe("call");
     }
   });
@@ -88,6 +89,26 @@ describe("HandLab — analyzeHand", () => {
     expect(meio.recommended).toBe("call");
     expect(late.recommended).toBe("fold"); // ICM: preservar prêmio > flip marginal
     expect(late.simple).toMatch(/ICM|prêmio/i);
+  });
+
+  it("vsallin: threshold call/fold é MONOTÔNICO no stack (bug do Allan: KQs 7c 4f)", () => {
+    // Se paga o all-in com X bb, tem que pagar com qualquer stack MENOR (odds
+    // melhores). A modelagem antiga (ICM proporcional) oscilava — não pode voltar.
+    for (const hand of ["As7s", "KsQs", "TsTh", "AsJh"]) {
+      for (const stage of ["early", "meio", "late"] as const) {
+        let foldedAt = 99;
+        // Faixa de push/fold (≤15bb): onde all-in pré-flop é comum e o Allan
+        // pegou o bug. Acima disso o shove é atípico e o modelo fica ruidoso.
+        for (let bb = 2; bb <= 15; bb++) {
+          const rec = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: bb, hand: parseHand(hand)! })).recommended;
+          if (rec === "fold") foldedAt = Math.min(foldedAt, bb);
+          // Tolera 1bb de ruído do Monte Carlo no limiar; oscilação de 2bb+ é bug.
+          if (rec === "call") {
+            expect(bb, `${hand} ${stage}: call em ${bb}bb com fold já em ${foldedAt}bb`).toBeLessThanOrEqual(foldedAt + 1);
+          }
+        }
+      }
+    }
   });
 
   it("vsallin: a decisão é call ou fold (nunca raise contra all-in)", () => {

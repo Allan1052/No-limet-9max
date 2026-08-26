@@ -17,7 +17,7 @@
 //
 // Tudo puro e testável; a UI só apresenta o resultado.
 // ---------------------------------------------------------------------------
-import { cardFromString, cardsToString, type Card } from "../engine/cards";
+import { cardFromString, cardsToString, seededRng, type Card } from "../engine/cards";
 import { equityHandVsRange } from "../engine/equity";
 import { buildTopRange } from "../ranges/build";
 import { rangeCombos, type Range } from "../ranges/types";
@@ -113,17 +113,20 @@ function recommendedFrom(action: string): string {
  */
 export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
   if (stage !== "late") return undefined;
-  const e = Math.max(1, effBB);
-  // Pressão MODERADA de mesa final (calibrada): o preço exigido sobe o bastante
-  // pra mãos marginais (AJo, KQs, A7s) largarem um all-in, mas mãos fortes (TT+)
-  // ainda pagam. Aperta demais (herói bustável na bolha) faria até TT foldar —
-  // agressivo e contra-intuitivo pro estudo.
+  // Mesa final com stacks FIXOS (bb absolutos) — NÃO proporcionais ao confronto.
+  // O all-in arriscado é `chips` = min(stack do confronto, stack do herói): assim
+  // a pressão de ICM ESCALA com o tamanho do all-in (shove curto pesa pouco,
+  // shove grande pesa muito) e a decisão fica MONOTÔNICA. A versão proporcional
+  // anterior dava thresholds oscilantes/tight demais (bug pego pelo Allan: KQs
+  // pagava 7bb mas foldava 4bb, A7s só pagava até 3bb). Calibrado pra apertar
+  // marginais (A7s/KQs ~7bb) mantendo premium (TT ~14bb) — pressão de mesa final.
+  const heroStack = 40;
   return {
-    stacks: [e * 2.5, e * 2, e * 1.5, e, e * 1.2],
-    payouts: [30, 25, 20, 14, 11],
+    stacks: [heroStack, 50, 32, 22, 16],
+    payouts: [28, 25, 22, 17, 13],
     hero: 0,
-    villain: 3,
-    chips: e,
+    villain: 1,
+    chips: Math.min(Math.max(1, effBB), heroStack),
   };
 }
 
@@ -149,6 +152,10 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     threeBet: spec.situation === "vs3bet",
     betLevelFaced: spec.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
     icmSpot,
+    // RNG semeado por mão+stack: a análise da MESMA mão é sempre igual (não
+    // "pisca" entre reloads) e o threshold vs all-in não oscila por ruído do
+    // Monte Carlo de equity.
+    rng: seededRng((((spec.hand[0] + 1) * 2654435761 + (spec.hand[1] + 1) * 40503 + Math.round(eff) * 2246822519) >>> 0)),
     // Vilão deu all-in: a decisão vira call/fold por EQUITY vs range + pot odds
     // (e ICM na fase final). Herói no BB já pôs 1bb; paga o resto.
     ...(facingAllin
