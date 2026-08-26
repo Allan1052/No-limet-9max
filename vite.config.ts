@@ -20,19 +20,17 @@ export default defineConfig({
       },
       output: {
         format: "es",
-        // Performance: separa bibliotecas 3ª-partes (react, i18n, workbox) do
-        // chunk de aplicação — menos JS reanalisado em cada deploy do app.
+        // Performance: TODAS as bibliotecas 3ª-partes num único chunk `vendor`,
+        // separado do código do app — as libs só mudam em `npm install` (raro),
+        // então o navegador reusa o cache delas entre deploys do app.
+        //
+        // Antes eram DOIS chunks (vendor + vendor-core), mas a divisão de
+        // node_modules era arbitrária e as libs se referenciavam entre os dois
+        // chunks → dependência circular (warning "Circular chunk: vendor-core
+        // -> vendor -> vendor-core"). Um chunk só elimina o ciclo sem perder o
+        // ganho de cache (o código do app já fica em chunks próprios).
         manualChunks: (id) => {
-          // vendor: bibliotecas 3ª-partes separadas do chunk de aplicação
-          if (id.includes("node_modules") && /(react-dom|react-router-dom|i18next|react-i18next)/.test(id)) {
-            return "vendor";
-          }
-          // workbox (runtime do PWA) e idb ficam junto do vendor — não mudam
-          // a cada deploy do app, então o navegador reusa o cache dessas libs
-          if (id.includes("node_modules") && /(@remix|workbox|idb|tslib|scheduler|react\/(jsx-)?runtime)/.test(id)) {
-            return "vendor";
-          }
-          if (id.includes("node_modules")) return "vendor-core";
+          if (id.includes("node_modules")) return "vendor";
         },
       },
     },
