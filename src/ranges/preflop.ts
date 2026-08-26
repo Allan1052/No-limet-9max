@@ -45,6 +45,13 @@ export interface PreflopContext {
   /** Tamanho da abertura do vilão em BB (default 2.3). */
   openSizeBB?: number;
   /**
+   * Dead money dos ANTES no pote, em big blinds (MTT). Fichas mortas alargam o
+   * roubo: com ante, abrir/shovar vale mais porque já há pote pra ganhar. Efeito
+   * MODERADO e f(0)=0 — sem ante (anteBB ausente/0) nada muda, então o benchmark
+   * (calibrado sem ante) fica intacto.
+   */
+  anteBB?: number;
+  /**
    * Quantos limpers (jogadores que só pagaram o BB) já entraram no pote não
    * aberto. Cada limper aumenta a abertura padrão em +1bb (isolamento).
    */
@@ -386,9 +393,12 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // Sem isso, os perfis largos (LAG) jammam muito além do razoável e sangram
     // no final table. Jogar bem em push/fold é ficar PERTO do ótimo, não abrir
     // mais; a diferença entre perfis vem sobretudo da largura da CALL vs shove.
-    const widthFactor = sd.pushFold
+    // Ante alarga o roubo: dead money no pote faz abrir/shovar valer mais.
+    // Moderado e f(0)=0 → sem ante, anteFactor=1 (benchmark intacto).
+    const anteFactor = 1 + Math.min(0.18, Math.max(0, ctx.anteBB ?? 0) * 0.12);
+    const widthFactor = (sd.pushFold
       ? (1 + (ctx.profile.rfiWidth - 1) * 0.25) * posMult
-      : ctx.profile.rfiWidth * posMult;
+      : ctx.profile.rfiWidth * posMult) * anteFactor;
     {
       // No push/fold, alarga o range conforme o stack encurta:
       // 15bb → +0%, 8bb → +9%, 4bb → +15% (aproxima do Nash).

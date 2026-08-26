@@ -154,6 +154,12 @@ export function preflopContextFor(
     callAmountBB: callAmt / bb,
     numContesting,
     potBB: totalPot(t) / bb, // pote cheio (p/ o preço do flat numa re-agressão não-all-in)
+    // Dead money dos antes (bb): ante × quem entrou na mão (não-"out"). Alarga o
+    // roubo no RFI/push-fold. Undefined quando não há ante.
+    anteBB:
+      t.ante > 0
+        ? (t.ante * t.players.filter((o) => o.status !== "out").length) / bb
+        : undefined,
     rng: seededRng(seed),
 
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),

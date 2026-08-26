@@ -44,6 +44,9 @@ export function HandLab() {
   const [villain, setVillain] = useState<Position>("CO");
   const [situation, setSituation] = useState<SituationKey>("vsopen");
   const [stage, setStage] = useState<StageKey>("inicio");
+  // Ante ligado por padrão: MTT moderno quase sempre tem ante (dead money que
+  // alarga o roubo). ~1bb de dead money representa o big blind ante padrão.
+  const [withAnte, setWithAnte] = useState(true);
   const [customBB, setCustomBB] = useState<number | null>(null);
   const [villainBB, setVillainBB] = useState<number | null>(null);
   // Conversor "por fichas": a pessoa manda a mão em fichas + o valor do big
@@ -112,6 +115,7 @@ export function HandLab() {
         stage,
         stackBB: effectiveBB,
         hand,
+        anteBB: withAnte ? 1 : 0,
       }),
     );
     markActiveToday();
@@ -225,6 +229,27 @@ export function HandLab() {
               {STAGE_LABEL[s]}
             </button>
           ))}
+        </div>
+
+        {/* Ante (MTT): dead money que alarga o roubo. */}
+        <label className="hl-label">Ante (torneio)</label>
+        <div className="hl-stage-row">
+          <button
+            className={`hl-stage-btn${withAnte ? " on" : ""}`}
+            onClick={() => setWithAnte(true)}
+          >
+            Com ante
+          </button>
+          <button
+            className={`hl-stage-btn${!withAnte ? " on" : ""}`}
+            onClick={() => setWithAnte(false)}
+          >
+            Sem ante
+          </button>
+          <span className="hl-stack-note">
+            Com ante o pote já tem fichas mortas — dá pra abrir/roubar um pouco
+            mais largo.
+          </span>
         </div>
 
         <label className="hl-label">Suas cartas</label>

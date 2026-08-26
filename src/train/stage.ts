@@ -73,6 +73,7 @@ export interface HandLabSpec {
   board?: Card[]; // cartas da mesa (3-5) para análise pós-flop
   potBB?: number; // pote em BB (para calcular pot-odds)
   villainBetBB?: number; // aposta do vilão em BB (para calcular pot-odds)
+  anteBB?: number; // dead money dos antes (bb) — alarga o roubo no MTT
 }
 
 export interface HandAnalysis {
@@ -173,6 +174,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     openSizeBB: facingAllin ? eff : openSize,
     threeBet: spec.situation === "vs3bet",
     betLevelFaced: spec.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
+    anteBB: spec.anteBB,
     icmSpot,
     // RNG semeado por mão+stack: a análise da MESMA mão é sempre igual (não
     // "pisca" entre reloads) e o threshold vs all-in não oscila por ruído do
@@ -220,7 +222,8 @@ function buildContext(spec: HandLabSpec): string {
 export function contextSeal(spec: HandLabSpec): string {
   const st = STAGES[spec.stage];
   const icm = st.icm === "bubble" ? " · ICM bolha" : st.icm === "final" ? " · ICM" : "";
-  return `MTT 9-max · ${st.label} · ${Math.round(spec.stackBB)}bb${icm}`;
+  const ante = spec.anteBB && spec.anteBB > 0 ? " · ante" : "";
+  return `MTT 9-max · ${st.label} · ${Math.round(spec.stackBB)}bb${ante}${icm}`;
 }
 
 /** Frase de contexto ligada ao estágio — o porquê de ele mudar a decisão. */

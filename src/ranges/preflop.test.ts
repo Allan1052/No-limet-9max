@@ -43,6 +43,31 @@ describe("pré-flop — abertura (pote não aberto)", () => {
   it("o raise com limper aparece na justificativa (isola)", () => {
     expect(decide("AsAh", "CO", { limpers: 2 }).reason).toMatch(/isol/i);
   });
+
+  it("ante alarga o RFI: abre >= mãos e mãos-fronteira novas entram", () => {
+    // Conta quantas mãos o HJ abre a 40bb com e sem ante. Com dead money o
+    // roubo vale mais → o range só pode crescer (nunca encolher).
+    const R = "23456789TJQKA";
+    const opensCount = (anteBB: number) => {
+      let n = 0;
+      for (let hi = 14; hi >= 2; hi--) {
+        for (let lo = hi; lo >= 2; lo--) {
+          for (const suit of hi === lo ? ["o"] : ["s", "o"]) {
+            const hand = `${R[hi - 2]}h${R[lo - 2]}${suit === "s" ? "h" : "d"}`;
+            const a = decide(hand, "HJ", { effectiveBB: 40, anteBB }).action;
+            if (a === "raise" || a === "jam" || a === "3bet") n++;
+          }
+        }
+      }
+      return n;
+    };
+    expect(opensCount(1)).toBeGreaterThan(opensCount(0)); // ante abre mais largo
+  });
+
+  it("ante NÃO muda o extremo: AA abre e 72o folda com ou sem ante", () => {
+    expect(decide("AsAh", "MP", { effectiveBB: 40, anteBB: 1 }).action).toBe("raise");
+    expect(decide("7s2h", "UTG", { effectiveBB: 40, anteBB: 1.5 }).action).toBe("fold");
+  });
 });
 
 describe("pré-flop — perfis diferenciam o comportamento", () => {
