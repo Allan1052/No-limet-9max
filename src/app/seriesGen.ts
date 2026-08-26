@@ -307,6 +307,160 @@ export async function generateThreeFasesCard(spec: HandLabSpec): Promise<string>
 }
 
 // ---------------------------------------------------------------------------
+// CARD DE RESPOSTA DE QUIZ — "a resposta nas 4 fases do torneio".
+// A mesma mão avaliada em Início · Meio · Bolha · Mesa Final, com a AÇÃO do
+// motor por fase. Serve pra postar o "reveal" de um quiz do Instagram.
+// ---------------------------------------------------------------------------
+
+const POS_PHRASE: Record<string, string> = {
+  BB: "no Big Blind",
+  SB: "no Small Blind",
+  BTN: "no Button",
+  CO: "no Cutoff",
+  HJ: "no Hijack",
+  LJ: "no Lojack",
+  MP: "no Meio",
+  UTG1: "em UTG+1",
+  UTG: "em UTG",
+};
+
+/** Desenha uma carta de baralho (naipe colorido). */
+function drawCard(x: number, y: number, c: Card): string {
+  const p = cardParts(c);
+  const w = 150, h = 210;
+  const col = p.red ? C.red : "#16130c";
+  return (
+    box(x, y, w, h, { fill: "#f4f1e6", stroke: C.gold, sw: 3, r: 16 }) +
+    `<text x="${x + 18}" y="${y + 52}" font-family="${SERIF}" font-size="46" font-weight="800" fill="${col}">${p.r}</text>` +
+    `<text x="${x + 20}" y="${y + 92}" font-family="${SERIF}" font-size="34" fill="${col}">${p.suit}</text>` +
+    `<text x="${x + w / 2}" y="${y + h / 2 + 40}" font-family="${SERIF}" font-size="96" fill="${col}" text-anchor="middle">${p.suit}</text>` +
+    `<text x="${x + w - 18}" y="${y + h - 24}" font-family="${SERIF}" font-size="46" font-weight="800" fill="${col}" text-anchor="end">${p.r}</text>`
+  );
+}
+
+/** Ação do motor → rótulo + cor para o badge. */
+function actionBadge(action: string): { label: string; color: string } {
+  if (action === "fold") return { label: "FOLD", color: C.fold };
+  if (action === "call") return { label: "CALL", color: C.call };
+  if (action === "allin") return { label: "ALL-IN", color: C.gold };
+  return { label: "RAISE", color: C.gold };
+}
+
+/** Frase curta do porquê, por fase — honesta e sem inventar número. */
+function answerWhy(stage: "inicio" | "meio" | "bolha" | "mesa_final", action: string, vsallin: boolean): string {
+  const icm = stage === "bolha" || stage === "mesa_final";
+  if (vsallin) {
+    if (action === "fold") return icm ? "ICM: quebrar custa prêmio — preserva." : "Sem preço contra o range — solta.";
+    return icm ? "Forte o bastante pra pagar mesmo com o ICM." : "Preço bom contra o roubo — paga.";
+  }
+  if (action === "fold") return icm ? "Com o ICM, fica abaixo do range — solta." : "Fora do range deste spot — solta.";
+  if (action === "allin") return "Stack de shove — vai com tudo.";
+  if (action === "raise") return icm ? "Mão de liderar, mas de olho no ICM." : "Mão de liderar — abre/re-ergue.";
+  return icm ? "Jogável, mas o ICM pede cautela." : "Jogável — paga e vê o flop.";
+}
+
+/** Monta o SVG do card de RESPOSTA (4 fases) a partir do spec. */
+export function buildQuizAnswerSvg(spec: HandLabSpec): string {
+  const vsallin = spec.situation === "vsallin";
+  const stack = Math.round(spec.stackBB);
+  const stages: ("inicio" | "meio" | "bolha" | "mesa_final")[] = ["inicio", "meio", "bolha", "mesa_final"];
+  const labels = ["INÍCIO", "MEIO", "BOLHA", "MESA FINAL"];
+  const phases = stages.map((st) => analyzeHand({ ...spec, stage: st }).recommended);
+
+  const P: string[] = [];
+  P.push(
+    `<defs><radialGradient id="bg" cx="50%" cy="0%" r="120%"><stop offset="0%" stop-color="${C.bgTop}"/><stop offset="45%" stop-color="${C.bgMid}"/><stop offset="100%" stop-color="${C.bgBot}"/></radialGradient>` +
+    `<pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="${C.gold}" stroke-width="1" opacity="0.06"/></pattern></defs>`,
+  );
+  P.push(`<rect width="${CARD_W}" height="${CARD_H}" fill="url(#bg)"/><rect width="${CARD_W}" height="${CARD_H}" fill="url(#grid)"/>`);
+  P.push(box(24, 24, CARD_W - 48, CARD_H - 48, { r: 26 }));
+  const M = 44, IW = CARD_W - 88, cx = CARD_W / 2;
+
+  // header
+  P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  P.push(box(M + 24, 68, 78, 52, { sw: 2, r: 8 }));
+  P.push(`<text x="${M + 63}" y="104" font-family="${SERIF}" font-size="40" font-weight="900" fill="${C.gold}" text-anchor="middle">CF</text>`);
+  P.push(`<text x="${M + 118}" y="92" font-family="${SERIF}" font-size="34" font-weight="800" fill="${C.ink}">Call<tspan font-style="italic" font-weight="600" font-size="26" fill="${C.cream}"> ou </tspan>Fold</text>`);
+  P.push(`<text x="${M + 120}" y="122" font-family="${SERIF}" font-size="13" letter-spacing="3" fill="${C.muted}">AQUI É POSSÍVEL</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
+
+  // eyebrow + título + subtítulo
+  const cs = spec.hand.map(cardParts);
+  const handColored = cs.map((p) => `<tspan fill="${C.ink}">${p.r}</tspan><tspan fill="${p.red ? C.red : C.ink}">${p.suit}</tspan>`).join("");
+  const posPhrase = POS_PHRASE[spec.heroPosition] ?? spec.heroPosition;
+  P.push(`<text x="${cx}" y="222" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="5" fill="${C.gold}" text-anchor="middle">✔ A RESPOSTA</text>`);
+  P.push(`<text x="${cx}" y="286" font-family="${SERIF}" font-size="52" font-weight="900" text-anchor="middle">${handColored}<tspan fill="${C.ink}"> ${esc(posPhrase.toUpperCase())}</tspan></text>`);
+  const sub = vsallin
+    ? `${spec.villainPosition} deu all-in de ${stack}bb — a resposta DEPENDE DA FASE`
+    : `${stack}bb — a mesma mão, a resposta por fase`;
+  P.push(`<text x="${cx}" y="330" font-family="${SERIF}" font-size="23" fill="${C.cream}" text-anchor="middle">${esc(sub)}</text>`);
+
+  // cartas
+  P.push(drawCard(cx - 160, 360, spec.hand[0]));
+  P.push(drawCard(cx + 10, 360, spec.hand[1]));
+
+  // selo do spot
+  const seal = vsallin
+    ? `MTT · ${spec.heroPosition} DEFENDE · ${stack}BB · ${spec.villainPosition} ALL-IN`
+    : `MTT · ${spec.heroPosition} · ${stack}BB · ${SITUATION_SHORT[spec.situation]}`;
+  P.push(box(cx - 260, 596, 520, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
+  P.push(`<text x="${cx}" y="628" font-family="${SERIF}" font-size="20" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
+
+  // grade 2x2 das fases
+  const gy = 700, cw = (IW - 24) / 2, ch = 300, gap = 24;
+  phases.forEach((action, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = M + col * (cw + gap), y = gy + row * (ch + gap);
+    const b = actionBadge(action);
+    P.push(box(x, y, cw, ch, { stroke: C.border, r: 18, fill: "rgba(255,255,255,0.015)" }));
+    const ccx = x + cw / 2;
+    P.push(`<text x="${ccx}" y="${y + 52}" font-family="${SERIF}" font-size="28" font-weight="800" letter-spacing="2" fill="${C.cream}" text-anchor="middle">${labels[i]}</text>`);
+    P.push(`<line x1="${x + 24}" y1="${y + 70}" x2="${x + cw - 24}" y2="${y + 70}" stroke="${C.faint}"/>`);
+    P.push(`<text x="${ccx}" y="${y + 140}" font-family="${SERIF}" font-size="52" font-weight="900" fill="${b.color}" text-anchor="middle">${b.label}</text>`);
+    P.push(multiline(wrap(answerWhy(stages[i], action, vsallin), 26), ccx, y + 188, 32, `font-family="${SERIF}" font-size="20" fill="${C.body}" text-anchor="middle"`));
+  });
+
+  // âncora
+  const anY = gy + 2 * ch + gap + 34, anH = 200;
+  P.push(box(M, anY, IW, anH, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  const a1 = vsallin ? "A mão é só METADE da conta." : "A mesma mão, decisões diferentes.";
+  const a2 = vsallin ? "A outra metade é QUEM shovou" : "O que muda é a pressão do torneio:";
+  const a3 = vsallin ? "e EM QUE FASE do torneio." : "posição, stack e — no fim — o ICM.";
+  P.push(`<text x="${cx}" y="${anY + 58}" font-family="${SERIF}" font-size="30" font-weight="700" fill="${C.gold}" text-anchor="middle">${esc(a1)}</text>`);
+  P.push(`<text x="${cx}" y="${anY + 100}" font-family="${SERIF}" font-size="30" font-weight="700" fill="${C.gold}" text-anchor="middle">${esc(a2)}</text>`);
+  P.push(`<text x="${cx}" y="${anY + 142}" font-family="${SERIF}" font-size="30" font-weight="700" fill="${C.gold}" text-anchor="middle">${esc(a3)}</text>`);
+  P.push(`<text x="${cx}" y="${anY + 180}" font-family="${SERIF}" font-size="16" font-style="italic" fill="#8a7f5a" text-anchor="middle">o mesmo shove de uma posição apertada muda a resposta</text>`);
+
+  // cta + footer
+  const ctaY = anY + anH + 24;
+  P.push(box(M, ctaY, IW, 68, { stroke: C.border2, sw: 1, r: 16 }));
+  P.push(`<text x="${cx}" y="${ctaY + 44}" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="middle">▶ TREINE ESSE SPOT NO APP</text>`);
+  const ftY = ctaY + 84;
+  P.push(box(M, ftY, IW, 60, { stroke: C.faint, sw: 1, r: 14 }));
+  P.push(`<text x="${M + 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.muted}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
+  P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">` + P.join("") + `</svg>`;
+}
+
+const SITUATION_SHORT: Record<string, string> = {
+  open: "VOCÊ ABRE",
+  vsopen: "VILÃO ABRIU",
+  vs3bet: "VILÃO 3-BETOU",
+  vsallin: "VILÃO ALL-IN",
+};
+
+/** Gera e baixa o card de RESPOSTA (4 fases) do spec atual. */
+export async function generateQuizAnswerCard(spec: HandLabSpec): Promise<string> {
+  const svg = buildQuizAnswerSvg(spec);
+  const blob = await svgToPngBlob(svg);
+  const name = `cof-resposta-${handPlain(spec.hand)}-${Math.round(spec.stackBB)}bb.png`;
+  downloadBlob(blob, name);
+  return name;
+}
+
+// ---------------------------------------------------------------------------
 // Flag do botão escondido — só quem tem a URL secreta ativa.
 // ---------------------------------------------------------------------------
 const GEN_FLAG = "cof-gen";
