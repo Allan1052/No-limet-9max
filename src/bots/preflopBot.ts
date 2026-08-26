@@ -133,8 +133,19 @@ export function preflopContextFor(
   for (const o of t.players) {
     if (o.seat === seat) continue;
     contestable += Math.min(o.totalCommitted, heroTotal);
-    if (o.status === "active" || o.status === "allin") numContesting++;
+    // "Contesta" o pote quem REALMENTE já entrou no confronto: all-in, ou já
+    // pagou a aposta atual (caller genuíno). NÃO conta quem só postou o blind e
+    // ainda vai agir (SB/BB atrás do BTN): eles quase sempre foldam pro shove +
+    // call, então tratá-los como oponentes no showdown inflava o nº de mãos a
+    // bater e fazia PREMIUM foldar all-in curto (bug do Allan: QQ na mesa final
+    // foldando pro shove de 8.8bb, com SB/BB vivos atrás contando como 3 no pote).
+    const contests =
+      o.status === "allin" ||
+      (o.status === "active" && o.committed >= t.currentBet && o.committed > t.bigBlind);
+    if (contests) numContesting++;
   }
+  // Nunca menos de 1 quando há aposta pra pagar (o próprio agressor conta).
+  if (numContesting === 0 && toCall > 0) numContesting = 1;
   // Semente estável por spot: o coach não "pisca" entre renders; bots variam por mão.
   const seed = (((p.holeCards[0] ?? 0) + 1) * 2654435761 + ((p.holeCards[1] ?? 0) + 1) * 40503 + Math.round(t.currentBet) * 2246822519) >>> 0;
 

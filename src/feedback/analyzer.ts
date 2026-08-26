@@ -165,13 +165,39 @@ export function gradeDecision(
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {
     item.evBB = advice.evBB;
-    // No modo 'free' (simples), não mostrar nota de EV — linguagem humana
-    if (userSubscriptionLevel !== 'free') {
+    // No modo 'free' (simples), não mostrar nota de EV — linguagem humana.
+    // E só mostra quando a conta de EV CRUA (pot odds) CONCORDA com a nota — o
+    // motor avalia contra a equity exigida (realização/implied/ICM), que é mais
+    // rígida que o preço cru, então às vezes um fold CERTO teria EV-cru positivo
+    // de pagar. Mostrar as duas coisas gerava contradição (bug do Allan: "fold
+    // BOA" + "pagar valia +3.2bb, o fold foi um erro"; "raise IMPRECISA" + "ação
+    // agressiva lucrativa"). Nesses casos, omitimos a nota em vez de contradizer.
+    if (userSubscriptionLevel !== 'free' && evNoteAgreesWithGrade(item, advice.evBB)) {
       const note = getEvNote(heroAction, advice.evBB, userSubscriptionLevel);
       if (note) item.text += ` ${note}`;
     }
   }
   return item;
+}
+
+/**
+ * A nota de EV cru (pot odds) concorda com o veredito da nota? Só então ela
+ * aparece — senão contradiz a avaliação do motor (que usa a equity EXIGIDA, mais
+ * rígida que o preço cru). Regra: para quem FOLDOU, a nota "pagar valia +X" só
+ * cabe se o fold foi julgado ERRADO; um fold CERTO com EV-cru positivo é omitido
+ * (o motor foldou por realização/implied/ICM, não por preço cru). Para quem
+ * PAGOU/foi agressivo, o inverso.
+ */
+function evNoteAgreesWithGrade(item: FeedbackItem, evBB: number): boolean {
+  const good = item.rating === "boa" || item.rating === "ok";
+  const callProfitable = evBB > 0.1; // pagar ganha fichas (EV cru)
+  const callBad = evBB < -0.1; // pagar perde fichas (EV cru)
+  if (item.heroFam === "fold") {
+    // fold bom ⇔ pagar NÃO era lucrativo; fold ruim ⇔ pagar era lucrativo.
+    return good ? !callProfitable : callProfitable;
+  }
+  // call / agressão (continuar): bom ⇔ continuar NÃO era ruim; ruim ⇔ era ruim.
+  return good ? !callBad : callBad;
 }
 
 /** Frase de EV conforme o que o herói fez (pagar vale evBB; foldar vale 0). */
