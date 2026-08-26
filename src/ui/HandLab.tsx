@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import { POSITIONS, type Position } from "../ranges/types";
 import { recordDecision } from "../train/decisionStats";
 import { markActiveToday } from "../train/streak";
+import { generateThreeFasesCard, isGenEnabled } from "../app/seriesGen";
 import {
   analyzeHand,
   parseHand,
@@ -71,6 +72,8 @@ export function HandLab() {
   const [showPhases, setShowPhases] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Gerador de cards ESCONDIDO (só ligado via URL secreta ?gen=allan).
+  const [genMsg, setGenMsg] = useState<string | null>(null);
 
   // Ao montar, lê um spec que veio do botão "Treinar esse spot" do resultado.
   useEffect(() => {
@@ -605,6 +608,30 @@ export function HandLab() {
           >
             🛣️ Treinar rua por rua
           </button>
+          {/* Botão ESCONDIDO — só aparece com a URL secreta. Gera o card do
+              Instagram ("3 fases") no próprio celular, sem gastar créditos. */}
+          {isGenEnabled() && (
+            <div style={{ marginTop: 8 }}>
+              <button
+                className="btn"
+                style={{ width: "100%", background: "#2a2416", border: "1px solid #7a5f1e", color: "#e6c454" }}
+                onClick={async () => {
+                  setGenMsg("Gerando…");
+                  try {
+                    const name = await generateThreeFasesCard(result.spec);
+                    setGenMsg(`✅ ${name}`);
+                  } catch (e) {
+                    setGenMsg(`❌ ${e instanceof Error ? e.message : "erro"}`);
+                  }
+                }}
+              >
+                📸 Gerar card 3 Fases (privado)
+              </button>
+              {genMsg && (
+                <p style={{ margin: "6px 0 0", color: "#b8b29a", fontSize: 12, textAlign: "center" }}>{genMsg}</p>
+              )}
+            </div>
+          )}
                   {/* Compartilhar resultado */}
           <div className="mt-4">
             <TrainingShareButton

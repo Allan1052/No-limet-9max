@@ -49,6 +49,7 @@ import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { markFirstOpen } from "../ui/AvatarSelector";
+import { syncGenFlagFromUrl } from "./seriesGen";
 import { GuidedHand, hasSeenGuidedHand, markGuidedHandDone } from "../ui/GuidedHand";
 import { SeatStatsPopup } from "../ui/SeatStatsPopup";
 import { SpotRangePopup } from "../ui/SpotRangePopup";
@@ -130,6 +131,11 @@ export function App() {
   // Diário de resultados ("Trophy Room"): grava no aparelho do jogador
   // uma única vez por torneio concluído, com todos os dados do summary.
   const summaryRef = useRef<string>("");
+  // Liga/desliga o gerador de cards escondido a partir da URL secreta (uma vez).
+  useEffect(() => {
+    syncGenFlagFromUrl();
+  }, []);
+
   useEffect(() => {
     if (controller.tournamentOver && controller.tournamentSummary()) {
       const s = controller.tournamentSummary()!;
