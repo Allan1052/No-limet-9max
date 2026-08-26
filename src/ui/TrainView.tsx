@@ -166,7 +166,7 @@ export function TrainView() {
           <button className="btn tiny" onClick={() => { trackEvent("training_module_finished", { module: moduleId, correct: session.correct, total: session.total }); setModuleId(null); }}>
             {t("train.back")}
           </button>
-          <span className="train-session">{t("train.session", { c: session.correct, t: session.total })}</span>
+          <span className="train-session" aria-live="polite" title="Acertos / respostas na janela de treino">{t("train.session", { c: session.correct, t: session.total })}</span>
         </div>
 
         <div className="train-spot">

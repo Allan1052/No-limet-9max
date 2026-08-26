@@ -11,24 +11,48 @@ export function IcmCalculator() {
 
   const totalPrize = payouts.reduce((a, b) => a + b, 0);
   const totalChips = stacks.reduce((a, b) => a + b, 0);
+  const hasInvalidStack = stacks.some((s) => !Number.isFinite(s) || s <= 0);
+  const hasInvalidPayout = payouts.some((p) => !Number.isFinite(p) || p <= 0);
+  const payoutCountIssue = payouts.length > stacks.length;
+  const payoutOrderIssue = payouts.some((p, i) => i > 0 && p > payouts[i - 1]);
+  const isValid = stacks.length >= 2 && payouts.length >= 1 && !hasInvalidStack && !hasInvalidPayout && !payoutCountIssue && totalChips > 0 && totalPrize > 0;
+  const validationMessages = [
+    stacks.length < 2 ? "Use pelo menos 2 jogadores." : null,
+    hasInvalidStack ? "Cada stack precisa ser maior que zero." : null,
+    hasInvalidPayout ? "Cada prêmio precisa ser maior que zero." : null,
+    payoutCountIssue ? "Não pode haver mais posições pagas do que jogadores." : null,
+    payoutOrderIssue ? "Confira a ordem: o prêmio de cada colocação deve ser igual ou menor que o anterior." : null,
+  ].filter((message): message is string => Boolean(message));
 
-  const values = useMemo(() => icmEquity(stacks, payouts), [stacks, payouts]);
+  const values = useMemo(() => (isValid ? icmEquity(stacks, payouts) : []), [isValid, stacks, payouts]);
 
   const safeHero = Math.min(hero, stacks.length - 1);
   const safeVillain = Math.min(villain, stacks.length - 1);
   const chips = Math.min(stacks[safeHero] ?? 0, stacks[safeVillain] ?? 0);
   const spot = { stacks, payouts, hero: safeHero, villain: safeVillain, chips };
 
-  const reqEq = safeHero !== safeVillain && chips > 0 ? requiredEquityToCall(spot) : null;
-  const bf = safeHero !== safeVillain && chips > 0 ? bubbleFactor(spot) : null;
+  const reqEq = isValid && safeHero !== safeVillain && chips > 0 ? requiredEquityToCall(spot) : null;
+  const bf = isValid && safeHero !== safeVillain && chips > 0 ? bubbleFactor(spot) : null;
 
   const setStack = (i: number, v: number) =>
-    setStacks((s) => s.map((x, j) => (j === i ? Math.max(0, v || 0) : x)));
+    setStacks((s) => s.map((x, j) => (j === i ? Math.max(1, v || 1) : x)));
   const setPayout = (i: number, v: number) =>
-    setPayouts((p) => p.map((x, j) => (j === i ? Math.max(0, v || 0) : x)));
+    setPayouts((p) => p.map((x, j) => (j === i ? Math.max(1, v || 1) : x)));
 
   return (
     <div className="icm">
+      <div className="icm-educational-label" role="note">
+        ICM didático: fichas, prêmios e valores abaixo são simulados e não representam dinheiro real.
+      </div>
+      {validationMessages.length > 0 ? (
+        <div className="icm-validation" role="alert">
+          <b>Confira as entradas antes de calcular:</b>
+          <ul>
+            {validationMessages.map((message) => <li key={message}>{message}</li>)}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="icm-cols">
         {/* Entradas */}
         <div className="panel">
@@ -39,7 +63,7 @@ export function IcmCalculator() {
               <input
                 type="number"
                 value={s}
-                min={0}
+                min={1}
                 onChange={(e) => setStack(i, Number(e.target.value))}
               />
               <button
@@ -62,14 +86,14 @@ export function IcmCalculator() {
         </div>
 
         <div className="panel">
-          <h3>Prêmios ($)</h3>
+          <h3>Prêmios virtuais (fichas)</h3>
           {payouts.map((p, i) => (
             <div className="icm-row" key={i}>
               <span className="icm-lbl">{i + 1}º lugar</span>
               <input
                 type="number"
                 value={p}
-                min={0}
+                min={1}
                 onChange={(e) => setPayout(i, Number(e.target.value))}
               />
               <button
@@ -92,17 +116,17 @@ export function IcmCalculator() {
         </div>
       </div>
 
-      {/* Valor de cada stack em $ */}
+      {/* Valor didático de cada stack */}
       <div className="panel">
-        <h3>Valor de cada stack (ICM)</h3>
+        <h3>Valor didático de cada stack (ICM)</h3>
         <table className="stats">
           <thead>
             <tr>
               <th>Jogador</th>
               <th>Fichas</th>
               <th>% fichas</th>
-              <th>Valor $</th>
-              <th>% do prêmio</th>
+              <th>Valor didático</th>
+              <th>% da premiação virtual</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +135,7 @@ export function IcmCalculator() {
                 <td className="pname">Jogador {i + 1}</td>
                 <td>{s}</td>
                 <td>{totalChips > 0 ? `${Math.round((s / totalChips) * 100)}%` : "—"}</td>
-                <td>{values[i].toFixed(2)}</td>
+                <td>{isValid && values[i] !== undefined ? values[i].toFixed(2) : "—"}</td>
                 <td>{totalPrize > 0 ? `${Math.round((values[i] / totalPrize) * 100)}%` : "—"}</td>
               </tr>
             ))}
@@ -125,7 +149,7 @@ export function IcmCalculator() {
 
       {/* Confronto de all-in / pressão de bolha */}
       <div className="panel">
-        <h3>All-in: equity necessária para pagar</h3>
+        <h3>All-in didático: equity necessária para pagar</h3>
         <div className="icm-spot">
           <label>
             Herói:
@@ -163,7 +187,9 @@ export function IcmCalculator() {
             </div>
           </div>
         ) : (
-          <div className="legend">Escolha herói e vilão diferentes (com fichas) para calcular.</div>
+          <div className="legend">
+            {isValid ? "Escolha herói e vilão diferentes (com fichas) para calcular." : "Corrija as entradas acima para liberar o cálculo didático."}
+          </div>
         )}
       </div>
     </div>

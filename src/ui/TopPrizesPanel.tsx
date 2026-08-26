@@ -8,13 +8,13 @@ import { topPrizes, type TournamentResultRecord } from "../app/resultsLog";
 
 const MEDAL = ["", "🥇", "🥈", "🥉"];
 
-const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 const num = (n: number) => Math.round(n).toLocaleString("en-US");
+const virtualValue = (n: number) => `${num(n)} fichas simuladas`;
 
 function recLabel(rec: TournamentResultRecord): string {
   const mode = rec.mode === "circuito" ? "Circuito" : "Treino Livre";
   const stage = rec.circuitStage ? ` · Etapa ${rec.circuitStage}` : "";
-  return `${mode}${stage} · Buy-in ${usd(rec.buyIn)}`;
+  return `${mode}${stage} · Faixa didática ${num(rec.buyIn)} fichas simuladas`;
 }
 
 function dateLabel(ts: number): string {
@@ -28,10 +28,10 @@ export function TopPrizesPanel() {
   if (list.length === 0) {
     return (
       <div className="tp-empty">
-        🏆 <b>Top 10 Premiações</b>
+        🏆 <b>Top 10 resultados de estudo</b>
         <div className="tp-empty-sub">
-          Ainda não há resultados no dinheiro. Jogue um torneio do Circuito e
-          chegue ao prêmio — os seus 10 maiores aparecem aqui.
+          Ainda não há resultados virtuais registrados. Jogue um torneio do Circuito
+          e conquiste fichas simuladas — os seus 10 maiores aparecem aqui.
         </div>
       </div>
     );
@@ -41,8 +41,8 @@ export function TopPrizesPanel() {
 
   return (
     <div className="tp-panel">
-      <div className="tp-title">🏆 Top 10 Premiações</div>
-      <div className="tp-sub">Seus 10 maiores prêmios em fichas de estudo</div>
+      <div className="tp-title">🏆 Top 10 resultados de estudo</div>
+      <div className="tp-sub">Seus 10 maiores resultados em fichas simuladas</div>
 
       <div className="tp-list">
         {list.map((rec, i) => {
@@ -62,7 +62,7 @@ export function TopPrizesPanel() {
                   <div className="tp-bar" style={{ width: `${pct}%` }} />
                 </div>
               </div>
-              <div className={`tp-cash ${top ? "gold" : ""}`}>{usd(rec.cash)}</div>
+              <div className={`tp-cash ${top ? "gold" : ""}`}>{virtualValue(rec.cash)}</div>
             </div>
           );
         })}

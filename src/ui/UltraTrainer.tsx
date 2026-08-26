@@ -113,6 +113,21 @@ export function UltraTrainer() {
     setScenario(null);
     setResult(null);
   };
+  const startExample = () => {
+    const example: ScenarioSpec = {
+      heroPosition: "BTN",
+      effectiveBB: 40,
+      raiserPosition: "CO",
+      openSizeBB: 2.3,
+      variant: "holdem",
+      stage: "inicio",
+    };
+    setActiveSpec(example);
+    setVillain(pickVillain());
+    setSession({ correct: 0, total: 0 });
+    setResult(null);
+    setScenario(buildScenarioFromSpec(example, Math.random));
+  };
   const appUrl =
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
   const onShareHit = async () => {
@@ -189,14 +204,22 @@ export function UltraTrainer() {
             spot lá (posição, cartas, stacks), toque em <b>Analisar minha mão</b> e
             depois em <b>🎯 Treinar esse spot</b> — a mão abre aqui já com a ação real.
           </p>
-          <button
-            className="btn primary ultra-start"
-            onClick={() =>
-              window.dispatchEvent(new CustomEvent("nav-to", { detail: "suamao" }))
-            }
-          >
-            ✍️ Ir para a aba Sua Mão
-          </button>
+          <div className="ultra-start-actions">
+            <button
+              className="btn primary ultra-start"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("nav-to", { detail: "suamao" }))
+              }
+            >
+              ✍️ Montar minha mão
+            </button>
+            <button className="btn ultra-example-start" onClick={startExample}>
+              ▶ Começar com um spot de exemplo
+            </button>
+          </div>
+          <p className="ultra-example-note">
+            Exemplo rápido: BTN com 40bb contra abertura de CO. Você responde uma mão e vê o feedback na hora; depois pode montar o seu próprio spot.
+          </p>
         </div>
       </div>
     );

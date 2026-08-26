@@ -36,7 +36,7 @@ const RATING_LABEL: Record<string, string> = {
   ruim: "Ruim",
 };
 
-const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+const virtualBuyIn = (n: number) => `${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
 
 const dateLabel = (ts: number) => {
   const d = new Date(ts);
@@ -134,11 +134,11 @@ export function HandHistoryPanel() {
                     <span className={`hh-tag ${r}`}>{RATING_LABEL[r] ?? r}</span>
                   </div>
                   <div className="hh-meta">
-                    {dateLabel(e.timestamp)} · Buy-in {usd(e.buyIn)} ·{" "}
+                    {dateLabel(e.timestamp)} · Faixa didática {virtualBuyIn(e.buyIn)} ·{" "}
                     {e.mode === "circuito"
                       ? `Circuito${e.circuitStage ? ` E${e.circuitStage}` : ""}`
                       : "Treino Livre"}{" "}
-                    · {e.entrants} inscritos
+                    · {e.entrants} participantes
                   </div>
                 </button>
                 {isOpen ? (

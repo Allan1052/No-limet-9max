@@ -148,26 +148,6 @@ export function HandLab() {
     window.dispatchEvent(new CustomEvent("cof-open-ultra"));
   };
 
-  const streetThisSpot = () => {
-    if (!result) return;
-    // O spot vira um treino rua por rua real: a SUA mão, a SUA posição e o spot
-    // do vilão — o jogador escolhe o flop/turn/river e decide a cada street.
-    // O spec (com hand, board e villainBetBB) é gravado no mesmo cof-sua-mao-spec
-    // e o evento cof-open-street abre o StreetTrainer.
-    const key =
-      result.recommended === "fold"
-        ? "fold"
-        : result.recommended === "call"
-          ? "call"
-          : result.recommended === "allin"
-            ? "allin"
-            : "raise";
-    recordDecision(key);
-    markActiveToday();
-    localStorage.setItem("cof-sua-mao-spec", JSON.stringify({ ...result.spec }));
-    window.dispatchEvent(new CustomEvent("cof-open-street"));
-  };
-
   return (
     <div className="handlab">
       <header className="handlab-head">
@@ -469,14 +449,33 @@ export function HandLab() {
             </button>
           </div>
 
-          <div className={`hl-voice-card ${mode}`}>
-            <p className="hl-voice-title">
-              {mode === "simple" ? "Na voz de um amigo" : "No vocabulário de pro"}
-            </p>
-            <p className="hl-voice-body">
-              {mode === "simple" ? result.simple : result.technical}
-            </p>
-          </div>
+          {mode === "simple" ? (
+            <div className="hl-voice-card simple">
+              <p className="hl-voice-title">Na voz de um amigo</p>
+              <p className="hl-voice-body">{result.simple}</p>
+            </div>
+          ) : (
+            <div className="hl-technical-breakdown" aria-label="Explicação técnica da decisão">
+              <div className="hl-explain-block">
+                <span className="hl-explain-kicker">1 · PREMISSA</span>
+                <p>{result.handType} · {result.context}</p>
+              </div>
+              <div className="hl-explain-block hl-explain-action">
+                <span className="hl-explain-kicker">2 · AÇÃO</span>
+                <p>{result.verdict.text}</p>
+              </div>
+              <div className="hl-explain-block">
+                <span className="hl-explain-kicker">3 · MOTIVO</span>
+                <p>{result.technical}</p>
+              </div>
+              {result.whyNot ? (
+                <div className="hl-explain-block hl-explain-alt">
+                  <span className="hl-explain-kicker">4 · ALTERNATIVA</span>
+                  <p><b>Por que não {result.whyNot.label}?</b> {result.whyNot.text}</p>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Frase-âncora didática (reforço mental do conceito). */}
           <p
@@ -492,7 +491,7 @@ export function HandLab() {
           </p>
 
           {/* "Por que não a alternativa?" — o usuário pensa, depois revela. */}
-          {result.whyNot ? (
+          {mode === "simple" && result.whyNot ? (
             <div style={{ margin: "10px 0 4px" }}>
               {!showWhyNot ? (
                 <button
@@ -602,13 +601,23 @@ export function HandLab() {
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
           </button>
-          <button
-            className="btn primary hl-train-btn"
-            style={{ marginTop: 8 }}
-            onClick={streetThisSpot}
+          <div
+            className="hl-coming-soon"
+            role="note"
+            style={{
+              marginTop: 10,
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px dashed rgba(230,196,84,0.35)",
+              background: "rgba(230,196,84,0.05)",
+              color: "#b8b29a",
+              fontSize: 12.5,
+              lineHeight: 1.45,
+              textAlign: "center",
+            }}
           >
-            🛣️ Treinar rua por rua
-          </button>
+            🛣️ <b style={{ color: "#e6c454" }}>Rua por Rua em breve.</b> Estamos fechando esse treino; por enquanto, use o treino 1×1 e o replayer da mão.
+          </div>
           {/* Botão ESCONDIDO — só aparece com a URL secreta. Gera o card do
               Instagram ("3 fases") no próprio celular, sem gastar créditos. */}
           {isGenEnabled() && (

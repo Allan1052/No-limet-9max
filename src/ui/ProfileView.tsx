@@ -7,15 +7,14 @@ import { useEffect, useState } from "react";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { ModeToggle } from "../ui/ModeToggle";
-import { isDevUnlocked, setDevLock } from "../lib/devLock";
+import { isDevUnlocked } from "../lib/devLock";
 import { LangSelect } from "./LangSelect";
 import { InstallButton } from "./InstallButton";
 import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { SupportPix } from "./SupportPix";
 import { TopPrizesPanel } from "./TopPrizesPanel";
 import { TournamentCountPanel } from "./TournamentCountPanel";
-import { loadEliteWins, recordTournamentWin } from "../tournament/eliteUnlock";
-import { recordEliteWinCloud, syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
+import { syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
 import { trackEvent } from "../app/analytics";
 
@@ -48,8 +47,8 @@ export function ProfileView({
   const [umamiExcluded, setUmamiExcluded] = useState(() =>
     typeof window !== "undefined" && localStorage.getItem("umami.disabled") === "1",
   );
-  const [ruaUnlocked, setRuaUnlocked] = useState(isDevUnlocked("rua2026"));
-  const [eliteUnlocked, setEliteUnlocked] = useState<boolean>(() => {
+  const [ruaUnlocked] = useState(isDevUnlocked("rua2026"));
+  const [eliteUnlocked] = useState<boolean>(() => {
     // Local + espelho da nuvem: se a vitória existe em qualquer um dos dois,
     // o $1.000 está destravado (loadAllEliteWins faz a união).
     return !!loadAllEliteWins()["109"];
@@ -59,65 +58,6 @@ export function ProfileView({
   useEffect(() => {
     syncEliteWins(getNickname());
   }, []);
-  const [pwOpen, setPwOpen] = useState(false);
-  const [pwInput, setPwInput] = useState("");
-  const [pwError, setPwError] = useState(false);
-  const [pwMode, setPwMode] = useState<"rua2026" | "elite109">("rua2026");
-  const requestRuaUnlock = () => {
-    if (isDevUnlocked("rua2026")) {
-      setDevLock("rua2026", false);
-      setRuaUnlocked(false);
-    } else {
-      setPwInput("");
-      setPwError(false);
-      setPwMode("rua2026");
-      setPwOpen(true);
-    }
-  };
-  const submitRuaPw = () => {
-    const v = pwInput.trim();
-    if (pwMode === "rua2026") {
-      if (v === "rua2026") {
-        setDevLock("rua2026", true);
-        setRuaUnlocked(true);
-        setPwOpen(false);
-        setPwError(false);
-      } else {
-        setPwError(true);
-      }
-    } else {
-      // elite109: destrava o $1.000 registrando a vitória comprovada de $109
-      // (o Allan já foi campeão de um torneio de $109 com 100+ jogadores —
-      // o registro local foi apagado em limpezas de cache). Senha: 2026.
-      if (v === "2026") {
-        recordTournamentWin(109, 100, "inicio");
-        recordEliteWinCloud(109, getNickname());
-        setEliteUnlocked(true);
-        setPwOpen(false);
-        setPwError(false);
-      } else {
-        setPwError(true);
-      }
-    }
-  };
-  const requestEliteUnlock = () => {
-    if (loadEliteWins()["109"]) {
-      // Já destravado pela vitória — remove o registro (volta ao natural).
-      const w = loadEliteWins();
-      delete w["109"];
-      try {
-        localStorage.setItem("cof-elite-wins", JSON.stringify(w));
-      } catch {
-        /* storage indisponível */
-      }
-      setEliteUnlocked(false);
-    } else {
-      setPwInput("");
-      setPwError(false);
-      setPwMode("elite109");
-      setPwOpen(true);
-    }
-  };
   const avatar = getHeroAvatarData();
 
   // "Ajude a manter grátis" — engajamento sutil (compartilhar mantém o app de pé).
@@ -229,28 +169,22 @@ export function ProfileView({
           <LangSelect />
         </div>
 
-        {/* Gate de senha p/ features em teste ("rua2026") — só o Allan usa. */}
-        <div className="profile-setting">
-          <span className="ps-label">🔑 {t("profile.devTest")}</span>
-          <button
-            className={`btn tiny ${ruaUnlocked ? "devlock-on" : "devlock-off"}`}
-            onClick={requestRuaUnlock}
-          >
-            {ruaUnlocked ? "🟢 " + t("profile.devTestOn") : "🔒 " + t("profile.devTestOff")}
-          </button>
-        </div>
-
-        {/* Destravamento do $1.000 (elite109) — para quando a vitória de $109
-            com 100+ jogadores se perde em limpezas de cache. Só o Allan vê. */}
-        <div className="profile-setting">
-          <span className="ps-label">🏆 $1.000 — elite</span>
-          <button
-            className={`btn tiny ${eliteUnlocked ? "devlock-on" : "devlock-off"}`}
-            onClick={requestEliteUnlock}
-          >
-            {eliteUnlocked ? "🟢 Destravado" : "🔒 Destravar ($109)"}
-          </button>
-        </div>
+        {/* Ferramentas experimentais ficam fora da navegação pública. O bloco só
+            aparece quando o modo privado já foi ativado para testes internos. */}
+        {ruaUnlocked ? (
+          <>
+            <div className="profile-setting">
+              <span className="ps-label">🔑 Ferramentas experimentais</span>
+              <span className="profile-private-badge">🟢 modo privado ativo</span>
+            </div>
+            {eliteUnlocked ? (
+              <div className="profile-setting">
+                <span className="ps-label">🏆 Faixa didática 1.000</span>
+                <span className="profile-private-badge">🟢 disponível para teste</span>
+              </div>
+            ) : null}
+          </>
+        ) : null}
 
         {ruaUnlocked ? (
           <div
@@ -292,6 +226,23 @@ export function ProfileView({
             </button>
           </div>
         ) : null}
+
+        <div
+          className="profile-privacy-note"
+          role="note"
+          style={{
+            margin: "14px 0",
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid rgba(230,196,84,0.18)",
+            background: "rgba(230,196,84,0.04)",
+            color: "var(--text-dim, #b8b29a)",
+            fontSize: 12.5,
+            lineHeight: 1.5,
+          }}
+        >
+          📱 Seu progresso, missões e XP ficam salvos somente neste aparelho; não sincronizam automaticamente entre celulares. 📊 O opt-out do Umami vale apenas para este navegador.
+        </div>
 
         <div className="profile-setting">
           <span className="ps-label">{t("profile.variant")}</span>
@@ -389,45 +340,6 @@ export function ProfileView({
       {avatarOpen ? <AvatarSelector onClose={() => setAvatarOpen(false)} /> : null}
       {supportOpen ? <SupportPix onClose={() => setSupportOpen(false)} /> : null}
 
-      {/* Modal de senha para funcionalidades em teste — evita prompt() nativo, que trava o app no mobile. */}
-      {pwOpen ? (
-        <div className="devpw-overlay" onClick={() => setPwOpen(false)}>
-          <div className="devpw-box" onClick={(e) => e.stopPropagation()}>
-            <div className="devpw-title">
-              {pwMode === "elite109" ? "🏆 Destravar $1.000" : "🔑 " + t("profile.devTestTitle")}
-            </div>
-            <div className="devpw-note">
-              {pwMode === "elite109"
-                ? "Já venceu um torneio de $109 com 100+ jogadores? A senha 2026 registra a vitória e libera o $1.000."
-                : t("profile.devTestNote")}
-            </div>
-            <input
-              className={`devpw-input${pwError ? " devpw-input-err" : ""}`}
-              type="text"
-              inputMode="text"
-              autoComplete="off"
-              placeholder="senha"
-              value={pwInput}
-              onChange={(e) => {
-                setPwInput(e.target.value);
-                if (pwError) setPwError(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitRuaPw();
-              }}
-            />
-            {pwError ? <div className="devpw-err">{t("profile.devTestWrong")}</div> : null}
-            <div className="devpw-btns">
-              <button className="btn tiny" onClick={() => setPwOpen(false)}>
-                {t("profile.devTestCancel")}
-              </button>
-              <button className="btn tiny" onClick={submitRuaPw}>
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

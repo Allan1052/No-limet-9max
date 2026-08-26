@@ -30,7 +30,7 @@ export function Board({
   return (
     <div className={`center ${inline ? "inline" : ""}`}>
       {buyIn ? (
-        <div className="tbl-buyin">🏆 {"$" + Math.round(buyIn).toLocaleString("en-US")}</div>
+        <div className="tbl-buyin">🏆 {Math.round(buyIn).toLocaleString("pt-BR")} fichas simuladas</div>
       ) : null}
       <div className="pot">Pote: {fmtAmount(pot, bigBlind, unit)}</div>
       {pile > 0 ? <ChipStack amount={pile} bigBlind={bigBlind} showLabel={false} className="pot-chips" /> : null}

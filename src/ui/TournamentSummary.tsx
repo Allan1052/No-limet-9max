@@ -55,7 +55,7 @@ export function TournamentSummary({
   onNewHand?: () => void;
 }) {
   const champ = summary.result === "campeao";
-  const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+  const virtualValue = (n: number) => `${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
   const num = (n: number) => Math.round(n).toLocaleString("en-US");
   const pts = (n: number) => Math.round(n).toLocaleString("pt-BR");
 
@@ -113,9 +113,9 @@ export function TournamentSummary({
     rating: "boa",
     coachTip: `${summary.handsPlayed} mãos · ${correctPct}% decisões corretas · VPIP ${summary.vpip}% · PFR ${summary.pfr}%`,
     street: "Resultado",
-    tournamentInfo: `${modeLabel} ${stageLabel} · Buy-in $${summary.buyIn} · ${num(summary.entrants)} inscritos`,
+    tournamentInfo: `${modeLabel} ${stageLabel} · Faixa didática ${summary.buyIn} fichas · ${num(summary.entrants)} participantes`,
     tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`, 
-    context: summary.inMoney ? `Prêmio: $${Math.round(summary.cash)}` : "Fora do dinheiro",
+    context: summary.inMoney ? `Resultado: ${virtualValue(summary.cash)}` : "Fora da faixa pontuável",
     // NOVOS campos (para o card compartilhado):
     position: "Mesa Final", // resultado do torneio — sem posição específica
     stackBB: "—",
@@ -154,9 +154,9 @@ export function TournamentSummary({
 
         <div className="summary-finish">
           {summary.inMoney ? (
-            <span className="itm">Prêmio: {usd(summary.cash)} 💰</span>
+            <span className="itm">Resultado: {virtualValue(summary.cash)} · sem dinheiro real</span>
           ) : (
-            <span className="oom">Fora do dinheiro desta vez — bola pra frente!</span>
+            <span className="oom">Fora da faixa pontuável desta vez — bola pra frente!</span>
           )}
         </div>
 
@@ -187,8 +187,8 @@ export function TournamentSummary({
               </>
             ) : ranking?.reason === "no_cash" ? (
               <div className="rank-none">
-                Fora do dinheiro — sem pontos nesta. Como na WSOP, só pontua quem{' '}
-                chega ao ITM{' '}
+                Fora da faixa pontuável — sem pontos nesta. Nesta regra didática, só pontua quem{' '}
+                chega ao top da etapa{' '}
                 {ranking.paidPlaces != null
                   ? `(posições ${a(1)}–${a(ranking.paidPlaces)} nesta mesa)`
                   : "nesta mesa"}

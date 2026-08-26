@@ -39,10 +39,10 @@ export function CircuitPicker({
     <div className="circuit">
       <div className="panel circuit-head">
         <div className="ultra-badge">🏆 Circuito {seasonLabel(season)}</div>
-        <h3>Faixa {tierLabel(tier)} · ${buyIn}</h3>
+        <h3>Faixa didática {tierLabel(tier)} · {buyIn} fichas simuladas</h3>
         <p className="ultra-sub">
-          10 etapas. Cravou uma, ela sai da sua lista. Só torneio jogado desde o
-          início conta — igual à WSOP.
+          10 etapas. Conquistou uma, ela sai da sua lista. Só torneio jogado desde o
+          início conta — um circuito de estudo inspirado no poker. Fichas e pontos são simulados.
         </p>
 
         <div className="circuit-bar">
@@ -100,12 +100,12 @@ export function CircuitPicker({
                   {stage.name}
                 </div>
                 <div className="cs-meta">
-                  {num(stage.entrants)} inscritos · paga {num(stage.paid)}
+                  {num(stage.entrants)} participantes · pontua até {num(stage.paid)}
                 </div>
               </div>
               <div className="cs-right">
                 <div className="cs-pts">{num(stageWinValue(stage.index, buyIn))}</div>
-                <div className="cs-pts-lbl">pts se cravar</div>
+                <div className="cs-pts-lbl">pts virtuais se vencer</div>
               </div>
               <div className="cs-go" aria-hidden="true">▶</div>
             </button>
@@ -114,8 +114,8 @@ export function CircuitPicker({
           <div className="circuit-rules">
             <b>Como pontua</b>
             <ul>
-              <li>Só entra no ranking quem chega ao dinheiro (top 15%).</li>
-              <li>Vencer vale 20× o mínimo pago — a mesma escala da WSOP.</li>
+              <li>Só entra no ranking quem alcança a faixa pontuável da etapa (top 15%, de forma simulada).</li>
+              <li>Vencer vale 20× a pontuação mínima da etapa — regra didática do circuito.</li>
               <li>Contam seus 10 melhores resultados.</li>
               <li>Tudo zera no dia 1º. O ranking anual guarda o ano inteiro.</li>
             </ul>

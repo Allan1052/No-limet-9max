@@ -28,12 +28,17 @@ import { loadAllEliteWins } from "../lib/eliteSync";
 
 export type PlayMode = "livre" | "circuito";
 
-function usd(n: number): string {
-  return "$" + Math.round(n).toLocaleString("en-US");
+function simulatedChips(n: number): string {
+  return `${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
 }
 
 function num(n: number): string {
   return Math.round(n).toLocaleString("en-US");
+}
+
+function didacticBand(n: number): string {
+  const label = n <= 5 ? "Micro" : n <= 11 ? "Baixa" : n <= 55 ? "Média" : n <= 109 ? "Alta" : "Elite";
+  return `${label} · ${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
 }
 
 const SPEED_LABEL: Record<Speed, string> = { turbo: "Turbo", normal: "Normal", deep: "Deep" };
@@ -175,7 +180,7 @@ export function TournamentSetup({
                 <b>🔄 Torneio salvo — continue de onde parou</b>
                 <small>
                   {circuitResume.circuitStage ? `Etapa ${circuitResume.circuitStage} · ` : ""}
-                  ${circuitResume.buyIn} · {STAGES[circuitResume.stage].label} ·{" "}
+                  {didacticBand(circuitResume.buyIn)} · {STAGES[circuitResume.stage].label} ·{" "}
                   {Math.round(circuitResume.heroStack / circuitResume.bb)}bb ·{" "}
                   {circuitResume.fieldRemaining.toLocaleString("en-US")}/
                   {circuitResume.entrants.toLocaleString("en-US")} vivos
@@ -188,7 +193,7 @@ export function TournamentSetup({
           ) : null}
 
           <div className="t-field circuit-buyin panel">
-            <label>Faixa de buy-in</label>
+            <label>Faixa didática (fichas simuladas)</label>
             <div className="t-btns">
               {BUY_INS.map((b) => {
                 const locked = !unlocked(b.value);
@@ -197,10 +202,10 @@ export function TournamentSetup({
                     key={b.value}
                     className={`tab ${buyIn === b.value ? "active" : ""}`}
                     onClick={() => pickBuyIn(b.value)}
-                    title={locked ? unlockRequirement(b.value) ?? "" : ""}
+                    title={locked ? "Faixa avançada — requisito de estudo ainda não cumprido" : ""}
                     style={locked ? { opacity: 0.55 } : undefined}
                   >
-                    {b.label}
+                    {didacticBand(b.value)}
                     {locked ? " 🔒" : ""}
                   </button>
                 );
@@ -244,12 +249,12 @@ export function TournamentSetup({
         <div className="panel saved-panel">
           <h3>Torneios salvos ({saved.length})</h3>
           <div className="legend" style={{ marginBottom: 8 }}>
-            Um save por faixa de buy-in — volte a qualquer um de onde parou.
+            Um torneio salvo por faixa didática — volte a qualquer um de onde parou.
           </div>
           {saved.map((s) => (
             <div key={s.buyIn} className="saved-row">
               <div className="saved-info">
-                <b>${s.buyIn}</b> · {STAGES[s.stage].label} · {Math.round(s.heroStack / s.bb)}bb
+                <b>{didacticBand(s.buyIn)}</b> · {STAGES[s.stage].label} · {Math.round(s.heroStack / s.bb)}bb
                 <br />
                 <small>
                   {s.fieldRemaining.toLocaleString("en-US")} / {s.entrants.toLocaleString("en-US")} vivos
@@ -305,7 +310,7 @@ export function TournamentSetup({
         </div>
 
         <div className="t-field">
-          <label>Buy-in</label>
+          <label>Faixa didática (fichas simuladas)</label>
           <div className="t-btns">
             {BUY_INS.map((b) => {
               const locked = !unlocked(b.value);
@@ -314,10 +319,10 @@ export function TournamentSetup({
                   key={b.value}
                   className={`tab ${buyIn === b.value ? "active" : ""}`}
                   onClick={() => pickBuyIn(b.value)}
-                  title={locked ? unlockRequirement(b.value) ?? "" : ""}
+                  title={locked ? "Faixa avançada — requisito de estudo ainda não cumprido" : ""}
                   style={locked ? { opacity: 0.55 } : undefined}
                 >
-                  {b.label}
+                  {didacticBand(b.value)}
                   {locked ? " 🔒" : savedBuyIns.has(b.value) ? " 💾" : ""}
                 </button>
               );
@@ -369,7 +374,7 @@ export function TournamentSetup({
 
         {savedBuyIns.has(buyIn) ? (
           <div className="legend" style={{ color: "var(--warn)", marginBottom: 6 }}>
-            ⚠ Você já tem um torneio de ${buyIn} salvo — iniciar um novo vai substituí-lo.
+            ⚠ Você já tem um torneio da {didacticBand(buyIn)} salvo — iniciar um novo vai substituí-lo.
           </div>
         ) : null}
 
@@ -421,15 +426,15 @@ export function TournamentSetup({
       <div className="panel">
         <h3>Prévia</h3>
         <div className="t-preview">
-          <div className="t-prize">{usd(pool)}</div>
-          <div className="t-prize-lbl">premiação estimada · {icmLabel}</div>
+          <div className="t-prize">{simulatedChips(pool)}</div>
+          <div className="t-prize-lbl">premiação didática · fichas simuladas · {icmLabel}</div>
         </div>
         <table className="stats" style={{ marginTop: 8 }}>
           <tbody>
-            <tr><td className="pname">1º lugar</td><td>{usd(ladder[0] ?? 0)}</td></tr>
-            <tr><td className="pname">2º lugar</td><td>{usd(ladder[1] ?? 0)}</td></tr>
-            <tr><td className="pname">3º lugar</td><td>{usd(ladder[2] ?? 0)}</td></tr>
-            <tr><td className="pname">Mínima (min-cash)</td><td>{usd(ladder[ladder.length - 1] ?? 0)}</td></tr>
+            <tr><td className="pname">1º lugar</td><td>{simulatedChips(ladder[0] ?? 0)}</td></tr>
+            <tr><td className="pname">2º lugar</td><td>{simulatedChips(ladder[1] ?? 0)}</td></tr>
+            <tr><td className="pname">3º lugar</td><td>{simulatedChips(ladder[2] ?? 0)}</td></tr>
+            <tr><td className="pname">Mínima (faixa pontuável)</td><td>{simulatedChips(ladder[ladder.length - 1] ?? 0)}</td></tr>
             <tr><td className="pname">Nível de blind</td><td>{level.sb}/{level.bb}</td></tr>
             <tr><td className="pname">Stack médio</td><td>~{avgBB}bb</td></tr>
           </tbody>
@@ -476,7 +481,7 @@ export function TournamentHUD({
               {field.heroRank}º{" "}
               <small className="hud-sub">
                 {field.inMoney
-                  ? `· ITM ${usd(field.currentCash)} 💰`
+                  ? `· ITM ${simulatedChips(field.currentCash)}`
                   : `· ${num(field.toBubble)} até a bolha`}
               </small>
             </span>
@@ -484,8 +489,8 @@ export function TournamentHUD({
         </>
       ) : null}
       <div className="hud-item">
-        <span className="hud-lbl">Premiação</span>
-        <span className="hud-val">{usd(t.prizePool)}</span>
+        <span className="hud-lbl">Premiação didática</span>
+        <span className="hud-val">{simulatedChips(t.prizePool)}</span>
       </div>
       <div className="hud-item hud-levels">
         <span className="hud-lbl">Nível (clique p/ mudar) · blinds {level.sb}/{level.bb}</span>

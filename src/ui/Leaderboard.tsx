@@ -37,11 +37,11 @@ interface LeaderboardEntry {
 }
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
-  { id: "micro", label: "Micro", buyin: "$5" },
-  { id: "baixa", label: "Baixa", buyin: "$11" },
-  { id: "media", label: "Média", buyin: "$22 e $55" },
-  { id: "alta", label: "Alta", buyin: "$109" },
-  { id: "elite", label: "Elite", buyin: "$1.000+" },
+  { id: "micro", label: "Micro", buyin: "5 fichas simuladas" },
+  { id: "baixa", label: "Baixa", buyin: "11 fichas simuladas" },
+  { id: "media", label: "Média", buyin: "22 e 55 fichas simuladas" },
+  { id: "alta", label: "Alta", buyin: "109 fichas simuladas" },
+  { id: "elite", label: "Elite", buyin: "1.000+ fichas simuladas" },
 ];
 
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];
@@ -187,7 +187,7 @@ export function Leaderboard() {
               </button>
             </div>
 
-            {/* Faixas de buy-in */}
+            {/* Faixas didáticas de fichas simuladas */}
             <div className="lb-tiers">
               {TIERS.map((t) => (
                 <button
@@ -229,7 +229,7 @@ export function Leaderboard() {
                 : "Seja um dos primeiros — o placar está começando"}
             </p>
             <p className="lb-empty-body">
-              O Circuito é real: cada resultado seu entra aqui na hora. Dispute desde o início e veja seu nome subir.
+              O Circuito é de estudo: cada resultado seu entra aqui na hora. Dispute desde o início e veja seu nome subir.
             </p>
             <div className="lb-empty-cta">{tr("rank.emptyCta")}</div>
           </div>
@@ -275,9 +275,9 @@ export function Leaderboard() {
             {rulesOpen ? (
               <div className="lb-rules-body">
                 <p>
-                  A escala é a mesma do <b>Player of the Year da WSOP</b>: os pontos
+                  A escala é inspirada no <b>Player of the Year da WSOP</b>: os pontos
                   saem de três fatores — posição final, número de{" "}
-                  <b>inscritos</b> e buy-in.
+                  <b>participantes</b> e faixa didática de fichas simuladas.
                 </p>
                 <ul>
                   <li>
@@ -290,12 +290,12 @@ export function Leaderboard() {
                     treino, não conquista.
                   </li>
                   <li>
-                    <b>Só pontua quem chega ao dinheiro</b> (os 15% melhores),
-                    exatamente como na WSOP.
+                    <b>Só pontua quem chega à faixa pontuável</b> (os 15% melhores),
+                    como referência didática inspirada na WSOP.
                   </li>
                   <li>
-                    <b>Vencer vale 20× o mínimo pago</b> — a razão que a WSOP fixou
-                    a partir de 2018.
+                    <b>Vencer vale 20× a pontuação mínima da etapa</b> — regra
+                    didática do circuito.
                   </li>
                   <li>
                     <b>Contam seus {BEST_RESULTS_COUNT} melhores resultados</b>, para
@@ -307,9 +307,9 @@ export function Leaderboard() {
                     já; o selo de qualificado chega no {MIN_RESULTS_TO_QUALIFY}º.
                   </li>
                   <li>
-                    <b>Buy-in conta, mas não domina.</b> Como na WSOP, o peso do
-                    buy-in é amortecido: um torneio caro vale mais, mas longe de
-                    valer "vezes o preço".
+                    <b>A faixa didática conta, mas não domina.</b> O peso da faixa
+                    é amortecido: uma faixa superior vale mais, mas não multiplica
+                    a pontuação pelo preço.
                   </li>
                   <li>
                     <b>Mensal zera no dia 1º.</b> O Anual guarda os{" "}

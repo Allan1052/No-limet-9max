@@ -79,10 +79,10 @@ function DevLockedPlaceholder({ onGo }: { onGo: () => void }) {
   return (
     <div className="play" style={{ textAlign: "center", padding: "48px 20px" }}>
       <p style={{ color: "var(--muted, #9aa39e)", fontSize: 15, marginBottom: 16 }}>
-        🔒 Funcionalidade em teste — indisponível no momento.
+        🔒 Este treino está em preparação e chega em breve.
       </p>
       <button className="btn primary" onClick={onGo}>
-        Voltar ao Treino
+        Voltar para um treino disponível
       </button>
     </div>
   );
@@ -193,6 +193,7 @@ export function App() {
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
   const [, startNavigationTransition] = useTransition();
+  const firstContactOverlay = !onboarded || !guidedDone;
   const navigate = (nextView: AppView) => {
     startNavigationTransition(() => setView(nextView));
   };
@@ -236,14 +237,14 @@ export function App() {
   // A barra de baixo some durante a mão (na mesa), pra os controles de ação
   // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
   // Ela volta entre as mãos e nas outras telas.
-  const navHidden = view === "play" && !handOver;
+  const navHidden = view === "play" && (!handOver || firstContactOverlay);
 
   // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
   const fs = controller.fieldStatus();
   const isCircuit = controller.tournament?.mode === "circuito";
   const circuitStage = controller.tournament?.circuitStage;
   const playInfo =
-    view === "play" ? (
+    view === "play" && !firstContactOverlay ? (
       <div className="tstatus">
         {fs ? (
           <>
@@ -252,11 +253,11 @@ export function App() {
             </span>
             <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
               {fs.inMoney
-                ? `ITM $${Math.round(fs.currentCash).toLocaleString("en-US")}`
-                : `🎯 ${fs.toBubble} p/ bolha`}
+                ? `ITM · ${Math.round(fs.currentCash).toLocaleString("pt-BR")} fichas simuladas`
+                : `🎯 ${fs.toBubble} p/ faixa pontuável`}
             </span>
-            {/* Barra de progresso visual: quanto falta pro dinheiro */}
-            <div className="ts-progress" title={`Falta ${fs.toBubble} bustar pro dinheiro`}>
+            {/* Barra de progresso visual: quanto falta para a faixa pontuável */}
+            <div className="ts-progress" title={`Faltam ${fs.toBubble} eliminações para a faixa pontuável`}>
               <div
                 className="ts-progress-fill"
                 style={{ width: `${Math.max(5, Math.min(100, ((fs.entrants - fs.remaining) / fs.entrants) * 100))}%` }}
@@ -336,7 +337,7 @@ export function App() {
       adviceText = "All-in por cima";
     }
   }
-  const hint = adviceText ? tr("hint.baseline", { action: adviceText }) : undefined;
+  const hint = adviceText && !firstContactOverlay ? tr("hint.baseline", { action: adviceText }) : undefined;
 
   // 17/08: splash NÃO-BLOQUEANTE — o app já monta por baixo enquanto a logo
   // aparece; o splash é só um overlay que some com fade (sem early return).

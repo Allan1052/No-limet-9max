@@ -21,6 +21,7 @@ const EVOLUTION_LEVELS = [
 /** Zona de referência de VPIP para recreativo (faixa saudável). */
 const VPIP_LO = 20;
 const VPIP_HI = 30;
+const MIN_SAMPLE = 20;
 
 /** Últimas 8 semanas (incluindo a atual), da mais antiga para a mais nova. */
 function recentWeeks(summary: ProgressSummary, now: Date = new Date()): { key: string; rate: number; decisions: number }[] {
@@ -105,10 +106,11 @@ export function ProgressPanel({
 }) {
   const { t } = useT();
   const has = summary.decisions > 0 || summary.hands > 0;
+  const sampleSufficient = summary.decisions >= MIN_SAMPLE;
 
-  const currentLevel = EVOLUTION_LEVELS.find(
-    (l) => summary.vpip >= l.minVpip
-  ) ?? EVOLUTION_LEVELS[0];
+  const currentLevel = sampleSufficient
+    ? EVOLUTION_LEVELS.find((l) => summary.vpip >= l.minVpip) ?? EVOLUTION_LEVELS[0]
+    : null;
 
   const weeks = recentWeeks(summary);
   const fx = has ? strengthsWeaknesses(summary) : [];
@@ -145,11 +147,11 @@ export function ProgressPanel({
             <div className="pp-metric-head">
               <span className="pp-metric-name">VPIP</span>
               <span className="pp-metric-sub">
-                {t("progress.vpipHint")}: {VPIP_LO}–{VPIP_HI}%
+                {sampleSufficient ? `${t("progress.vpipHint")}: ${VPIP_LO}–${VPIP_HI}%` : t("progress.sampleInsufficient", { c: summary.decisions, min: MIN_SAMPLE })}
               </span>
             </div>
             <div className="pp-vpip-row">
-              <div className="pp-vpip-track">
+              <div className={`pp-vpip-track${sampleSufficient ? "" : " insufficient"}`}>
                 <div
                   className="pp-vpip-zone"
                   style={{ left: `${zoneLoPct}%`, width: `${zoneHiPct - zoneLoPct}%` }}
@@ -157,18 +159,24 @@ export function ProgressPanel({
                 <div
                   className="pp-vpip-marker"
                   style={{ left: `${vpipPct}%` }}
-                  title={`VPIP ${summary.vpip}%`}
+                  title={sampleSufficient ? `VPIP ${summary.vpip}%` : `Amostra: ${summary.decisions} decisões`}
                 />
               </div>
-              <span className={`pp-vpip-val ${summary.vpip >= VPIP_LO && summary.vpip <= VPIP_HI ? "in-zone" : ""}`}>
-                {summary.vpip}%
+              <span className={`pp-vpip-val ${sampleSufficient && summary.vpip >= VPIP_LO && summary.vpip <= VPIP_HI ? "in-zone" : ""}`}>
+                {sampleSufficient ? `${summary.vpip}%` : "—"}
               </span>
             </div>
-            <div className="pp-level-line">
-              <span className="pp-level-icon">{currentLevel.icon}</span>
-              <span className="pp-level-name">{currentLevel.name}</span>
-              <span className="pp-level-desc">{currentLevel.desc}</span>
-            </div>
+            {currentLevel ? (
+              <div className="pp-level-line">
+                <span className="pp-level-icon">{currentLevel.icon}</span>
+                <span className="pp-level-name">{currentLevel.name}</span>
+                <span className="pp-level-desc">{currentLevel.desc}</span>
+              </div>
+            ) : (
+                <div className="pp-sample-note">
+                {t("progress.sampleHint", { n: Math.max(0, MIN_SAMPLE - summary.decisions) })}
+              </div>
+            )}
           </div>
 
           {/* ---------- Precisão (anel) + semana ---------- */}
@@ -178,9 +186,9 @@ export function ProgressPanel({
               <span className="pp-metric-sub">boa + ok</span>
             </div>
             <div className="pp-prec-row">
-              <div className="pp-ring" style={{ ["--rate" as string]: summary.goodRateAll }}>
-                <div className="pp-rate">{summary.goodRateAll}%</div>
-                <div className="pp-rate-lbl">{t("progress.allTime")}</div>
+              <div className={`pp-ring${sampleSufficient ? "" : " insufficient"}`} style={{ ["--rate" as string]: sampleSufficient ? summary.goodRateAll : 0 }}>
+                <div className="pp-rate">{sampleSufficient ? `${summary.goodRateAll}%` : "—"}</div>
+                <div className="pp-rate-lbl">{sampleSufficient ? t("progress.allTime") : t("progress.sampleShort")}</div>
               </div>
               <div className="pp-prec-side">
                 <div className="pp-prec-item">
@@ -264,7 +272,7 @@ export function ProgressPanel({
 
           <div className="pp-stats">
             <span>
-              {summary.hands} {t("progress.hands")}
+              {summary.hands} {t("progress.hands")} · {summary.decisions} {t("progress.decisions")}
             </span>
           </div>
         </>

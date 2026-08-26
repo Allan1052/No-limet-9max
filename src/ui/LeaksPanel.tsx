@@ -254,7 +254,7 @@ function LeakCard({
                 fontStyle: "italic",
               }}
             >
-              🔒 O treino desse ponto fraco está em teste — peça o desbloqueio.
+              🔒 O treino dirigido desse ponto fraco chega em breve. Por enquanto, toque no vazamento para revisar as mãos.
             </span>
           ) : (
             <button

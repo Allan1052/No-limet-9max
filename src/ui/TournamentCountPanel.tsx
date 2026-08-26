@@ -24,9 +24,9 @@ import { tierForBuyIn } from "../tournament/poyPoints";
 interface TierCount {
   /** Faixa (micro, baixa, media, alta, elite). */
   tier: ReturnType<typeof tierForBuyIn>;
-  /** Rótulo curto exibido (ex.: "$11"). */
+  /** Rótulo curto exibido para a faixa didática. */
   label: string;
-  /** Buy-ins desta faixa (ex.: "$22 e $55"). */
+  /** Valores virtuais desta faixa, sempre apresentados como fichas simuladas. */
   buyins: string;
   /** Quantos torneios disputados nesta faixa (Circuito). */
   played: number;
@@ -35,11 +35,11 @@ interface TierCount {
 }
 
 const TIER_BUYINS: Record<string, string> = {
-  micro: "$5",
-  baixa: "$11",
-  media: "$22 e $55",
-  alta: "$109",
-  elite: "$1.000+",
+  micro: "5 fichas simuladas",
+  baixa: "11 fichas simuladas",
+  media: "22 e 55 fichas simuladas",
+  alta: "109 fichas simuladas",
+  elite: "1.000+ fichas simuladas",
 };
 
 /**
@@ -176,8 +176,8 @@ export function TournamentCountPanel() {
         🎟️ <b>Trajetória no Circuito</b>
         <div className="tc-empty-sub">
           Aqui fica a sua trilha: cada torneio do Circuito disputado, separado
-          por faixa de buy-in — premiado ou não. Jogue a primeira etapa e sua
-          trajetória começa aqui.
+          por faixa didática de fichas simuladas — com resultado positivo ou não.
+          Jogue a primeira etapa e sua trajetória começa aqui. Sem dinheiro real.
         </div>
       </div>
     );
@@ -196,7 +196,7 @@ export function TournamentCountPanel() {
       <div className="tc-sub">
         {totalPlayed} {totalPlayed === 1 ? "torneio disputado" : "torneios disputados"} ·{" "}
         {totalInMoney}{" "}
-        {totalInMoney === 1 ? "vez no dinheiro" : "vezes no dinheiro"}
+        {totalInMoney === 1 ? "resultado pontuável" : "resultados pontuáveis"} · fichas simuladas
       </div>
       <div className="tc-list">
         {counts.map((c) => {
@@ -215,7 +215,7 @@ export function TournamentCountPanel() {
                   <span className="tc-played">{c.played} {c.played === 1 ? "disputado" : "disputados"}</span>
                   <span className="tc-inmoney">
                     {c.inMoney}{" "}
-                    {c.inMoney === 1 ? "premiado" : c.inMoney === 0 ? "no dinheiro" : "premiados"}
+                    {c.inMoney === 1 ? "resultado positivo" : c.inMoney === 0 ? "sem resultado positivo" : "resultados positivos"}
                     {c.played > 0 ? <small> ({cashRate}%)</small> : null}
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export function TournamentCountPanel() {
         })}
       </div>
       <div className="tc-foot">
-        Todo torneio do Circuito conta — disputado ou não. A jornada importa.
+        Todo torneio do Circuito conta — disputado ou não. A jornada importa; os valores são apenas fichas simuladas para estudo.
       </div>
     </div>
   );
