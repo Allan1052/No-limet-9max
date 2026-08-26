@@ -24,23 +24,29 @@ import { rangeCombos, type Range } from "../ranges/types";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import type { IcmSpot } from "../ranges/icm";
+import { type Stage, STAGES } from "../tournament/structure";
 import { stackDepthAdjust } from "../ranges/stackDepth";
 import { comboToHandType, type Position } from "../ranges/types";
 import { gradeDecision, type FeedbackItem } from "../feedback/analyzer";
 
-export type StageKey = "early" | "meio" | "late";
+// Estágio unificado com a taxonomia OFICIAL do torneio (não duplica): os 4
+// estágios reais — inicio, meio, bolha, mesa_final — cada um com stack médio e
+// pressão de ICM próprios (STAGES em src/tournament/structure.ts).
+export type StageKey = Stage;
 
-/** Estágio → stack efetiva em big blinds (a decisão muda com a profundidade). */
+/** Estágio → stack efetivo padrão (bb) — vem da taxonomia oficial (avgBB). */
 export const STAGE_BB: Record<StageKey, number> = {
-  early: 100,
-  meio: 40,
-  late: 18,
+  inicio: STAGES.inicio.avgBB, // 200
+  meio: STAGES.meio.avgBB, // 45
+  bolha: STAGES.bolha.avgBB, // 22
+  mesa_final: STAGES.mesa_final.avgBB, // 20
 };
 
 export const STAGE_LABEL: Record<StageKey, string> = {
-  early: "Início · stacks cheias",
+  inicio: "Início · stacks cheias",
   meio: "Meio do torneio",
-  late: "Fase final · stack curta",
+  bolha: "Bolha · ICM aperta",
+  mesa_final: "Mesa final · ICM",
 };
 
 /** Situações possíveis do spot (pré-flop, que o motor cobre hoje). */
@@ -112,14 +118,30 @@ function recommendedFrom(action: string): string {
  * estava passando esse dado (bug pego pelo Allan).
  */
 export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
-  if (stage !== "late") return undefined;
-  // Mesa final com stacks FIXOS (bb absolutos) — NÃO proporcionais ao confronto.
-  // O all-in arriscado é `chips` = min(stack do confronto, stack do herói): assim
-  // a pressão de ICM ESCALA com o tamanho do all-in (shove curto pesa pouco,
-  // shove grande pesa muito) e a decisão fica MONOTÔNICA. A versão proporcional
-  // anterior dava thresholds oscilantes/tight demais (bug pego pelo Allan: KQs
-  // pagava 7bb mas foldava 4bb, A7s só pagava até 3bb). Calibrado pra apertar
-  // marginais (A7s/KQs ~7bb) mantendo premium (TT ~14bb) — pressão de mesa final.
+  const kind = STAGES[stage].icm; // "none" | "bubble" | "final"
+  if (kind === "none") return undefined; // inicio/meio jogam em fichas puras
+  // Mesa final/bolha com stacks FIXOS (bb absolutos) — NÃO proporcionais ao
+  // confronto. O all-in arriscado é `chips` = min(stack do confronto, stack do
+  // herói): a pressão de ICM ESCALA com o tamanho do all-in (shove curto pesa
+  // pouco, grande pesa muito) e a decisão fica MONOTÔNICA. A versão proporcional
+  // anterior oscilava/apertava demais (bug pego pelo Allan). A BOLHA é mais
+  // apertada que a MESA FINAL: bustar na bolha = ganhar ZERO (você para antes do
+  // dinheiro); na mesa final você já premiou. Por isso os payouts da bolha caem
+  // mais rápido (o corte do dinheiro é brutal).
+  if (kind === "bubble") {
+    // 6 jogadores, 4 pagos → 2 fora do dinheiro (a bolha). Herói é um stack
+    // MÉDIO (idx 3) — o mais pressionado: bustar = ficar de fora, mas foldando
+    // provavelmente premia. Por isso aperta mais que a mesa final.
+    const heroStack = 20;
+    return {
+      stacks: [55, 40, 30, heroStack, 14, 10],
+      payouts: [34, 27, 22, 17],
+      hero: 3,
+      villain: 0,
+      chips: Math.min(Math.max(1, effBB), heroStack),
+    };
+  }
+  // mesa_final: já no dinheiro — pressão moderada (marginais ~6-7bb, premium ~14bb).
   const heroStack = 40;
   return {
     stacks: [heroStack, 50, 32, 22, 16],
@@ -191,15 +213,36 @@ function buildContext(spec: HandLabSpec): string {
   return `${spec.heroPosition} · ${spec.stackBB}bb · ${SITUATION_LABEL[spec.situation]}`;
 }
 
+/**
+ * Selo de contexto — gerado do ESTADO REAL do spot (nunca escrito à mão): mostra
+ * o formato, o estágio, o stack e se há ICM. Ex.: "MTT 9-max · Bolha · 15bb · ICM".
+ */
+export function contextSeal(spec: HandLabSpec): string {
+  const st = STAGES[spec.stage];
+  const icm = st.icm === "bubble" ? " · ICM bolha" : st.icm === "final" ? " · ICM" : "";
+  return `MTT 9-max · ${st.label} · ${Math.round(spec.stackBB)}bb${icm}`;
+}
+
 /** Frase de contexto ligada ao estágio — o porquê de ele mudar a decisão. */
 function stageContext(spec: HandLabSpec, handType: string, pushFold: boolean): string {
   if (pushFold) {
     return `stack curta: nesse ponto do torneio quem abre geralmente dá all-in — com ${handType} a escolha é ${pushFold ? "jam ou largar" : "preservar"}`;
   }
-  if (spec.stage === "early") {
+  if (spec.stage === "inicio") {
     return `stacks cheias: ${handType} com implied odds valem mais (dê valor nos streets seguintes)`;
   }
+  if (spec.stage === "bolha") {
+    return `bolha: cada ficha vale prêmio — com ${handType}, preservar supera disputar (ICM no talo)`;
+  }
+  if (spec.stage === "mesa_final") {
+    return `mesa final: ICM pesa — com ${handType}, escolha as brigas que valem o pódio`;
+  }
   return `torneio andando: preserve fichas — com ${handType}, ataque só quando tiver vantagem`;
+}
+
+/** O estágio ativa a pressão de ICM na decisão? */
+function stageHasIcm(stage: StageKey): boolean {
+  return STAGES[stage].icm !== "none";
 }
 
 // ---------------------------------------------------------------------------
@@ -215,7 +258,11 @@ function simpleVoice(
   const pos = spec.heroPosition;
   // Vilão deu all-in: é call/fold puro por equity (e ICM na fase final).
   if (spec.situation === "vsallin") {
-    const icm = spec.stage === "late" ? " Na fase final ainda pesa o ICM: quebrar aqui custa prêmio, então o padrão aperta." : "";
+    const icm = spec.stage === "bolha"
+      ? " Na bolha o ICM está no talo: quebrar aqui = ganhar zero, então o padrão aperta muito."
+      : spec.stage === "mesa_final"
+        ? " Na mesa final pesa o ICM: quebrar custa prêmio, então o padrão aperta."
+        : "";
     if (action === "fold") {
       return `Era FOLD. O vilão foi com tudo e ${hand} não tem chance suficiente pra pagar — você perde mais vezes do que a conta paga.${icm} Guarda as fichas.`;
     }
@@ -254,10 +301,11 @@ function technicalVoice(
   // Vilão all-in: call/fold por equity vs range de shove + pot odds; na fase
   // final, a equity exigida sobe pelo ICM (requiredEquityToCall).
   if (spec.situation === "vsallin") {
+    const icmOn = stageHasIcm(spec.stage);
     const decision =
       action === "fold"
-        ? `${hand} fica abaixo da equity exigida vs o range de all-in${spec.stage === "late" ? " ajustada por ICM (o risco de quebrar vale mais que dobrar)" : " pelas pot odds"}. Fold é a linha de maior EV${spec.stage === "late" ? " de torneio" : ""}.`
-        : `${hand} bate a equity exigida vs o range de all-in${spec.stage === "late" ? ", mesmo com o ICM apertando o preço" : " pelas pot odds"}. Call é +EV: você realiza mais do que arrisca.`;
+        ? `${hand} fica abaixo da equity exigida vs o range de all-in${icmOn ? " ajustada por ICM (o risco de quebrar vale mais que dobrar)" : " pelas pot odds"}. Fold é a linha de maior EV${icmOn ? " de torneio" : ""}.`
+        : `${hand} bate a equity exigida vs o range de all-in${icmOn ? ", mesmo com o ICM apertando o preço" : " pelas pot odds"}. Call é +EV: você realiza mais do que arrisca.`;
     return `${buildContext(spec)}. ${stageTalk} ${depth} ${decision}`.trim();
   }
   const openTalk =
@@ -280,11 +328,14 @@ function technicalVoice(
 }
 
 function stageTechnicalTalk(spec: HandLabSpec): string {
-  if (spec.stage === "early") {
-    return "Início de torneio: stacks de 200bb+, implied odds altos — conectores e suited gain value real nos streets seguintes.";
+  if (spec.stage === "inicio") {
+    return "Início de torneio: stacks de 200bb+, implied odds altos — conectores e suited ganham valor real nos streets seguintes.";
   }
-  if (spec.stage === "late") {
-    return "Fase final: o M está caindo, o custo de cegar cresce a cada órbita e o ICM começa a pesar — cada decisão vale mais fichas que no início.";
+  if (spec.stage === "bolha") {
+    return "Bolha: o ICM está no máximo — bustar aqui vale ZERO (você para antes do dinheiro), então a fold equity de quem shova sobe e o call range aperta forte.";
+  }
+  if (spec.stage === "mesa_final") {
+    return "Mesa final: já no dinheiro, mas o ICM ainda pesa — cada subida na premiação vale muito, o custo de eliminação é alto e os ranges de call apertam.";
   }
   return "Meio de torneio: pressão de bolha se aproxima; a profundidade média cai e o jogo muda de speculate para squeeze.";
 }

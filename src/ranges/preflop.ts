@@ -116,7 +116,16 @@ function posIndex(p: Position): number {
   return POSITIONS.indexOf(p);
 }
 
-/** Abertura padrão (2.0bb) num pote sem limper — o open mínimo/padrão moderno. */
+/**
+ * Abertura padrão (2.0bb) num pote sem limper — o open mínimo/padrão moderno.
+ *
+ * DECISÃO (Fase 1, ago/2026): mantemos 2.0bb como PADRÃO EDUCATIVO — é o open
+ * mín-raise que os solvers modernos usam em MTT com ante, e é o valor com que o
+ * benchmark GTO foi calibrado (61/61). Não migramos para 2.2–2.5bb (padrão de
+ * cash 6-max com rake) porque (a) mudaria a árvore validada e (b) o app é MTT.
+ * O valor exibido na dica, no histórico e no card deve ser SEMPRE este mesmo —
+ * o sizing é premissa do spot, não um número solto.
+ */
 const BASE_OPEN_BB = 2.0;
 
 /**

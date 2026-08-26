@@ -6,7 +6,7 @@ function spec(overrides: Partial<HandLabSpec> = {}): HandLabSpec {
     heroPosition: "BTN",
     villainPosition: "CO",
     situation: "vsopen",
-    stage: "early",
+    stage: "inicio",
     stackBB: 100,
     hand: parseHand("AhKs")!,
     ...overrides,
@@ -43,11 +43,11 @@ describe("HandLab — analyzeHand", () => {
     expect(a.context).toContain("BTN");
   });
 
-  it("o estágio late encurta o stack e muda o cálculo (território shove-or-fold)", () => {
-    expect(STAGE_BB.late).toBe(18);
-    const a = analyzeHand(spec({ stage: "late", stackBB: STAGE_BB.late, hand: parseHand("AhJs")! }));
+  it("o estágio mesa_final encurta o stack e muda o cálculo (território shove-or-fold)", () => {
+    expect(STAGE_BB.mesa_final).toBe(20);
+    const a = analyzeHand(spec({ stage: "mesa_final", stackBB: STAGE_BB.mesa_final, hand: parseHand("AhJs")! }));
     // A resposta existe e as duas vozes refletem o estágio
-    expect(a.context).toMatch(/18bb/);
+    expect(a.context).toMatch(/20bb/);
     expect(a.simple).toBeTruthy();
     expect(a.technical).toBeTruthy();
   });
@@ -63,9 +63,9 @@ describe("HandLab — analyzeHand", () => {
     // reparsear o texto e divergia (badge RAISE com verdict "Call é o que...").
     const spots: HandLabSpec[] = [
       spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsopen", stage: "meio", stackBB: 20, hand: parseHand("As7s")! }),
-      spec({ heroPosition: "BTN", situation: "open", stage: "early", stackBB: 100, hand: parseHand("Ah4d")! }),
-      spec({ heroPosition: "CO", situation: "open", stage: "early", stackBB: 40, hand: parseHand("Ts9s")! }),
-      spec({ heroPosition: "CO", situation: "open", stage: "late", stackBB: 10, hand: parseHand("Ks9s")! }),
+      spec({ heroPosition: "BTN", situation: "open", stage: "inicio", stackBB: 100, hand: parseHand("Ah4d")! }),
+      spec({ heroPosition: "CO", situation: "open", stage: "inicio", stackBB: 40, hand: parseHand("Ts9s")! }),
+      spec({ heroPosition: "CO", situation: "open", stage: "mesa_final", stackBB: 10, hand: parseHand("Ks9s")! }),
     ];
     for (const s of spots) {
       const a = analyzeHand(s);
@@ -77,7 +77,7 @@ describe("HandLab — analyzeHand", () => {
 
   it("vsallin: mão premium paga o all-in em qualquer estágio", () => {
     // 12bb: mesmo com o ICM da fase final, um par forte paga um shove curto.
-    for (const stage of ["early", "meio", "late"] as const) {
+    for (const stage of ["inicio", "meio", "mesa_final"] as const) {
       const a = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: 12, hand: parseHand("TsTh")! }));
       expect(a.recommended).toBe("call");
     }
@@ -85,7 +85,7 @@ describe("HandLab — analyzeHand", () => {
 
   it("vsallin: ICM da fase final aperta — AJo paga no meio mas folda no late", () => {
     const meio = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("AsJh")! }));
-    const late = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "late", stackBB: 15, hand: parseHand("AsJh")! }));
+    const late = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "mesa_final", stackBB: 15, hand: parseHand("AsJh")! }));
     expect(meio.recommended).toBe("call");
     expect(late.recommended).toBe("fold"); // ICM: preservar prêmio > flip marginal
     expect(late.simple).toMatch(/ICM|prêmio/i);
@@ -95,7 +95,7 @@ describe("HandLab — analyzeHand", () => {
     // Se paga o all-in com X bb, tem que pagar com qualquer stack MENOR (odds
     // melhores). A modelagem antiga (ICM proporcional) oscilava — não pode voltar.
     for (const hand of ["As7s", "KsQs", "TsTh", "AsJh"]) {
-      for (const stage of ["early", "meio", "late"] as const) {
+      for (const stage of ["inicio", "meio", "bolha", "mesa_final"] as const) {
         let foldedAt = 99;
         // Faixa de push/fold (≤15bb): onde all-in pré-flop é comum e o Allan
         // pegou o bug. Acima disso o shove é atípico e o modelo fica ruidoso.
@@ -108,6 +108,19 @@ describe("HandLab — analyzeHand", () => {
           }
         }
       }
+    }
+  });
+
+  it("vsallin: BOLHA aperta o call mais (ou igual) que a mesa final — ICM máximo", () => {
+    const lastCall = (stage: "bolha" | "mesa_final", hand: string) => {
+      let x = 0;
+      for (let bb = 2; bb <= 18; bb++) {
+        if (analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage, stackBB: bb, hand: parseHand(hand)! })).recommended === "call") x = bb;
+      }
+      return x;
+    };
+    for (const hand of ["As7s", "KsQs", "TsTh"]) {
+      expect(lastCall("bolha", hand), `${hand}: bolha deve pagar com stack <= mesa final`).toBeLessThanOrEqual(lastCall("mesa_final", hand));
     }
   });
 

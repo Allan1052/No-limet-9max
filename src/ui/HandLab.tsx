@@ -24,6 +24,7 @@ import {
   RANK_OPTIONS,
   STAGE_BB,
   STAGE_LABEL,
+  contextSeal,
   SITUATION_LABEL,
   SUIT_OPTIONS,
   type SituationKey,
@@ -42,7 +43,7 @@ export function HandLab() {
   const [hero, setHero] = useState<Position>("BTN");
   const [villain, setVillain] = useState<Position>("CO");
   const [situation, setSituation] = useState<SituationKey>("vsopen");
-  const [stage, setStage] = useState<StageKey>("early");
+  const [stage, setStage] = useState<StageKey>("inicio");
   const [customBB, setCustomBB] = useState<number | null>(null);
   const [villainBB, setVillainBB] = useState<number | null>(null);
   // Conversor "por fichas": a pessoa manda a mão em fichas + o valor do big
@@ -387,6 +388,24 @@ export function HandLab() {
 
       {result && (
         <section className="hl-result">
+          {/* Selo de contexto — premissas REAIS do spot (formato · estágio · stack · ICM). */}
+          <div
+            style={{
+              display: "inline-block",
+              margin: "0 auto 10px",
+              padding: "4px 12px",
+              borderRadius: 20,
+              border: "1px solid #7a5f1e",
+              background: "rgba(230,196,84,0.08)",
+              color: "#e6c454",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              textAlign: "center",
+            }}
+          >
+            🎓 {contextSeal(result.spec)}
+          </div>
           <div className="hl-verdict">
             <span className="hl-verdict-tag">
               {result.recommended === "allin"
