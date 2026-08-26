@@ -30,9 +30,10 @@ export function SessionDiagnosis({
   onTrain?: () => void;
 }) {
   const d = buildSessionDiagnosis(report);
-  const ring = scoreColor(d.score);
+  // Amostra pequena: não mostramos nota grande (seria enganosa). Anel neutro.
+  const ring = d.insufficientSample ? "rgba(230,196,84,0.35)" : scoreColor(d.score);
   // ângulo do anel de progresso (0–100 → 0–360°)
-  const deg = Math.round((d.score / 100) * 360);
+  const deg = d.insufficientSample ? 0 : Math.round((d.score / 100) * 360);
 
   return (
     <div
@@ -80,8 +81,19 @@ export function SessionDiagnosis({
               justifyContent: "center",
             }}
           >
-            <div style={{ fontSize: 52, fontWeight: 900, color: ring, lineHeight: 1 }}>{d.score}</div>
-            <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>de 100</div>
+            {d.insufficientSample ? (
+              <>
+                <div style={{ fontSize: 44, fontWeight: 900, color: ring, lineHeight: 1 }}>📊</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 6, textAlign: "center", padding: "0 10px" }}>
+                  {d.evaluated}/{d.minSample} decisões
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 52, fontWeight: 900, color: ring, lineHeight: 1 }}>{d.score}</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>de 100</div>
+              </>
+            )}
           </div>
         </div>
       </div>

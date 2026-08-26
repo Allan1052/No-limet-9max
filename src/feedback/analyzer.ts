@@ -494,6 +494,11 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
   const heroFreq = vars.heroFreq !== undefined ? pc(vars.heroFreq) : '';
   const surplus = vars.surplus !== undefined ? vars.surplus.toFixed(1) : '';
   const gap = vars.gap !== undefined ? vars.gap.toFixed(1) : '';
+  // Âncora curta no SPOT REAL (posição) — a auditoria pediu que a dica aponte
+  // para o spot, não use elogio genérico ("jogadores fortes fazem isso"). Fica
+  // vazio quando não temos a posição, pra não inventar contexto.
+  const heroPos = vars.ctx?.heroPosition as string | undefined;
+  const spotTag = heroPos ? ` de ${heroPos}` : "";
 
   // Cada chave pode ter VÁRIAS variações do mesmo feedback — sorteia uma por
   // decisão, pra o texto não sair "copia e cola" de mão pra mão. O sorteador
@@ -508,9 +513,9 @@ function getFeedbackText(level: UserSubscriptionLevel, rating: Rating, key: stri
     free: {
       boa: {
         freqMain: [
-          `Boa! Essa é a jogada principal aqui. Jogadores sólidos fazem ${heroAction} nesse spot. Continue assim.`,
-          `Isso aí. ${heroAction} é o que a maioria dos jogadores fortes faz nesse spot — tava no caminho certo.`,
-          `Jogada certa. ${heroAction} é a linha principal do spot — segue nesse ritmo.`,
+          `Boa! ${heroAction} é a jogada principal aqui${spotTag}. Mandou bem — segue assim.`,
+          `Isso aí. Nesse spot${spotTag}, ${heroAction} é a linha certa. Tava no caminho.`,
+          `Jogada certa: ${heroAction} é o que o spot pede${spotTag}. Nesse ritmo.`,
         ],
         aligned: [
           `Boa! Você fez o que um jogador experiente faria. ${reasonText}`,

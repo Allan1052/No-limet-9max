@@ -9,12 +9,24 @@
 
 import type { SessionReport } from "./analyzeSession";
 
+/**
+ * Mínimo de decisões avaliadas para uma NOTA confiável. Abaixo disso, uma mão
+ * "boa" vira 100% e "Excelente" — estatística de amostra 1, sem valor (bug da
+ * auditoria: 94/100 "Excelente" com uma mão importada). Abaixo do piso, não
+ * mostramos nota grande; pedimos mais mãos e mostramos o denominador.
+ */
+export const MIN_SAMPLE = 20;
+
 export interface SessionDiagnosis {
   /** Nota geral da sessão, 0–100 (só quando há mãos avaliadas). */
   score: number;
   /** Rótulo da nota: "Excelente", "Muito bom"... */
   grade: string;
   emoji: string;
+  /** Amostra pequena demais para uma nota confiável (evaluated < MIN_SAMPLE). */
+  insufficientSample: boolean;
+  /** Piso de amostra usado (para a UI exibir "faltam X decisões"). */
+  minSample: number;
   /** Veredito de uma linha. */
   headline: string;
   /** % de decisões no padrão (boa+ok sobre avaliadas). */
@@ -66,7 +78,10 @@ export function buildSessionDiagnosis(report: SessionReport): SessionDiagnosis {
   if (vpip > 34 || vpip < 13) score -= 6; // seleção de mãos desregulada
   if (gap > 12 && vpip >= 18) score -= 6; // passivo demais
   score = Math.max(0, Math.min(100, Math.round(score)));
-  const { grade, emoji } = gradeOf(score);
+  const insufficientSample = evaluated < MIN_SAMPLE;
+  const { grade, emoji } = insufficientSample
+    ? { grade: "Amostra insuficiente", emoji: "📊" }
+    : gradeOf(score);
 
   // ── PONTOS FORTES ──
   const strengths: string[] = [];
@@ -135,8 +150,11 @@ export function buildSessionDiagnosis(report: SessionReport): SessionDiagnosis {
 
   // ── HEADLINE ──
   let headline: string;
-  if (evaluated < 5) {
-    headline = "Sessão curta — importe mais mãos pra um diagnóstico completo.";
+  if (insufficientSample) {
+    const faltam = MIN_SAMPLE - evaluated;
+    headline = evaluated === 0
+      ? "Nenhuma decisão sua foi avaliada ainda — importe mãos em que você agiu no pré-flop."
+      : `Só ${evaluated} decisão(ões) avaliada(s). Importe ~${faltam} a mais (mín. ${MIN_SAMPLE}) para uma nota confiável — com poucas mãos, um acerto vira "100%" à toa.`;
   } else if (score >= 80) {
     headline = weaknesses.length
       ? `Pré-flop forte (${score}/100) — ajuste um detalhe e fica redondo.`
@@ -155,6 +173,8 @@ export function buildSessionDiagnosis(report: SessionReport): SessionDiagnosis {
     score,
     grade,
     emoji,
+    insufficientSample,
+    minSample: MIN_SAMPLE,
     headline,
     accuracy,
     vpip,

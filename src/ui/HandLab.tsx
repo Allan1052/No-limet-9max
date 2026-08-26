@@ -548,7 +548,7 @@ export function HandLab() {
                   cursor: "pointer",
                 }}
               >
-                📊 A mesma mão nas 3 fases
+                📊 A mesma mão nas 4 fases do torneio
               </button>
             ) : (
               <div
@@ -560,11 +560,12 @@ export function HandLab() {
                 }}
               >
                 <p style={{ margin: "0 0 8px", color: "#e6c454", fontWeight: 700, fontSize: 13 }}>
-                  {result.handType} · {result.spec.heroPosition} · {Math.round(result.spec.stackBB)}bb — a mesma mão, 3 fases:
+                  {result.handType} · {result.spec.heroPosition} · {Math.round(result.spec.stackBB)}bb — nas 4 fases do torneio:
                 </p>
                 <div style={{ display: "flex", gap: 8 }}>
                   {([
                     { st: "inicio", label: "Início" },
+                    { st: "meio", label: "Meio" },
                     { st: "bolha", label: "Bolha" },
                     { st: "mesa_final", label: "Mesa Final" },
                   ] as const).map(({ st, label }) => {
