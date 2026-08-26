@@ -125,7 +125,7 @@
   .btn:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 3px; }
 
   /* ---- Hero ---- */
-  .hero { text-align: center; padding: 34px 0 20px; position: relative; }
+  .hero { text-align: center; padding: 28px 0 12px; position: relative; }
   .hero-logo { display: block; margin: 0 auto 20px; max-width: 380px; width: 80%; height: auto; }
   .community-bar {
     display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -151,7 +151,7 @@
   }
   .hero h1 { font-size: clamp(32px, 6.4vw, 58px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.06; }
   .hero h1 .g { color: var(--gold); }
-  .hero p.sub { font-size: clamp(16px, 2.4vw, 20px); color: var(--dim); max-width: 40ch; margin: 22px auto 30px; }
+  .hero p.sub { font-size: clamp(16px, 2.4vw, 20px); color: var(--dim); max-width: 40ch; margin: 18px auto 22px; }
   .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .trust { margin-top: 22px; font-size: 13px; color: var(--dim); display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
   .trust b { color: var(--cream); }
@@ -169,7 +169,7 @@
   .phone img { width: 100%; display: block; border-radius: 29px; }
 
   /* ---- Playing cards ---- */
-  .cards { display: flex; gap: 10px; justify-content: center; margin: 34px 0 0; }
+  .cards { display: flex; gap: 10px; justify-content: center; margin: 22px 0 0; }
   .card {
     width: 72px; height: 102px; border-radius: 9px; background: var(--card-bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -242,6 +242,8 @@
   .spot-meta b { color: #fff; }
   .demo-cards { display:flex; gap: 10px; justify-content:center; margin: 14px 0 22px; }
   .demo-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .quick-cta { margin: 18px 0 0; text-align: center; }
+  .quick-cta .btn { font-size: 14px; padding: 11px 18px; }
   .act {
     min-width: 108px; font-weight: 800; font-size: 16px; padding: 13px 20px; border-radius: 11px;
     border: 1px solid var(--gold-dim); background: #14170f; color: var(--cream); cursor: pointer;
@@ -522,14 +524,11 @@
     </div>
     <p class="tagline">Feito por um recreativo qualquer. Dentro do ônibus, indo ao trabalho, das 21h12 às 06h00.</p>
     <span class="eyebrow">Poker pra quem joga por diversão</span>
-    <div class="new-features" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;"><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🎯 Drill Mode</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📊 Hand Lab Pós-Flop</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🎓 Mesa Final</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📤 Card Compartilhável</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🏆 XP + Conquistas</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📚 Aprenda do Zero</span></div>
+    <div class="new-features" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;"><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📊 Hand Lab Pós-Flop</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🎓 Mesa Final</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📤 Card Compartilhável</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">🏆 XP + Conquistas</span><span style="background:#123a2a;border:1px solid #d4af37;padding:4px 12px;border-radius:20px;font-size:12px;color:#d4af37;">📚 Aprenda do Zero</span></div>
     <h1>Evoluir no poker não é decorar termo difícil.<br>É aprender a <span class="g">decidir certo</span>.</h1>
     <p class="sub">Simulador de estudo de <b>NL Hold'em 9-max</b>. Treine decisões de verdade, sem dinheiro real, no seu tempo.</p>
     <p class="sub">A maioria das mãos é decisão simples. Quem chega longe não erra as simples — e treina as poucas difíceis. Sem curso caro, sem jargão, no seu tempo.</p>
-    <div class="cta-row">
-      <a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'hero'})">♠ Começar agora — grátis</a>
-      <span style="display:block; margin-top:8px; font-size:13px; color:var(--gold-soft);">🔥 Seja um dos primeiros jogadores — grátis pra sempre</span>
-    </div>
+    <!-- A primeira ação fica depois da mão interativa: proposta → decisão → CTA. -->
     <div class="cards" aria-hidden="true">
       <div class="card black"><span class="r">A</span><span class="s">♠</span></div>
       <div class="card red"><span class="r">A</span><span class="s">♥</span></div>
@@ -545,6 +544,26 @@
     </div>
   </div>
 </header>
+
+<!-- Primeira ação: proposta clara, mão interativa e CTA ficam juntos; o restante explica com calma abaixo. -->
+<section class="demo wrap" id="demo">
+  <div class="felt">
+    <div class="label">2 · Faça uma decisão agora</div>
+    <h2>Call ou Fold?</h2>
+    <p class="lead">Uma mão curta para sentir o app. Não existe dinheiro real aqui — só uma decisão para estudar.</p>
+    <p class="spot-meta">Você no <b>CO</b> com <b>25bb</b> · <b>UTG</b> deu <b>3x raise</b> (7.5bb)</p>
+    <div class="demo-cards" aria-hidden="true">
+      <div class="card black"><span class="r">K</span><span class="s">♠</span></div>
+      <div class="card black"><span class="r">Q</span><span class="s">♠</span></div>
+    </div>
+    <div class="demo-actions">
+      <button class="act fold" data-a="fold">Fold</button>
+      <button class="act" data-a="call">Call</button>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <p class="quick-cta"><a class="btn primary" href="https://calloufold.com.br/" onclick="umami && umami.track('download_button_click', {origin: 'interactive_demo'})">3 · Abrir o app grátis</a></p>
+  </div>
+</section>
 
 <section class="peek wrap">
   <span class="eyebrow">Dá uma espiada</span>
@@ -617,23 +636,6 @@
   </div>
 </section>
 
-<section class="demo wrap" id="demo">
-  <div class="felt">
-    <div class="label">Você joga o quê?</div>
-    <h2>Call ou Fold?</h2>
-    <p class="lead">Repara: você vai acertar isso aqui sem saber nenhum termo técnico. Só com uma boa decisão.</p>
-    <p class="spot-meta">Você no <b>CO</b> com <b>25bb</b> · <b>UTG</b> deu <b>3x raise</b> (7.5bb)</p>
-    <div class="demo-cards" aria-hidden="true">
-      <div class="card black"><span class="r">K</span><span class="s">♠</span></div>
-      <div class="card black"><span class="r">Q</span><span class="s">♠</span></div>
-    </div>
-    <div class="demo-actions">
-      <button class="act fold" data-a="fold">Fold</button>
-      <button class="act" data-a="call">Call</button>
-    </div>
-    <div class="verdict" id="verdict"></div>
-  </div>
-</section>
 
 <section class="wrap">
   <div class="section-h">
