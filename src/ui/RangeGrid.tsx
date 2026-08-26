@@ -142,7 +142,7 @@ export function RangeGrid() {
         </div>
 
         <div className="rg-status">
-          <b>{pctOpen}%</b> das mãos entram no pote em {position} ({profile.archetype}, {depth}bb) · cobertura ponderada por combinações
+          <b>{pctOpen}%</b> das combinações entram no pote em {position} ({profile.archetype}, {depth}bb) · cobertura ponderada por combinações
           {sd.pushFold ? " · zona de push/fold (abrir = all-in)" : ""}
           {selected ? (
             <span className="rg-hover">
