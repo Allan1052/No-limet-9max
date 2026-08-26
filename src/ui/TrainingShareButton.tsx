@@ -6,6 +6,7 @@ import { useState } from "react";
 import { drawTrainingCard, type TrainingShareData } from "../app/drawTrainingCard";
 import { shareSpot } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
+import { trackEvent } from "../app/analytics";
 
 const SHARE_TEXT = "Treinei poker no Call ou Fold — simulador grátis. 🃏\nSem dinheiro real. Só estudo.";
 const SHARE_URL = "https://calloufold.com.br";
@@ -26,11 +27,16 @@ export function TrainingShareButton({
   const handleShare = async () => {
     if (generating) return;
     setGenerating(true);
+    trackEvent("share_started", { source: "training" });
     try {
       const blob = await drawTrainingCard(data);
-      if (!blob) return;
+      if (!blob) {
+        trackEvent("share_failed", { source: "training", reason: "card_generation" });
+        return;
+      }
       const result = await shareSpot(blob, SHARE_URL, SHARE_TEXT, DISCLAIMER);
       if (result === "shared" || result === "copied") {
+        trackEvent("share_succeeded", { source: "training", method: result });
         setDone(true);
         setTimeout(() => setDone(false), 3000);
         // XP: achievement "Compartilhador"
@@ -39,7 +45,13 @@ export function TrainingShareButton({
           const xpResult = processXpEvent(xpState, { type: "shareHand" });
           saveXpState(xpResult.state);
         }
+      } else if (result === "cancelled") {
+        trackEvent("share_cancelled", { source: "training" });
+      } else {
+        trackEvent("share_failed", { source: "training", reason: result });
       }
+    } catch {
+      trackEvent("share_failed", { source: "training", reason: "exception" });
     } finally {
       setGenerating(false);
     }

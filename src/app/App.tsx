@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useTransition } from "react";
 import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
@@ -192,6 +192,10 @@ export function App() {
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("play");
+  const [, startNavigationTransition] = useTransition();
+  const navigate = (nextView: AppView) => {
+    startNavigationTransition(() => setView(nextView));
+  };
 
   // Funil de ativação: registra a tela visitada sem identificar o jogador.
   useEffect(() => {
@@ -203,7 +207,7 @@ export function App() {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && typeof detail === "string") {
-        setView(detail as AppView);
+        navigate(detail as AppView);
       }
     };
     window.addEventListener("nav-to", handler);
@@ -213,7 +217,7 @@ export function App() {
   // "Treinar esse spot" da Sua Mão: abre o Treino 1×1 (view "ultra") já com o
   // spot analisado — o UltraTrainer lê o spec do localStorage no mount.
   useEffect(() => {
-    const handler = () => setView("ultra");
+    const handler = () => navigate("ultra");
     window.addEventListener("cof-open-ultra", handler);
     return () => window.removeEventListener("cof-open-ultra", handler);
   }, []);
@@ -221,7 +225,7 @@ export function App() {
   // "Treinar rua por rua" da Sua Mão: abre o Treino Rua por Rua (view "street")
   // já com a mão, posição e stack do jogador — o StreetTrainer lê o spec no mount.
   useEffect(() => {
-    const handler = () => setView("street");
+    const handler = () => navigate("street");
     window.addEventListener("cof-open-street", handler);
     return () => window.removeEventListener("cof-open-street", handler);
   }, []);
@@ -403,9 +407,9 @@ export function App() {
           setGameVariant={setGameVariant}
           omahaUnlocked={omahaUnlocked}
           setOmahaUnlocked={setOmahaUnlocked}
-          onOpenProgress={() => setProgressOpen(true)}
-          onOpenAchievements={() => setAchievementsOpen(true)}
-          onOpenHistory={() => setHistoryLogOpen(true)}
+          onOpenProgress={() => startNavigationTransition(() => setProgressOpen(true))}
+          onOpenAchievements={() => startNavigationTransition(() => setAchievementsOpen(true))}
+          onOpenHistory={() => startNavigationTransition(() => setHistoryLogOpen(true))}
           buildLabel={formatBuild(__BUILD_ID__)}
           fullBuildLabel={formatBuildFull(__BUILD_ID__)}
           onCheckUpdate={forceUpdate}
@@ -676,7 +680,9 @@ export function App() {
       ) : null}
 
       {achievementsOpen ? (
-        <AchievementsPanel onClose={() => setAchievementsOpen(false)} />
+        <Suspense fallback={<div className="overlay"><div className="replay progress-modal"><p>Carregando conquistas…</p></div></div>}>
+          <AchievementsPanel onClose={() => setAchievementsOpen(false)} />
+        </Suspense>
       ) : null}
 
       {celebrateItm ? <MoneyRain onDone={dismissItmCelebration} /> : null}
@@ -708,7 +714,7 @@ export function App() {
         <span>{tr("disclaimer")}</span>
       </div>
 
-      <BottomNav view={view} setView={setView} hidden={navHidden} />
+      <BottomNav view={view} setView={navigate} hidden={navHidden} />
     </div>
   );
 }

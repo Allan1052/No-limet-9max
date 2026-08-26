@@ -13,7 +13,7 @@ import { useT } from "../i18n";
 import { HoodedFace, VILLAINS, pickVillain, type Villain } from "./UltraTrainerFaces";
 import type { TransKey } from "../i18n/translations";
 import { spotRangeGrid } from "../ranges/spotGrid";
-import { buildStageIcm, type HandLabSpec } from "../train/stage";
+import { buildStageIcm, STAGE_LABEL, type HandLabSpec } from "../train/stage";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { comboToHandType } from "../ranges/types";
 import {
@@ -59,7 +59,9 @@ export function UltraTrainer() {
           betLevelFaced: s.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
           threeBet: s.situation === "vs3bet",
           facingAllin,
-          // Fase final aplica ICM (mesma pressão da análise).
+          // A fase escolhida na Sua Mão acompanha o treino; o ICM só é
+          // aplicado quando a própria análise construiu esse contexto.
+          stage: s.stage,
           icmSpot: buildStageIcm(s.stackBB, s.stage),
         } as ScenarioSpec;
       } catch {
@@ -167,6 +169,8 @@ export function UltraTrainer() {
       profile: BASELINE_PROFILE,
       raiserPosition: s.raiserPosition,
       openSizeBB: s.openSizeBB,
+      icmSpot: s.icmSpot,
+      threeBet: s.threeBet,
     });
   }, [scenario]);
 
@@ -226,7 +230,9 @@ export function UltraTrainer() {
         {/* Arena 1×1 — heads-up de Main Event contra o seu carrasco pessoal. */}
         <div className={`arena ${result ? (isCorrect(result) ? "won" : "lost") : ""}`}>
           <div className="arena-top">
-            <span className="arena-title">🏆 {t("ultra.mainEvent")}</span>
+            <span className="arena-title">
+              🏆 {s.stage ? `TREINO · ${STAGE_LABEL[s.stage]}` : t("ultra.mainEvent")}
+            </span>
             <span className="arena-badges">
               <span className="arena-ring">{t("ultra.fullring")}</span>
               <span className="arena-headsup">{t("ultra.headsup")}</span>

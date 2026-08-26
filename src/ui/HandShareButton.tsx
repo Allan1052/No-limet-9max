@@ -11,6 +11,7 @@ import { drawHandShareCard, type HandShareData, type ShareCardMode } from "../ap
 import { shareSpot, shareMulti, downloadBlob } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 import { buildCaption } from "../app/captionSuggestions";
+import { trackEvent } from "../app/analytics";
 
 
 const SHARE_TEXT = "Essa mão eu joguei no Call ou Fold — simulador grátis de poker. 🃏\nSem dinheiro real. Só estudo.";
@@ -37,12 +38,17 @@ export function HandShareButton({
   const handleShare = async (mode: ShareCardMode) => {
     if (generating) return;
     setGenerating(true);
+    trackEvent("share_started", { source: "hand", format: mode });
     try {
       const blob = await drawHandShareCard(data, mode);
-      if (!blob) return;
+      if (!blob) {
+        trackEvent("share_failed", { source: "hand", format: mode, reason: "card_generation" });
+        return;
+      }
 
       const result = await shareSpot(blob, SHARE_URL, SHARE_TEXT, DISCLAIMER);
       if (result === "shared" || result === "copied") {
+        trackEvent("share_succeeded", { source: "hand", format: mode, method: result });
         setDone(true);
         setTimeout(() => setDone(false), 3000);
         // XP: achievement "Compartilhador"
@@ -51,7 +57,13 @@ export function HandShareButton({
           const xpResult = processXpEvent(xpState, { type: "shareHand" });
           saveXpState(xpResult.state);
         }
+      } else if (result === "cancelled") {
+        trackEvent("share_cancelled", { source: "hand", format: mode });
+      } else {
+        trackEvent("share_failed", { source: "hand", format: mode, reason: result });
       }
+    } catch {
+      trackEvent("share_failed", { source: "hand", format: mode, reason: "exception" });
     } finally {
       setGenerating(false);
     }
@@ -64,10 +76,14 @@ export function HandShareButton({
   const handleCarousel = async () => {
     if (generating || !data.actionLog || data.actionLog.length < 2) return;
     setGenerating(true);
+    trackEvent("share_started", { source: "hand", format: "carousel" });
     try {
       const card1 = await drawHandShareCard(data, "simples", "decisao");
       const card2 = await drawHandShareCard(data, "simples", "narrativa");
-      if (!card1 || !card2) return;
+      if (!card1 || !card2) {
+        trackEvent("share_failed", { source: "hand", format: "carousel", reason: "card_generation" });
+        return;
+      }
       const files = [
         new File([card1], "card_1_resultado.png", { type: "image/png" }),
         new File([card2], "card_2_a_mao_contada.png", { type: "image/png" }),
@@ -78,6 +94,7 @@ export function HandShareButton({
         await downloadBlob(card2, "card_2_a_mao_contada.png");
       }
       if (result === "shared" || result === "download") {
+        trackEvent("share_succeeded", { source: "hand", format: "carousel", method: result });
         setDone(true);
         setTimeout(() => setDone(false), 3000);
         if (isXpUnlocked()) {
@@ -85,7 +102,13 @@ export function HandShareButton({
           const xpResult = processXpEvent(xpState, { type: "shareHand" });
           saveXpState(xpResult.state);
         }
+      } else if (result === "cancelled") {
+        trackEvent("share_cancelled", { source: "hand", format: "carousel" });
+      } else {
+        trackEvent("share_failed", { source: "hand", format: "carousel", reason: result });
       }
+    } catch {
+      trackEvent("share_failed", { source: "hand", format: "carousel", reason: "exception" });
     } finally {
       setGenerating(false);
     }
@@ -120,9 +143,11 @@ export function HandShareButton({
         document.execCommand("copy");
         ta.remove();
       }
+      trackEvent("caption_copied", { source: "hand" });
       setDone(true);
       setTimeout(() => setDone(false), 3000);
     } catch {
+      trackEvent("caption_copy_failed", { source: "hand" });
       // ignorar — o usuário pode copiar manualmente do painel
     }
   };

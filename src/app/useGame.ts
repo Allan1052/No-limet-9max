@@ -168,16 +168,10 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   );
 
   const onChampion = useCallback((d: { entrants: number; cash: number }) => {
+    // A vitória já foi contabilizada pelo evento tournamentOver em onTournamentEnd.
+    // Este callback cuida apenas da celebração visual para não duplicar XP,
+    // torneios concluídos, ITMs e conquistas.
     setChampion(d);
-    // XP: vitória adicional
-    if (isXpUnlocked()) {
-      const xpState = loadXpState();
-      const resultXp = processXpEvent(xpState, { type: "tournamentOver", finishPlace: 1, inMoney: true });
-      saveXpState(resultXp.state);
-      if (resultXp.newAchievements.length > 0) {
-        setXpToasts((prev) => [...prev, ...resultXp.newAchievements]);
-      }
-    }
   }, []);
 
   // ---- Disciplina callbacks ----

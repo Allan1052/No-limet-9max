@@ -16,7 +16,7 @@
 
 import { useMemo, useState } from "react";
 import { spotRangeGrid, type SpotCategory } from "../ranges/spotGrid";
-import { allHandTypes } from "../ranges/types";
+import { allHandTypes, comboCount } from "../ranges/types";
 import { stackDepthAdjust } from "../ranges/stackDepth";
 import { PROFILES, BASELINE_PROFILE, profileById } from "../bots/profiles";
 
@@ -76,9 +76,14 @@ export function RangeGrid() {
   );
 
   const pctOpen = useMemo(() => {
-    let n = 0;
-    for (const cell of Object.values(grid)) if (cell.category !== "fold") n++;
-    return Math.round((n / allHandTypes().length) * 100);
+    const totalCombos = allHandTypes().reduce((sum, hand) => sum + comboCount(hand), 0);
+    const playedCombos = Object.values(grid).reduce((sum, cell) => {
+      const playableFreq = cell.mix
+        ? cell.mix.filter((m) => m.cat !== "fold").reduce((n, m) => n + m.freq, 0)
+        : cell.category === "fold" ? 0 : 1;
+      return sum + comboCount(cell.hand) * playableFreq;
+    }, 0);
+    return Math.round((playedCombos / totalCombos) * 100);
   }, [grid]);
 
   return (
@@ -126,7 +131,7 @@ export function RangeGrid() {
           <div className="t-field" style={{ margin: 0 }}>
             <label>Perfil</label>
             <select value={profileId} onChange={(e) => setProfileId(e.target.value)}>
-              <option value="baseline">Base (quase-GTO)</option>
+              <option value="baseline">Base (referência educativa)</option>
               {PROFILES.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -137,7 +142,7 @@ export function RangeGrid() {
         </div>
 
         <div className="rg-status">
-          <b>{pctOpen}%</b> das mãos entram no pote em {position} ({profile.archetype}, {depth}bb)
+          <b>{pctOpen}%</b> das mãos entram no pote em {position} ({profile.archetype}, {depth}bb) · cobertura ponderada por combinações
           {sd.pushFold ? " · zona de push/fold (abrir = all-in)" : ""}
           {selected ? (
             <span className="rg-hover">
@@ -162,7 +167,7 @@ export function RangeGrid() {
                 hand,
                 category: cell.category,
                 freq: cell.freq,
-                mix: null,
+                mix: cell.mix,
               };
               const isSelected = selected?.hand === hand;
               return (
@@ -189,7 +194,7 @@ export function RangeGrid() {
           <span className="rg-note">
             Suited no triângulo de cima (s), offsuit embaixo (o), pares na diagonal. Cada
             célula é pintada pela ação que o motor recomenda. Toque para ver a mão e as
-            frequências — igual aos solvers profissionais.
+            frequências — referência educativa do motor, não uma saída de solver profissional.
           </span>
         </div>
       </div>

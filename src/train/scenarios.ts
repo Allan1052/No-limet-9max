@@ -15,6 +15,7 @@ import { preflopDecision, type PreflopContext } from "../ranges/preflop";
 import { gradeDecision, type FeedbackItem, type HeroAdvice } from "../feedback/analyzer";
 import type { IcmSpot } from "../ranges/icm";
 import type { Position } from "../ranges/types";
+import type { Stage } from "../tournament/structure";
 
 export interface TrainModule {
   id: string;
@@ -43,6 +44,8 @@ export interface ScenarioSpec {
   /** O vilão deu ALL-IN na frente — a decisão vira call/fold por equity vs
    *  range + pot odds (e ICM via icmSpot). Só oferece Fold/Call. */
   facingAllin?: boolean;
+  /** Fase do torneio escolhida na aba Sua Mão, preservada no treino personalizado. */
+  stage?: Stage;
 }
 
 export interface TrainAction {

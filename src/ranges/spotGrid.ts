@@ -22,7 +22,9 @@ export type SpotCategory = "open" | "3bet" | "4bet" | "call" | "limp" | "fold";
 export interface SpotCell {
   hand: string; // "AA", "AKs", "AKo"
   category: SpotCategory;
-  freq: number; // 0..1 — confiança/frequência da categoria (para a intensidade da cor)
+  freq: number; // 0..1 — frequência da categoria dominante (intensidade da cor)
+  /** Mix completo agregado por categoria, quando o motor devolve frequência. */
+  mix: { cat: SpotCategory; freq: number }[] | null;
 }
 
 export interface SpotGridContext {
@@ -67,6 +69,23 @@ function categoryFreq(
   return sum > 0 ? Math.min(1, sum) : 1;
 }
 
+/** Agrega ações que viram a mesma categoria visual (ex.: jam/raise = abrir). */
+function categoryMix(
+  mix: { action: string; freq: number }[] | undefined,
+  mode: SpotMode,
+): { cat: SpotCategory; freq: number }[] | null {
+  if (!mix || mix.length === 0) return null;
+  const sums = new Map<SpotCategory, number>();
+  for (const m of mix) {
+    const cat = categorize(m.action, mode);
+    sums.set(cat, (sums.get(cat) ?? 0) + m.freq);
+  }
+  return Array.from(sums.entries())
+    .map(([cat, freq]) => ({ cat, freq: Math.min(1, freq) }))
+    .filter((m) => m.freq > 0.001)
+    .sort((a, b) => b.freq - a.freq);
+}
+
 /**
  * Gera a grade completa (169 células) para um spot, rodando o motor em cada
  * tipo de mão. Barato: preflopDecision é lógica de range, sem Monte Carlo.
@@ -88,7 +107,12 @@ export function spotRangeGrid(ctx: SpotGridContext): Record<string, SpotCell> {
       variant: "holdem", // Default para Hold'em na grade de spots
     });
     const category = categorize(dec.action, mode);
-    out[hand] = { hand, category, freq: categoryFreq(dec.mix, category, mode) };
+    out[hand] = {
+      hand,
+      category,
+      freq: categoryFreq(dec.mix, category, mode),
+      mix: categoryMix(dec.mix, mode),
+    };
   }
   return out;
 }

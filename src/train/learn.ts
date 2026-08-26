@@ -83,7 +83,7 @@ export const LEARN_LESSONS: LearnLesson[] = [
     body: [
       "No poker, a ordem em que você joga muda tudo. Quem age por último em cada rua (o botão, ou BTN) vê primeiro as decisões dos outros — e informação vale fichas.",
       "Pense numa fila de caixa: quem está no fim da fila vê quanto cada pessoa pagou antes de decidir. Quem está no começo decide no escuro.",
-      "Na prática: do BTN você pode jogar mais mãos, porque age depois de todos nas rodadas seguintes. De UTG (primeiro a falar), jogue só mãos fortes — qualquer decisão errada sua será explorada pelos 8 jogadores que falam depois.",
+      "Na prática: do BTN você pode jogar mais mãos, porque age depois de todos nas rodadas seguintes. De UTG (primeiro a falar), jogue mais seletivo — qualquer decisão errada sua pode ser enfrentada por até 8 jogadores que ainda vão falar.",
       "Regra para começar: posição inicial = mãos fortes; botão = mãos variadas. Se a dúvida apertar, foldar cedo dói menos do que foldar caro depois.",
     ],
     examples: [
@@ -104,9 +104,9 @@ export const LEARN_LESSONS: LearnLesson[] = [
     icon: "📊",
     body: [
       "Range é o conjunto de mãos que um jogador pode ter numa situação. Ninguém joga com UMA mão só na cabeça — joga com um leque de possibilidades.",
-      "Na abertura sem aumento antes (RFI), profissionais seguem larguras por posição: UTG abre cerca de 15% das mãos (só as fortes: pares grandes, Ax forte, cartas altas do mesmo naipe), enquanto o botão abre cerca de 42% (mãos médias também entram).",
+      "Na abertura sem aumento antes (RFI), a largura muda muito com posição, stack, ante, sizing e perfil. Como referência do motor-base do Call ou Fold em 100bb, a enumeração encontrou cerca de 11% de abertura em UTG e 45% no BTN — não são números universais nem uma promessa de solver.",
       "Por quê? Porque de UTG ainda há 8 jogadores para falar — mão média vira dor de cabeça. No botão, só os blinds respondem, então dá para abrir mais.",
-      "No nosso app, a aba Rua por Rua mostra exatamente isso: toque na grade para ver quais mãos entram, call e aposta em cada posição. Treinar range de abertura é o treino mais importante de um iniciante.",
+      "Na aba Ranges, você pode tocar na grade para comparar as recomendações do motor por posição e profundidade. Use-a como referência educativa; o contexto real sempre pode mudar a decisão.",
     ],
     examples: [
       { label: "Dentro do range de UTG", hero: "AsKs", note: "Ases fortes e pares grandes: a base do range apertado de quem fala primeiro." },
@@ -117,7 +117,7 @@ export const LEARN_LESSONS: LearnLesson[] = [
       { question: "Aproximadamente quanto um profissional abre de UTG?", choices: ["15% das mãos", "42% das mãos", "Todas as mãos", "50% das mãos"], answer: 0 },
       { question: "Por que o botão abre mais mãos que o UTG?", choices: ["O botão joga por último e só os blinds respondem", "O botão ganha mais fichas", "As cartas do botão são melhores", "Não há motivo"], answer: 0 },
       { question: "Quais mãos fazem parte do range de UTG?", choices: ["Qualquer duas cartas", "Mãos fortes (pares grandes, Ax forte)", "Só conectores baixos", "Mãos do mesmo naipe apenas"], answer: 1 },
-      { question: "Onde no app você pode treinar ranges de abertura por posição?", choices: ["Ranking", "Rua por Rua", "Anatomia", "Perfil"], answer: 1 },
+      { question: "Onde no app você pode comparar ranges de abertura por posição?", choices: ["Ranking", "Ranges", "Anatomia", "Perfil"], answer: 1 },
     ],
   },
   {
@@ -126,7 +126,7 @@ export const LEARN_LESSONS: LearnLesson[] = [
     icon: "🪙",
     body: [
       "Cada aposta define um preço para você continuar na mão. A pergunta certa nunca é 'será que eu tenho a melhor mão?' — é 'o preço que estão me cobrando compensa?'",
-      "Exemplo real: pote de 100 fichas, adversário aposta 50. Você precisa pagar 50 para disputar 200 (100 do pote + 50 da aposta + suas 50 se pagar). Esse é o preço do call — 1 em cada 3 vezes que você ganhar já paga a conta.",
+      "Exemplo real: pote de 100 fichas, adversário aposta 50. Você precisa pagar 50 para disputar 200 (100 do pote + 50 da aposta + suas 50 se pagar). O ponto de equilíbrio é 50 ÷ 200 = 25% — você precisa ganhar cerca de 1 em cada 4 vezes, antes de considerar rake, empates e outros fatores.",
       "Regra prática para novatos: contra aposta pequena (metade do pote ou menos), você pode pagar com mais mãos. Contra aposta grande (pote inteiro ou mais), só continue com mãos realmente fortes ou projetos com muitas cartas de saída (outs).",
       "E lembre: foldar não é perder fichas — é GUARDAR fichas para chegar na final. Quem dobra demais para defender orgulho quebra no meio do torneio.",
     ],
@@ -135,7 +135,7 @@ export const LEARN_LESSONS: LearnLesson[] = [
     ],
     quiz: [
       { question: "Pote de 100, adversário aposta 50. Quanto você precisa pagar para continuar?", choices: ["25", "50", "100", "150"], answer: 1 },
-      { question: "Se você paga 50 num pote que valerá 200, quantas vezes precisa ganhar para a conta fechar?", choices: ["1 em cada 2", "1 em cada 3", "1 em cada 5", "Sempre"], answer: 1 },
+      { question: "Se você paga 50 num pote que valerá 200, qual é o ponto de equilíbrio aproximado?", choices: ["1 em cada 2", "1 em cada 4", "1 em cada 5", "Sempre"], answer: 1 },
       { question: "Contra uma aposta grande (pote inteiro), qual a postura correta com mão média?", choices: ["Pagar sempre", "Foldar na maioria dos casos", "Dar all-in", "Aumentar sempre"], answer: 1 },
       { question: "O que significa 'guardar fichas para a final'?", choices: ["Não apostar nunca", "Foldar mãos ruins em vez de pagar caro", "Acumular fichas no início", "Jogar só no final"], answer: 1 },
       { question: "O que a pergunta certa antes de pagar deve ser?", choices: ["'Será que ele está blefando?'", "'O preço compensa?', ou seja, quanto preciso ganhar para pagar a conta", "'Tenho sorte hoje?'", "'Qual o buy-in?'"], answer: 1 },
@@ -169,9 +169,9 @@ export const LEARN_LESSONS: LearnLesson[] = [
     icon: "🔍",
     body: [
       "Cada ação do adversário encolhe o leque de mãos que ele pode ter. Quando alguém aumenta de UTG, o range dele é forte (pares grandes, Ax). Quando o botão aumenta, o range é largo — até cartas médias entram.",
-      "No pós-flop, a leitura continua: quem paga uma aposta num board com A no topo provavelmente tem algo com A ou uma mão que aguenta pressão. Quem aposta de novo no turn geralmente mostra força real.",
-      "Padrões ajudam: jogador que só aumenta com mãos enormes é previsível; jogador que aumenta com qualquer carta vai errar muitas vezes — espere ele exagerar e pague com mão forte.",
-      "No Rua por Rua do app, você toca no jogador para ver o range dele atualizado a cada ação — exatamente como os profissionais constroem a leitura rua a rua. Treine isso: adivinhar o range do vilão antes de decidir é o hábito que mais acelera evolução.",
+      "No pós-flop, a leitura continua: quem paga uma aposta num board com A no topo pode ter um Ás, um projeto ou uma mão que aguenta pressão. Uma ação isolada não prova força: contexto, sizing e textura importam.",
+      "Padrões ajudam, mas não são certeza: jogador que só aumenta com mãos enormes é previsível; jogador que aumenta com qualquer carta pode exagerar. Observe antes de explorar.",
+      "Na aba Sua Mão, você revisa o spot e vê a explicação do motor; no replayer disponível, acompanhe a sequência sem tratar a estimativa como leitura infalível. Criar hipóteses sobre o range do vilão antes de decidir é um hábito que acelera a evolução.",
     ],
     examples: [
       { label: "Aumento de UTG = forte", hero: "AsKs", note: "Quando alguém abre lá do começo, pense em mãos assim: pares grandes, AK, ases fortes. Dê respeito." },
@@ -182,7 +182,7 @@ export const LEARN_LESSONS: LearnLesson[] = [
       { question: "Um aumento do botão indica:", choices: ["Só cartas premium", "Range largo, incluindo mãos médias", "Sempre blefe", "Sempre value"], answer: 1 },
       { question: "O que cada ação do adversário faz com o range dele?", choices: ["Aumenta", "Encolhe (filtra as mãos possíveis)", "Não muda", "Zera"], answer: 1 },
       { question: "Contra um jogador que só aumenta com mãos enormes, o que fazer?", choices: ["Pagar tudo", "Foldar sem pensar", "Aguardar mão forte e explorar a previsibilidade", "Blefar sempre"], answer: 2 },
-      { question: "Onde no app você treina leitura de range do vilão rua a rua?", choices: ["Ranking", "Rua por Rua", "Campanha", "Drill"], answer: 1 },
+      { question: "Onde no app você revisa a leitura do spot e a explicação do motor?", choices: ["Ranking", "Sua Mão", "Campanha", "Perfil"], answer: 1 },
     ],
   },
   {
@@ -190,20 +190,20 @@ export const LEARN_LESSONS: LearnLesson[] = [
     title: "Sobrevivendo ao torneio",
     icon: "🏆",
     body: [
-      "Torneio tem 3 fases com estratégias diferentes. No início (stacks profundos), jogue sólido: mãos fortes, posições certas, fold sem culpa. É hora de observar, não de heroísmo.",
-      "No meio (blinds subindo), o jogo acelera: quem não rouba blinds morre aos poucos. Comece a abrir mais do botão e do cutoff, e defenda seus blinds com mais frequência.",
-      "No fim (stack curto, bolha chegando), vale a matemática do push-or-fold: com 10-15 blinds, a decisão vira 'dou all-in ou foldo?'. Mãos como qualquer par, Ax e cartas altas conectadas viram all-in de UTG com stack curto — esperar AA que não vem é morrer devagar.",
-      "O coach do app mostra o veredito considerando o estágio do torneio e seu stack em blinds. Jogue torneios de treino aqui no app (sem dinheiro real) até a bolha deixar de dar medo — depois é só repetir no circuito.",
+      "Torneio tem quatro contextos importantes, e não uma receita única: início, meio, bolha e mesa final. No início, com stacks mais profundos, jogue seletivo e observe; a decisão depende da posição, da ação e do stack.",
+      "No meio, blinds e antes pesam mais: roubar em posição ganha importância, mas não significa abrir qualquer mão. Ajuste o range conforme stacks, jogadores e ação anterior.",
+      "Na bolha, sobreviver e pressionar têm valor diferente para cada stack. Na mesa final, a distribuição de prêmios pode adicionar pressão de ICM. Com 10–15bb, push ou fold aparece com frequência, mas posição, ante, ICM e ação anterior definem o range — não existe 'qualquer par, Ax e carta conectada' automático.",
+      "O coach do app mostra o veredito considerando o estágio escolhido e o stack em blinds. Use os torneios de treino, sem dinheiro real, para comparar decisões e entender onde a pressão muda o plano.",
     ],
     examples: [
-      { label: "All-in com stack curto (~12bb)", hero: "Ad9c", note: "Com 10-15bb, A9 vira all-in de UTG — esperar o AA que não vem é morrer devagar." },
-      { label: "All-in com stack curto (~12bb)", hero: "6s6d", note: "Qualquer par crava com stack curto: você quase nunca está muito atrás de quem paga." },
+      { label: "Possível shove com stack curto (~12bb)", hero: "Ad9c", note: "A9 pode entrar em um range de shove em alguns spots de 10–15bb, mas posição, ante, ação e ICM mudam a resposta." },
+      { label: "Par em stack curto (~12bb)", hero: "6s6d", note: "Pares médios podem ser bons candidatos a shove em alguns cenários, mas não são automáticos: o range do vilão e a pressão de torneio contam." },
     ],
     quiz: [
       { question: "Qual a estratégia correta no início do torneio (stacks profundos)?", choices: ["All-in com qualquer mão", "Jogo sólido: mãos fortes e fold sem culpa", "Roubar blinds sem parar", "Pagar todos os aumentos"], answer: 1 },
       { question: "O que acontece com quem não rouba blinds na fase média?", choices: ["Nada", "Morre aos poucos comendo os blinds", "Ganha mais", "Sobe no ranking"], answer: 1 },
       { question: "Com 12 blinds, qual a natureza da decisão na maioria das mãos?", choices: ["Call ou fold", "Push ou fold (all-in ou desistir)", "Check ou call", "Fold sempre"], answer: 1 },
-      { question: "Quais mãos viram all-in de UTG com stack muito curto?", choices: ["Só AA", "Qualquer par, Ax e cartas altas conectadas", "Nenhuma", "Só flush draw"], answer: 1 },
+      { question: "Com 12 blinds, o que mais importa antes de decidir entre shove e fold?", choices: ["Só a sua mão", "Posição, antes, ICM e ação anterior", "O buy-in real", "Se a mão é do mesmo naipe"], answer: 1 },
       { question: "O que o coach do app considera no veredito de um torneio?", choices: ["Só a mão", "O estágio do torneio e seu stack em blinds", "O buy-in", "A sorte do dia"], answer: 1 },
     ],
   },

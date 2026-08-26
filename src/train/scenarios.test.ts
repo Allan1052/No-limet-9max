@@ -14,13 +14,14 @@ describe("Módulos de Maestria — cenários", () => {
     }
   });
 
-  it("fixedHand: o 1×1 abre com as cartas montadas (não sorteia)", () => {
+  it("fixedHand: o 1×1 abre com as cartas montadas e preserva a fase", () => {
     const hand = [makeCard(14, 3), makeCard(7, 3)]; // A♠ 7♠ (a mão do Allan)
     const sc = buildScenarioFromSpec(
-      { heroPosition: "BB", effectiveBB: 20, raiserPosition: "BTN", openSizeBB: 2.3, fixedHand: hand },
+      { heroPosition: "BB", effectiveBB: 20, raiserPosition: "BTN", openSizeBB: 2.3, fixedHand: hand, stage: "bolha" },
       Math.random,
     );
     expect(sc.hand).toEqual(hand);
+    expect(sc.spec.stage).toBe("bolha");
     expect(sc.advice.kind).toBe("preflop");
   });
 

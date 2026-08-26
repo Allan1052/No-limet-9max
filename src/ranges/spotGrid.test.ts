@@ -18,9 +18,14 @@ describe("spotRangeGrid — abertura (RFI)", () => {
     expect(opens(btn)).toBeGreaterThan(opens(utg));
   });
 
-  it("tem 169 células", () => {
+  it("tem 169 células e preserva o mix do motor quando disponível", () => {
     const g = spotRangeGrid({ heroPosition: "CO", effectiveBB: 100, profile: BASELINE_PROFILE });
     expect(Object.keys(g).length).toBe(169);
+    const aaMix = g["AA"].mix;
+    if (aaMix) {
+      expect(aaMix.some((m) => m.cat === "open")).toBe(true);
+      expect(aaMix.reduce((sum, m) => sum + m.freq, 0)).toBeCloseTo(1, 5);
+    }
   });
 });
 

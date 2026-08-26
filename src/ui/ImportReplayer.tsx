@@ -13,6 +13,7 @@ import type { SessionReport } from "../import/analyzeSession";
 import { analyzePostflopStreets } from "../import/analyzePostflop";
 import { SessionDiagnosis } from "./SessionDiagnosis";
 import { drawHandShareCard, shareDataFromHand } from "../app/handShareCard";
+import { trackEvent } from "../app/analytics";
 
 /** Junta o feedback pré-flop (report.feedback) com os feedbacks pós-flop por
  *  rua num único array, na ordem da mão — o formato que shareDataFromHand
@@ -507,6 +508,7 @@ export function ImportReplayer({
   // Gera o card (canvas PNG) da mão atual: abre em nova aba E baixa o arquivo,
   // no mesmo padrão do botão de compartilhar do jogo ao vivo.
   const handleShareCard = async () => {
+    trackEvent("share_started", { source: "import_replayer" });
     try {
       // O card mostra a DECISÃO DA RUA ATUAL (a que está na mesa), não a última
       // item da lista — senão o pré-flop sempre dominaria o veredito do card.
@@ -516,17 +518,25 @@ export function ImportReplayer({
         ruaFb.length > 0 ? ruaFb : streetFbToFeedback(streetFb, fb),
         mistakeFixBB !== undefined ? { mistakeFixBB } : undefined,
       );
-      if (!data) return;
+      if (!data) {
+        trackEvent("share_failed", { source: "import_replayer", reason: "share_data" });
+        return;
+      }
       const blob = await drawHandShareCard(data, "simples", "decisao");
-      if (!blob) return;
+      if (!blob) {
+        trackEvent("share_failed", { source: "import_replayer", reason: "card_generation" });
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `calloufold-mao-${handIdx + 1}.png`;
       a.click();
       window.open(url, "_blank", "noopener");
+      trackEvent("share_succeeded", { source: "import_replayer", method: "download" });
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (e) {
+      trackEvent("share_failed", { source: "import_replayer", reason: "exception" });
       console.error("[ImportReplayer] falha ao gerar card", e);
     }
   };
