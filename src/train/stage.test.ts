@@ -129,6 +129,17 @@ describe("HandLab — analyzeHand", () => {
     expect(["call", "fold"]).toContain(a.recommended);
   });
 
+  it("whyNot: gera a alternativa oposta com explicação", () => {
+    const foldRfi = analyzeHand(spec({ heroPosition: "UTG", situation: "open", stage: "meio", stackBB: 40, hand: parseHand("Js5s")! }));
+    expect(foldRfi.recommended).toBe("fold");
+    expect(foldRfi.whyNot?.label).toBe("ABRIR"); // fold RFI → por que não abrir
+    expect(foldRfi.whyNot?.text.length).toBeGreaterThan(20);
+
+    const callAllin = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 12, hand: parseHand("TsTh")! }));
+    expect(callAllin.recommended).toBe("call");
+    expect(callAllin.whyNot?.label).toBe("FOLDAR"); // call → por que não foldar
+  });
+
   it("devolve contexto legível com posição e stack", () => {
     const a = analyzeHand(spec());
     expect(a.context).toContain("BTN");

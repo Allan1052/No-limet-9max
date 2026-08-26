@@ -84,6 +84,8 @@ export interface HandAnalysis {
   recommended: string; // fold | call | raise | allin
   simple: string; // explicação na voz do amigo
   technical: string; // explicação no vocabulário técnico
+  /** "Por que não a alternativa?" — a linha oposta natural e por que ela perde. */
+  whyNot: { label: string; text: string } | null;
 }
 
 /** Traduz a ação do motor pro rótulo exibido ao jogador. */
@@ -208,6 +210,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     recommended,
     simple,
     technical,
+    whyNot: whyNotAlternative(spec, recommended, handType),
   };
 }
 
@@ -246,6 +249,59 @@ function stageContext(spec: HandLabSpec, handType: string, pushFold: boolean): s
 /** O estágio ativa a pressão de ICM na decisão? */
 function stageHasIcm(stage: StageKey): boolean {
   return STAGES[stage].icm !== "none";
+}
+
+/**
+ * "Por que não a alternativa?" — pega a linha OPOSTA natural à recomendada e
+ * explica por que ela perde. É o gancho didático: em vez de só dizer o certo,
+ * mostra por que o outro caminho custa fichas. Voz simples, sem jargão.
+ */
+function whyNotAlternative(
+  spec: HandLabSpec,
+  recommended: string,
+  hand: string,
+): { label: string; text: string } | null {
+  const situ = spec.situation;
+  const pos = spec.heroPosition;
+  const icmOn = stageHasIcm(spec.stage);
+  const shortStack = spec.stackBB <= 15;
+
+  // Recomendado FOLD → por que não ENTRAR?
+  if (recommended === "fold") {
+    if (situ === "vsallin") {
+      return {
+        label: "PAGAR",
+        text: `${hand} não tem chance suficiente contra o range de all-in — pagar perde mais do que a conta devolve${icmOn ? ", e o ICM piora (quebrar custa prêmio)" : ""}. Call aqui é -EV.`,
+      };
+    }
+    if (situ === "vs3bet") {
+      return { label: "PAGAR", text: `contra um 3-bet a mão de ${pos} fica abaixo do range de defesa — pagar joga dominado e fora de posição.` };
+    }
+    if (situ === "vsopen") {
+      return { label: "PAGAR", text: `${hand} está dominada ou mal posicionada contra a abertura — pagar só chama pra perder e sangra fichas.` };
+    }
+    return { label: "ABRIR", text: `${hand} fica fora do range de abertura de ${pos} — abrir cria um pote dominado e fora de posição, custando fichas no longo prazo.` };
+  }
+
+  // Recomendado CALL → por que não FOLDAR?
+  if (recommended === "call") {
+    if (situ === "vsallin") {
+      return {
+        label: "FOLDAR",
+        text: `você tem equity de sobra contra o range de all-in — foldar deixaria fichas na mesa${shortStack ? ` e, com ${Math.round(spec.stackBB)}bb, você precisa dobrar pra seguir vivo` : ""}.`,
+      };
+    }
+    return { label: "FOLDAR", text: `${hand} tem preço e equity pra continuar — foldar aqui é apertado demais e entrega um pote lucrativo.` };
+  }
+
+  // Recomendado AGRESSIVO (raise/jam/3bet) → por que não uma linha mais passiva?
+  if (situ === "open") {
+    return { label: "FOLDAR", text: `${hand} está no range de abertura de ${pos} — foldar desperdiça um roubo lucrativo (com ante, ainda mais fichas mortas pra pegar).` };
+  }
+  if (situ === "vsopen") {
+    return { label: "SÓ PAGAR", text: `${hand} é forte o bastante pra re-agredir — só pagar perde valor e entrega a iniciativa ao vilão.` };
+  }
+  return { label: "FOLDAR", text: `${hand} sustenta a agressão aqui — recuar deixa valor e fold equity na mesa.` };
 }
 
 // ---------------------------------------------------------------------------

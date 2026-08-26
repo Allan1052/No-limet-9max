@@ -67,6 +67,7 @@ export function HandLab() {
   const [rank2, setRank2] = useState("Q");
   const [suit2, setSuit2] = useState("h");
   const [mode, setMode] = useState<Mode>("simple");
+  const [showWhyNot, setShowWhyNot] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -103,6 +104,7 @@ export function HandLab() {
   const analyze = () => {
     setErr(null);
     setResult(null);
+    setShowWhyNot(false);
     if (!hand) {
       setErr("Cartas inválidas — escolha duas cartas diferentes.");
       return;
@@ -470,6 +472,46 @@ export function HandLab() {
               {mode === "simple" ? result.simple : result.technical}
             </p>
           </div>
+
+          {/* "Por que não a alternativa?" — o usuário pensa, depois revela. */}
+          {result.whyNot ? (
+            <div style={{ margin: "10px 0 4px" }}>
+              {!showWhyNot ? (
+                <button
+                  onClick={() => setShowWhyNot(true)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px dashed #7a5f1e",
+                    background: "rgba(230,196,84,0.06)",
+                    color: "#e6c454",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  🤔 Por que não {result.whyNot.label}?
+                </button>
+              ) : (
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    border: "1px solid #7a5f1e",
+                    background: "rgba(230,196,84,0.05)",
+                  }}
+                >
+                  <p style={{ margin: 0, color: "#e6c454", fontWeight: 700, fontSize: 13 }}>
+                    Por que não {result.whyNot.label}?
+                  </p>
+                  <p style={{ margin: "6px 0 0", color: "#efe9d8", fontSize: 14, lineHeight: 1.45 }}>
+                    {result.whyNot.text}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
 
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
