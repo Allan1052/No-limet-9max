@@ -140,6 +140,13 @@ describe("HandLab — analyzeHand", () => {
     expect(callAllin.whyNot?.label).toBe("FOLDAR"); // call → por que não foldar
   });
 
+  it("anchor: frase-âncora contextual (ICM quando é bolha/mesa final vs all-in)", () => {
+    const bolha = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "bolha", stackBB: 12, hand: parseHand("As7s")! }));
+    expect(bolha.anchor).toMatch(/ICM/);
+    const rfi = analyzeHand(spec({ heroPosition: "BTN", situation: "open", stage: "inicio", stackBB: 40, hand: parseHand("As7s")! }));
+    expect(rfi.anchor.length).toBeGreaterThan(10);
+  });
+
   it("devolve contexto legível com posição e stack", () => {
     const a = analyzeHand(spec());
     expect(a.context).toContain("BTN");

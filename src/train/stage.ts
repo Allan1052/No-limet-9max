@@ -86,6 +86,8 @@ export interface HandAnalysis {
   technical: string; // explicação no vocabulário técnico
   /** "Por que não a alternativa?" — a linha oposta natural e por que ela perde. */
   whyNot: { label: string; text: string } | null;
+  /** Frase-âncora didática contextual (aparece depois da decisão). */
+  anchor: string;
 }
 
 /** Traduz a ação do motor pro rótulo exibido ao jogador. */
@@ -211,6 +213,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     simple,
     technical,
     whyNot: whyNotAlternative(spec, recommended, handType),
+    anchor: anchorPhrase(spec),
   };
 }
 
@@ -249,6 +252,27 @@ function stageContext(spec: HandLabSpec, handType: string, pushFold: boolean): s
 /** O estágio ativa a pressão de ICM na decisão? */
 function stageHasIcm(stage: StageKey): boolean {
   return STAGES[stage].icm !== "none";
+}
+
+/**
+ * Frase-âncora didática — uma verdade curta que fica na cabeça, contextual ao
+ * spot. Aparece DEPOIS da decisão (nunca no card do quiz), como reforço mental.
+ * (Formulações inspiradas na pesquisa de campo da Manus, ago/2026.)
+ */
+function anchorPhrase(spec: HandLabSpec): string {
+  if (spec.situation === "vsallin" && stageHasIcm(spec.stage)) {
+    return "💡 Pot odds dizem quanto você precisa ganhar; o ICM diz quanto custa ser eliminado.";
+  }
+  if (spec.stage === "bolha") {
+    return "💡 A bolha não manda foldar tudo — ela muda o preço do risco.";
+  }
+  if (spec.situation === "vsallin") {
+    return "💡 Contra um all-in a conta é uma só: sua equity contra o range dele × o preço pra pagar.";
+  }
+  if (spec.situation === "vsopen" || spec.situation === "vs3bet") {
+    return "💡 Range não é lista de mãos bonitas — é o conjunto que segue lucrativo nesta cadeira, com este stack, contra esta ação.";
+  }
+  return "💡 Abrir é roubar com plano: posição, stack e o que já há no pote decidem quais mãos valem a fila.";
 }
 
 /**

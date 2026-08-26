@@ -68,6 +68,7 @@ export function HandLab() {
   const [suit2, setSuit2] = useState("h");
   const [mode, setMode] = useState<Mode>("simple");
   const [showWhyNot, setShowWhyNot] = useState(false);
+  const [showPhases, setShowPhases] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -105,6 +106,7 @@ export function HandLab() {
     setErr(null);
     setResult(null);
     setShowWhyNot(false);
+    setShowPhases(false);
     if (!hand) {
       setErr("Cartas inválidas — escolha duas cartas diferentes.");
       return;
@@ -473,6 +475,19 @@ export function HandLab() {
             </p>
           </div>
 
+          {/* Frase-âncora didática (reforço mental do conceito). */}
+          <p
+            style={{
+              margin: "10px 2px 0",
+              color: "#b8b29a",
+              fontSize: 13,
+              fontStyle: "italic",
+              lineHeight: 1.45,
+            }}
+          >
+            {result.anchor}
+          </p>
+
           {/* "Por que não a alternativa?" — o usuário pensa, depois revela. */}
           {result.whyNot ? (
             <div style={{ margin: "10px 0 4px" }}>
@@ -512,6 +527,73 @@ export function HandLab() {
               )}
             </div>
           ) : null}
+
+          {/* A mesma mão recalculada nas 3 fases — mostra o efeito do ICM. */}
+          <div style={{ margin: "10px 0 4px" }}>
+            {!showPhases ? (
+              <button
+                onClick={() => setShowPhases(true)}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px dashed #7a5f1e",
+                  background: "rgba(230,196,84,0.06)",
+                  color: "#e6c454",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                }}
+              >
+                📊 A mesma mão nas 3 fases
+              </button>
+            ) : (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid #7a5f1e",
+                  background: "rgba(230,196,84,0.05)",
+                }}
+              >
+                <p style={{ margin: "0 0 8px", color: "#e6c454", fontWeight: 700, fontSize: 13 }}>
+                  {result.handType} · {result.spec.heroPosition} · {Math.round(result.spec.stackBB)}bb — a mesma mão, 3 fases:
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {([
+                    { st: "inicio", label: "Início" },
+                    { st: "bolha", label: "Bolha" },
+                    { st: "mesa_final", label: "Mesa Final" },
+                  ] as const).map(({ st, label }) => {
+                    const a = analyzeHand({ ...result.spec, stage: st });
+                    const act =
+                      a.recommended === "allin" ? "ALL-IN"
+                        : a.recommended === "raise" ? "RAISE"
+                          : a.recommended.toUpperCase();
+                    const col = a.recommended === "fold" ? "#e07b6b" : "#57b06a";
+                    return (
+                      <div
+                        key={st}
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          padding: "8px 4px",
+                          borderRadius: 10,
+                          background: "rgba(0,0,0,0.25)",
+                        }}
+                      >
+                        <div style={{ color: "#b8b29a", fontSize: 11, fontWeight: 700 }}>{label}</div>
+                        <div style={{ color: col, fontSize: 15, fontWeight: 900, marginTop: 3 }}>{act}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p style={{ margin: "8px 0 0", color: "#b8b29a", fontSize: 12, fontStyle: "italic" }}>
+                  Mesmo stack, mesma mão — o que muda é a pressão de ICM.
+                </p>
+              </div>
+            )}
+          </div>
 
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
             🎯 Treinar esse spot
