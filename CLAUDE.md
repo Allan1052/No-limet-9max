@@ -24,6 +24,11 @@ no celular do Allan). Fluxo: commitar fonte + `dist`, `git fetch origin main`,
 `git rebase origin/main`, `git push origin HEAD:main`. **Nunca** force-push.
 Depois de deployar, o Allan precisa fechar/reabrir o app 2× (cache do PWA).
 
+⚠️ **SEMPRE recompilar o `dist` (`npx vite build`) depois de mexer no código e
+commitar o `dist` junto** — o app é servido do `dist` commitado; sem rebuild, a
+mudança fica no repo mas NÃO vai pro ar. Regras completas para os dois agentes
+(Claude + Manus) no arquivo **`AGENTS.md`** na raiz.
+
 ## Guardrails de qualidade (não quebrar)
 - **SELO GTO deve continuar 61/61** (src/ranges/_calibration/gtoBenchmark.test.ts).
 - Rodar a suíte antes de deployar (`npx vitest run`) — hoje ~3660+ testes.
