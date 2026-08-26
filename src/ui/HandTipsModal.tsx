@@ -226,7 +226,7 @@ export function GtoSealChip() {
         whiteSpace: "nowrap",
       }}
     >
-      ✓ Motor validado — bate com o GTO em {pct}% de {cal.total} spots-referência
+      ✓ Motor auditado em {cal.total} spots-referência · {pct}% de concordância com o GTO
     </div>
   );
 }
