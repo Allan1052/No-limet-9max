@@ -19,22 +19,45 @@
 import type { Card } from "../engine/cards";
 import { equityHandVsRange, equityHandVsRangeMulti } from "../engine/equity";
 import { buildTopRange } from "./build";
-import { rangeCombos } from "./types";
+import { rangeCombos, type Position } from "./types";
 import { requiredEquityToCall, type IcmSpot } from "./icm";
 
 /**
+ * Largura de OPEN-SHOVE (primeiro a agir vai de all-in) por POSIÇÃO. Um all-in
+ * do BTN/SB é ROUBO largo; de UTG é apertado. Ignorar a posição (como antes)
+ * fazia o motor tratar todo shove como apertado (~15% a 15bb) e mandar FOLDAR
+ * mãos que pagam fácil contra um roubo — ex.: A7s no BB vs shove de BTN (bug/
+ * calibração pega pelo Allan no quiz do Instagram). Valores em fração de 1.326
+ * combos, para ~15bb; o stack curto alarga (stackWiden abaixo).
+ */
+const OPEN_SHOVE_BASE: Record<Position, number> = {
+  UTG: 0.14,
+  UTG1: 0.16,
+  MP: 0.19,
+  LJ: 0.23,
+  HJ: 0.27,
+  CO: 0.34,
+  BTN: 0.46,
+  SB: 0.50,
+  BB: 0.32,
+};
+
+/**
  * Largura estimada do range de quem DÁ o all-in, a partir da sequência de
- * apostas (betLevelFaced) e do stack. Quanto mais re-raises antes do all-in,
- * mais premium é o range. Um open-shove curto é largo; um 5-bet+ é AA/KK/QQ/AK.
+ * apostas (betLevelFaced), do stack e da POSIÇÃO de quem shova. Quanto mais
+ * re-raises antes do all-in, mais premium é o range. Um open-shove de posição
+ * tardia é largo; um 5-bet+ é AA/KK/QQ/AK.
  *   1 = abertura/open-shove · 2 = 3-bet · 3 = 4-bet · 4+ = 5-bet+.
  */
-export function shoverRangePct(betLevelFaced: number, effectiveBB: number): number {
+export function shoverRangePct(betLevelFaced: number, effectiveBB: number, raiserPosition?: Position): number {
   const bl = Math.max(0, Math.floor(betLevelFaced));
   if (bl >= 4) return 0.035; // 5-bet+ all-in: só o topo (AA/KK/QQ/AK)
   if (bl === 3) return 0.06; // 4-bet all-in
   if (bl === 2) return 0.11; // 3-bet all-in
-  // Abertura / open-shove: stack curto shoveia largo, stack fundo mais apertado.
-  return Math.max(0.12, Math.min(0.55, 0.6 - effectiveBB * 0.03));
+  // Abertura / open-shove: base por posição + alargamento por stack curto.
+  const base = raiserPosition ? OPEN_SHOVE_BASE[raiserPosition] : 0.30; // médio se desconhecido
+  const stackWiden = Math.max(0, (16 - effectiveBB) * 0.02); // ≤16bb alarga
+  return Math.max(0.12, Math.min(0.65, base + stackWiden));
 }
 
 export interface FacingAllinInput {
@@ -50,6 +73,8 @@ export interface FacingAllinInput {
   callBB: number;
   /** Stack efetivo em bb — só para estimar o range de um open-shove. */
   effectiveBB?: number;
+  /** Posição de quem deu o all-in — abre/fecha a largura do range de open-shove. */
+  raiserPosition?: Position;
   /** Contexto de ICM: perto do dinheiro, a equity exigida sobe. */
   icmSpot?: IcmSpot;
   rng?: () => number;
@@ -72,7 +97,7 @@ export interface FacingAllinResult {
 export function facingAllinDecision(inp: FacingAllinInput): FacingAllinResult {
   const iters = inp.iterations ?? 5000;
   const rng = inp.rng ?? Math.random;
-  const pct = shoverRangePct(inp.betLevelFaced, inp.effectiveBB ?? 100);
+  const pct = shoverRangePct(inp.betLevelFaced, inp.effectiveBB ?? 100, inp.raiserPosition);
   const villain = rangeCombos(buildTopRange(pct));
   const nOpp = Math.max(1, Math.floor(inp.numContesting || 1));
 

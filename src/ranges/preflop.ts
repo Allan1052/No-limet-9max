@@ -203,6 +203,7 @@ function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision
     contestablePotBB: ctx.contestablePotBB,
     callBB: ctx.callAmountBB,
     effectiveBB: ctx.effectiveBB,
+    raiserPosition: ctx.raiserPosition,
     icmSpot: ctx.icmSpot,
     rng: ctx.rng,
     iterations: 2500,

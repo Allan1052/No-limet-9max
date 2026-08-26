@@ -83,12 +83,22 @@ describe("HandLab — analyzeHand", () => {
     }
   });
 
-  it("vsallin: ICM da fase final aperta — AJo paga no meio mas folda no late", () => {
-    const meio = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("AsJh")! }));
-    const late = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "mesa_final", stackBB: 15, hand: parseHand("AsJh")! }));
+  it("vsallin: ICM da fase final aperta — A7s paga o shove do BTN no chip-EV mas folda no late", () => {
+    // Este É o quiz do Instagram: A♠7♠ no BB, 15bb, BTN deu all-in. Contra o
+    // roubo LARGO de um BTN, A7s paga no chip-EV (início/meio); na bolha/mesa
+    // final o ICM sobe o preço e a mesma mão vira fold.
+    const meio = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("As7s")! }));
+    const late = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "mesa_final", stackBB: 15, hand: parseHand("As7s")! }));
     expect(meio.recommended).toBe("call");
     expect(late.recommended).toBe("fold"); // ICM: preservar prêmio > flip marginal
     expect(late.simple).toMatch(/ICM|prêmio/i);
+  });
+
+  it("vsallin: o range do shove depende da POSIÇÃO — A7s paga o BTN (roubo largo) mas folda o UTG (apertado)", () => {
+    const vsBtn = analyzeHand(spec({ heroPosition: "BB", villainPosition: "BTN", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("As7s")! }));
+    const vsUtg = analyzeHand(spec({ heroPosition: "BB", villainPosition: "UTG", situation: "vsallin", stage: "meio", stackBB: 15, hand: parseHand("As7s")! }));
+    expect(vsBtn.recommended).toBe("call"); // BTN shova largo → A7s paga
+    expect(vsUtg.recommended).toBe("fold"); // UTG shova apertado → A7s está dominada
   });
 
   it("vsallin: threshold call/fold é MONOTÔNICO no stack (bug do Allan: KQs 7c 4f)", () => {
