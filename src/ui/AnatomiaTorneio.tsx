@@ -83,6 +83,13 @@ export function AnatomiaTorneio() {
         </div>
 
         <div className="anat-denom">{t("anat.denom")}</div>
+        <details className="anat-method">
+          <summary>ⓘ {t("anat.methodOpen")}</summary>
+          <div className="anat-method-body">
+            <strong>{t("anat.methodTitle")}</strong>
+            <p>{t("anat.methodBody")}</p>
+          </div>
+        </details>
 
         <div className="anat-legend">
           <span>

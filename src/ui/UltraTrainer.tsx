@@ -202,7 +202,7 @@ export function UltraTrainer() {
           <p className="ultra-sub" style={{ marginBottom: 18 }}>
             O 1×1 treina <b>a mão que você monta</b> na aba <b>Sua Mão</b>. Monte o
             spot lá (posição, cartas, stacks), toque em <b>Analisar minha mão</b> e
-            depois em <b>🎯 Treinar esse spot</b> — a mão abre aqui já com a ação real.
+            depois em <b>🎯 Treinar no 1×1</b> — a mão abre aqui já com a ação real.
           </p>
           <div className="ultra-start-actions">
             <button
@@ -246,7 +246,12 @@ export function UltraTrainer() {
         <div className="ss-head">
           <button className="btn tiny" onClick={back}>{t("ultra.change")}</button>
           <span className="train-session">
-            {t("train.session", { c: session.correct, t: session.total })}
+            {t("train.session", {
+              c: session.correct,
+              t: session.total,
+              correctLabel: t(session.correct === 1 ? "train.correct.one" : "train.correct.many"),
+              answerLabel: t(session.total === 1 ? "train.answer.one" : "train.answer.many"),
+            })}
           </span>
         </div>
 
@@ -356,10 +361,11 @@ export function UltraTrainer() {
               </button>
             ) : null}
             {cells ? (
-              <>
+              <details className="ultra-range-details">
+                <summary>▦ {t("ultra.rangeToggle")}</summary>
                 <div className="ultra-grid-title">{t("ultra.rangeTitle")}</div>
                 <SpotRangeGrid cells={cells} highlight={handType} />
-              </>
+              </details>
             ) : null}
             <button className="btn primary train-next" onClick={next}>
               {t("ultra.newHand")}

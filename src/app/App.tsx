@@ -215,7 +215,7 @@ export function App() {
     return () => window.removeEventListener("nav-to", handler);
   }, []);
 
-  // "Treinar esse spot" da Sua Mão: abre o Treino 1×1 (view "ultra") já com o
+  // "Treinar no 1×1" da Sua Mão: abre o Treino 1×1 (view "ultra") já com o
   // spot analisado — o UltraTrainer lê o spec do localStorage no mount.
   useEffect(() => {
     const handler = () => navigate("ultra");
@@ -238,6 +238,10 @@ export function App() {
   // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
   // Ela volta entre as mãos e nas outras telas.
   const navHidden = view === "play" && (!handOver || firstContactOverlay);
+  // Na primeira passagem, a mão guiada e a próxima mão são o caminho principal.
+  // Só liberamos os painéis de progresso/diagnóstico/exportação depois que existe
+  // pelo menos uma mão concluída para eles explicarem.
+  const hasFirstPlayedHand = controller.handLog.length > 0;
 
   // HUD do torneio no topo (linha das abas), à direita — estilo GGPoker.
   const fs = controller.fieldStatus();
@@ -460,33 +464,36 @@ export function App() {
               <button className="btn primary" onClick={() => { trackEvent("new_hand_started"); if (controller.tournamentOver) dismissSummary(); newHand(); }}>
                 {tr("btn.newHand")}
               </button>
-              <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
-                {tr("btn.reviewHand")}
-              </button>
-              {controller.lastHand ? (
-                <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+              {hasFirstPlayedHand ? (
+                <>
+                  <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
+                    {tr("btn.reviewHand")}
+                  </button>
+                  {controller.lastHand ? (
+                    <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+                  ) : null}
+                  <button className="btn" onClick={() => setProgressOpen(true)}>
+                    📊 {tr("btn.progress")}
+                  </button>
+                  {isXpUnlocked() ? (
+                    <button className="btn" onClick={() => setAchievementsOpen(true)}>
+                      🏆 Conquistas
+                    </button>
+                  ) : null}
+                  <button className="btn" onClick={() => setHistoryOpen(true)}>
+                    📋 Mãos desta sessão
+                  </button>
+                  <button className="btn" onClick={() => setLeaksOpen(true)}>
+                    🎯 Pontos fracos
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => downloadText(controller.exportSessionText())}
+                  >
+                    {tr("btn.exportHands")} ({controller.handLog.length})
+                  </button>
+                </>
               ) : null}
-              <button className="btn" onClick={() => setProgressOpen(true)}>
-                📊 {tr("btn.progress")}
-              </button>
-              {isXpUnlocked() ? (
-                <button className="btn" onClick={() => setAchievementsOpen(true)}>
-                  🏆 Conquistas
-                </button>
-              ) : null}
-              <button className="btn" onClick={() => setHistoryOpen(true)}>
-                📋 Mãos desta sessão
-              </button>
-              <button className="btn" onClick={() => setLeaksOpen(true)}>
-                🎯 Pontos fracos
-              </button>
-              <button
-                className="btn"
-                disabled={controller.handLog.length === 0}
-                onClick={() => downloadText(controller.exportSessionText())}
-              >
-                {tr("btn.exportHands")} ({controller.handLog.length})
-              </button>
               {controller.messageKey ? (
                 <div className="message">{tr(controller.messageKey, controller.messageVars)}</div>
               ) : null}

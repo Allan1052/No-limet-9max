@@ -155,6 +155,7 @@ export function HandLab() {
     window.dispatchEvent(new CustomEvent("cof-open-ultra"));
   };
 
+
   return (
     <div className="handlab">
       <header className="handlab-head">
@@ -614,7 +615,7 @@ export function HandLab() {
           </div>
 
           <button className="btn primary hl-train-btn" onClick={trainThisSpot}>
-            🎯 Treinar esse spot
+            🎯 Treinar no 1×1
           </button>
           <div
             className="hl-coming-soon"
@@ -631,7 +632,7 @@ export function HandLab() {
               textAlign: "center",
             }}
           >
-            🛣️ <b style={{ color: "#e6c454" }}>Rua por Rua em breve.</b> Estamos fechando esse treino; por enquanto, use o treino 1×1 e o replayer da mão.
+            🛣️ <b style={{ color: "#e6c454" }}>Rua por Rua disponível em breve.</b> Estamos validando o acesso público; por enquanto, use o treino 1×1 e o replayer da mão.
           </div>
           {/* Gerador antigo privado preservado para o modo de manutenção; não é CTA público. */}
           {isGenEnabled() && (

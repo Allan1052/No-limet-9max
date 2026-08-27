@@ -2037,6 +2037,25 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .ultra-stacks { display: flex; gap: 6px; flex-wrap: wrap; }
 .ultra-start { width: 100%; margin-top: 6px; }
 .ultra-grid-title { font-size: 13px; font-weight: 700; color: var(--gold-soft); margin: 16px 0 8px; }
+.ultra-range-details {
+  margin-top: 12px;
+  padding: 0 10px 10px;
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  text-align: left;
+}
+.ultra-range-details summary {
+  padding: 11px 2px;
+  color: var(--gold-soft);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.ultra-range-details summary::-webkit-details-marker { display: none; }
+.ultra-range-details summary:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; border-radius: 5px; }
+.ultra-range-details[open] summary { border-bottom: 1px solid rgba(212,175,55,.16); }
 
 /* ---------------------------------------------------------------------------
    Arena 1×1 — heads-up de Main Event contra o seu carrasco pessoal.
@@ -4110,6 +4129,36 @@ body {
 .anat-legend i.raise { background: var(--c-raise,#f59e0b); }
 .anat-leak { background: rgba(212,175,55,.06); border: 1px solid rgba(212,175,55,.35); border-radius: 12px; padding: 12px 14px; margin: 12px auto; max-width: 36ch; }
 .anat-denom { font-size: 12px; color: var(--dim,#9c9a86); margin: 8px auto 2px; text-align: center; max-width: 42ch; font-variant-numeric: tabular-nums; }
+.anat-method {
+  max-width: 520px;
+  margin: 6px auto 10px;
+  text-align: left;
+  color: var(--dim,#9c9a86);
+  font-size: 12px;
+}
+.anat-method summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid rgba(212,175,55,.24);
+  border-radius: 999px;
+  color: var(--gold-soft,#d4af37);
+  cursor: pointer;
+  list-style: none;
+}
+.anat-method summary::-webkit-details-marker { display: none; }
+.anat-method summary:focus-visible { outline: 2px solid var(--gold-bright,#e6c454); outline-offset: 2px; }
+.anat-method-body {
+  margin-top: 7px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(212,175,55,.35);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255,255,255,.025);
+  line-height: 1.5;
+}
+.anat-method-body strong { color: var(--gold-soft,#d4af37); }
+.anat-method-body p { margin: 4px 0 0; }
 .anat-leak-t { font-weight: 800; font-size: 16px; color: var(--gold-soft, #d4af37); }
 .anat-leak-s { font-size: 13px; color: var(--dim,#9c9a86); margin-top: 3px; }
 .anat-punch { font-weight: 800; font-size: 18px; margin: 12px 0 4px; }
