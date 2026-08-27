@@ -21,6 +21,7 @@ import { analyzeHand, type HandLabSpec } from "../train/stage";
 const CARD_W = 1080;
 const CARD_H = 1920;
 const SERIF = "Georgia, 'Times New Roman', serif";
+const OFFICIAL_LOGO_HREF = "/logo.png";
 
 const RANK_CH = "23456789TJQKA";
 const SUIT_GLYPH = ["♣", "♦", "♥", "♠"]; // índice = suitOf (0=c,1=d,2=h,3=s)
@@ -175,11 +176,8 @@ export function buildThreeFasesSvg(spec: HandLabSpec): string {
   const hy = 44;
   const hh = 100;
   parts.push(box(M, hy, IW, hh, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  // logo CF
-  parts.push(box(M + 24, hy + 24, 78, 52, { stroke: C.border, sw: 2, r: 8 }));
-  parts.push(`<text x="${M + 63}" y="${hy + 60}" font-family="${SERIF}" font-size="40" font-weight="900" fill="${C.gold}" text-anchor="middle">CF</text>`);
-  parts.push(`<text x="${M + 118}" y="${hy + 48}" font-family="${SERIF}" font-size="34" font-weight="800" fill="${C.ink}">Call<tspan font-style="italic" font-weight="600" font-size="26" fill="${C.cream}"> ou </tspan>Fold</text>`);
-  parts.push(`<text x="${M + 120}" y="${hy + 78}" font-family="${SERIF}" font-size="13" letter-spacing="3" fill="${C.muted}">AQUI É POSSÍVEL</text>`);
+  // Assinatura horizontal oficial — não reconstruir a tipografia da marca.
+  parts.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="${hy + 8}" width="306" height="84" preserveAspectRatio="xMidYMid meet"/>`);
   parts.push(`<text x="${CARD_W - M - 24}" y="${hy + 42}" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   parts.push(`<text x="${CARD_W - M - 24}" y="${hy + 74}" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
 
@@ -378,10 +376,8 @@ export function buildQuizAnswerSvg(spec: HandLabSpec): string {
 
   // header
   P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  P.push(box(M + 24, 68, 78, 52, { sw: 2, r: 8 }));
-  P.push(`<text x="${M + 63}" y="104" font-family="${SERIF}" font-size="40" font-weight="900" fill="${C.gold}" text-anchor="middle">CF</text>`);
-  P.push(`<text x="${M + 118}" y="92" font-family="${SERIF}" font-size="34" font-weight="800" fill="${C.ink}">Call<tspan font-style="italic" font-weight="600" font-size="26" fill="${C.cream}"> ou </tspan>Fold</text>`);
-  P.push(`<text x="${M + 120}" y="122" font-family="${SERIF}" font-size="13" letter-spacing="3" fill="${C.muted}">AQUI É POSSÍVEL</text>`);
+  // Assinatura horizontal oficial — não reconstruir a tipografia da marca.
+  P.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="52" width="306" height="84" preserveAspectRatio="xMidYMid meet"/>`);
   P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
 
@@ -651,10 +647,7 @@ export function buildFourFasesInstagramSvg(spec: HandLabSpec): string {
   const hy = 48;
   const hh = 106;
   parts.push(box(M, hy, IW, hh, { stroke: C4.border, sw: 2, r: 18, fill: "rgba(36,71,52,0.88)" }));
-  parts.push(box(M + 24, hy + 25, 78, 56, { stroke: C4.gold, sw: 2, r: 9, fill: "rgba(8,26,18,0.45)" }));
-  parts.push(`<text x="${M + 63}" y="${hy + 64}" font-family="${SERIF}" font-size="42" font-weight="900" fill="${C4.gold}" text-anchor="middle">CF</text>`);
-  parts.push(`<text x="${M + 122}" y="${hy + 48}" font-family="${SERIF}" font-size="34" font-weight="900" fill="${C4.ink}">Call<tspan font-style="italic" font-weight="600" font-size="26" fill="${C4.cream}"> ou </tspan>Fold</text>`);
-  parts.push(`<text x="${M + 124}" y="${hy + 80}" font-family="${SERIF}" font-size="14" font-weight="700" letter-spacing="3" fill="${C4.cream}">AQUI É POSSÍVEL</text>`);
+  parts.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="${hy + 8}" width="306" height="90" preserveAspectRatio="xMidYMid meet"/>`);
   parts.push(`<text x="${S - M - 24}" y="${hy + 45}" font-family="${SERIF}" font-size="22" font-weight="900" letter-spacing="2" fill="${C4.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   parts.push(`<text x="${S - M - 24}" y="${hy + 78}" font-family="${SERIF}" font-size="20" fill="${C4.cream}" text-anchor="end">feito por um recreativo</text>`);
 

@@ -40,6 +40,7 @@ describe("card Instagram de resposta em quatro fases", () => {
     expect(svg).toContain("#3bdd7b");
     expect(svg).toContain("#ff8b7a");
     expect(svg).toContain("TREINE O MESMO SPOT NO APP");
+    expect(svg).toContain('href="/logo.png');
   });
 
   it("preenche uma legenda com as decisões das quatro fases", () => {
