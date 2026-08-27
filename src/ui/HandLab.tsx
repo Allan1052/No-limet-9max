@@ -29,6 +29,7 @@ import {
   contextSeal,
   SITUATION_LABEL,
   SUIT_OPTIONS,
+  phasePressureLabel,
   type SituationKey,
   type StageKey,
   type FinalTableSpec,
@@ -585,6 +586,7 @@ export function HandLab() {
                         : a.recommended === "raise" ? "RAISE"
                           : a.recommended.toUpperCase();
                     const col = a.recommended === "fold" ? "#e07b6b" : "#57b06a";
+                    const pr = phasePressureLabel(st);
                     return (
                       <div
                         key={st}
@@ -598,12 +600,14 @@ export function HandLab() {
                       >
                         <div style={{ color: "#b8b29a", fontSize: 11, fontWeight: 700 }}>{label}</div>
                         <div style={{ color: col, fontSize: 15, fontWeight: 900, marginTop: 3 }}>{act}</div>
+                        <div style={{ color: "#8a7f5a", fontSize: 9, marginTop: 3, lineHeight: 1.2 }}>{pr.tag}</div>
                       </div>
                     );
                   })}
                 </div>
                 <p style={{ margin: "8px 0 0", color: "#b8b29a", fontSize: 12, fontStyle: "italic" }}>
-                  Mesmo stack, mesma mão — o que muda é a pressão de ICM.
+                  Mesma mão — o que muda é a pressão de premiação (ICM). No <b>Início/Meio</b> o preço é
+                  em <b>fichas</b>; o ICM de verdade entra na <b>Bolha/Mesa Final</b> (ou quando você detalha a mesa).
                 </p>
               </div>
             )}

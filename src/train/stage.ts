@@ -49,6 +49,25 @@ export const STAGE_LABEL: Record<StageKey, string> = {
   mesa_final: "Mesa final · ICM",
 };
 
+/**
+ * Rótulo HONESTO de pressão por fase (P0 do parecer da Manus): diz se o preço é
+ * em FICHAS (chip-EV, início/meio) ou ajustado por PREMIAÇÃO SIMULADA (ICM,
+ * bolha/mesa final). Deixa claro que o "meio" é uma leitura de TRANSIÇÃO — o ICM
+ * de verdade só entra na bolha/mesa final (ou quando o jogador detalha a mesa).
+ */
+export function phasePressureLabel(stage: StageKey): { tag: string; note: string } {
+  switch (stage) {
+    case "inicio":
+      return { tag: "Chip-EV · preço em fichas", note: "Decisão por posição, stack, range e preço — sem ICM." };
+    case "meio":
+      return { tag: "Transição · pressão crescente", note: "Leitura didática: o ICM real depende da premiação e de quem cobre quem." };
+    case "bolha":
+      return { tag: "ICM alto · risco de ficar fora", note: "Quebrar antes do dinheiro custa premiação simulada — calls mais seletivos." };
+    case "mesa_final":
+      return { tag: "ICM ativo · pay jumps", note: "Já premiado, mas cada eliminação pode custar saltos de premiação simulada." };
+  }
+}
+
 /** Situações possíveis do spot (pré-flop, que o motor cobre hoje). */
 export type SituationKey =
   | "open" // ninguém abriu: você é o primeiro a agir
