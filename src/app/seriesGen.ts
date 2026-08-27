@@ -23,6 +23,20 @@ const CARD_H = 1920;
 const SERIF = "Georgia, 'Times New Roman', serif";
 const OFFICIAL_LOGO_HREF = "/logo.png";
 
+interface OfficialLogoPlacement {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface SvgToPngOptions {
+  officialLogo?: OfficialLogoPlacement;
+}
+
+const THREE_PHASES_LOGO: OfficialLogoPlacement = { x: 62, y: 52, width: 306, height: 84 };
+const FOUR_PHASES_LOGO: OfficialLogoPlacement = { x: 66, y: 56, width: 306, height: 90 };
+
 const RANK_CH = "23456789TJQKA";
 const SUIT_GLYPH = ["♣", "♦", "♥", "♠"]; // índice = suitOf (0=c,1=d,2=h,3=s)
 
@@ -176,8 +190,7 @@ export function buildThreeFasesSvg(spec: HandLabSpec): string {
   const hy = 44;
   const hh = 100;
   parts.push(box(M, hy, IW, hh, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  // Assinatura horizontal oficial — não reconstruir a tipografia da marca.
-  parts.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="${hy + 8}" width="306" height="84" preserveAspectRatio="xMidYMid meet"/>`);
+  // A assinatura oficial é composta no canvas após o SVG rasterizar.
   parts.push(`<text x="${CARD_W - M - 24}" y="${hy + 42}" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   parts.push(`<text x="${CARD_W - M - 24}" y="${hy + 74}" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
 
@@ -261,22 +274,62 @@ export function buildThreeFasesSvg(spec: HandLabSpec): string {
   );
 }
 
+/** Carrega uma imagem do mesmo domínio para a composição final do card. */
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`falha ao carregar ${src}`));
+    image.src = src;
+  });
+}
+
+/** Desenha uma imagem dentro de uma caixa, preservando a proporção oficial. */
+function drawContainedImage(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  placement: OfficialLogoPlacement,
+  scale: number,
+): void {
+  const sourceWidth = image.naturalWidth || image.width;
+  const sourceHeight = image.naturalHeight || image.height;
+  if (!sourceWidth || !sourceHeight) throw new Error("logo oficial sem dimensões");
+
+  const ratio = Math.min(placement.width / sourceWidth, placement.height / sourceHeight);
+  const drawWidth = sourceWidth * ratio;
+  const drawHeight = sourceHeight * ratio;
+  const drawX = placement.x + (placement.width - drawWidth) / 2;
+  const drawY = placement.y + (placement.height - drawHeight) / 2;
+  ctx.drawImage(image, drawX * scale, drawY * scale, drawWidth * scale, drawHeight * scale);
+}
+
 /** SVG do card → PNG Blob, tudo no navegador (canvas). */
-export function svgToPngBlob(svg: string, scale = 1): Promise<Blob> {
+export function svgToPngBlob(svg: string, scale = 1, options: SvgToPngOptions = {}): Promise<Blob> {
   const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = CARD_W * scale;
-      canvas.height = CARD_H * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("sem contexto 2D"));
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("toBlob falhou"));
-      }, "image/png");
+      void (async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = CARD_W * scale;
+        canvas.height = CARD_H * scale;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("sem contexto 2D");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        if (options.officialLogo) {
+          const logo = await loadImage(OFFICIAL_LOGO_HREF);
+          drawContainedImage(ctx, logo, options.officialLogo, scale);
+        }
+
+        const blob = await new Promise<Blob>((resolveBlob, rejectBlob) => {
+          canvas.toBlob((nextBlob) => {
+            if (nextBlob) resolveBlob(nextBlob);
+            else rejectBlob(new Error("toBlob falhou"));
+          }, "image/png");
+        });
+        resolve(blob);
+      })().catch(reject);
     };
     img.onerror = () => reject(new Error("falha ao carregar SVG"));
     img.src = url;
@@ -298,7 +351,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
 /** Gera e baixa o card "3 fases" do spec atual. Retorna o nome do arquivo. */
 export async function generateThreeFasesCard(spec: HandLabSpec): Promise<string> {
   const svg = buildThreeFasesSvg(spec);
-  const blob = await svgToPngBlob(svg);
+  const blob = await svgToPngBlob(svg, 1, { officialLogo: THREE_PHASES_LOGO });
   const name = `cof-3fases-${handPlain(spec.hand)}-${Math.round(spec.stackBB)}bb.png`;
   downloadBlob(blob, name);
   return name;
@@ -376,8 +429,7 @@ export function buildQuizAnswerSvg(spec: HandLabSpec): string {
 
   // header
   P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  // Assinatura horizontal oficial — não reconstruir a tipografia da marca.
-  P.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="52" width="306" height="84" preserveAspectRatio="xMidYMid meet"/>`);
+  // A assinatura oficial é composta no canvas após o SVG rasterizar.
   P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
 
@@ -450,7 +502,7 @@ const SITUATION_SHORT: Record<string, string> = {
 /** Gera e baixa o card de RESPOSTA (4 fases) do spec atual. */
 export async function generateQuizAnswerCard(spec: HandLabSpec): Promise<string> {
   const svg = buildQuizAnswerSvg(spec);
-  const blob = await svgToPngBlob(svg);
+  const blob = await svgToPngBlob(svg, 1, { officialLogo: THREE_PHASES_LOGO });
   const name = `cof-resposta-${handPlain(spec.hand)}-${Math.round(spec.stackBB)}bb.png`;
   downloadBlob(blob, name);
   return name;
@@ -647,7 +699,7 @@ export function buildFourFasesInstagramSvg(spec: HandLabSpec): string {
   const hy = 48;
   const hh = 106;
   parts.push(box(M, hy, IW, hh, { stroke: C4.border, sw: 2, r: 18, fill: "rgba(36,71,52,0.88)" }));
-  parts.push(`<image href="${OFFICIAL_LOGO_HREF}" x="${M + 18}" y="${hy + 8}" width="306" height="90" preserveAspectRatio="xMidYMid meet"/>`);
+  // A assinatura oficial é composta no canvas após o SVG rasterizar.
   parts.push(`<text x="${S - M - 24}" y="${hy + 45}" font-family="${SERIF}" font-size="22" font-weight="900" letter-spacing="2" fill="${C4.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
   parts.push(`<text x="${S - M - 24}" y="${hy + 78}" font-family="${SERIF}" font-size="20" fill="${C4.cream}" text-anchor="end">feito por um recreativo</text>`);
 
@@ -711,7 +763,7 @@ export function buildFourFasesInstagramSvg(spec: HandLabSpec): string {
 
 /** Renderiza o card de resposta como PNG, sem iniciar download. */
 export async function renderFourFasesInstagramCard(spec: HandLabSpec): Promise<Blob> {
-  return svgToPngBlob(buildFourFasesInstagramSvg(spec));
+  return svgToPngBlob(buildFourFasesInstagramSvg(spec), 1, { officialLogo: FOUR_PHASES_LOGO });
 }
 
 /** Gera e baixa o card vertical de quatro fases. */
