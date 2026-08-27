@@ -473,6 +473,13 @@ function quizQuestion(spec: HandLabSpec): string {
   return "ABRE OU FOLD?";
 }
 
+/** Mantém perguntas longas dentro da largura segura sem reduzir o A8o. */
+function quizQuestionFontSize(question: string): number {
+  const safeWidth = CARD_W - 120;
+  const estimatedWidthAtOnePx = Math.max(1, question.length * 0.58);
+  return Math.min(94, Math.max(58, Math.floor(safeWidth / estimatedWidthAtOnePx)));
+}
+
 function quizPremise(spec: HandLabSpec, context: SingleQuizContext = {}): string {
   const action = spec.situation === "vsopen"
     ? `${spec.villainPosition} abriu`
@@ -593,7 +600,7 @@ export function buildSingleQuizSvg(spec: HandLabSpec, context: SingleQuizContext
   P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="24" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
   P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="23" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(singlePressureTag(spec))}</text>`);
 
-  P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="94" font-weight="900" letter-spacing="2" fill="${C.gold}" text-anchor="middle">${esc(question)}</text>`);
+  P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="${quizQuestionFontSize(question)}" font-weight="900" letter-spacing="2" fill="${C.gold}" text-anchor="middle">${esc(question)}</text>`);
 
   const premiseY = 850;
   P.push(box(M, premiseY, IW, 210, { stroke: C.border, r: 18, fill: "rgba(255,255,255,0.015)" }));
