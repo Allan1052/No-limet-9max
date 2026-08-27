@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 import { cardsToString } from '../engine/cards';
 import { TrainingShareButton } from './TrainingShareButton';
+import { InstagramAnswerCardActions } from './InstagramAnswerCardActions';
 import { useEffect, useMemo, useState } from "react";
 
 import { POSITIONS, type Position } from "../ranges/types";
@@ -618,8 +619,7 @@ export function HandLab() {
           >
             🛣️ <b style={{ color: "#e6c454" }}>Rua por Rua em breve.</b> Estamos fechando esse treino; por enquanto, use o treino 1×1 e o replayer da mão.
           </div>
-          {/* Botão ESCONDIDO — só aparece com a URL secreta. Gera o card do
-              Instagram ("3 fases") no próprio celular, sem gastar créditos. */}
+          {/* Gerador antigo privado preservado para o modo de manutenção; não é CTA público. */}
           {isGenEnabled() && (
             <div style={{ marginTop: 8 }}>
               <button
@@ -657,6 +657,7 @@ export function HandLab() {
               )}
             </div>
           )}
+          <InstagramAnswerCardActions spec={result.spec} />
                   {/* Compartilhar resultado */}
           <div className="mt-4">
             <TrainingShareButton

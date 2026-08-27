@@ -6804,3 +6804,118 @@ body {
   font-weight: 700;
   letter-spacing: 0.2px;
 }
+
+/* Conteúdo para Instagram — exportação do card de resposta em 4 fases. */
+.ig-answer-tools {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(230, 196, 84, 0.42);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(36, 71, 52, 0.78), rgba(10, 28, 19, 0.76));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.ig-answer-tools-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ig-answer-tools-head h3 {
+  margin: 2px 0 4px;
+  color: #f5f0df;
+  font-size: 17px;
+}
+
+.ig-answer-tools-kicker {
+  margin: 0;
+  color: #f2cf5b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.ig-answer-tools-sub {
+  max-width: 560px;
+  margin: 0;
+  color: #d9d4c3;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.ig-answer-tools-badge {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid rgba(242, 207, 91, 0.7);
+  border-radius: 999px;
+  color: #f2cf5b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.ig-answer-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ig-answer-tools-actions .btn {
+  flex: 1 1 180px;
+  min-height: 42px;
+}
+
+.ig-answer-tools-message {
+  margin: 10px 0 0;
+  color: #f2cf5b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.ig-answer-tools-caption {
+  margin-top: 10px;
+  color: #f2cf5b;
+  font-size: 12px;
+}
+
+.ig-answer-tools-caption summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.ig-answer-tools-caption pre {
+  max-height: 190px;
+  margin: 8px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #f1eee4;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 560px) {
+  .ig-answer-tools {
+    padding: 12px;
+  }
+
+  .ig-answer-tools-head {
+    display: block;
+  }
+
+  .ig-answer-tools-badge {
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  .ig-answer-tools-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .ig-answer-tools-actions .btn {
+    width: 100%;
+  }
+}

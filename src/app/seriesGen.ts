@@ -486,3 +486,268 @@ export function isGenEnabled(): boolean {
     return false;
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Card de resposta Instagram — 4 fases.
+// Evolução do gerador privado anterior: mantém o mesmo renderer SVG determinístico,
+// mas usa quatro estágios oficiais e a hierarquia de contraste aprovada no card A7s.
+// ---------------------------------------------------------------------------
+
+const C4 = {
+  bgTop: "#1b3829",
+  bgMid: "#103022",
+  bgBot: "#081a12",
+  panel: "#1d3b2b",
+  panelSoft: "#244734",
+  gold: "#f2cf5b",
+  goldDim: "#d8b644",
+  border: "#a58532",
+  borderSoft: "#6f8b5c",
+  ink: "#fbf7ea",
+  cream: "#e6ddc7",
+  muted: "#b9c3ae",
+  body: "#f5f2e8",
+  call: "#3bdd7b",
+  fold: "#ff8b7a",
+  other: "#f2cf5b",
+};
+
+type FourStage = "inicio" | "meio" | "bolha" | "mesa_final";
+
+interface FourPhaseCopy {
+  label: string;
+  action: string;
+  sub: string;
+  why: string;
+  tone: "call" | "fold" | "other";
+}
+
+function actionLabel(action: string): string {
+  if (action === "allin") return "ALL-IN";
+  return action.toUpperCase();
+}
+
+function actionTone(action: string): FourPhaseCopy["tone"] {
+  if (action === "call") return "call";
+  if (action === "fold") return "fold";
+  return "other";
+}
+
+function phaseLabel(stage: FourStage): string {
+  return {
+    inicio: "INÍCIO",
+    meio: "MEIO",
+    bolha: "BOLHA",
+    mesa_final: "MESA FINAL",
+  }[stage];
+}
+
+function phaseSub(stage: FourStage): string {
+  return {
+    inicio: "sem pressão de ICM",
+    meio: "ICM começa a aparecer",
+    bolha: "ICM aperta",
+    mesa_final: "ICM no centro",
+  }[stage];
+}
+
+function phaseWhy(stage: FourStage, action: string, hand: string): string {
+  const call = action === "call";
+  const raise = action === "raise" || action === "allin";
+  if (stage === "inicio") {
+    if (call) return `${hand} paga: o preço cabe na conta de fichas.`;
+    if (raise) return `${hand} toma a iniciativa: ainda há espaço para pressionar.`;
+    return `${hand} não alcança o preço; preservar fichas é melhor.`;
+  }
+  if (stage === "meio") {
+    if (call) return `A conta de fichas ainda permite ${hand} continuar.`;
+    if (raise) return `Com stacks menores, ${hand} ganha valor ao pressionar.`;
+    return `A pressão cresce e ${hand} não paga o preço exigido.`;
+  }
+  if (stage === "bolha") {
+    if (call) return `Mesmo na bolha, ${hand} é forte o bastante para pagar.`;
+    if (raise) return `A bolha aumenta a fold equity de ${hand}.`;
+    return `Quebrar aqui custa caro: o ICM pede mais disciplina.`;
+  }
+  if (call) return `Já premiado, ${hand} ainda encontra um pagamento claro.`;
+  if (raise) return `O ICM protege o pódio, mas ${hand} pode pressionar.`;
+  return `O ICM protege o pódio: não vale arriscar por pouco. `;
+}
+
+function fourPhaseCopy(stage: FourStage, recommended: string, hand: string): FourPhaseCopy {
+  return {
+    label: phaseLabel(stage),
+    action: actionLabel(recommended),
+    sub: phaseSub(stage),
+    why: phaseWhy(stage, recommended, hand),
+    tone: actionTone(recommended),
+  };
+}
+
+function cardColor(tone: FourPhaseCopy["tone"]): string {
+  return tone === "call" ? C4.call : tone === "fold" ? C4.fold : C4.other;
+}
+
+function playingCardSvg(c: Card, x: number, y: number, w: number, h: number): string {
+  const p = cardParts(c);
+  const suitColor = p.red ? "#d94f4f" : "#10130f";
+  const r = Math.round(w * 0.08);
+  return [
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="#fbf7ea" stroke="${C4.gold}" stroke-width="4"/>`,
+    `<text x="${x + 22}" y="${y + 58}" font-family="${SERIF}" font-size="52" font-weight="900" fill="#10130f">${esc(p.r)}</text>`,
+    `<text x="${x + 22}" y="${y + 102}" font-family="${SERIF}" font-size="42" font-weight="900" fill="${suitColor}">${esc(p.suit)}</text>`,
+    `<text x="${x + w / 2}" y="${y + h * 0.64}" font-family="${SERIF}" font-size="92" font-weight="900" text-anchor="middle" fill="${suitColor}">${esc(p.suit)}</text>`,
+    `<text x="${x + w - 22}" y="${y + h - 20}" font-family="${SERIF}" font-size="50" font-weight="900" text-anchor="end" fill="#10130f">${esc(p.r)}</text>`,
+  ].join("");
+}
+
+function fourStageContext(spec: HandLabSpec): string {
+  const situation = spec.situation === "vsallin"
+    ? `${spec.villainPosition} ALL-IN`
+    : spec.situation === "vs3bet"
+      ? `${spec.villainPosition} 3-BET`
+      : spec.situation === "vsopen"
+        ? `${spec.villainPosition} ABRIU`
+        : "VOCÊ AGE PRIMEIRO";
+  return `${spec.heroPosition} · ${Math.round(spec.stackBB)}BB · ${situation}`;
+}
+
+function answerHeader(spec: HandLabSpec, hand: string): { title: string; subtitle: string } {
+  const actor = spec.situation === "vsallin" ? `${spec.villainPosition} deu all-in` : fourStageContext(spec);
+  return {
+    title: `${hand} NO ${spec.heroPosition}`,
+    subtitle: `${actor} — a resposta DEPENDE DA FASE`,
+  };
+}
+
+/** Card vertical de resposta, com quatro fases oficiais e contraste para celular. */
+export function buildFourFasesInstagramSvg(spec: HandLabSpec): string {
+  const hand = handPlain(spec.hand);
+  const stages: FourStage[] = ["inicio", "meio", "bolha", "mesa_final"];
+  const phases = stages.map((stage) => {
+    const analysis = analyzeHand({ ...spec, stage });
+    return fourPhaseCopy(stage, analysis.recommended, analysis.handType || hand);
+  });
+  const { title, subtitle } = answerHeader(spec, hand);
+  const parts: string[] = [];
+  const S = CARD_W;
+  const M = 48;
+  const IW = S - M * 2;
+  const cx = S / 2;
+
+  parts.push(
+    `<defs><linearGradient id="answer-bg" x1="0" y1="0" x2="0" y2="1">` +
+      `<stop offset="0%" stop-color="${C4.bgTop}"/><stop offset="54%" stop-color="${C4.bgMid}"/><stop offset="100%" stop-color="${C4.bgBot}"/>` +
+    `</linearGradient><pattern id="answer-grid" width="54" height="54" patternUnits="userSpaceOnUse">` +
+      `<path d="M54 0H0V54" fill="none" stroke="${C4.gold}" stroke-width="1" opacity="0.055"/>` +
+    `</pattern></defs>`,
+  );
+  parts.push(`<rect width="${S}" height="${CARD_H}" fill="url(#answer-bg)"/>`);
+  parts.push(`<rect width="${S}" height="${CARD_H}" fill="url(#answer-grid)"/>`);
+  parts.push(box(24, 24, S - 48, CARD_H - 48, { stroke: C4.border, sw: 2, r: 28 }));
+
+  // Cabeçalho compacto com contraste alto.
+  const hy = 48;
+  const hh = 106;
+  parts.push(box(M, hy, IW, hh, { stroke: C4.border, sw: 2, r: 18, fill: "rgba(36,71,52,0.88)" }));
+  parts.push(box(M + 24, hy + 25, 78, 56, { stroke: C4.gold, sw: 2, r: 9, fill: "rgba(8,26,18,0.45)" }));
+  parts.push(`<text x="${M + 63}" y="${hy + 64}" font-family="${SERIF}" font-size="42" font-weight="900" fill="${C4.gold}" text-anchor="middle">CF</text>`);
+  parts.push(`<text x="${M + 122}" y="${hy + 48}" font-family="${SERIF}" font-size="34" font-weight="900" fill="${C4.ink}">Call<tspan font-style="italic" font-weight="600" font-size="26" fill="${C4.cream}"> ou </tspan>Fold</text>`);
+  parts.push(`<text x="${M + 124}" y="${hy + 80}" font-family="${SERIF}" font-size="14" font-weight="700" letter-spacing="3" fill="${C4.cream}">AQUI É POSSÍVEL</text>`);
+  parts.push(`<text x="${S - M - 24}" y="${hy + 45}" font-family="${SERIF}" font-size="22" font-weight="900" letter-spacing="2" fill="${C4.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
+  parts.push(`<text x="${S - M - 24}" y="${hy + 78}" font-family="${SERIF}" font-size="20" fill="${C4.cream}" text-anchor="end">feito por um recreativo</text>`);
+
+  // Título e cartas.
+  parts.push(`<text x="${cx}" y="${hy + hh + 58}" font-family="${SERIF}" font-size="27" font-weight="900" letter-spacing="4" fill="${C4.gold}" text-anchor="middle">✓ A RESPOSTA · 4 FASES</text>`);
+  parts.push(`<text x="${cx}" y="${hy + hh + 112}" font-family="${SERIF}" font-size="48" font-weight="900" fill="${C4.ink}" text-anchor="middle">${esc(title)}</text>`);
+  parts.push(`<text x="${cx}" y="${hy + hh + 150}" font-family="${SERIF}" font-size="23" font-weight="700" fill="${C4.cream}" text-anchor="middle">${esc(subtitle)}</text>`);
+
+  const cw = 132;
+  const ch = 174;
+  const cardGap = 20;
+  const cardsW = cw * 2 + cardGap;
+  const cardsY = 330;
+  const cardsX = (S - cardsW) / 2;
+  if (spec.hand[0] != null) parts.push(playingCardSvg(spec.hand[0], cardsX, cardsY, cw, ch));
+  if (spec.hand[1] != null) parts.push(playingCardSvg(spec.hand[1], cardsX + cw + cardGap, cardsY, cw, ch));
+
+  const sealY = 532;
+  const sealText = fourStageContext(spec);
+  const sealW = Math.min(IW, Math.max(420, sealText.length * 14 + 60));
+  parts.push(box(cx - sealW / 2, sealY, sealW, 56, { stroke: C4.border, sw: 2, r: 16, fill: "rgba(36,71,52,0.95)" }));
+  parts.push(`<text x="${cx}" y="${sealY + 36}" font-family="${SERIF}" font-size="22" font-weight="900" letter-spacing="1.2" fill="${C4.ink}" text-anchor="middle">${esc(sealText)}</text>`);
+
+  // Grade de quatro fases: duas linhas de dois cards, com ação muito visível.
+  const gridY = 640;
+  const gap = 18;
+  const colW = (IW - gap) / 2;
+  const rowH = 344;
+  phases.forEach((phase, i) => {
+    const x = M + (i % 2) * (colW + gap);
+    const y = gridY + Math.floor(i / 2) * (rowH + gap);
+    parts.push(box(x, y, colW, rowH, { stroke: C4.border, sw: 2, r: 20, fill: "rgba(36,71,52,0.90)" }));
+    const pcx = x + colW / 2;
+    parts.push(`<text x="${pcx}" y="${y + 48}" font-family="${SERIF}" font-size="26" font-weight="900" letter-spacing="1.2" fill="${C4.gold}" text-anchor="middle">${phase.label}</text>`);
+    parts.push(`<line x1="${x + 26}" y1="${y + 70}" x2="${x + colW - 26}" y2="${y + 70}" stroke="${C4.borderSoft}" stroke-width="1.5"/>`);
+    parts.push(`<text x="${pcx}" y="${y + 105}" font-family="${SERIF}" font-size="18" font-weight="900" fill="${C4.cream}" text-anchor="middle">${phase.sub}</text>`);
+    parts.push(`<text x="${pcx}" y="${y + 184}" font-family="${SERIF}" font-size="56" font-weight="900" fill="${cardColor(phase.tone)}" text-anchor="middle">${phase.action}</text>`);
+    const whyLines = wrap(phase.why, 31);
+    const whyStart = y + 242 - ((whyLines.length - 1) * 28) / 2;
+    parts.push(multiline(whyLines, pcx, whyStart, 28, `font-family="${SERIF}" font-size="23" font-weight="700" fill="${C4.body}" text-anchor="middle"`));
+  });
+
+  const anchorY = 1412;
+  const actor = spec.situation === "vsallin" ? "quem shovou" : "quem agiu antes";
+  parts.push(box(M, anchorY, IW, 156, { stroke: C4.border, sw: 2, r: 20, fill: "rgba(36,71,52,0.94)" }));
+  parts.push(`<text x="${cx}" y="${anchorY + 55}" font-family="${SERIF}" font-size="31" font-weight="900" fill="${C4.gold}" text-anchor="middle">A mão é só METADE da conta.</text>`);
+  parts.push(`<text x="${cx}" y="${anchorY + 96}" font-family="${SERIF}" font-size="29" font-weight="900" fill="${C4.gold}" text-anchor="middle">A outra metade é ${esc(actor)} e EM QUE FASE do torneio.</text>`);
+  parts.push(`<text x="${cx}" y="${anchorY + 130}" font-family="${SERIF}" font-size="16" font-style="italic" fill="${C4.cream}" text-anchor="middle">mesma mão · contexto diferente · decisão diferente</text>`);
+
+  const ctaY = 1592;
+  parts.push(`<rect x="${M}" y="${ctaY}" width="${IW}" height="78" rx="18" fill="${C4.gold}" stroke="${C4.gold}" stroke-width="2"/>`);
+  parts.push(`<text x="${cx}" y="${ctaY + 50}" font-family="${SERIF}" font-size="28" font-weight="900" letter-spacing="2" fill="#12251a" text-anchor="middle">▶ TREINE O MESMO SPOT NO APP</text>`);
+
+  const ftY = 1700;
+  parts.push(box(M, ftY, IW, 66, { stroke: C4.borderSoft, sw: 1.5, r: 16, fill: "rgba(8,26,18,0.55)" }));
+  parts.push(`<text x="${M + 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C4.cream}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
+  parts.push(`<text x="${S - M - 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C4.gold}" text-anchor="end">calloufold.com.br</text>`);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${CARD_H}" viewBox="0 0 ${S} ${CARD_H}">${parts.join("")}</svg>`;
+}
+
+/** Renderiza o card de resposta como PNG, sem iniciar download. */
+export async function renderFourFasesInstagramCard(spec: HandLabSpec): Promise<Blob> {
+  return svgToPngBlob(buildFourFasesInstagramSvg(spec));
+}
+
+/** Gera e baixa o card vertical de quatro fases. */
+export async function generateFourFasesInstagramCard(spec: HandLabSpec): Promise<string> {
+  const blob = await renderFourFasesInstagramCard(spec);
+  const name = `cof-resposta-4-fases-${handPlain(spec.hand)}-${Math.round(spec.stackBB)}bb.png`;
+  await downloadBlob(blob, name);
+  return name;
+}
+
+/** Legenda curta, preenchida a partir das decisões reais do motor. */
+export function buildFourFasesInstagramCaption(spec: HandLabSpec): string {
+  const hand = handPlain(spec.hand);
+  const stages: FourStage[] = ["inicio", "meio", "bolha", "mesa_final"];
+  const phaseLines = stages.map((stage) => {
+    const analysis = analyzeHand({ ...spec, stage });
+    return `${phaseLabel(stage)}: ${actionLabel(analysis.recommended)} — ${phaseWhy(stage, analysis.recommended, analysis.handType || hand)}`;
+  });
+  const actor = spec.situation === "vsallin" ? "quem shovou" : "quem agiu antes";
+  return [
+    `A mesma mão pode mudar de resposta conforme a fase do torneio: ${hand} no ${spec.heroPosition}.`,
+    "",
+    ...phaseLines,
+    "",
+    `A mão é só metade da conta. A outra metade é ${actor} e em que fase do torneio você está.`,
+    "",
+    "Alguém já te falou sobre isso? Em qual fase você mais fica na dúvida?",
+    "",
+    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · sem dinheiro real.",
+    "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
+  ].join("\n");
+}
