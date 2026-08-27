@@ -36,6 +36,9 @@ interface SvgToPngOptions {
 
 const THREE_PHASES_LOGO: OfficialLogoPlacement = { x: 62, y: 52, width: 306, height: 84 };
 const FOUR_PHASES_LOGO: OfficialLogoPlacement = { x: 66, y: 56, width: 306, height: 90 };
+// O cabeçalho de decisão/quiz tem menos conteúdo à esquerda. A marca fica um
+// pouco menor e mais recuada para corrigir o desalinhamento óptico percebido no feed.
+const SINGLE_QUIZ_LOGO: OfficialLogoPlacement = { x: 72, y: 52, width: 248, height: 87 };
 
 const RANK_CH = "23456789TJQKA";
 const SUIT_GLYPH = ["♣", "♦", "♥", "♠"]; // índice = suitOf (0=c,1=d,2=h,3=s)
@@ -405,6 +408,13 @@ const SITUATION_SHORT: Record<string, string> = {
   vsallin: "VILÃO ALL-IN",
 };
 
+/** Rótulo de pressão honesto para cards de decisão única. */
+function singlePressureTag(spec: HandLabSpec): string {
+  if (spec.stage === "inicio" || spec.stage === "meio") return "CHIP-EV · SEM ICM INFORMADO";
+  if (spec.finalTable) return "ICM · MESA INFORMADA";
+  return "ICM DIDÁTICO · MESA REPRESENTATIVA";
+}
+
 
 // ---------------------------------------------------------------------------
 // CLASSIFICADOR — decide AUTOMATICAMENTE qual card cabe no spot.
@@ -449,6 +459,37 @@ export function classifyCardSpot(spec: HandLabSpec): CardClassification {
 }
 
 /** Card de DECISÃO ÚNICA — uma resposta grande + porquê + a alternativa. */
+export interface SingleQuizContext {
+  /** Stack informado do vilão, quando a tela possui esse dado; não é parte do motor. */
+  villainStackBB?: number | null;
+}
+
+function quizQuestion(spec: HandLabSpec): string {
+  const stack = Math.round(spec.stackBB);
+  if (spec.situation === "vsopen" && stack <= 20) return "ALL-IN OU FOLD?";
+  if (spec.situation === "vsopen") return "CALL, RAISE OU FOLD?";
+  if (spec.situation === "vsallin") return "CALL OU FOLD?";
+  if (spec.situation === "vs3bet") return "CALL, 4-BET OU FOLD?";
+  return "ABRE OU FOLD?";
+}
+
+function quizPremise(spec: HandLabSpec, context: SingleQuizContext = {}): string {
+  const action = spec.situation === "vsopen"
+    ? `${spec.villainPosition} abriu`
+    : spec.situation === "vsallin"
+      ? `${spec.villainPosition} shovou`
+      : spec.situation === "vs3bet"
+        ? `${spec.villainPosition} 3-betou`
+        : "spot de abertura";
+  const villainStack = context.villainStackBB;
+  const coverage = villainStack == null
+    ? ""
+    : villainStack >= spec.stackBB
+      ? " · vilão cobre"
+      : ` · vilão ${Math.round(villainStack)}bb`;
+  return `${spec.heroPosition} · ${Math.round(spec.stackBB)}bb · ${action}${coverage}`;
+}
+
 export function buildSingleAnswerSvg(spec: HandLabSpec): string {
   const a = analyzeHand(spec);
   const b = actionBadge(a.recommended);
@@ -476,10 +517,11 @@ export function buildSingleAnswerSvg(spec: HandLabSpec): string {
   P.push(drawCard(cx + 10, 340, spec.hand[1]));
   // selo do spot
   const seal = `MTT · ${STAGE_UP[spec.stage]} · ${stack}BB · ${SITUATION_SHORT[spec.situation]}`;
-  P.push(box(cx - 280, 576, 560, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
+  const sealW = Math.min(IW, Math.max(560, seal.length * 14 + 60));
+  P.push(box(cx - sealW / 2, 576, sealW, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
   P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="20" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
-  // Rótulo honesto de pressão (chip-EV vs ICM) da fase
-  P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="19" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(phasePressureLabel(spec.stage).tag)}</text>`);
+  // Rótulo honesto de pressão: explicita quando a mesa/premiação não foi informada.
+  P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="19" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(singlePressureTag(spec))}</text>`);
   // BADGE gigante
   P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="140" font-weight="900" fill="${b.color}" text-anchor="middle">${b.label}</text>`);
   // POR QUÊ
@@ -495,19 +537,90 @@ export function buildSingleAnswerSvg(spec: HandLabSpec): string {
     P.push(`<text x="${M + 28}" y="${wnY + 44}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="2" fill="${C.fold}">POR QUE NÃO ${esc(a.whyNot.label)}?</text>`);
     P.push(multiline(wrap(a.whyNot.text, 52).slice(0, 4), M + 28, wnY + 88, 38, `font-family="${SERIF}" font-size="24" fill="${C.body}"`));
   }
+  // Novidade do produto: o material é gerado dentro do próprio app.
+  const noveltyY = 1314;
+  P.push(box(M, noveltyY, IW, 128, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(224,123,107,0.045)" }));
+  P.push(`<text x="${M + 28}" y="${noveltyY + 40}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="1.5" fill="${C.fold}">NOVIDADE · CARD GERADO NO APP</text>`);
+  P.push(`<text x="${M + 28}" y="${noveltyY + 82}" font-family="${SERIF}" font-size="23" fill="${C.body}">Monte a mão, analise e compartilhe dentro do Call ou Fold.</text>`);
   // âncora
   const anY = 1560;
   P.push(box(M, anY, IW, 140, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(230,196,84,0.05)" }));
   P.push(multiline(wrap(a.anchor.replace(/^💡\s*/, ""), 46), cx, anY + 56, 40, `font-family="${SERIF}" font-size="27" font-weight="700" fill="${C.gold}" text-anchor="middle"`));
   // cta + footer
   const ctaY = anY + 168;
-  P.push(box(M, ctaY, IW, 68, { stroke: C.border2, sw: 1, r: 16 }));
-  P.push(`<text x="${cx}" y="${ctaY + 44}" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="middle">▶ TREINE ESSE SPOT NO APP</text>`);
+  P.push(box(M, ctaY, IW, 68, { stroke: C.gold, sw: 1, r: 16, fill: C.gold }));
+  P.push(`<text x="${cx}" y="${ctaY + 44}" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="1.5" fill="#0a1f14" text-anchor="middle">▶ TREINE ESSE SPOT NO APP</text>`);
   const ftY = ctaY + 84;
   P.push(box(M, ftY, IW, 60, { stroke: C.faint, sw: 1, r: 14 }));
   P.push(`<text x="${M + 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.muted}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
   P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">` + P.join("") + `</svg>`;
+}
+
+/**
+ * Card de QUIZ de decisão única: pergunta primeiro, resposta fora da peça.
+ * O contexto de stack do vilão é opcional e vem da UI, nunca é inventado pelo motor.
+ */
+export function buildSingleQuizSvg(spec: HandLabSpec, context: SingleQuizContext = {}): string {
+  const cs = spec.hand.map(cardParts);
+  const handColored = cs.map((p) => `<tspan fill="${C.ink}">${p.r}</tspan><tspan fill="${p.red ? C.red : C.ink}">${p.suit}</tspan>`).join("");
+  const posPhrase = POS_PHRASE[spec.heroPosition] ?? spec.heroPosition;
+  const cx = CARD_W / 2, M = 44, IW = CARD_W - 88;
+  const P: string[] = [];
+  const question = quizQuestion(spec);
+  const premise = quizPremise(spec, context);
+
+  P.push(
+    `<defs><radialGradient id="quiz-bg" cx="50%" cy="0%" r="120%"><stop offset="0%" stop-color="${C.bgTop}"/><stop offset="45%" stop-color="${C.bgMid}"/><stop offset="100%" stop-color="${C.bgBot}"/></radialGradient>` +
+    `<pattern id="quiz-grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="${C.gold}" stroke-width="1" opacity="0.06"/></pattern></defs>`,
+  );
+  P.push(`<rect width="${CARD_W}" height="${CARD_H}" fill="url(#quiz-bg)"/><rect width="${CARD_W}" height="${CARD_H}" fill="url(#quiz-grid)"/>`);
+  P.push(box(24, 24, CARD_W - 48, CARD_H - 48, { r: 26 }));
+
+  // Cabeçalho com área livre à esquerda para a logo oficial composta no canvas.
+  P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">QUIZ · MTT · UMA MÃO</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
+
+  P.push(`<text x="${cx}" y="230" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="5" fill="${C.gold}" text-anchor="middle">✦ DESAFIO</text>`);
+  P.push(`<text x="${cx}" y="298" font-family="${SERIF}" font-size="52" font-weight="900" text-anchor="middle">${handColored}<tspan fill="${C.ink}"> ${esc(posPhrase.toUpperCase())}</tspan></text>`);
+  P.push(drawCard(cx - 160, 340, spec.hand[0]));
+  P.push(drawCard(cx + 10, 340, spec.hand[1]));
+
+  const seal = `MTT · ${STAGE_UP[spec.stage]} · ${Math.round(spec.stackBB)}BB · ${SITUATION_SHORT[spec.situation]}`;
+  const sealW = Math.min(IW, Math.max(560, seal.length * 14 + 60));
+  P.push(box(cx - sealW / 2, 576, sealW, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
+  P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="20" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
+  P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="19" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(singlePressureTag(spec))}</text>`);
+
+  P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="86" font-weight="900" letter-spacing="2" fill="${C.gold}" text-anchor="middle">${esc(question)}</text>`);
+
+  const premiseY = 850;
+  P.push(box(M, premiseY, IW, 210, { stroke: C.border, r: 18, fill: "rgba(255,255,255,0.015)" }));
+  P.push(`<text x="${M + 28}" y="${premiseY + 44}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="2" fill="${C.goldDim}">PREMISSA DO SPOT</text>`);
+  P.push(`<text x="${M + 28}" y="${premiseY + 98}" font-family="${SERIF}" font-size="30" font-weight="800" fill="${C.body}">${esc(premise)}</text>`);
+  P.push(`<text x="${M + 28}" y="${premiseY + 154}" font-family="${SERIF}" font-size="22" fill="${C.cream}">A resposta depende do contexto — não só das cartas.</text>`);
+
+  const noveltyY = 1100;
+  P.push(box(M, noveltyY, IW, 138, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(224,123,107,0.045)" }));
+  P.push(`<text x="${M + 28}" y="${noveltyY + 42}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="1.5" fill="${C.fold}">NOVIDADE · CARD GERADO NO APP</text>`);
+  P.push(`<text x="${M + 28}" y="${noveltyY + 88}" font-family="${SERIF}" font-size="23" fill="${C.body}">Monte a mão, analise e compartilhe dentro do Call ou Fold.</text>`);
+
+  const commentY = 1295;
+  P.push(box(M, commentY, IW, 132, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  P.push(`<text x="${cx}" y="${commentY + 48}" font-family="${SERIF}" font-size="28" font-weight="800" fill="${C.gold}" text-anchor="middle">RESPOSTA DEPOIS DO SEU PALPITE</text>`);
+  P.push(`<text x="${cx}" y="${commentY + 92}" font-family="${SERIF}" font-size="22" fill="${C.cream}" text-anchor="middle">A explicação vem em comentário separado.</text>`);
+
+  const ctaY = 1495;
+  P.push(box(M, ctaY, IW, 78, { stroke: C.gold, sw: 2, r: 18, fill: C.gold }));
+  P.push(`<text x="${cx}" y="${ctaY + 51}" font-family="${SERIF}" font-size="29" font-weight="900" letter-spacing="1.5" fill="#0a1f14" text-anchor="middle">COMENTE: ${esc(question)}</text>`);
+
+  const ftY = 1700;
+  P.push(box(M, ftY, IW, 66, { stroke: C.faint, sw: 1.5, r: 16, fill: "rgba(8,26,18,0.55)" }));
+  P.push(`<text x="${M + 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C.cream}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
+  P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">${P.join("")}</svg>`;
 }
 
 const STAGE_UP: Record<string, string> = {
@@ -786,6 +899,11 @@ export async function renderInstagramCardSvg(svg: string): Promise<Blob> {
   return svgToPngBlob(svg, 1, { officialLogo: FOUR_PHASES_LOGO });
 }
 
+/** Renderiza o card de quiz de decisão única com placement óptico próprio da logo. */
+export async function renderSingleQuizCard(spec: HandLabSpec, context: SingleQuizContext = {}): Promise<Blob> {
+  return svgToPngBlob(buildSingleQuizSvg(spec, context), 1, { officialLogo: SINGLE_QUIZ_LOGO });
+}
+
 /** Renderiza o card de resposta em quatro fases como PNG, sem iniciar download. */
 export async function renderFourFasesInstagramCard(spec: HandLabSpec): Promise<Blob> {
   return renderInstagramCardSvg(buildFourFasesInstagramSvg(spec));
@@ -822,6 +940,25 @@ export function buildFourFasesInstagramCaption(spec: HandLabSpec): string {
   ].join("\n");
 }
 
+/** Legenda do quiz: a ação do motor fica fora da peça e entra depois no comentário. */
+export function buildSingleQuizCaption(spec: HandLabSpec, context: SingleQuizContext = {}): string {
+  const hand = handPlain(spec.hand);
+  const question = quizQuestion(spec);
+  return [
+    `QUIZ · ${hand} no ${spec.heroPosition}.`,
+    `Premissa: ${quizPremise(spec, context)}.`,
+    `${singlePressureTag(spec)}.`,
+    "",
+    question,
+    "",
+    "Comenta sua decisão antes de olhar a resposta.",
+    "A explicação vem depois, em comentário separado.",
+    "",
+    "Card gerado dentro do próprio app Call ou Fold · estudo gratuito de poker MTT 9-max · fichas simuladas · sem dinheiro real.",
+    "#poker #pokerbrasil #pokerestrategia #MTT #calloufold",
+  ].join("\n");
+}
+
 /** Legenda curta para o card de decisão única, sem inventar uma história de fases. */
 export function buildSingleAnswerCaption(spec: HandLabSpec): string {
   const a = analyzeHand(spec);
@@ -837,8 +974,9 @@ export function buildSingleAnswerCaption(spec: HandLabSpec): string {
     whyNot,
     "",
     "Você faria igual neste spot? O contexto muda a decisão.",
+    "Card gerado dentro do próprio app a partir da análise desta mão.",
     "",
-    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · sem dinheiro real.",
+    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · fichas simuladas · sem dinheiro real.",
     "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
   ].filter(Boolean).join("\n");
 }
