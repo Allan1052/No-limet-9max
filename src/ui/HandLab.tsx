@@ -672,7 +672,7 @@ export function HandLab() {
               )}
             </div>
           )}
-          <InstagramAnswerCardActions spec={result.spec} />
+          <InstagramAnswerCardActions spec={result.spec} villainStackBB={villainBB} />
                   {/* Compartilhar resultado */}
           <div className="mt-4">
             <TrainingShareButton

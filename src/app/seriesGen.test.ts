@@ -6,6 +6,8 @@ import {
   buildFourFasesInstagramSvg,
   buildSingleAnswerCaption,
   buildSingleAnswerSvg,
+  buildSingleQuizCaption,
+  buildSingleQuizSvg,
   classifyCardSpot,
   svgToPngBlob,
 } from "./seriesGen";
@@ -17,6 +19,16 @@ const spec: HandLabSpec = {
   stage: "inicio",
   stackBB: 15,
   hand: [makeCard(14, 3), makeCard(7, 3)],
+  anteBB: 1,
+};
+
+const quizSpec: HandLabSpec = {
+  heroPosition: "SB",
+  villainPosition: "BTN",
+  situation: "vsopen",
+  stage: "inicio",
+  stackBB: 12,
+  hand: [makeCard(14, 3), makeCard(8, 1)],
   anteBB: 1,
 };
 
@@ -114,12 +126,42 @@ describe("card Instagram de resposta em quatro fases", () => {
     const svg = buildSingleAnswerSvg(visualSpec);
     expect(svg).toContain("✔ A RESPOSTA");
     expect(svg).not.toContain("4 FASES");
-    expect(svg).toContain("Chip-EV · preço em fichas");
+    expect(svg).toContain("CHIP-EV · SEM ICM INFORMADO");
+    expect(svg).toContain("NOVIDADE · CARD GERADO NO APP");
+    expect(svg).toContain("TREINE ESSE SPOT NO APP");
+    expect(svg).toContain('fill="#e6c454"');
     const caption = buildSingleAnswerCaption(visualSpec);
     expect(caption).toContain("K♠Q♥ no BTN: ");
     expect(caption).toContain("Chip-EV · preço em fichas");
+    expect(caption).toContain("Card gerado dentro do próprio app");
     expect(caption).not.toContain("INÍCIO:");
     expect(caption).toContain("Você faria igual neste spot?");
+  });
+
+  it("monta o quiz A8o com pergunta operacional e resposta escondida", () => {
+    const svg = buildSingleQuizSvg(quizSpec, { villainStackBB: 20 });
+
+    expect(svg).toContain('width="1080" height="1920"');
+    expect(svg).toContain("✦ DESAFIO");
+    expect(svg).toContain(">A</tspan>");
+    expect(svg).toContain(">♠</tspan>");
+    expect(svg).toContain(">8</tspan>");
+    expect(svg).toContain(">♦</tspan>");
+    expect(svg).toContain("NO SMALL BLIND");
+    expect(svg).toContain("ALL-IN OU FOLD?");
+    expect(svg).toContain("PREMISSA DO SPOT");
+    expect(svg).toContain("SB · 12bb · BTN abriu · vilão cobre");
+    expect(svg).toContain("CHIP-EV · SEM ICM INFORMADO");
+    expect(svg).toContain("NOVIDADE · CARD GERADO NO APP");
+    expect(svg).toContain("COMENTE: ALL-IN OU FOLD?");
+    expect(svg).not.toContain("✔ A RESPOSTA");
+    expect(svg).not.toContain('font-size="140"');
+
+    const caption = buildSingleQuizCaption(quizSpec, { villainStackBB: 20 });
+    expect(caption).toContain("ALL-IN OU FOLD?");
+    expect(caption).toContain("vilão cobre");
+    expect(caption).toContain("A explicação vem depois, em comentário separado.");
+    expect(caption).not.toContain("ALL-IN.");
   });
 
   it("preenche uma legenda com as decisões das quatro fases", () => {
