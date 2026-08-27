@@ -31,7 +31,9 @@ import {
   SUIT_OPTIONS,
   type SituationKey,
   type StageKey,
+  type FinalTableSpec,
 } from "../train/stage";
+import { FinalTableSituation } from "./FinalTableSituation";
 
 type Mode = "simple" | "technical";
 
@@ -73,6 +75,8 @@ export function HandLab() {
   const [showPhases, setShowPhases] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Situação real da mesa final/bolha (ICM do spot do jogador) — opcional.
+  const [ftSit, setFtSit] = useState<FinalTableSpec | null>(null);
   // Gerador de cards ESCONDIDO (só ligado via URL secreta ?gen=allan).
   const [genMsg, setGenMsg] = useState<string | null>(null);
 
@@ -124,6 +128,7 @@ export function HandLab() {
         stackBB: effectiveBB,
         hand,
         anteBB: withAnte ? 1 : 0,
+        finalTable: (stage === "bolha" || stage === "mesa_final") ? ftSit ?? undefined : undefined,
       }),
     );
     markActiveToday();
@@ -218,6 +223,11 @@ export function HandLab() {
             </button>
           ))}
         </div>
+
+        {/* ICM do SEU spot: só na bolha/mesa final, onde o ICM pesa. */}
+        {(stage === "bolha" || stage === "mesa_final") && (
+          <FinalTableSituation value={ftSit} onChange={setFtSit} />
+        )}
 
         {/* Ante (MTT): dead money que alarga o roubo. */}
         <label className="hl-label">Ante (torneio)</label>

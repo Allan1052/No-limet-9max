@@ -74,6 +74,19 @@ export interface HandLabSpec {
   potBB?: number; // pote em BB (para calcular pot-odds)
   villainBetBB?: number; // aposta do vilão em BB (para calcular pot-odds)
   anteBB?: number; // dead money dos antes (bb) — alarga o roubo no MTT
+  /**
+   * Situação REAL da mesa final/bolha (opcional): quantos jogadores restam, sua
+   * posição em fichas e o formato dos stacks. Quando presente (e o estágio tem
+   * ICM), o motor calcula o ICM do SEU spot — "sou 3º de 6 com curtos atrás"
+   * aperta mais que uma mesa final genérica. Sem isso, usa a mesa representativa.
+   */
+  finalTable?: FinalTableSpec;
+}
+
+export interface FinalTableSpec {
+  players: number; // jogadores restantes (2–9)
+  heroRank: number; // posição do herói em fichas (1 = líder … players = mais curto)
+  shape: "equilibrado" | "escalonado"; // stacks parecidos vs escalonado (com curtos)
 }
 
 export interface HandAnalysis {
@@ -157,6 +170,52 @@ export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefin
   };
 }
 
+/** Escada de prêmios (top-heavy) para N jogadores — só a FORMA importa no ICM. */
+function ftPayouts(players: number): number[] {
+  return Array.from({ length: players }, (_, i) => Math.pow(0.72, i) * 100);
+}
+
+/** Tamanhos relativos de stack por posição (índice 0 = líder). */
+function ftShapeStacks(players: number, shape: "equilibrado" | "escalonado"): number[] {
+  if (shape === "equilibrado") {
+    // Spread suave: do líder (1.3) ao mais curto (0.6). Ninguém "prestes a quebrar".
+    return Array.from({ length: players }, (_, i) => 1.3 - (players > 1 ? (i / (players - 1)) * 0.7 : 0));
+  }
+  // Escalonado: líderes grandes, cauda curta (há stacks prestes a quebrar).
+  return Array.from({ length: players }, (_, i) => Math.pow(0.6, i));
+}
+
+/**
+ * ICM do SEU spot real de mesa final/bolha: a partir de quantos jogadores
+ * restam, da sua posição em fichas e do formato dos stacks, monta o IcmSpot.
+ * Captura o efeito que o Allan pediu: ser 3º de 6 COM CURTOS ATRÁS aperta o call
+ * (você ladrilha o prêmio de graça quando eles quebram); ser o próprio curto
+ * afrouxa (você é obrigado a gambar). O vilão default é o maior stack adversário
+ * (o pior caso de ICM: quem te cobre coloca você em risco pelo torneio inteiro).
+ */
+export function buildFinalTableIcm(ft: FinalTableSpec, heroStackBB: number): IcmSpot {
+  const players = Math.max(2, Math.min(9, Math.round(ft.players)));
+  const rank = Math.max(1, Math.min(players, Math.round(ft.heroRank)));
+  const rel = ftShapeStacks(players, ft.shape);
+  const heroIdx = rank - 1;
+  const scale = heroStackBB / rel[heroIdx];
+  const stacks = rel.map((r) => Math.max(1, r * scale));
+  stacks[heroIdx] = heroStackBB;
+  // Vilão = maior stack adversário (cobre o herói → risco máximo de ICM).
+  let villain = 0;
+  for (let i = 0; i < stacks.length; i++) {
+    if (i !== heroIdx && stacks[i] > (villain === heroIdx ? -1 : stacks[villain] ?? -1)) villain = i;
+  }
+  if (villain === heroIdx) villain = (heroIdx + 1) % players;
+  return {
+    stacks,
+    payouts: ftPayouts(players),
+    hero: heroIdx,
+    villain,
+    chips: Math.min(heroStackBB, stacks[villain]),
+  };
+}
+
 /**
  * Analisa a mão reconstruída pelo jogador e devolve o veredito nas duas vozes.
  */
@@ -165,7 +224,12 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
   const sd = stackDepthAdjust(spec.stackBB);
   const openSize = 2.3;
   const eff = spec.stackBB;
-  const icmSpot = buildStageIcm(eff, spec.stage);
+  // ICM: se o jogador informou a situação REAL da mesa final/bolha, usa o spot
+  // dele; senão, a mesa representativa do estágio.
+  const icmSpot =
+    spec.finalTable && STAGES[spec.stage].icm !== "none"
+      ? buildFinalTableIcm(spec.finalTable, eff)
+      : buildStageIcm(eff, spec.stage);
   const facingAllin = spec.situation === "vsallin";
 
   const ctx: PreflopContext = {
