@@ -511,16 +511,23 @@ function technicalVoice(
 }
 
 function stageTechnicalTalk(spec: HandLabSpec): string {
+  const bb = Math.max(1, Math.round(spec.stackBB));
+  const depth = bb < 30
+    ? `este spot é curto (${bb}bb): o pré-flop domina, então pense em shove-or-fold; não há implied odds de stack profunda`
+    : bb < 60
+      ? `este spot tem profundidade intermediária (${bb}bb): há menos espaço pós-flop que numa stack cheia e os erros pré-flop custam caro`
+      : `este spot é profundo (${bb}bb): há espaço para jogar pós-flop e considerar implied odds, especialmente em posição`;
+
   if (spec.stage === "inicio") {
-    return "Início de torneio: stacks de 200bb+, implied odds altos — conectores e suited ganham valor real nos streets seguintes.";
+    return `Início de torneio: ${depth}.`;
   }
   if (spec.stage === "bolha") {
-    return "Bolha: o ICM está no máximo — bustar aqui vale ZERO (você para antes do dinheiro), então a fold equity de quem shova sobe e o call range aperta forte.";
+    return `Bolha, com ${bb}bb: o ICM está no máximo — bustar aqui vale ZERO (você para antes do dinheiro), então a fold equity de quem shova sobe e o call range aperta forte.`;
   }
   if (spec.stage === "mesa_final") {
-    return "Mesa final: já no dinheiro, mas o ICM ainda pesa — cada subida na premiação vale muito, o custo de eliminação é alto e os ranges de call apertam.";
+    return `Mesa final, com ${bb}bb: já no dinheiro, mas o ICM ainda pesa — cada subida na premiação vale muito, o custo de eliminação é alto e os ranges de call apertam.`;
   }
-  return "Meio de torneio: pressão de bolha se aproxima; a profundidade média cai e o jogo muda de speculate para squeeze.";
+  return `Meio de torneio, com ${bb}bb: pressão de bolha se aproxima; a profundidade média cai e o jogo muda de speculate para squeeze.`;
 }
 
 function depthTalk(bb: number): string {

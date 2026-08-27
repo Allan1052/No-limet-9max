@@ -57,6 +57,29 @@ describe("HandLab — analyzeHand", () => {
     expect(["allin", "raise", "fold"]).toContain(a.recommended);
   });
 
+  it("voz técnica usa o stack real no início — A8o com 12bb não recebe texto de 200bb+", () => {
+    const a = analyzeHand(spec({
+      heroPosition: "SB",
+      villainPosition: "BTN",
+      situation: "vsopen",
+      stage: "inicio",
+      stackBB: 12,
+      hand: parseHand("As8d")!,
+      anteBB: 1,
+    }));
+    expect(a.recommended).toBe("allin");
+    expect(a.technical).toContain("12bb");
+    expect(a.technical).toContain("shove-or-fold");
+    expect(a.technical).not.toContain("200bb+");
+    expect(a.technical).not.toContain("implied odds altos");
+  });
+
+  it("voz técnica ainda reconhece profundidade em stack cheia", () => {
+    const a = analyzeHand(spec({ stage: "inicio", stackBB: 100, hand: parseHand("As7s")! }));
+    expect(a.technical).toContain("100bb");
+    expect(a.technical).toContain("implied odds");
+  });
+
   it("badge, veredito e voz batem com a decisão do motor (bug do Allan: RAISE+texto Call)", () => {
     // Em vários spots, a AÇÃO do badge (recommended) tem que ser a MESMA que a
     // voz Simples anuncia ("Era RAISE/CALL/FOLD/ALL-IN"). Antes o badge vinha de
