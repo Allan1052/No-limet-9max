@@ -19,7 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { POSITIONS, type Position } from "../ranges/types";
 import { recordDecision } from "../train/decisionStats";
 import { markActiveToday } from "../train/streak";
-import { generateThreeFasesCard, generateQuizAnswerCard, isGenEnabled } from "../app/seriesGen";
+import { generateThreeFasesCard, generateAutoCard, isGenEnabled } from "../app/seriesGen";
 import {
   analyzeHand,
   parseHand,
@@ -643,14 +643,14 @@ export function HandLab() {
                 onClick={async () => {
                   setGenMsg("Gerando…");
                   try {
-                    const name = await generateQuizAnswerCard(result.spec);
-                    setGenMsg(`✅ ${name}`);
+                    const { name, kind } = await generateAutoCard(result.spec);
+                    setGenMsg(`✅ ${kind === "fases" ? "4 fases" : "decisão única"}: ${name}`);
                   } catch (e) {
                     setGenMsg(`❌ ${e instanceof Error ? e.message : "erro"}`);
                   }
                 }}
               >
-                🏆 Gerar card RESPOSTA (4 fases)
+                🏆 Gerar card RESPOSTA (automático)
               </button>
               {genMsg && (
                 <p style={{ margin: "6px 0 0", color: "#b8b29a", fontSize: 12, textAlign: "center" }}>{genMsg}</p>

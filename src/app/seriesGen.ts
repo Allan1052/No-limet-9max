@@ -509,6 +509,129 @@ export async function generateQuizAnswerCard(spec: HandLabSpec): Promise<string>
 }
 
 // ---------------------------------------------------------------------------
+// CLASSIFICADOR — decide AUTOMATICAMENTE qual card cabe no spot.
+//
+// A regra (pedido do Allan, pra gerar tudo automático sem sair nonsense):
+//   • "4 fases" (história do ICM) só cabe quando o stack é CURTO o bastante pra
+//     existir em QUALQUER fase (≤ ~25bb) E a decisão MUDA entre as fases. Um
+//     stack fundo (200bb) não pode estar na bolha/mesa final — então nunca vira
+//     card de 4 fases.
+//   • Senão → "decisão única": uma resposta só, com o porquê e a alternativa.
+// ---------------------------------------------------------------------------
+const FASES_MAX_BB = 25; // acima disso o stack não "cabe" nas fases finais (sem ICM real)
+
+export interface CardClassification {
+  kind: "fases" | "unica";
+  /** A decisão muda entre as 4 fases? */
+  flips: boolean;
+  /** O stack é curto o bastante pra caber em todas as fases? */
+  shortEnough: boolean;
+  /** As 4 decisões (início/meio/bolha/mesa_final), na ordem. */
+  decisions: string[];
+  /** Explicação legível da escolha. */
+  reason: string;
+}
+
+/** Olha o spot e decide qual card usar (e por quê). Puro — só lê o motor. */
+export function classifyCardSpot(spec: HandLabSpec): CardClassification {
+  const stages: ("inicio" | "meio" | "bolha" | "mesa_final")[] = ["inicio", "meio", "bolha", "mesa_final"];
+  const decisions = stages.map((st) => analyzeHand({ ...spec, stage: st }).recommended);
+  const flips = new Set(decisions).size > 1;
+  const shortEnough = spec.stackBB <= FASES_MAX_BB;
+  const kind: "fases" | "unica" = flips && shortEnough ? "fases" : "unica";
+  let reason: string;
+  if (kind === "fases") {
+    reason = `Stack curto (${Math.round(spec.stackBB)}bb) e a decisão muda pelas fases — o ICM conta a história.`;
+  } else if (!shortEnough) {
+    reason = `Stack fundo (${Math.round(spec.stackBB)}bb): não cabe na bolha/mesa final e o ICM quase não pesa — decisão única.`;
+  } else {
+    reason = `A decisão é a mesma nas 4 fases (${decisions[0].toUpperCase()}) — não há flip de ICM, decisão única.`;
+  }
+  return { kind, flips, shortEnough, decisions, reason };
+}
+
+/** Card de DECISÃO ÚNICA — uma resposta grande + porquê + a alternativa. */
+export function buildSingleAnswerSvg(spec: HandLabSpec): string {
+  const a = analyzeHand(spec);
+  const b = actionBadge(a.recommended);
+  const stack = Math.round(spec.stackBB);
+  const cs = spec.hand.map(cardParts);
+  const handColored = cs.map((p) => `<tspan fill="${C.ink}">${p.r}</tspan><tspan fill="${p.red ? C.red : C.ink}">${p.suit}</tspan>`).join("");
+  const posPhrase = POS_PHRASE[spec.heroPosition] ?? spec.heroPosition;
+  const P: string[] = [];
+  const cx = CARD_W / 2, M = 44, IW = CARD_W - 88;
+
+  P.push(
+    `<defs><radialGradient id="bg" cx="50%" cy="0%" r="120%"><stop offset="0%" stop-color="${C.bgTop}"/><stop offset="45%" stop-color="${C.bgMid}"/><stop offset="100%" stop-color="${C.bgBot}"/></radialGradient>` +
+    `<pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="${C.gold}" stroke-width="1" opacity="0.06"/></pattern></defs>`,
+  );
+  P.push(`<rect width="${CARD_W}" height="${CARD_H}" fill="url(#bg)"/><rect width="${CARD_W}" height="${CARD_H}" fill="url(#grid)"/>`);
+  P.push(box(24, 24, CARD_W - 48, CARD_H - 48, { r: 26 }));
+  // header (logo oficial é composto depois; aqui só o lado direito)
+  P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">ESTUDO · MTT · DECISÃO</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
+  // eyebrow + título + cartas
+  P.push(`<text x="${cx}" y="230" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="5" fill="${C.gold}" text-anchor="middle">✔ A RESPOSTA</text>`);
+  P.push(`<text x="${cx}" y="298" font-family="${SERIF}" font-size="52" font-weight="900" text-anchor="middle">${handColored}<tspan fill="${C.ink}"> ${esc(posPhrase.toUpperCase())}</tspan></text>`);
+  P.push(drawCard(cx - 160, 340, spec.hand[0]));
+  P.push(drawCard(cx + 10, 340, spec.hand[1]));
+  // selo do spot
+  const seal = `MTT · ${STAGE_UP[spec.stage]} · ${stack}BB · ${SITUATION_SHORT[spec.situation]}`;
+  P.push(box(cx - 280, 576, 560, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
+  P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="20" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
+  // BADGE gigante
+  P.push(`<text x="${cx}" y="770" font-family="${SERIF}" font-size="140" font-weight="900" fill="${b.color}" text-anchor="middle">${b.label}</text>`);
+  // POR QUÊ
+  const whyY = 850;
+  P.push(box(M, whyY, IW, 210, { stroke: C.border, r: 18, fill: "rgba(255,255,255,0.015)" }));
+  P.push(`<text x="${M + 28}" y="${whyY + 44}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="2" fill="${C.goldDim}">POR QUÊ</text>`);
+  const simpleTrim = a.simple.replace(/^Era [A-ZÀ-Ú-]+\.\s*/, ""); // tira o "Era CALL." do começo
+  P.push(multiline(wrap(simpleTrim, 52).slice(0, 4), M + 28, whyY + 88, 38, `font-family="${SERIF}" font-size="24" fill="${C.body}"`));
+  // POR QUE NÃO a alternativa
+  if (a.whyNot) {
+    const wnY = whyY + 240;
+    P.push(box(M, wnY, IW, 200, { stroke: C.border2, r: 18, fill: "rgba(224,123,107,0.06)" }));
+    P.push(`<text x="${M + 28}" y="${wnY + 44}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="2" fill="${C.fold}">POR QUE NÃO ${esc(a.whyNot.label)}?</text>`);
+    P.push(multiline(wrap(a.whyNot.text, 52).slice(0, 4), M + 28, wnY + 88, 38, `font-family="${SERIF}" font-size="24" fill="${C.body}"`));
+  }
+  // âncora
+  const anY = 1560;
+  P.push(box(M, anY, IW, 140, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(230,196,84,0.05)" }));
+  P.push(multiline(wrap(a.anchor.replace(/^💡\s*/, ""), 46), cx, anY + 56, 40, `font-family="${SERIF}" font-size="27" font-weight="700" fill="${C.gold}" text-anchor="middle"`));
+  // cta + footer
+  const ctaY = anY + 168;
+  P.push(box(M, ctaY, IW, 68, { stroke: C.border2, sw: 1, r: 16 }));
+  P.push(`<text x="${cx}" y="${ctaY + 44}" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="middle">▶ TREINE ESSE SPOT NO APP</text>`);
+  const ftY = ctaY + 84;
+  P.push(box(M, ftY, IW, 60, { stroke: C.faint, sw: 1, r: 14 }));
+  P.push(`<text x="${M + 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.muted}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
+  P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 38}" font-family="${SERIF}" font-size="20" font-weight="700" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">` + P.join("") + `</svg>`;
+}
+
+const STAGE_UP: Record<string, string> = {
+  inicio: "INÍCIO",
+  meio: "MEIO",
+  bolha: "BOLHA",
+  mesa_final: "MESA FINAL",
+};
+
+/**
+ * Gera o card CERTO automaticamente: o classificador decide entre "4 fases" e
+ * "decisão única". Retorna o nome do arquivo e qual card foi usado.
+ */
+export async function generateAutoCard(spec: HandLabSpec): Promise<{ name: string; kind: "fases" | "unica" }> {
+  const cls = classifyCardSpot(spec);
+  const svg = cls.kind === "fases" ? buildQuizAnswerSvg(spec) : buildSingleAnswerSvg(spec);
+  const blob = await svgToPngBlob(svg, 1, { officialLogo: THREE_PHASES_LOGO });
+  const tag = cls.kind === "fases" ? "4fases" : "decisao";
+  const name = `cof-${tag}-${handPlain(spec.hand)}-${Math.round(spec.stackBB)}bb.png`;
+  downloadBlob(blob, name);
+  return { name, kind: cls.kind };
+}
+
+// ---------------------------------------------------------------------------
 // Flag do botão escondido — só quem tem a URL secreta ativa.
 // ---------------------------------------------------------------------------
 const GEN_FLAG = "cof-gen";
