@@ -38,8 +38,11 @@ describe("card Instagram de resposta em quatro fases", () => {
     expect(svg).toContain("MEIO");
     expect(svg).toContain("BOLHA");
     expect(svg).toContain("MESA FINAL");
-    expect(svg).toContain("#3bdd7b");
-    expect(svg).toContain("#ff8b7a");
+    expect(svg).toContain("#3bdd7b"); // CALL (verde) — KQo paga nas 4 fases
+    // A cor de FOLD só aparece num spot que REALMENTE flipa por ICM (curto, vs
+    // all-in). KQo no BTN vs abertura do CO é CALL nas 4 fases — não flipa (um
+    // flat premium não folda por ICM). Quem flipa é A7s vs all-in curto.
+    expect(buildFourFasesInstagramSvg(spec)).toContain("#ff8b7a"); // FOLD (vermelho)
     expect(svg).toContain("TREINE O MESMO SPOT NO APP");
     expect(svg).not.toContain("<image");
   });
