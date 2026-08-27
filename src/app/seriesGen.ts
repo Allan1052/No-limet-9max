@@ -617,12 +617,7 @@ function phaseLabel(stage: FourStage): string {
 }
 
 function phaseSub(stage: FourStage): string {
-  return {
-    inicio: "sem pressão de ICM",
-    meio: "ICM começa a aparecer",
-    bolha: "ICM aperta",
-    mesa_final: "ICM no centro",
-  }[stage];
+  return phasePressureLabel(stage).tag;
 }
 
 function phaseWhy(stage: FourStage, action: string, hand: string): string {
@@ -786,9 +781,14 @@ export function buildFourFasesInstagramSvg(spec: HandLabSpec): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${CARD_H}" viewBox="0 0 ${S} ${CARD_H}">${parts.join("")}</svg>`;
 }
 
-/** Renderiza o card de resposta como PNG, sem iniciar download. */
+/** Renderiza qualquer card social como PNG, sem iniciar download. */
+export async function renderInstagramCardSvg(svg: string): Promise<Blob> {
+  return svgToPngBlob(svg, 1, { officialLogo: FOUR_PHASES_LOGO });
+}
+
+/** Renderiza o card de resposta em quatro fases como PNG, sem iniciar download. */
 export async function renderFourFasesInstagramCard(spec: HandLabSpec): Promise<Blob> {
-  return svgToPngBlob(buildFourFasesInstagramSvg(spec), 1, { officialLogo: FOUR_PHASES_LOGO });
+  return renderInstagramCardSvg(buildFourFasesInstagramSvg(spec));
 }
 
 /** Gera e baixa o card vertical de quatro fases. */
@@ -820,4 +820,25 @@ export function buildFourFasesInstagramCaption(spec: HandLabSpec): string {
     "Call ou Fold · app gratuito de estudo de poker MTT 9-max · sem dinheiro real.",
     "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
   ].join("\n");
+}
+
+/** Legenda curta para o card de decisão única, sem inventar uma história de fases. */
+export function buildSingleAnswerCaption(spec: HandLabSpec): string {
+  const a = analyzeHand(spec);
+  const hand = handPlain(spec.hand);
+  const whyNot = a.whyNot ? `Por que não ${a.whyNot.label}? ${a.whyNot.text}` : "";
+  return [
+    `${hand} no ${spec.heroPosition}: ${actionLabel(a.recommended)}.`,
+    `${phasePressureLabel(spec.stage).tag}.`,
+    "",
+    a.simple,
+    "",
+    a.technical,
+    whyNot,
+    "",
+    "Você faria igual neste spot? O contexto muda a decisão.",
+    "",
+    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · sem dinheiro real.",
+    "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
+  ].filter(Boolean).join("\n");
 }

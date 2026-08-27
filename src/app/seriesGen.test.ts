@@ -4,6 +4,9 @@ import type { HandLabSpec } from "../train/stage";
 import {
   buildFourFasesInstagramCaption,
   buildFourFasesInstagramSvg,
+  buildSingleAnswerCaption,
+  buildSingleAnswerSvg,
+  classifyCardSpot,
   svgToPngBlob,
 } from "./seriesGen";
 
@@ -38,6 +41,10 @@ describe("card Instagram de resposta em quatro fases", () => {
     expect(svg).toContain("MEIO");
     expect(svg).toContain("BOLHA");
     expect(svg).toContain("MESA FINAL");
+    expect(svg).toContain("Chip-EV · preço em fichas");
+    expect(svg).toContain("Transição · pressão crescente");
+    expect(svg).toContain("ICM alto · risco de ficar fora");
+    expect(svg).toContain("ICM ativo · pay jumps");
     expect(svg).toContain("#3bdd7b"); // CALL (verde) — KQo paga nas 4 fases
     // A cor de FOLD só aparece num spot que REALMENTE flipa por ICM (curto, vs
     // all-in). KQo no BTN vs abertura do CO é CALL nas 4 fases — não flipa (um
@@ -98,6 +105,21 @@ describe("card Instagram de resposta em quatro fases", () => {
     expect(drawnSources).toHaveLength(2);
     expect(drawnSources[0]).toMatch(/^data:image\/svg\+xml/);
     expect(drawnSources[1]).toBe("/logo.png");
+  });
+
+  it("classifica um spot fundo como decisão única e não cria uma história de fases", () => {
+    const classification = classifyCardSpot(visualSpec);
+    expect(classification.kind).toBe("unica");
+    expect(classification.shortEnough).toBe(false);
+    const svg = buildSingleAnswerSvg(visualSpec);
+    expect(svg).toContain("✔ A RESPOSTA");
+    expect(svg).not.toContain("4 FASES");
+    expect(svg).toContain("Chip-EV · preço em fichas");
+    const caption = buildSingleAnswerCaption(visualSpec);
+    expect(caption).toContain("K♠Q♥ no BTN: ");
+    expect(caption).toContain("Chip-EV · preço em fichas");
+    expect(caption).not.toContain("INÍCIO:");
+    expect(caption).toContain("Você faria igual neste spot?");
   });
 
   it("preenche uma legenda com as decisões das quatro fases", () => {
