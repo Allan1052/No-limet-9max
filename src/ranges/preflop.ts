@@ -107,6 +107,11 @@ export interface PreflopDecision {
   mix?: PreflopFreq[];
   /** Rótulo do raise conforme o nível ("3-bet"/"4-bet"/"5-bet"), quando aplicável. */
   nBet?: string;
+  /** Equity real do herói (0..1) vs range — só em decisão de pagar all-in. */
+  equity?: number;
+  /** Equity exigida pelo preço (0..1, já com ICM) — só vs all-in. Perto da equity
+   *  real → spot de FRONTEIRA (o texto não pode dizer "com folga"). */
+  requiredEquity?: number;
 }
 
 /** Nome do raise conforme o nível de aposta enfrentado. */
@@ -213,6 +218,8 @@ function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision
     sizeBB: d.action === "call" ? ctx.effectiveBB : 0,
     reason: `${handType}: ${d.reason}`,
     handType,
+    equity: d.heroEquity,
+    requiredEquity: d.requiredEquity,
   };
 }
 

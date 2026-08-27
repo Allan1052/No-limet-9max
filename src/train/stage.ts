@@ -120,10 +120,13 @@ export interface HandAnalysis {
   whyNot: { label: string; text: string } | null;
   /** Frase-âncora didática contextual (aparece depois da decisão). */
   anchor: string;
+  /** Spot de FRONTEIRA: equity ~ preço (quase 50/50). A UI não deve prometer
+   *  "com folga"; é decisão apertada e a premissa manda. */
+  borderline: boolean;
 }
 
 /** Traduz a ação do motor pro rótulo exibido ao jogador. */
-function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; action: string } {
+function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; action: string; borderline: boolean } {
   void hand;
   const d = preflopDecision(ctx);
   const advice = {
@@ -133,9 +136,15 @@ function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; actio
     mix: d.mix,
     effectiveBB: ctx.effectiveBB,
   };
+  // FRONTEIRA (bug do 66 pego pelo Allan/Manus): quando a equity real fica a
+  // menos de ~3 pontos do preço exigido, é um call/fold de FRONTEIRA — o texto
+  // NÃO pode dizer "com folga"/"de sobra". Só vale quando temos equity e preço
+  // (decisão de pagar all-in).
+  const borderline =
+    d.equity !== undefined && d.requiredEquity !== undefined && Math.abs(d.equity - d.requiredEquity) < 0.03;
   // Devolve TAMBÉM a ação real do motor — o badge e as vozes têm que vir daqui,
   // não de reparsear o texto do feedback (que gerava badge RAISE com texto Call).
-  return { item: gradeDecision("Pré-flop", "free", d.action, advice), action: d.action };
+  return { item: gradeDecision("Pré-flop", "free", d.action, advice), action: d.action, borderline };
 }
 
 /** Ação do motor → categoria do badge/voz (fold | call | raise | allin). */
@@ -279,13 +288,13 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
       : {}),
   };
 
-  const { item, action } = analyze(ctx, spec.hand);
+  const { item, action, borderline } = analyze(ctx, spec.hand);
   // O badge e as vozes vêm da DECISÃO REAL do motor — não de parsear o texto.
   const recommended = recommendedFrom(action);
 
   const stageCtx = stageContext(spec, handType, sd.pushFold);
-  const simple = simpleVoice(recommended, handType, spec, stageCtx);
-  const technical = technicalVoice(recommended, handType, spec, stageCtx, sd.pushFold);
+  const simple = simpleVoice(recommended, handType, spec, stageCtx, borderline);
+  const technical = technicalVoice(recommended, handType, spec, stageCtx, sd.pushFold, borderline);
 
   return {
     spec,
@@ -297,6 +306,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     technical,
     whyNot: whyNotAlternative(spec, recommended, handType),
     anchor: anchorPhrase(spec),
+    borderline,
   };
 }
 
@@ -420,6 +430,7 @@ function simpleVoice(
   hand: string,
   spec: HandLabSpec,
   _ctx: string,
+  borderline = false,
 ): string {
   const pos = spec.heroPosition;
   // Vilão deu all-in: é call/fold puro por equity (e ICM na fase final).
@@ -429,6 +440,10 @@ function simpleVoice(
       : spec.stage === "mesa_final"
         ? " Na mesa final pesa o ICM: quebrar custa prêmio, então o padrão aperta."
         : "";
+    // FRONTEIRA: equity ~ preço. Sem linguagem de certeza — é quase 50/50.
+    if (borderline) {
+      return `É FRONTEIRA — quase 50/50. ${hand} contra o range de all-in dele fica praticamente EMPATADO com o preço, então ${action === "fold" ? "o padrão inclina levemente pra FOLD" : "o padrão inclina levemente pra CALL"}, mas é decisão apertada: os dois lados perdem/ganham pouco.${icm} Não é erro grave escolher o outro lado aqui.`;
+    }
     if (action === "fold") {
       return `Era FOLD. O vilão foi com tudo e ${hand} não tem chance suficiente pra pagar — você perde mais vezes do que a conta paga.${icm} Guarda as fichas.`;
     }
@@ -461,6 +476,7 @@ function technicalVoice(
   spec: HandLabSpec,
   ctx: string,
   pushFold: boolean,
+  borderline = false,
 ): string {
   const depth = depthTalk(spec.stackBB);
   const stageTalk = stageTechnicalTalk(spec);
@@ -468,8 +484,9 @@ function technicalVoice(
   // final, a equity exigida sobe pelo ICM (requiredEquityToCall).
   if (spec.situation === "vsallin") {
     const icmOn = stageHasIcm(spec.stage);
-    const decision =
-      action === "fold"
+    const decision = borderline
+      ? `${hand} fica praticamente NA equity exigida vs o range de all-in${icmOn ? " ajustado por ICM" : " pelas pot odds"} — é um spot de FRONTEIRA (a margem cabe dentro do ruído da estimativa de equity). O EV dos dois lados é quase igual; ${action === "fold" ? "fold" : "call"} é a inclinação, não uma decisão com folga. A premissa (range/preço/stack do shove) manda aqui.`
+      : action === "fold"
         ? `${hand} fica abaixo da equity exigida vs o range de all-in${icmOn ? " ajustada por ICM (o risco de quebrar vale mais que dobrar)" : " pelas pot odds"}. Fold é a linha de maior EV${icmOn ? " de torneio" : ""}.`
         : `${hand} bate a equity exigida vs o range de all-in${icmOn ? ", mesmo com o ICM apertando o preço" : " pelas pot odds"}. Call é +EV: você realiza mais do que arrisca.`;
     return `${buildContext(spec)}. ${stageTalk} ${depth} ${decision}`.trim();
