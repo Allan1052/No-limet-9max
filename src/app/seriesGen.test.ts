@@ -154,6 +154,9 @@ describe("card Instagram de resposta em quatro fases", () => {
     expect(svg).toContain("CHIP-EV · SEM ICM INFORMADO");
     expect(svg).toContain("NOVIDADE · CARD GERADO NO APP");
     expect(svg).toContain("COMENTE: ALL-IN OU FOLD?");
+    expect(svg).toContain('font-size="34"');
+    expect(svg).toContain('font-size="32"');
+    expect(svg).toContain('font-size="27"');
     expect(svg).not.toContain("✔ A RESPOSTA");
     expect(svg).not.toContain('font-size="140"');
 

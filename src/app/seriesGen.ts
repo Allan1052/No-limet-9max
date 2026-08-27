@@ -579,10 +579,10 @@ export function buildSingleQuizSvg(spec: HandLabSpec, context: SingleQuizContext
 
   // Cabeçalho com área livre à esquerda para a logo oficial composta no canvas.
   P.push(box(M, 44, IW, 100, { stroke: C.border2, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="22" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">QUIZ · MTT · UMA MÃO</text>`);
-  P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="20" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="86" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="2" fill="${C.gold}" text-anchor="end">QUIZ · MTT · UMA MÃO</text>`);
+  P.push(`<text x="${CARD_W - M - 24}" y="118" font-family="${SERIF}" font-size="24" fill="${C.cream}" text-anchor="end">feito por um recreativo</text>`);
 
-  P.push(`<text x="${cx}" y="230" font-family="${SERIF}" font-size="26" font-weight="800" letter-spacing="5" fill="${C.gold}" text-anchor="middle">✦ DESAFIO</text>`);
+  P.push(`<text x="${cx}" y="230" font-family="${SERIF}" font-size="32" font-weight="800" letter-spacing="5" fill="${C.gold}" text-anchor="middle">✦ DESAFIO</text>`);
   P.push(`<text x="${cx}" y="298" font-family="${SERIF}" font-size="52" font-weight="900" text-anchor="middle">${handColored}<tspan fill="${C.ink}"> ${esc(posPhrase.toUpperCase())}</tspan></text>`);
   P.push(drawCard(cx - 160, 340, spec.hand[0]));
   P.push(drawCard(cx + 10, 340, spec.hand[1]));
@@ -590,35 +590,35 @@ export function buildSingleQuizSvg(spec: HandLabSpec, context: SingleQuizContext
   const seal = `MTT · ${STAGE_UP[spec.stage]} · ${Math.round(spec.stackBB)}BB · ${SITUATION_SHORT[spec.situation]}`;
   const sealW = Math.min(IW, Math.max(560, seal.length * 14 + 60));
   P.push(box(cx - sealW / 2, 576, sealW, 48, { stroke: C.border, sw: 1, r: 14, fill: "rgba(230,196,84,0.04)" }));
-  P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="20" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
-  P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="19" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(singlePressureTag(spec))}</text>`);
+  P.push(`<text x="${cx}" y="608" font-family="${SERIF}" font-size="24" font-weight="700" letter-spacing="1" fill="${C.cream}" text-anchor="middle">${esc(seal)}</text>`);
+  P.push(`<text x="${cx}" y="656" font-family="${SERIF}" font-size="23" font-weight="700" fill="${C.goldDim}" text-anchor="middle">${esc(singlePressureTag(spec))}</text>`);
 
-  P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="86" font-weight="900" letter-spacing="2" fill="${C.gold}" text-anchor="middle">${esc(question)}</text>`);
+  P.push(`<text x="${cx}" y="790" font-family="${SERIF}" font-size="94" font-weight="900" letter-spacing="2" fill="${C.gold}" text-anchor="middle">${esc(question)}</text>`);
 
   const premiseY = 850;
   P.push(box(M, premiseY, IW, 210, { stroke: C.border, r: 18, fill: "rgba(255,255,255,0.015)" }));
-  P.push(`<text x="${M + 28}" y="${premiseY + 44}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="2" fill="${C.goldDim}">PREMISSA DO SPOT</text>`);
-  P.push(`<text x="${M + 28}" y="${premiseY + 98}" font-family="${SERIF}" font-size="30" font-weight="800" fill="${C.body}">${esc(premise)}</text>`);
-  P.push(`<text x="${M + 28}" y="${premiseY + 154}" font-family="${SERIF}" font-size="22" fill="${C.cream}">A resposta depende do contexto — não só das cartas.</text>`);
+  P.push(`<text x="${M + 28}" y="${premiseY + 44}" font-family="${SERIF}" font-size="25" font-weight="800" letter-spacing="2" fill="${C.goldDim}">PREMISSA DO SPOT</text>`);
+  P.push(`<text x="${M + 28}" y="${premiseY + 98}" font-family="${SERIF}" font-size="34" font-weight="800" fill="${C.body}">${esc(premise)}</text>`);
+  P.push(`<text x="${M + 28}" y="${premiseY + 154}" font-family="${SERIF}" font-size="27" fill="${C.cream}">A resposta depende do contexto — não só das cartas.</text>`);
 
   const noveltyY = 1100;
   P.push(box(M, noveltyY, IW, 138, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(224,123,107,0.045)" }));
-  P.push(`<text x="${M + 28}" y="${noveltyY + 42}" font-family="${SERIF}" font-size="20" font-weight="800" letter-spacing="1.5" fill="${C.fold}">NOVIDADE · CARD GERADO NO APP</text>`);
-  P.push(`<text x="${M + 28}" y="${noveltyY + 88}" font-family="${SERIF}" font-size="23" fill="${C.body}">Monte a mão, analise e compartilhe dentro do Call ou Fold.</text>`);
+  P.push(`<text x="${M + 28}" y="${noveltyY + 42}" font-family="${SERIF}" font-size="25" font-weight="800" letter-spacing="1.5" fill="${C.fold}">NOVIDADE · CARD GERADO NO APP</text>`);
+  P.push(`<text x="${M + 28}" y="${noveltyY + 88}" font-family="${SERIF}" font-size="28" fill="${C.body}">Monte a mão, analise e compartilhe dentro do Call ou Fold.</text>`);
 
   const commentY = 1295;
   P.push(box(M, commentY, IW, 132, { stroke: C.border2, sw: 1, r: 18, fill: "rgba(230,196,84,0.05)" }));
-  P.push(`<text x="${cx}" y="${commentY + 48}" font-family="${SERIF}" font-size="28" font-weight="800" fill="${C.gold}" text-anchor="middle">RESPOSTA DEPOIS DO SEU PALPITE</text>`);
-  P.push(`<text x="${cx}" y="${commentY + 92}" font-family="${SERIF}" font-size="22" fill="${C.cream}" text-anchor="middle">A explicação vem em comentário separado.</text>`);
+  P.push(`<text x="${cx}" y="${commentY + 48}" font-family="${SERIF}" font-size="32" font-weight="800" fill="${C.gold}" text-anchor="middle">RESPOSTA DEPOIS DO SEU PALPITE</text>`);
+  P.push(`<text x="${cx}" y="${commentY + 92}" font-family="${SERIF}" font-size="27" fill="${C.cream}" text-anchor="middle">A explicação vem em comentário separado.</text>`);
 
   const ctaY = 1495;
   P.push(box(M, ctaY, IW, 78, { stroke: C.gold, sw: 2, r: 18, fill: C.gold }));
-  P.push(`<text x="${cx}" y="${ctaY + 51}" font-family="${SERIF}" font-size="29" font-weight="900" letter-spacing="1.5" fill="#0a1f14" text-anchor="middle">COMENTE: ${esc(question)}</text>`);
+  P.push(`<text x="${cx}" y="${ctaY + 51}" font-family="${SERIF}" font-size="32" font-weight="900" letter-spacing="1.5" fill="#0a1f14" text-anchor="middle">COMENTE: ${esc(question)}</text>`);
 
   const ftY = 1700;
   P.push(box(M, ftY, IW, 66, { stroke: C.faint, sw: 1.5, r: 16, fill: "rgba(8,26,18,0.55)" }));
-  P.push(`<text x="${M + 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C.cream}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
-  P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="20" font-weight="900" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
+  P.push(`<text x="${M + 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="24" font-weight="900" fill="${C.cream}">UMA MÃO POR VEZ · SÓ ESTUDO</text>`);
+  P.push(`<text x="${CARD_W - M - 26}" y="${ftY + 42}" font-family="${SERIF}" font-size="24" font-weight="900" fill="${C.gold}" text-anchor="end">calloufold.com.br</text>`);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">${P.join("")}</svg>`;
 }
