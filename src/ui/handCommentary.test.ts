@@ -192,7 +192,7 @@ describe("handCommentary — spots de resposta pré-flop", () => {
       "technical",
     );
     expect(c).not.toBeNull();
-    expect(c!.lines[0]).toMatch(/não é covardia|equity morta|66%|abre em ~100% do range/i);
+    expect(c!.lines[0]).toMatch(/não é covardia|equity morta|66%|abrir de late|posição é que decide/i);
   });
   it("stack curto muda a resposta", () => {
     const c = getHandCommentary(

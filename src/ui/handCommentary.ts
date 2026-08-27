@@ -319,7 +319,7 @@ function trashPhrases(ctx: HandCommentCtx): string[] {
     }
     return [
       pos
-        ? `${pos}: ${ctx.heroAction === "Fold" ? "esse fold" : "esse raise"} define quem paga a conta${ctx.heroAction === "Fold" ? "" : " — quem joga assim financia o stack de quem aperta"}. De ${pos}, o range abre com menos de 20% das mãos — e essa nem chega perto.`
+        ? `${pos}: ${ctx.heroAction === "Fold" ? "esse fold" : "esse raise"} define quem paga a conta${ctx.heroAction === "Fold" ? "" : " — quem joga assim financia o stack de quem aperta"}. De ${pos}, o range abre bem apertado — e essa mão nem chega perto.`
         : `${ctx.heroAction === "Fold" ? "Fold sem dó" : "Isso"} aqui é dinheiro na lixeira${ctx.heroAction === "Fold" ? ". Mãos assim só desperdiçam fichas" : " — nem em sonho"}.`,
       `Sem par, sem carta alta, sem backdoor.${ctx.heroAction === "Fold" ? " O fold é a linha dominante: nada aqui justifica pagar." : " Raise com isso é entregar fichas de mão beijada pro pote de quem abriu."}`,
     ];
@@ -498,7 +498,7 @@ function strongAcePhrases(ctx: HandCommentCtx): string[] {
       ];
     }
     return [`${c.label} vs 3-bet de early${pos ? ` de ${pos}` : ""}: call de domínio — você é o dominado aqui, com o kicker morto contra AK/AQs/QQ+. Fold é a linha dominante; vs 3-bet de BTN, call seletivo existe.`,
-      `O erro clássico de ${c.label}: parece forte porque domina o campo${stack >= 60 ? ` (${stack}bb deep)` : ""}, mas 60% do valor de quem 3-beta de early é AK/QQ+/AKs — que domina você. Call vs 3-bet de early = dominado e fora de posição.`,
+      `O erro clássico de ${c.label}: parece forte porque domina o campo${stack >= 60 ? ` (${stack}bb deep)` : ""}, mas a maior parte do range de VALOR de quem 3-beta de early é AK/QQ+/AKs — que domina você. Call vs 3-bet de early = dominado e fora de posição.`,
     ];
   }
   return ["Ás forte pós-flop sem Ás: dois overcards sem nada — fold. Não se apaixone com o Ás: é o kicker que paga o pote.",
@@ -556,7 +556,7 @@ function suitedConnectorPhrases(ctx: HandCommentCtx): string[] {
         latePos(ctx)
           ? `Suited connector${pos ? ` de ${pos}` : ""}: mão de 'pós-flop bom'${isGood(ctx.rating) ? " — abriu certo" : " — abre com plano"}. De BTN, ${scLabel} é linda: acerta straight, acerta flush, acerta par com kicker jogável.`
           : `Suited connector${pos ? ` de ${pos}` : ""} de early position: abre como aposta${isGood(ctx.rating) ? ", não como call" : ""}. O 98s de BTN é ouro; de UTG, é risco caro.`,
-          `${scLabel} de BTN tem ~44% de equity vs range de open (~30%) e implied odds de ~20:1 quando o flat vem — o raise de 2.2x captura equity; de early, o mesmo raise custa ~-0.4bb/mão.`,
+          `${scLabel} de BTN tem ~44% de equity vs range de open (~30%) e implied odds de ~20:1 quando o flat vem — o raise de 2.2x captura equity; de early, o mesmo raise já não se paga.`,
       ];
     }
     if (ctx.heroAction === "Fold") {
@@ -590,14 +590,14 @@ function weakBroadwayPhrases(ctx: HandCommentCtx, c: HandShape = classify([0, 1]
     if (ctx.heroAction === "Fold") {
       if (isGood(ctx.rating)) {
         return [`${pos}: ${c.label} — fold limpo${pos === "BTN" || pos === "CO" ? ", mas sem abrir mão do botão: essa é mão de abrir de late" : ""}. De early, o range tem que ser nobre; com força na sua frente, qualquer cadeira pede fold.`,
-          `${c.label} abre em ~100% do range de BTN, mas em ~0% de UTG: posição explica ~30% do VPIP do range. O fold economiza ~2.5bb/mão que viram diferença na bolha.`];
+          `${c.label} é mão de abrir de late (BTN/CO), não de UTG — a posição é que decide se ela entra. Foldar de early economiza as fichas que fazem diferença na bolha.`];
       }
       return [`${pos}: ${c.label} não era pra essa cadeira${ctx.heroAction === "Fold" ? " — mas foldou, e folded é melhor do que pagar caro" : ""}. Fichas guardadas são fichas pra final.`,
         `Dominada por AQ+ (~34% de equity) e jogada dominando nada: qualquer ação com essa mão de early é +EV negativo no longo prazo.`];
     }
     const stack = Math.round(ctx.heroBB ?? 100);
   return [`${pos}: ${c.label} — valor depende da cadeira: de early, folda; de late, abre. KQo de BTN é arma; de UTG, é peso morto.`,
-      `KQo entra em ~25% dos ranges de BTN e ~0% de UTG: a mesma mão vale ~+0.3bb/mão de late e ~-1.2bb/mão de early${stack >= 60 ? ` (${stack}bb deep: equity de ~43% vs open do CO ainda tolera call seletivo)` : ` (${stack}bb: raise/fold range — call com essa mão não se paga)`}. A cadeira muda a conta.`,
+      `KQo é mão de abrir de late (BTN), não de UTG: a mesma mão rende de late e sangra de early${stack >= 60 ? ` (${stack}bb deep: ainda tolera call seletivo vs open do CO)` : ` (${stack}bb: raise/fold range — call com essa mão não se paga)`}. A cadeira muda a conta.`,
       `${c.label} de CO/BTN${stack <= 30 ? ` com ${stack}bb` : ""} pode virar shove nos últimos estágios${stack <= 15 ? " — a fold equity de ~40-50% faz a matemática fechar" : ""}: shove de late é mais forte que raise de early.`];
   }
   return ["Broadway fraco pós-flop sem acertar: fold rápido. Carta alta não paga pote."];
