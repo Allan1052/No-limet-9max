@@ -368,9 +368,22 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   if (ctx.variant === "omaha") return omahaPreflopDecision(ctx);
   const handType = comboToHandType(ctx.hand[0], ctx.hand[1]);
   const sd = stackDepthAdjust(ctx.effectiveBB, ctx.profile.adaptability);
-  const icmFactor = ctx.icmSpot
+  const icmFactorRaw = ctx.icmSpot
     ? icmTightenFactor(ctx.icmSpot, ctx.profile.icmSensitivity)
     : 1;
+  // O ICM aperta os RANGES pré-flop com MUITO menos força do que um all-in — e
+  // depende de quanto a ação COMPROMETE o stack. A decisão de PAGAR ALL-IN usa
+  // requiredEquityToCall com o ICM CHEIO (caminho separado, em facingAllin) e
+  // não é tocada aqui. Distinguimos dois casos:
+  //   • icmFactor  — 3-bet / re-agressão: compromete mais (pode acabar all-in),
+  //     então o ICM aperta de forma MODERADA.
+  //   • icmFlat    — só PAGAR um raise: barato e dá pra foldar depois, então o
+  //     ICM quase não aperta. Sem isso, o motor foldava mãos CLARAS — KQo no BTN
+  //     contra a abertura do CO saía FOLD na bolha/mesa final (bug do card da
+  //     Manus pego pelo Allan): um flat premium virava fold por "pressão de ICM"
+  //     que na prática mal existe num call barato.
+  const icmFactor = 1 - (1 - icmFactorRaw) * 0.55;
+  const icmFlat = 1 - (1 - icmFactorRaw) * 0.12;
 
   // ----- Caso 3: re-agressão (open + 3-bet já ocorreram) → 4-bet / pagar / foldar -----
   if (ctx.threeBet && ctx.raiserPosition) {
@@ -548,8 +561,8 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const raiseSize = ctx.openSizeBB ?? BASE_OPEN_BB;
     const sizeFactor = raiseSize <= 2.6 ? 1 : Math.max(0.1, Math.pow(2.4 / raiseSize, 0.9));
 
-    const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFactor * sizeFactor;
-    const coldCallPct = Math.min(0.9, p.defendPct * ctx.profile.coldCallFactor * icmFactor) * sizeFactor;
+    const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFlat * sizeFactor;
+    const coldCallPct = Math.min(0.9, p.defendPct * ctx.profile.coldCallFactor * icmFlat) * sizeFactor;
     let defendPct = Math.max(baseDefend, coldCallPct);
     let value3betPct = p.value3betPct * ctx.profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
     const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * ctx.profile.bluffFactor * ctx.profile.threeBetFactor * icmFactor;
