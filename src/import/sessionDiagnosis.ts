@@ -169,6 +169,29 @@ export function buildSessionDiagnosis(report: SessionReport): SessionDiagnosis {
     strengths.push("Você revisou a sessão inteira — o primeiro passo de todo jogador que evolui. 👊");
   }
 
+  // AMOSTRA INSUFICIENTE (P0 da auditoria da Manus): com <20 decisões, NÃO
+  // afirmar comportamento ("VPIP alto", "passivo"...) nem sugerir ajuste forte —
+  // com 1 mão, "100%" é só o denominador, não um diagnóstico. Zera os rótulos
+  // comportamentais e deixa só o convite pra importar mais.
+  if (insufficientSample) {
+    return {
+      score,
+      grade,
+      emoji,
+      insufficientSample,
+      minSample: MIN_SAMPLE,
+      headline,
+      accuracy,
+      vpip,
+      pfr,
+      evaluated,
+      totalHands,
+      strengths: ["Boa — você já está revisando as mãos. Traga mais decisões pra um raio-x confiável. 👊"],
+      weaknesses: [],
+      adjustments: [`Importe pelo menos ${MIN_SAMPLE} decisões avaliadas: com poucas mãos, qualquer número (até 100%) é só o denominador, não o seu jogo.`],
+    };
+  }
+
   return {
     score,
     grade,

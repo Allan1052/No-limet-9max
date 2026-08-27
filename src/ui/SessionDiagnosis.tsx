@@ -105,12 +105,19 @@ export function SessionDiagnosis({
         {d.headline}
       </div>
 
-      {/* Stats principais */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
-        <MiniStat label="VPIP" value={`${d.vpip}%`} />
-        <MiniStat label="PFR" value={`${d.pfr}%`} />
-        <MiniStat label="Precisão" value={`${Math.round(d.accuracy * 100)}%`} />
-      </div>
+      {/* Stats principais — escondidos com amostra pequena: "100%" com 1 mão é
+          só o denominador, não o jogo do usuário (P0 da auditoria). */}
+      {d.insufficientSample ? (
+        <div style={{ marginBottom: 22, textAlign: "center", color: DIM, fontSize: 13, fontStyle: "italic" }}>
+          VPIP, PFR e precisão aparecem a partir de {d.minSample} decisões avaliadas.
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
+          <MiniStat label="VPIP" value={`${d.vpip}%`} />
+          <MiniStat label="PFR" value={`${d.pfr}%`} />
+          <MiniStat label="Precisão" value={`${Math.round(d.accuracy * 100)}%`} />
+        </div>
+      )}
 
       <Section title="✅ Pontos fortes" color={GREEN} items={d.strengths} />
       {d.weaknesses.length > 0 ? (

@@ -26,6 +26,12 @@ describe("diagnóstico — piso de amostra mínima", () => {
     expect(d.minSample).toBe(MIN_SAMPLE);
   });
 
+  it("com amostra pequena NÃO afirma comportamento (sem 'VPIP alto', P0 da auditoria)", () => {
+    const d = buildSessionDiagnosis(report(1, 1));
+    expect(d.weaknesses).toHaveLength(0); // nada de "VPIP alto (100%)" com 1 mão
+    expect(JSON.stringify(d.strengths)).not.toMatch(/VPIP|PFR/i);
+  });
+
   it("logo abaixo do piso ainda é insuficiente", () => {
     expect(buildSessionDiagnosis(report(MIN_SAMPLE - 1, MIN_SAMPLE - 1)).insufficientSample).toBe(true);
   });
