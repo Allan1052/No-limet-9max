@@ -20,7 +20,7 @@ export function HandResultSummary({
   return (
     <section className={`hand-result-summary ${good ? "is-good" : "is-review"}`} aria-label="Resultado da sua decisão">
       <div className="hrs-topline">
-        <span className="hrs-status">{good ? "✓ ACERTO" : "! REVISAR"}</span>
+        <span className="hrs-status">{good ? "✓ ACERTO" : "✕ ERRO"}</span>
         <span className="hrs-street">{item.street}</span>
       </div>
       <div className="hrs-actions">
