@@ -71,35 +71,28 @@
 
 @media (max-width: 640px) {
   .session-progress-strip {
-    gap: 5px;
-    margin-block: 0 1px;
-    padding: 4px 6px 6px;
-    border-radius: 10px;
+    gap: 6px;
+    margin-block: 0 2px;
+    padding: 6px 8px 8px;
+    border-radius: 11px;
   }
 
   .sps-label,
   .sps-unit {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .sps-metric strong {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .sps-divider {
-    height: 14px;
+    height: 16px;
   }
 
   .sps-track {
-    left: 6px;
-    right: 6px;
-    bottom: 2px;
-  }
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .session-progress-strip {
-    padding-block: 3px 5px;
-    margin-bottom: 0;
+    left: 8px;
+    right: 8px;
+    bottom: 3px;
   }
 }
