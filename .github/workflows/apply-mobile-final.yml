@@ -1,0 +1,39 @@
+name: Aplicar acabamento mobile final
+on:
+  push:
+    branches:
+      - openai/ui-etapa-2-final-compact
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: openai/ui-etapa-2-final-compact
+      - name: Abreviar fichas simuladas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/app/App.tsx')
+          s = p.read_text()
+          old = ' fichas simuladas`'
+          new = ' FS`'
+          if old not in s:
+              raise SystemExit('texto alvo não encontrado')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Testar e buildar
+        run: |
+          npm install
+          npm test
+          npm run build
+      - name: Commitar ajuste
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/App.tsx
+          git commit -m "ui: abreviar fichas simuladas para FS"
+          git push origin HEAD:openai/ui-etapa-2-final-compact
