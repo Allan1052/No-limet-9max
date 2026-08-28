@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { useT } from "../i18n";
 import { isDevUnlocked } from "../lib/devLock";
 import type { TransKey } from "../i18n/translations";
+import "./bottomNavFocus.css";
 
 export type AppView =
   | "play"
@@ -28,24 +29,31 @@ export type AppView =
   | "street"
   | "ft";
 
-type Hub = { id: string; icon: string; labelKey: TransKey; views: AppView[] };
+type Hub = {
+  id: string;
+  icon: string;
+  labelKey?: TransKey;
+  label?: string;
+  views: AppView[];
+};
 
 // Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
 const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "drill", "ft"];
 
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
+// A hierarquia agora segue o caminho principal do produto:
+// Jogar → Treinar → Sua Mão → Estudar → Mais.
 export const HUBS: Hub[] = [
   { id: "jogar", icon: "🃏", labelKey: "nav.play", views: ["play", "torneio"] },
   // ⚠ "street" (Rua por Rua) foi REMOVIDO da navegação (decisão do Allan, 15/08):
   // o treino sempre começa na aba "Sua Mão", que carrega a mão, a posição e o
   // stack reais do spot. O acesso solto pela sub-nav "zerava" o treino.
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "suamao", "campanha", "ft"] },
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "campanha", "ft"] },
+  { id: "suamao", icon: "♠", labelKey: "nav.sub.suamao", views: ["suamao"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "aprenda", "icm"] },
-  // Allan (18/08): a Importação de mãos saiu de dentro de Estudar (ficava escondida
-  // atrás do botão ⋯) e virou aba separada na barra principal, bem visível.
-  { id: "importar", icon: "📥", labelKey: "nav.import", views: ["importar"] },
-  { id: "ranking", icon: "🏆", labelKey: "nav.ranking", views: ["ranking"] },
-  { id: "perfil", icon: "👤", labelKey: "nav.profile", views: ["perfil", "missoes"] },
+  // Importação, ranking e perfil continuam acessíveis, mas deixam de competir
+  // com a jornada principal na barra inferior.
+  { id: "mais", icon: "•••", label: "Mais", views: ["importar", "ranking", "perfil", "missoes"] },
 ];
 
 // Rótulo de cada sub-view (reaproveita as chaves tab.* onde faz sentido).
@@ -89,12 +97,12 @@ export function BottomNav({
       {HUBS.map((h) => (
         <button
           key={h.id}
-          className={`bn-item${activeHub === h.id ? " on" : ""}`}
+          className={`bn-item${activeHub === h.id ? " on" : ""}${h.id === "jogar" ? " bn-primary" : ""}${h.id === "suamao" ? " bn-focus" : ""}`}
           onClick={() => setView(h.views[0])}
           aria-current={activeHub === h.id ? "page" : undefined}
         >
           <span className="bn-ic">{h.icon}</span>
-          <span className="bn-l">{t(h.labelKey)}</span>
+          <span className="bn-l">{h.label ?? t(h.labelKey!)}</span>
         </button>
       ))}
     </nav>

@@ -1,0 +1,40 @@
+/* Hierarquia visual da navegação principal.
+   Jogar é a ação principal; Sua Mão ganha acesso direto sem competir com ela. */
+.bottom-nav .bn-item.bn-primary .bn-ic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -8px auto 1px;
+  border-radius: 50%;
+  border: 1px solid rgba(230, 196, 84, 0.65);
+  background: linear-gradient(180deg, rgba(28, 34, 22, 0.98), rgba(12, 16, 11, 0.98));
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.38), 0 0 16px rgba(212, 175, 55, 0.16);
+}
+
+.bottom-nav .bn-item.bn-primary.on .bn-ic {
+  border-color: var(--gold-bright, #f7e79b);
+  background: linear-gradient(180deg, #2d351d, #171d12);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.42), 0 0 20px rgba(230, 196, 84, 0.28);
+}
+
+.bottom-nav .bn-item.bn-primary .bn-l {
+  font-weight: 800;
+  color: var(--gold-soft, #d4af37);
+}
+
+.bottom-nav .bn-item.bn-focus .bn-ic {
+  color: var(--gold-soft, #d4af37);
+}
+
+.bottom-nav .bn-item.bn-focus.on .bn-l {
+  color: var(--gold-bright, #f7e79b);
+  font-weight: 800;
+}
+
+@media (max-width: 420px) {
+  .bottom-nav .bn-item.bn-primary .bn-ic {
+    width: 34px;
+    height: 34px;
+  }
+}
