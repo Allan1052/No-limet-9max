@@ -7,25 +7,20 @@ import { useSettings } from "../app/settings";
 import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
+import "./controlsHierarchy.css";
 
-// Haptics — vibração sutil ao tocar nos botões de ação (mobile)
 function haptic() {
-  if (typeof navigator !== "undefined" && navigator.vibrate) {
-    navigator.vibrate(15); // vibração curta e leve
-  }
+  if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);
 }
 
 interface ControlsProps {
   legal: LegalActions;
-  active: boolean; // é a vez do herói?
+  active: boolean;
   pot: number;
   bigBlind: number;
   onAction: (a: Action) => void;
-  isOmaha?: boolean; // Indica se é Omaha (PLO)
-  /** Valor sugerido para o slider começar (pré-flop: abertura padrão + limpers). */
+  isOmaha?: boolean;
   defaultRaiseTo?: number;
-  /** Tamanho de aposta recomendado pelo coach neste spot (em bb), quando a linha
-   * certa é agressiva. Renderiza o chip dourado "💰 ~Xbb" ao vivo na mesa. */
   coachBetSize?: number;
 }
 
@@ -35,8 +30,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
   const [raiseTo, setRaiseTo] = useState(startTo);
 
-  // Reajusta o slider sempre que o spot muda: começa na abertura sugerida
-  // (2.3bb + limpers no pré-flop), limitada ao intervalo legal.
   useEffect(() => {
     const start = defaultRaiseTo ?? legal.minRaiseTo;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
@@ -48,108 +41,63 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, target)));
   };
 
-
   return (
-    <div className="controls">
-      {/* Linha 1: Fold / Call / Raise / BB — lado a lado */}
-      <div className="action-row">
-        <button
-          className="btn danger"
-          disabled={!active || !legal.canFold}
-          onClick={() => { haptic(); onAction({ type: "fold" }); }}
-        >
-          {t("ctrl.fold")}
-        </button>
-
-        {legal.canCheck ? (
-          <button className="btn" disabled={!active} onClick={() => { haptic(); onAction({ type: "check" }); }}>
-            {t("ctrl.check")}
+    <div className="controls controls-v2">
+      <div className="action-panel">
+        <div className="control-section-label">AÇÕES PRINCIPAIS</div>
+        <div className="action-row action-row-primary">
+          <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
+            <span className="action-choice-label">{t("ctrl.fold")}</span>
           </button>
-        ) : (
-          <button
-            className="btn"
-            disabled={!active || !legal.canCall}
-            onClick={() => { haptic(); onAction({ type: "call" }); }}
-          >
-            {t("ctrl.call")} {fmtAmount(legal.callAmount, bigBlind, unit)}
-          </button>
-        )}
 
-        <button
-          className="btn primary"
-          disabled={!canRaise}
-          onClick={() => {
+          {legal.canCheck ? (
+            <button className="btn action-choice action-choice-call" disabled={!active} onClick={() => { haptic(); onAction({ type: "check" }); }}>
+              <span className="action-choice-label">{t("ctrl.check")}</span>
+            </button>
+          ) : (
+            <button className="btn action-choice action-choice-call" disabled={!active || !legal.canCall} onClick={() => { haptic(); onAction({ type: "call" }); }}>
+              <span className="action-choice-label">{t("ctrl.call")}</span>
+              <span className="action-choice-value">{fmtAmount(legal.callAmount, bigBlind, unit)}</span>
+            </button>
+          )}
+
+          <button className="btn primary action-choice action-choice-raise" disabled={!canRaise} onClick={() => {
             haptic();
-            onAction(
-              raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo },
-            );
-          }}
-        >
-          {legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}
-        </button>
-
-        <button
-          className="btn unit-toggle"
-          type="button"
-          onClick={() => setUnit(unit === "bb" ? "chips" : "bb")}
-          title={t("unit.toggle")}
-        >
-          {unit === "bb" ? "bb" : "fichas"}
-        </button>
-      </div>
-
-      {/* Linha 2: Percentuais + All-in */}
-      <div className="pct-row">
-        {isOmaha && (
-          <button
-            className="btn size pot-btn"
-            disabled={!canRaise}
-            onClick={() => potBet(1.0)}
-            title="Pot Limit"
-          >
-            POT
+            onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
+          }}>
+            <span className="action-choice-label">{legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}</span>
+            <span className="action-choice-value">{fmtAmount(raiseTo, bigBlind, unit)}</span>
           </button>
-        )}
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.35)} title={t("ctrl.pctOf", { p: 35 })}>
-          35%
-        </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title={t("ctrl.pctOf", { p: 60 })}>
-          60%
-        </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.75)} title={t("ctrl.pctOf", { p: 75 })}>
-          75%
-        </button>
-        <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>
-          120%
-        </button>
+        </div>
       </div>
 
-      {/* Linha 3: Slider + valor */}
-      <div className="slider-row">
-        <input
-          type="range"
-          min={legal.minRaiseTo}
-          max={legal.maxRaiseTo}
-          value={Math.min(raiseTo, legal.maxRaiseTo)}
-          disabled={!canRaise}
-          onChange={(e) => setRaiseTo(Number(e.target.value))}
-        />
-        <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
+      <div className="sizing-panel">
+        <div className="control-section-label">TAMANHOS DE APOSTA</div>
+        <div className="pct-row sizing-row">
+          {isOmaha && <button className="btn size pot-btn" disabled={!canRaise} onClick={() => potBet(1.0)} title="Pot Limit">POT</button>}
+          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.35)} title={t("ctrl.pctOf", { p: 35 })}>35%</button>
+          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title={t("ctrl.pctOf", { p: 60 })}>60%</button>
+          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.75)} title={t("ctrl.pctOf", { p: 75 })}>75%</button>
+          <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>120%</button>
+          <button className="btn unit-toggle unit-toggle-secondary" type="button" onClick={() => setUnit(unit === "bb" ? "chips" : "bb")} title={t("unit.toggle")}>
+            {unit === "bb" ? "bb" : "fichas"}
+          </button>
+        </div>
       </div>
+
+      <div className="raise-control-panel">
+        <div className="raise-control-heading">
+          <span className="control-section-label">DEFINA O TAMANHO DO RAISE</span>
+          <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
+        </div>
+        <div className="slider-row slider-row-v2">
+          <input type="range" min={legal.minRaiseTo} max={legal.maxRaiseTo} value={Math.min(raiseTo, legal.maxRaiseTo)} disabled={!canRaise} onChange={(e) => setRaiseTo(Number(e.target.value))} />
+        </div>
+      </div>
+
       {active && coachBetSize && coachBetSize > 0 ? (
         <div className="coach-size-hint">
-          <span
-            style={{
-              display: "inline-block",
-              padding: "4px 12px",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#0b0f0d",
-              background: "linear-gradient(180deg,#ecd07a,#c9a227)",
-            }}
-            title="Tamanho sugerido pelo coach para esta rua"
-          >
+          <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#0b0f0d", background: "linear-gradient(180deg,#ecd07a,#c9a227)" }} title="Tamanho sugerido pelo coach para esta rua">
             💰 coach: ~{Math.round(coachBetSize)}bb
           </span>
         </div>
