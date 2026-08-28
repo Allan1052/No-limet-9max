@@ -7,7 +7,7 @@ const component = fs.readFileSync(new URL("./SessionProgressStrip.tsx", import.m
 describe("Etapa 4 - progresso compacto durante o jogo", () => {
   it("integra a faixa de progresso no fluxo principal", () => {
     expect(app).toContain("<SessionProgressStrip");
-    expect(app).toContain("summary={progress}");
+    expect(app).toContain("summary={progress()}");
   });
 
   it("mostra mãos, decisões e precisão da sessão usando dados existentes", () => {
