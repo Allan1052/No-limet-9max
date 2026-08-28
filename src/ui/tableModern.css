@@ -100,6 +100,8 @@
 }
 
 @media (max-width: 640px) {
+  /* Refinamento aprovado no celular: cabeçalho e faixa de status respiram menos,
+     a mesa encosta visualmente na linha superior e os controles sobem até ela. */
   .app.nav-hidden .topbar {
     gap: 8px;
     padding-bottom: 4px;
@@ -152,7 +154,6 @@
     flex-direction: column;
     gap: 2px;
     min-height: 0;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 
   .app.nav-hidden .play > .table-modern {
@@ -160,7 +161,7 @@
   }
 
   .table-wrap.table-modern {
-    height: clamp(330px, calc(100dvh - 292px), 515px);
+    height: clamp(360px, calc(100dvh - 265px), 535px);
     min-height: 0;
     border-radius: 20px;
     margin-top: 0;
@@ -206,13 +207,13 @@
   }
 
   .app.nav-hidden .play .controls {
-    margin-top: 0;
+    margin-top: 2px;
   }
 }
 
 @media (max-width: 400px) {
   .table-wrap.table-modern {
-    height: clamp(320px, calc(100dvh - 280px), 480px);
+    height: clamp(350px, calc(100dvh - 250px), 500px);
   }
 
   .table-modern .seat:not(.hero) {
@@ -235,15 +236,14 @@
 /* Celular deitado: mesa mais larga e baixa, calculada pela altura disponível. */
 @media (orientation: landscape) and (max-height: 520px) {
   .app.nav-hidden .play {
-    gap: 2px;
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    gap: 4px;
   }
 
   .table-wrap.table-modern {
-    height: clamp(245px, calc(100dvh - 190px), 320px);
+    height: clamp(260px, calc(100dvh - 170px), 340px);
     min-height: 0;
     border-radius: 16px;
-    margin-top: 0;
+    margin-top: 2px;
   }
 
   .table-modern .felt {
