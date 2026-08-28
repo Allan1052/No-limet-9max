@@ -3,6 +3,7 @@ import { CardView, CardBack } from "./Card";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
 import type { PlayerState } from "../game/state";
+import "./tableHierarchy.css";
 
 interface SeatProps {
   player: PlayerState;
@@ -44,6 +45,7 @@ export function Seat({
 
   const folded = player.status === "folded";
   const showCards = player.isHero || reveal;
+  const stackLabel = fmtAmount(player.stack, bigBlind, unit);
   const badgeClass = lastAction
     ? /Raise|Aposta|All-in/.test(lastAction)
       ? "badge aggro"
@@ -62,11 +64,13 @@ export function Seat({
         className="pod pod-btn"
         onClick={() => onSelect?.(player.seat)}
         title={rangeMarked ? "Ver o range desta mão" : "Ver estatísticas"}
+        aria-label={`${player.isHero ? "Você, " : ""}${position ? `${position}, ` : ""}${player.name}, stack ${stackLabel}`}
       >
+        {player.isHero ? <div className="hero-kicker">VOCÊ</div> : null}
         {position ? <div className="pos-tag">{position}</div> : null}
         {rangeMarked ? <div className="range-flag">👁 range</div> : null}
         <div className="name">{player.name}</div>
-        <div className="stack">{fmtAmount(player.stack, bigBlind, unit)}</div>
+        <div className="stack">{stackLabel}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (
             player.holeCards.map((c, i) => <CardView key={i} card={c} small />)
