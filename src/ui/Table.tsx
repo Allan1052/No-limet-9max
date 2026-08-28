@@ -9,18 +9,19 @@ import { ChipStack } from "./ChipStack";
 import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
+import "./tableModern.css";
 
 // Posições (%) dos 9 assentos. O herói (assento 0) fica embaixo, no centro.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "90%", left: "50%" }, // 0 herói
-  { top: "82%", left: "19%" }, // 1
-  { top: "52%", left: "9%" }, // 2
-  { top: "20%", left: "14%" }, // 3
-  { top: "8%", left: "37%" }, // 4
-  { top: "8%", left: "63%" }, // 5
-  { top: "20%", left: "86%" }, // 6
-  { top: "52%", left: "91%" }, // 7
-  { top: "82%", left: "81%" }, // 8
+  { top: "90%", left: "50%" },
+  { top: "82%", left: "19%" },
+  { top: "52%", left: "9%" },
+  { top: "20%", left: "14%" },
+  { top: "8%", left: "37%" },
+  { top: "8%", left: "63%" },
+  { top: "20%", left: "86%" },
+  { top: "52%", left: "91%" },
+  { top: "82%", left: "81%" },
 ];
 
 function towardCenter(pos: { top: string; left: string }, f: number) {
@@ -29,19 +30,9 @@ function towardCenter(pos: { top: string; left: string }, f: number) {
   return { top: `${t + (50 - t) * f}%`, left: `${l + (50 - l) * f}%` };
 }
 
-// Onde o pote fica (centro): as fichas recolhidas deslizam pra cá.
 const POT_CENTER = { top: "45%", left: "50%" };
 
-/** Ficha voando da frente do jogador pro pote (o "dealer recolhe"). */
-function SweepChip({
-  from,
-  amount,
-  bigBlind,
-}: {
-  from: { top: string; left: string };
-  amount: number;
-  bigBlind: number;
-}) {
+function SweepChip({ from, amount, bigBlind }: { from: { top: string; left: string }; amount: number; bigBlind: number }) {
   const [go, setGo] = useState(false);
   useEffect(() => {
     const id = requestAnimationFrame(() => setGo(true));
@@ -77,34 +68,25 @@ export function PokerTable({
   celebrate?: boolean;
   updateReady?: boolean;
   onUpdate?: () => void;
-  /** Assentos que têm range pra ver ao final da mão (ficam marcados). */
   rangeSeats?: number[];
-  /** Valor do torneio — aparece na mesa, junto ao pote. */
   buyIn?: number;
 }) {
   const { t } = useT();
 
-  // Get the base URL from the manifest or default to '/'
   function getBasePath(): string {
     const base = document.querySelector('script[type="module"]')?.getAttribute('src') || '';
-    // Detect if we're at root (script src = "/assets/...")
     if (base.startsWith('/assets/')) return '/';
-    // Old format: /ProjectName/assets/...
     const match = base.match(/^(\/[^/]+\/)/);
     return match ? match[1] : '/';
   }
   const reveal = table.handOver;
 
-  // Varrida do dealer: quando uma aposta da frente é RECOLHIDA (committed vai a
-  // 0 ao fechar a rua), dispara uma ficha voando daquele assento pro pote.
   const [sweeps, setSweeps] = useState<Array<{ id: string; from: { top: string; left: string }; amount: number }>>([]);
   const prevCommitted = useRef<Record<number, number>>({});
   const prevBoardLen = useRef(0);
-  const commitSig =
-    table.players.map((p) => `${p.seat}:${p.committed}`).join(",") + `|${table.street}|${table.handOver}`;
+  const commitSig = table.players.map((p) => `${p.seat}:${p.committed}`).join(",") + `|${table.street}|${table.handOver}`;
   useEffect(() => {
     const prev = prevCommitted.current;
-    // Virada de mão nova (board zerou): não é recolhimento — não varre.
     const newHand = table.board.length < prevBoardLen.current;
     const born: Array<{ id: string; from: { top: string; left: string }; amount: number }> = [];
     if (!newHand) {
@@ -113,11 +95,7 @@ export function PokerTable({
         if (before > 0 && (p.committed ?? 0) === 0 && p.status !== "out") {
           const pos = SEAT_POS[p.seat];
           if (pos) {
-            born.push({
-              id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              from: towardCenter(pos, 0.36),
-              amount: before,
-            });
+            born.push({ id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, from: towardCenter(pos, 0.36), amount: before });
           }
         }
       }
@@ -134,50 +112,19 @@ export function PokerTable({
     }
   }, [commitSig]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Posições (UTG..BTN/SB/BB) dos jogadores ainda na mesa, a partir do botão.
   const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
   const positions = tablePositions(seatsInPlay, table.buttonSeat);
 
   return (
-    <div className={`table-wrap ${celebrate ? "celebrate" : ""}`}>
+    <div className={`table-wrap table-modern ${celebrate ? "celebrate" : ""}`}>
       <div className="felt">
-        <div
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-            pointerEvents: 'none',
-            opacity: '0.2'
-          }}
-        >
-          <img
-            src={`${getBasePath()}brand-logo-splash.png`}
-            alt="Call ou Fold"
-            style={{ width: '50px', height: '50px' }}
-          />
-          <span
-            style={{
-              color: '#d4af37',
-              fontFamily: 'Georgia, serif',
-              fontWeight: 700,
-              fontSize: '9px',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase'
-            }}
-          >
-            aqui é possível
-          </span>
+        <div className="table-surface-glow" />
+        <div className="table-brand-mark">
+          <img src={`${getBasePath()}brand-logo-splash.png`} alt="Call ou Fold" />
+          <span>aqui é possível</span>
         </div>
       </div>
 
-      {/* Coluna central única (dica + pote + board). As infos do torneio
-          (classificação, blinds, inscritos) foram para a barra do topo, ao
-          estilo GGPoker — assim o feltro fica limpo. */}
       <div className="tbl-center-col">
         {hint ? <div className="tbl-hint">💡 {hint}</div> : null}
         <Board
@@ -194,14 +141,12 @@ export function PokerTable({
         />
       </div>
 
-      {/* Botão central: ver as dicas completas da mão (após o river/showdown) */}
       {showTips ? (
         <button className="tbl-tips-btn" onClick={onShowTips}>
           💡 {t("tips.button")}
         </button>
       ) : null}
 
-      {/* Aviso de nova versão, bem no centro da mesa */}
       {updateReady ? (
         <button className="tbl-update-btn" onClick={onUpdate}>
           ✨ {t("update.button")}
@@ -229,9 +174,6 @@ export function PokerTable({
         );
       })}
 
-      {/* Fichas apostadas na frente de cada jogador (a aposta "na mesa" da rua).
-          Na mão encerrada (showdown) as apostas já pertencem ao pote — não
-          pintamos pilhas na frente dos assentos pra não sobrepor nada. */}
       {table.players.map((p) => {
         if (table.handOver) return null;
         if (!p.committed || p.committed <= 0 || p.status === "out") return null;
@@ -245,8 +187,6 @@ export function PokerTable({
         );
       })}
 
-      {/* Dealer recolhendo: fichas deslizando pro pote. Na mão encerrada o
-          dinheiro já está centralizado no pote — sem fichas voando por cima. */}
       {table.handOver ? null : sweeps.map((s) => (
         <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />
       ))}

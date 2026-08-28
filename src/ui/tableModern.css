@@ -1,0 +1,153 @@
+/* Etapa 2 — mesa coerente com o mockup 2 aprovado.
+   Somente apresentação: não altera posições, apostas ou regras. */
+
+.table-wrap.table-modern {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  min-height: 560px;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.025), transparent 42%),
+    linear-gradient(180deg, rgba(10,14,12,.96), rgba(5,8,7,.98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.table-modern .felt {
+  position: absolute;
+  inset: 8% 6% 12%;
+  border-radius: 48% / 42%;
+  border: 2px solid rgba(230,196,84,.42);
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(33,74,58,.92) 0%, rgba(17,45,34,.98) 58%, rgba(8,25,19,1) 100%);
+  box-shadow:
+    0 0 0 7px rgba(7,10,8,.92),
+    0 0 0 9px rgba(230,196,84,.14),
+    0 20px 55px rgba(0,0,0,.48),
+    inset 0 0 70px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+}
+
+.table-modern .table-surface-glow {
+  position: absolute;
+  inset: 13% 13% 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(98,180,132,.11), transparent 66%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.table-modern .table-brand-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+  opacity: .13;
+  z-index: 1;
+}
+
+.table-modern .table-brand-mark img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
+.table-modern .table-brand-mark span {
+  color: var(--gold, #e6c454);
+  font-family: Georgia, serif;
+  font-weight: 700;
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.table-modern .tbl-center-col {
+  z-index: 4;
+  filter: drop-shadow(0 7px 16px rgba(0,0,0,.35));
+}
+
+.table-modern .seat {
+  z-index: 6;
+}
+
+.table-modern .seat .pod {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(27,32,29,.97), rgba(10,14,12,.98));
+  box-shadow: 0 8px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.table-modern .seat.acting .pod {
+  border-color: rgba(230,196,84,.72);
+  box-shadow: 0 0 0 2px rgba(230,196,84,.20), 0 0 24px rgba(230,196,84,.32), 0 10px 22px rgba(0,0,0,.48);
+}
+
+.table-modern .seat.hero .pod {
+  border-color: rgba(230,196,84,.82);
+  box-shadow: 0 0 0 1px rgba(230,196,84,.18), 0 14px 28px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.table-modern .seat-bet,
+.table-modern .dealer-btn {
+  z-index: 7;
+}
+
+@media (max-width: 640px) {
+  .table-wrap.table-modern {
+    min-height: 500px;
+    border-radius: 22px;
+  }
+
+  .table-modern .felt {
+    inset: 9% 3.5% 13%;
+    border-width: 1px;
+    box-shadow:
+      0 0 0 5px rgba(7,10,8,.94),
+      0 0 0 6px rgba(230,196,84,.14),
+      0 16px 36px rgba(0,0,0,.5),
+      inset 0 0 50px rgba(0,0,0,.34);
+  }
+
+  .table-modern .table-brand-mark img {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* Celular deitado: mesa mais larga, mais baixa e com o centro livre. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .table-wrap.table-modern {
+    min-height: 330px;
+    height: min(66vh, 390px);
+    border-radius: 18px;
+  }
+
+  .table-modern .felt {
+    inset: 7% 4% 10%;
+    border-radius: 49% / 43%;
+  }
+
+  .table-modern .table-brand-mark {
+    opacity: .09;
+  }
+
+  .table-modern .table-brand-mark img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .table-modern .seat.hero {
+    width: 128px;
+  }
+
+  .table-modern .seat .pod {
+    transform: scale(.9);
+  }
+}
