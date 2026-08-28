@@ -257,7 +257,7 @@ export function App() {
             </span>
             <span className={`ts-seg${fs.inMoney ? " itm" : ""}`}>
               {fs.inMoney
-                ? `ITM · ${Math.round(fs.currentCash).toLocaleString("pt-BR")} fichas simuladas`
+                ? `ITM · ${Math.round(fs.currentCash).toLocaleString("pt-BR")} FS`
                 : `🎯 ${fs.toBubble} p/ faixa pontuável`}
             </span>
             {/* Barra de progresso visual: quanto falta para a faixa pontuável */}
