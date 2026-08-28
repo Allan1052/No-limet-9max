@@ -11,17 +11,19 @@ import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
 import "./tableModern.css";
 
-// Posições (%) dos 9 assentos. O herói (assento 0) fica embaixo, no centro.
+// Posições (%) dos 9 assentos. Mantemos todos um pouco mais para dentro do
+// oval para que, no celular, nenhum pod invada a faixa de classificação acima
+// nem empurre os controles para fora da tela.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "90%", left: "50%" },
-  { top: "82%", left: "19%" },
-  { top: "52%", left: "9%" },
-  { top: "20%", left: "14%" },
-  { top: "8%", left: "37%" },
-  { top: "8%", left: "63%" },
-  { top: "20%", left: "86%" },
-  { top: "52%", left: "91%" },
-  { top: "82%", left: "81%" },
+  { top: "86%", left: "50%" },
+  { top: "76%", left: "20%" },
+  { top: "50%", left: "10%" },
+  { top: "25%", left: "15%" },
+  { top: "13%", left: "37%" },
+  { top: "13%", left: "63%" },
+  { top: "25%", left: "85%" },
+  { top: "50%", left: "90%" },
+  { top: "76%", left: "80%" },
 ];
 
 function towardCenter(pos: { top: string; left: string }, f: number) {
