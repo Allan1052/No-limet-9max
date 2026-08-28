@@ -13,6 +13,7 @@ import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
 import { HandActions } from "../ui/HandActions";
 import { HandResultSummary } from "../ui/HandResultSummary";
+import { SessionProgressStrip } from "../ui/SessionProgressStrip";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
 
@@ -446,6 +447,7 @@ export function App() {
         /></Suspense>
       ) : (
         <div className="play">
+          <SessionProgressStrip summary={progress()} />
           <PokerTable
             table={t}
             lastActionLabel={controller.lastActionLabel}
