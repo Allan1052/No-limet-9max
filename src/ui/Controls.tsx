@@ -40,7 +40,6 @@ export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, co
   return (
     <div className="controls controls-v2">
       <div className="action-panel">
-        <div className="control-section-label">AÇÕES PRINCIPAIS</div>
         <div className="action-row action-row-primary">
           <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
             <span className="action-choice-label">{t("ctrl.fold")}</span>
