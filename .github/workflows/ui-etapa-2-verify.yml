@@ -1,0 +1,18 @@
+name: Verificar Etapa 2 mobile
+on:
+  push:
+    branches:
+      - openai/ui-etapa-2-viewport-fix
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm test
+      - run: npm run build
