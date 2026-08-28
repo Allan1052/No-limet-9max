@@ -12,11 +12,19 @@ describe("Etapa 2 - mesa visual moderna", () => {
     expect(table).toContain('className="table-surface-glow"');
   });
 
-  test("mantém a mesa legível em celular vertical e horizontal", () => {
-    expect(css).toContain(".table-modern");
-    expect(css).toContain(".table-surface-glow");
+  test("compacta os assentos no celular vertical para evitar sobreposição", () => {
     expect(css).toContain("@media (max-width: 640px)");
+    expect(css).toContain(".table-modern .seat:not(.hero)");
+    expect(css).toContain("width: 104px");
+    expect(css).toContain(".table-modern .seat.hero");
+    expect(css).toContain("width: 118px");
+    expect(css).toContain("transform: scale(.92)");
+  });
+
+  test("mantém tratamento específico para celular horizontal", () => {
     expect(css).toContain("@media (orientation: landscape)");
+    expect(css).toContain("max-height: 520px");
+    expect(css).toContain("transform: scale(.82)");
   });
 
   test("preserva os nove assentos e o fluxo existente", () => {
