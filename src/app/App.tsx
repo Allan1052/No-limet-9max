@@ -12,6 +12,7 @@ import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
 import { HandActions } from "../ui/HandActions";
+import { HandResultSummary } from "../ui/HandResultSummary";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
 
@@ -458,6 +459,13 @@ export function App() {
             rangeSeats={participantSeats}
             buyIn={controller.tournament?.buyIn}
           />
+
+          {handOver && controller.feedback.length > 0 ? (
+            <HandResultSummary
+              feedback={controller.feedback}
+              onOpenTips={() => setTipsOpen(true)}
+            />
+          ) : null}
 
           {handOver ? (
             <div className="controls action-row">
