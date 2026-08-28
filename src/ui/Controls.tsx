@@ -24,7 +24,7 @@ interface ControlsProps {
   coachBetSize?: number;
 }
 
-export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = false, defaultRaiseTo, coachBetSize }: ControlsProps) {
+export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, coachBetSize }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
@@ -36,10 +36,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
   }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
 
   const canRaise = active && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo;
-  const potBet = (frac: number) => {
-    const target = Math.round((legal.callAmount + pot) * frac) + legal.callAmount;
-    setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, target)));
-  };
 
   return (
     <div className="controls controls-v2">
@@ -71,24 +67,15 @@ export function Controls({ legal, active, pot, bigBlind, onAction, isOmaha = fal
         </div>
       </div>
 
-      <div className="sizing-panel">
-        <div className="control-section-label">TAMANHOS DE APOSTA</div>
-        <div className="pct-row sizing-row">
-          {isOmaha && <button className="btn size pot-btn" disabled={!canRaise} onClick={() => potBet(1.0)} title="Pot Limit">POT</button>}
-          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.35)} title={t("ctrl.pctOf", { p: 35 })}>35%</button>
-          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.6)} title={t("ctrl.pctOf", { p: 60 })}>60%</button>
-          <button className="btn size" disabled={!canRaise} onClick={() => potBet(0.75)} title={t("ctrl.pctOf", { p: 75 })}>75%</button>
-          <button className="btn size" disabled={!canRaise} onClick={() => potBet(1.2)} title={t("ctrl.pctOf", { p: 120 })}>120%</button>
-          <button className="btn unit-toggle unit-toggle-secondary" type="button" onClick={() => setUnit(unit === "bb" ? "chips" : "bb")} title={t("unit.toggle")}>
-            {unit === "bb" ? "bb" : "fichas"}
-          </button>
-        </div>
-      </div>
-
       <div className="raise-control-panel">
         <div className="raise-control-heading">
           <span className="control-section-label">DEFINA O TAMANHO DO RAISE</span>
-          <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
+          <div className="raise-heading-actions">
+            <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
+            <button className="btn unit-toggle unit-toggle-secondary" type="button" onClick={() => setUnit(unit === "bb" ? "chips" : "bb")} title={t("unit.toggle")}>
+              {unit === "bb" ? "bb" : "fichas"}
+            </button>
+          </div>
         </div>
         <div className="slider-row slider-row-v2">
           <input type="range" min={legal.minRaiseTo} max={legal.maxRaiseTo} value={Math.min(raiseTo, legal.maxRaiseTo)} disabled={!canRaise} onChange={(e) => setRaiseTo(Number(e.target.value))} />
