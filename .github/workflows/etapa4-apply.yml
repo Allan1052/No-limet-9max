@@ -30,8 +30,8 @@ jobs:
                   raise SystemExit('import alvo não encontrado')
               s = s.replace(imp, imp + new_imp, 1)
           anchor = '''      ) : (\n        <div className="play">\n          <PokerTable'''
-          insert = '''      ) : (\n        <div className="play">\n          <SessionProgressStrip summary={progress} />\n          <PokerTable'''
-          if '<SessionProgressStrip summary={progress} />' not in s:
+          insert = '''      ) : (\n        <div className="play">\n          <SessionProgressStrip summary={progress()} />\n          <PokerTable'''
+          if '<SessionProgressStrip summary={progress()} />' not in s:
               if anchor not in s:
                   raise SystemExit('ponto de integração não encontrado')
               s = s.replace(anchor, insert, 1)
