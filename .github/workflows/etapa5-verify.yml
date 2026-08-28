@@ -13,5 +13,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install
-      - run: npx vitest run src/ui/mobilePolish.contract.test.ts
+      - run: npm test
       - run: npm run build
