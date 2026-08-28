@@ -1,5 +1,5 @@
-/* Etapa 2 — mesa coerente com o mockup 2 aprovado.
-   Somente apresentação: não altera posições, apostas ou regras. */
+/* Etapa 2 — mesa coerente com o mockup aprovado.
+   Somente apresentação: não altera apostas, ranges ou regras. */
 
 .table-wrap.table-modern {
   position: relative;
@@ -100,46 +100,44 @@
 }
 
 @media (max-width: 640px) {
+  /* A tela ativa passa a respeitar a altura REAL do aparelho. Assim a faixa de
+     classificação fica acima, a mesa ocupa o miolo e os controles continuam
+     acessíveis no rodapé sem a mesa empurrá-los para fora do viewport. */
+  .app.nav-hidden .play {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+  }
+
+  .app.nav-hidden .play > .table-modern {
+    flex: 0 1 auto;
+  }
+
   .table-wrap.table-modern {
-    min-height: clamp(500px, 132vw, 570px);
-    border-radius: 22px;
+    height: clamp(340px, calc(100dvh - 300px), 520px);
+    min-height: 0;
+    border-radius: 20px;
+    margin-top: 6px;
   }
 
   .table-modern .felt {
-    inset: 8% 2.5% 12%;
+    inset: 7% 3% 10%;
     border-width: 1px;
     box-shadow:
       0 0 0 5px rgba(7,10,8,.94),
       0 0 0 6px rgba(230,196,84,.14),
-      0 16px 36px rgba(0,0,0,.5),
-      inset 0 0 50px rgba(0,0,0,.34);
+      0 14px 30px rgba(0,0,0,.5),
+      inset 0 0 46px rgba(0,0,0,.34);
   }
 
   .table-modern .table-brand-mark img {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
-  /* Assentos menores deixam a borda da mesa e as ações respirarem no retrato. */
-  .table-modern .seat:not(.hero) {
-    width: 104px;
-  }
-
-  .table-modern .seat.hero {
-    width: 118px;
-  }
-
-  .table-modern .seat .pod {
-    transform: scale(.92);
-    transform-origin: center;
-  }
-
-  .table-modern .seat.hero .pod {
-    transform: scale(.94);
-  }
-}
-
-@media (max-width: 400px) {
   .table-modern .seat:not(.hero) {
     width: 98px;
   }
@@ -149,24 +147,63 @@
   }
 
   .table-modern .seat .pod {
-    transform: scale(.88);
+    transform: scale(.86);
+    transform-origin: center;
   }
 
   .table-modern .seat.hero .pod {
-    transform: scale(.91);
+    transform: scale(.89);
+  }
+
+  .table-modern .tbl-center-col {
+    transform: translate(-50%, -50%) scale(.9);
+    transform-origin: center;
+  }
+
+  .app.nav-hidden .hub-subnav {
+    position: relative;
+    z-index: 20;
+    margin-bottom: 4px;
   }
 }
 
-/* Celular deitado: mesa mais larga, mais baixa e com assentos ainda mais enxutos. */
-@media (orientation: landscape) and (max-height: 520px) {
+@media (max-width: 400px) {
   .table-wrap.table-modern {
-    min-height: 330px;
-    height: min(70vh, 390px);
-    border-radius: 18px;
+    height: clamp(330px, calc(100dvh - 288px), 485px);
+  }
+
+  .table-modern .seat:not(.hero) {
+    width: 92px;
+  }
+
+  .table-modern .seat.hero {
+    width: 106px;
+  }
+
+  .table-modern .seat .pod {
+    transform: scale(.82);
+  }
+
+  .table-modern .seat.hero .pod {
+    transform: scale(.86);
+  }
+}
+
+/* Celular deitado: mesa mais larga e baixa, calculada pela altura disponível. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .app.nav-hidden .play {
+    gap: 4px;
+  }
+
+  .table-wrap.table-modern {
+    height: clamp(260px, calc(100dvh - 170px), 340px);
+    min-height: 0;
+    border-radius: 16px;
+    margin-top: 2px;
   }
 
   .table-modern .felt {
-    inset: 6% 3% 9%;
+    inset: 5% 4% 8%;
     border-radius: 49% / 43%;
   }
 
@@ -175,24 +212,28 @@
   }
 
   .table-modern .table-brand-mark img {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
   .table-modern .seat:not(.hero) {
-    width: 96px;
+    width: 90px;
   }
 
   .table-modern .seat.hero {
-    width: 108px;
+    width: 102px;
   }
 
   .table-modern .seat .pod {
-    transform: scale(.82);
+    transform: scale(.78);
     transform-origin: center;
   }
 
   .table-modern .seat.hero .pod {
-    transform: scale(.86);
+    transform: scale(.82);
+  }
+
+  .table-modern .tbl-center-col {
+    transform: translate(-50%, -50%) scale(.82);
   }
 }
