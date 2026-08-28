@@ -12,19 +12,24 @@ describe("Etapa 2 - mesa visual moderna", () => {
     expect(table).toContain('className="table-surface-glow"');
   });
 
-  test("compacta os assentos no celular vertical para evitar sobreposição", () => {
-    expect(css).toContain("@media (max-width: 640px)");
-    expect(css).toContain(".table-modern .seat:not(.hero)");
-    expect(css).toContain("width: 104px");
-    expect(css).toContain(".table-modern .seat.hero");
-    expect(css).toContain("width: 118px");
-    expect(css).toContain("transform: scale(.92)");
+  test("dimensiona a mesa pelo viewport no celular em vez de forçar altura fixa", () => {
+    expect(css).toContain("height: clamp(340px, calc(100dvh - 300px), 520px)");
+    expect(css).toContain("min-height: 0");
+    expect(css).toContain(".app.nav-hidden .play");
+  });
+
+  test("mantém os assentos dentro da área visual para não cobrir a classificação", () => {
+    expect(table).toContain('{ top: "86%", left: "50%" }');
+    expect(table).toContain('{ top: "13%", left: "37%" }');
+    expect(table).toContain('{ top: "13%", left: "63%" }');
+    expect(css).toContain("width: 98px");
+    expect(css).toContain("width: 112px");
   });
 
   test("mantém tratamento específico para celular horizontal", () => {
     expect(css).toContain("@media (orientation: landscape)");
     expect(css).toContain("max-height: 520px");
-    expect(css).toContain("transform: scale(.82)");
+    expect(css).toContain("height: clamp(260px, calc(100dvh - 170px), 340px)");
   });
 
   test("preserva os nove assentos e o fluxo existente", () => {
