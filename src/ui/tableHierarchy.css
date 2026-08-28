@@ -1,0 +1,119 @@
+/* Etapa 1 do polish da mesa: hierarquia visual do Hero.
+   Mantém a lógica da mão intacta e trabalha só leitura/ênfase. */
+
+.seat.hero {
+  width: 144px;
+  z-index: 9;
+}
+
+.seat.hero .pod {
+  background:
+    linear-gradient(180deg, rgba(39, 43, 28, 0.98) 0%, rgba(18, 22, 15, 0.98) 100%);
+  border-color: var(--gold-bright);
+  box-shadow:
+    0 0 0 1px rgba(247, 231, 155, 0.2),
+    0 0 22px rgba(212, 175, 55, 0.36),
+    0 10px 24px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.seat.hero.acting .pod {
+  border-color: var(--gold-bright);
+  box-shadow:
+    0 0 0 3px rgba(230, 196, 84, 0.2),
+    0 0 30px rgba(230, 196, 84, 0.48),
+    0 12px 28px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.hero-kicker {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  min-width: 44px;
+  padding: 2px 8px;
+  border: 1px solid var(--gold-bright);
+  border-radius: 999px;
+  background: var(--gold-grad);
+  color: #10120c;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.9px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+}
+
+.seat.hero .pos-tag {
+  top: 7px;
+  left: 7px;
+  background: rgba(10, 13, 10, 0.9);
+  color: var(--gold-bright);
+  border: 1px solid rgba(230, 196, 84, 0.48);
+  padding: 2px 6px;
+}
+
+.seat.hero .name {
+  margin-top: 4px;
+  color: var(--gold-bright);
+  font-size: 13px;
+  letter-spacing: 0.15px;
+}
+
+.seat.hero .stack {
+  margin-top: 3px;
+  color: #fff7cf;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.seat.hero .hole {
+  margin-top: 6px;
+  gap: 4px;
+  transform: scale(1.08);
+  transform-origin: center top;
+}
+
+.seat.hero .badge {
+  margin-top: 7px;
+  min-width: 54px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .seat.hero {
+    width: 138px;
+  }
+
+  .seat.hero .pod {
+    padding: 7px 8px 6px;
+  }
+
+  .hero-kicker {
+    top: -12px;
+    font-size: 8px;
+    padding: 2px 7px;
+  }
+
+  .seat.hero .name {
+    font-size: 12px;
+  }
+
+  .seat.hero .stack {
+    font-size: 13px;
+  }
+
+  .seat.hero .hole {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat.hero .pod {
+    transition: none;
+  }
+}
