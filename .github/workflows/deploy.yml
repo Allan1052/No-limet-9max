@@ -30,6 +30,8 @@ jobs:
         with:
           node-version: "20"
       - run: npm install
+      # Regra do projeto: nenhum deploy segue adiante sem a suíte de testes passar.
+      - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
