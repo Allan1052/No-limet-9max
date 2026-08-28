@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const seatSource = readFileSync(new URL("./Seat.tsx", import.meta.url), "utf8");
-const hierarchyCss = readFileSync(new URL("./tableHierarchy.css", import.meta.url), "utf8");
+const seatSource = readFileSync(new URL("../src/ui/Seat.tsx", import.meta.url), "utf8");
+const hierarchyCss = readFileSync(new URL("../src/ui/tableHierarchy.css", import.meta.url), "utf8");
 
 describe("hierarquia visual da mesa", () => {
   it("identifica o Hero explicitamente sem depender só de cor", () => {
