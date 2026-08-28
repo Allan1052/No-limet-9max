@@ -17,15 +17,15 @@
   position: absolute;
   inset: 8% 6% 12%;
   border-radius: 48% / 42%;
-  border: 2px solid rgba(230,196,84,.42);
+  border: 2px solid rgba(230,196,84,.46);
   background:
-    radial-gradient(ellipse at 50% 42%, rgba(33,74,58,.92) 0%, rgba(17,45,34,.98) 58%, rgba(8,25,19,1) 100%);
+    radial-gradient(ellipse at 50% 40%, rgba(48,126,88,.98) 0%, rgba(22,82,55,.99) 55%, rgba(8,35,24,1) 100%);
   box-shadow:
     0 0 0 7px rgba(7,10,8,.92),
-    0 0 0 9px rgba(230,196,84,.14),
+    0 0 0 9px rgba(230,196,84,.16),
     0 20px 55px rgba(0,0,0,.48),
-    inset 0 0 70px rgba(0,0,0,.35),
-    inset 0 1px 0 rgba(255,255,255,.05);
+    inset 0 0 66px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.08);
   overflow: hidden;
 }
 
@@ -33,7 +33,7 @@
   position: absolute;
   inset: 13% 13% 18%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(98,180,132,.11), transparent 66%);
+  background: radial-gradient(circle at 50% 46%, rgba(116,211,157,.16), transparent 66%);
   pointer-events: none;
   z-index: 1;
 }
@@ -100,15 +100,59 @@
 }
 
 @media (max-width: 640px) {
-  /* A tela ativa passa a respeitar a altura REAL do aparelho. Assim a faixa de
-     classificação fica acima, a mesa ocupa o miolo e os controles continuam
-     acessíveis no rodapé sem a mesa empurrá-los para fora do viewport. */
+  /* Refinamento aprovado no celular: cabeçalho e faixa de status respiram menos,
+     a mesa encosta visualmente na linha superior e os controles sobem até ela. */
+  .app.nav-hidden .topbar {
+    gap: 8px;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+
+  .app.nav-hidden .brand {
+    gap: 8px;
+  }
+
+  .app.nav-hidden .brand-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .app.nav-hidden .brand-name {
+    font-size: 20px;
+  }
+
+  .app.nav-hidden .brand small,
+  .app.nav-hidden .brand-text small {
+    margin-top: 1px;
+    font-size: 8px;
+    letter-spacing: 1.8px;
+  }
+
+  .app.nav-hidden .hub-subnav {
+    position: relative;
+    z-index: 20;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .app.nav-hidden .hub-chips,
+  .app.nav-hidden .hub-info,
+  .app.nav-hidden .tstatus {
+    min-height: 0;
+  }
+
+  .app.nav-hidden .tstatus {
+    gap: 4px;
+    line-height: 1.05;
+  }
+
   .app.nav-hidden .play {
     width: 100%;
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
     min-height: 0;
   }
 
@@ -117,20 +161,22 @@
   }
 
   .table-wrap.table-modern {
-    height: clamp(340px, calc(100dvh - 300px), 520px);
+    height: clamp(360px, calc(100dvh - 265px), 535px);
     min-height: 0;
     border-radius: 20px;
-    margin-top: 6px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   .table-modern .felt {
-    inset: 7% 3% 10%;
+    inset: 5% 3% 8%;
     border-width: 1px;
     box-shadow:
       0 0 0 5px rgba(7,10,8,.94),
-      0 0 0 6px rgba(230,196,84,.14),
-      0 14px 30px rgba(0,0,0,.5),
-      inset 0 0 46px rgba(0,0,0,.34);
+      0 0 0 6px rgba(230,196,84,.16),
+      0 12px 26px rgba(0,0,0,.42),
+      inset 0 0 42px rgba(0,0,0,.27),
+      inset 0 1px 0 rgba(255,255,255,.08);
   }
 
   .table-modern .table-brand-mark img {
@@ -160,16 +206,14 @@
     transform-origin: center;
   }
 
-  .app.nav-hidden .hub-subnav {
-    position: relative;
-    z-index: 20;
-    margin-bottom: 4px;
+  .app.nav-hidden .play .controls {
+    margin-top: 2px;
   }
 }
 
 @media (max-width: 400px) {
   .table-wrap.table-modern {
-    height: clamp(330px, calc(100dvh - 288px), 485px);
+    height: clamp(350px, calc(100dvh - 250px), 500px);
   }
 
   .table-modern .seat:not(.hero) {
