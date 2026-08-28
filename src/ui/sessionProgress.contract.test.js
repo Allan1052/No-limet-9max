@@ -10,9 +10,10 @@ describe("Etapa 4 - progresso compacto durante o jogo", () => {
     expect(app).toContain("summary={progress}");
   });
 
-  it("mostra mãos, decisões e precisão usando dados existentes", () => {
+  it("mostra mãos, decisões e precisão da sessão usando dados existentes", () => {
     expect(component).toContain("summary.hands");
     expect(component).toContain("summary.decisions");
-    expect(component).toContain("summary.goodRateAll");
+    expect(component).toContain("summary.counts.boa + summary.counts.ok");
+    expect(component).toContain('aria-label="Progresso desta sessão"');
   });
 });
