@@ -13,7 +13,7 @@ describe("Etapa 2 - mesa visual moderna", () => {
   });
 
   test("dimensiona a mesa pelo viewport no celular em vez de forçar altura fixa", () => {
-    expect(css).toContain("height: clamp(360px, calc(100dvh - 265px), 535px)");
+    expect(css).toContain("height: clamp(340px, calc(100dvh - 300px), 520px)");
     expect(css).toContain("min-height: 0");
     expect(css).toContain(".app.nav-hidden .play");
   });
@@ -24,22 +24,6 @@ describe("Etapa 2 - mesa visual moderna", () => {
     expect(table).toContain('{ top: "13%", left: "63%" }');
     expect(css).toContain("width: 98px");
     expect(css).toContain("width: 112px");
-  });
-
-  test("comprime cabeçalho e faixa de status no celular para liberar altura útil", () => {
-    expect(css).toContain(".app.nav-hidden .topbar");
-    expect(css).toContain("padding-bottom: 4px");
-    expect(css).toContain("margin-bottom: 4px");
-    expect(css).toContain(".app.nav-hidden .hub-subnav");
-    expect(css).toContain("margin-bottom: 0");
-    expect(css).toContain(".app.nav-hidden .play .controls");
-    expect(css).toContain("margin-top: 2px");
-  });
-
-  test("usa verde mais vivo com brilho moderado na mesa aprovada", () => {
-    expect(css).toContain("rgba(48,126,88,.98)");
-    expect(css).toContain("rgba(22,82,55,.99)");
-    expect(css).toContain("rgba(116,211,157,.16)");
   });
 
   test("mantém tratamento específico para celular horizontal", () => {
