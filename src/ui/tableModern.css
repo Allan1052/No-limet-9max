@@ -101,12 +101,12 @@
 
 @media (max-width: 640px) {
   .table-wrap.table-modern {
-    min-height: 500px;
+    min-height: clamp(500px, 132vw, 570px);
     border-radius: 22px;
   }
 
   .table-modern .felt {
-    inset: 9% 3.5% 13%;
+    inset: 8% 2.5% 12%;
     border-width: 1px;
     box-shadow:
       0 0 0 5px rgba(7,10,8,.94),
@@ -116,21 +116,57 @@
   }
 
   .table-modern .table-brand-mark img {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Assentos menores deixam a borda da mesa e as ações respirarem no retrato. */
+  .table-modern .seat:not(.hero) {
+    width: 104px;
+  }
+
+  .table-modern .seat.hero {
+    width: 118px;
+  }
+
+  .table-modern .seat .pod {
+    transform: scale(.92);
+    transform-origin: center;
+  }
+
+  .table-modern .seat.hero .pod {
+    transform: scale(.94);
   }
 }
 
-/* Celular deitado: mesa mais larga, mais baixa e com o centro livre. */
+@media (max-width: 400px) {
+  .table-modern .seat:not(.hero) {
+    width: 98px;
+  }
+
+  .table-modern .seat.hero {
+    width: 112px;
+  }
+
+  .table-modern .seat .pod {
+    transform: scale(.88);
+  }
+
+  .table-modern .seat.hero .pod {
+    transform: scale(.91);
+  }
+}
+
+/* Celular deitado: mesa mais larga, mais baixa e com assentos ainda mais enxutos. */
 @media (orientation: landscape) and (max-height: 520px) {
   .table-wrap.table-modern {
     min-height: 330px;
-    height: min(66vh, 390px);
+    height: min(70vh, 390px);
     border-radius: 18px;
   }
 
   .table-modern .felt {
-    inset: 7% 4% 10%;
+    inset: 6% 3% 9%;
     border-radius: 49% / 43%;
   }
 
@@ -139,15 +175,24 @@
   }
 
   .table-modern .table-brand-mark img {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .table-modern .seat:not(.hero) {
+    width: 96px;
   }
 
   .table-modern .seat.hero {
-    width: 128px;
+    width: 108px;
   }
 
   .table-modern .seat .pod {
-    transform: scale(.9);
+    transform: scale(.82);
+    transform-origin: center;
+  }
+
+  .table-modern .seat.hero .pod {
+    transform: scale(.86);
   }
 }
