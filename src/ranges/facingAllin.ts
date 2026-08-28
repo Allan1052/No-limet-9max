@@ -49,14 +49,23 @@ const OPEN_SHOVE_BASE: Record<Position, number> = {
  * tardia é largo; um 5-bet+ é AA/KK/QQ/AK.
  *   1 = abertura/open-shove · 2 = 3-bet · 3 = 4-bet · 4+ = 5-bet+.
  */
-export function shoverRangePct(betLevelFaced: number, effectiveBB: number, raiserPosition?: Position): number {
+export function shoverRangePct(
+  betLevelFaced: number,
+  effectiveBB: number,
+  raiserPosition?: Position,
+  shoverStackBB?: number,
+): number {
   const bl = Math.max(0, Math.floor(betLevelFaced));
   if (bl >= 4) return 0.035; // 5-bet+ all-in: só o topo (AA/KK/QQ/AK)
   if (bl === 3) return 0.06; // 4-bet all-in
   if (bl === 2) return 0.11; // 3-bet all-in
   // Abertura / open-shove: base por posição + alargamento por stack curto.
+  // A LARGURA depende do stack de QUEM SHOVA (não do efetivo): um vilão de 40bb
+  // que dá all-in tem range mais apertado que um de 12bb. Se o stack do shover
+  // não foi informado, cai no efetivo (comportamento antigo).
+  const widenStack = shoverStackBB ?? effectiveBB;
   const base = raiserPosition ? OPEN_SHOVE_BASE[raiserPosition] : 0.30; // médio se desconhecido
-  const stackWiden = Math.max(0, (16 - effectiveBB) * 0.02); // ≤16bb alarga
+  const stackWiden = Math.max(0, (16 - widenStack) * 0.02); // ≤16bb alarga
   return Math.max(0.12, Math.min(0.65, base + stackWiden));
 }
 
@@ -71,8 +80,14 @@ export interface FacingAllinInput {
   contestablePotBB: number;
   /** Fichas (bb) que o herói paga para chamar o all-in. */
   callBB: number;
-  /** Stack efetivo em bb — só para estimar o range de um open-shove. */
+  /** Stack efetivo em bb — preço e teto do que o herói arrisca. */
   effectiveBB?: number;
+  /**
+   * Stack REAL de quem shova (bb), quando maior que o efetivo. Estima a LARGURA
+   * do range de open-shove pela profundidade de QUEM DÁ o all-in, não pelo
+   * efetivo. Ausente ⇒ usa o efetivo.
+   */
+  shoverStackBB?: number;
   /** Posição de quem deu o all-in — abre/fecha a largura do range de open-shove. */
   raiserPosition?: Position;
   /** Contexto de ICM: perto do dinheiro, a equity exigida sobe. */
@@ -97,7 +112,7 @@ export interface FacingAllinResult {
 export function facingAllinDecision(inp: FacingAllinInput): FacingAllinResult {
   const iters = inp.iterations ?? 5000;
   const rng = inp.rng ?? Math.random;
-  const pct = shoverRangePct(inp.betLevelFaced, inp.effectiveBB ?? 100, inp.raiserPosition);
+  const pct = shoverRangePct(inp.betLevelFaced, inp.effectiveBB ?? 100, inp.raiserPosition, inp.shoverStackBB);
   const villain = rangeCombos(buildTopRange(pct));
   const nOpp = Math.max(1, Math.floor(inp.numContesting || 1));
 

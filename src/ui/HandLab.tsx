@@ -127,6 +127,9 @@ export function HandLab() {
         situation,
         stage,
         stackBB: effectiveBB,
+        // Stack real do vilão (quando informado) para estimar a largura do shove
+        // pela profundidade dele, não pelo efetivo.
+        villainStackBB: villainBB ?? undefined,
         hand,
         anteBB: withAnte ? 1 : 0,
         finalTable: (stage === "bolha" || stage === "mesa_final") ? ftSit ?? undefined : undefined,

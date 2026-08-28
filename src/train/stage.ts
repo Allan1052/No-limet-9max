@@ -87,7 +87,14 @@ export interface HandLabSpec {
   villainPosition: Position;
   situation: SituationKey;
   stage: StageKey;
-  stackBB: number; // stack efetivo em BB (o estágio dá um padrão, mas o usuário pode ajustar)
+  stackBB: number; // stack EFETIVO em BB (o menor dos dois; o estágio dá um padrão, o usuário pode ajustar)
+  /**
+   * Stack REAL do vilão em BB, quando o usuário informa e ele é MAIOR que o do
+   * herói. O efetivo (stackBB) manda no preço; o stack do vilão só estima a
+   * LARGURA do range de shove — um vilão de 40bb que dá all-in tem range mais
+   * apertado que um de 12bb. Ausente ⇒ usa o efetivo.
+   */
+  villainStackBB?: number;
   hand: Card[]; // 2 cartas do herói
   board?: Card[]; // cartas da mesa (3-5) para análise pós-flop
   potBB?: number; // pote em BB (para calcular pot-odds)
@@ -264,6 +271,10 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     heroPosition: spec.heroPosition,
     hand: spec.hand,
     effectiveBB: eff,
+    // Stack real do vilão (só quando informado e MAIOR que o efetivo) para estimar
+    // a largura do shove pela profundidade de quem shova, não pelo efetivo.
+    villainStackBB:
+      spec.villainStackBB != null && spec.villainStackBB > eff ? spec.villainStackBB : undefined,
     profile: BASELINE_PROFILE,
     variant: "holdem",
     raiserPosition: spec.situation === "open" ? undefined : spec.villainPosition,

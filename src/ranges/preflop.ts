@@ -37,7 +37,15 @@ export type PreflopAction = "fold" | "raise" | "call" | "3bet" | "jam";
 export interface PreflopContext {
   heroPosition: Position;
   hand: Card[]; // 2 cartas para Hold'em, 4 para Omaha
-  effectiveBB: number; // stack efetivo em big blinds
+  effectiveBB: number; // stack efetivo em big blinds (o MENOR dos dois stacks)
+  /**
+   * Stack REAL de quem deu o all-in (bb), quando difere do efetivo. Serve só para
+   * estimar a LARGURA do range de shove: um vilão de 40bb que shova tem range mais
+   * apertado que um de 12bb, mesmo que o herói só arrisque o efetivo (25bb). Sem
+   * isto, um shove de 40bb vs herói de 25bb era lido como um shove de range de
+   * 25bb (largo demais) e o herói pagava frouxo. Ausente ⇒ usa o efetivo.
+   */
+  villainStackBB?: number;
   profile: BotProfile;
   variant: "holdem" | "omaha";
   /** Posição de quem abriu, se o pote já foi aberto com raise. */
@@ -208,6 +216,7 @@ function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision
     contestablePotBB: ctx.contestablePotBB,
     callBB: ctx.callAmountBB,
     effectiveBB: ctx.effectiveBB,
+    shoverStackBB: ctx.villainStackBB,
     raiserPosition: ctx.raiserPosition,
     icmSpot: ctx.icmSpot,
     rng: ctx.rng,
@@ -717,6 +726,43 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         action: "fold",
         sizeBB: 0,
         reason: `${handType}: stack curto — fora do range de all-in vs ${ctx.raiserPosition}; pagar OOP raso é pior que foldar.`,
+        handType,
+        mix: bandMix("jam", jamPct, handType, "fold"),
+      };
+    }
+
+    // ── ZONA DE RE-SHOVE (13–~22bb): enfrentando UMA abertura, com esse stack
+    // não dá pra flatar e jogar o pós-flop com SPR minúsculo (ainda mais OOP). É
+    // JAM-ou-FOLD: as mãos que continuam entram com um re-shove (3-bet all-in)
+    // por valor + fold equity; o resto folda. Sem isto, o motor flatava KJo/ATo
+    // dominadas do BB e set-minava pares pequenos a 15bb sem implied odds — os
+    // vazamentos que o Allan pegou. A largura escala com o stack (mais curto =
+    // mais largo) e com quão solto o vilão abre (posição). O benchmark GTO só tem
+    // spots de 100bb e ≤10bb, então esta faixa não mexe no SELO 61/61.
+    const RESHOVE_MAX_BB = 22;
+    const facingSingleOpen = !ctx.threeBet && (ctx.betLevelFaced ?? 1) <= 1;
+    if (facingSingleOpen && !sd.pushFold && ctx.effectiveBB < RESHOVE_MAX_BB) {
+      const raiserWide = RFI_BASE_PERCENT[ctx.raiserPosition] ?? 0.18;
+      // Largura calibrada por combos: vs UTG (0.11) a ~18bb ≈ 7% (só o topo —
+      // pares médios/altos, ases fortes, AQo/KQs; QJo-QJs já foldam); vs BTN
+      // (0.45) alarga pra ~24% (KJo/ATo/J9s entram). Encurtar o stack alarga mais.
+      const jamPct = Math.max(
+        0.05,
+        Math.min(0.34, 0.02 + Math.max(0, 16 - ctx.effectiveBB) * 0.02 + 0.48 * raiserWide),
+      );
+      if (freqIn(buildTopRange(jamPct), handType) > 0) {
+        return {
+          action: "jam",
+          sizeBB: ctx.effectiveBB,
+          reason: `${handType}: ${Math.round(ctx.effectiveBB)}bb é curto demais pra flatar — re-shove (all-in) sobre a abertura de ${ctx.raiserPosition}. Flatar joga um pote OOP com SPR minúsculo; o all-in soma valor e fold equity.`,
+          handType,
+          mix: bandMix("jam", jamPct, handType, "fold"),
+        };
+      }
+      return {
+        action: "fold",
+        sizeBB: 0,
+        reason: `${handType}: ${Math.round(ctx.effectiveBB)}bb enfrentando a abertura de ${ctx.raiserPosition} — fora do range de re-shove; flatar dominado com stack curto (ainda mais OOP) é pior que foldar.`,
         handType,
         mix: bandMix("jam", jamPct, handType, "fold"),
       };
