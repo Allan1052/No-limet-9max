@@ -22,6 +22,12 @@ function dayStr(d: Date = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+function previousLocalDay(d: Date): Date {
+  const previous = new Date(d);
+  previous.setDate(previous.getDate() - 1);
+  return previous;
+}
+
 function load(): StreakState {
   try {
     const raw = localStorage.getItem(KEY);
@@ -46,21 +52,20 @@ function save(s: StreakState): void {
 }
 
 /**
- * Marca que o jogador treinou HOJE. Idempotente no mesmo dia.
- * Devolve o estado e se a sequência aumentou agora (pra comemorar).
+ * Marca que o jogador treinou no dia informado (HOJE por padrão).
+ * Idempotente no mesmo dia. O parâmetro existe para testes determinísticos.
  */
-export function markActiveToday(): { current: number; best: number; incremented: boolean } {
+export function markActiveToday(now: Date = new Date()): { current: number; best: number; incremented: boolean } {
   const s = load();
-  const today = dayStr();
+  const today = dayStr(now);
   if (s.last === today) {
     return { current: s.current, best: s.best, incremented: false };
   }
-  const yesterday = dayStr(new Date(Date.now() - 864e5));
+  const yesterday = dayStr(previousLocalDay(now));
   const current = s.last === yesterday ? s.current + 1 : 1;
   const best = Math.max(s.best, current);
   save({ current, best, last: today });
 
-  // Analytics: registra milestone de streak
   if (current === 1) {
     trackEvent("streak_started", { day: today });
   } else {
@@ -70,14 +75,26 @@ export function markActiveToday(): { current: number; best: number; incremented:
   return { current, best, incremented: true };
 }
 
-/**
- * Sequência pra MOSTRAR agora (honesta): se o último treino foi hoje ou ontem,
- * a sequência está viva; senão, quebrou (mostra 0).
- */
-export function getStreak(): { current: number; best: number } {
+/** Sequência viva no dia informado (HOJE por padrão). */
+export function getStreak(now: Date = new Date()): { current: number; best: number } {
   const s = load();
-  const today = dayStr();
-  const yesterday = dayStr(new Date(Date.now() - 864e5));
+  const today = dayStr(now);
+  const yesterday = dayStr(previousLocalDay(now));
   const alive = s.last === today || s.last === yesterday;
   return { current: alive ? s.current : 0, best: s.best };
+}
+
+/** Estado pronto para a UI: separa sequência viva de treino concluído hoje. */
+export function getTrainingDayStatus(now: Date = new Date()): {
+  trainedToday: boolean;
+  current: number;
+  best: number;
+} {
+  const s = load();
+  const streak = getStreak(now);
+  return {
+    trainedToday: s.last === dayStr(now),
+    current: streak.current,
+    best: streak.best,
+  };
 }
