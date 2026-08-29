@@ -1,3 +1,5 @@
+// O tsconfig do app não carrega @types/node; Vitest executa este built-in normalmente.
+// @ts-ignore -- tipos Node ficam fora do bundle/browser de produção.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
