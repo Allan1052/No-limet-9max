@@ -3,7 +3,6 @@ import { anatomyFromDecisions } from "./anatomy";
 
 describe("anatomia do torneio", () => {
   it("recreativo pagador: call muito acima do padrão", () => {
-    // Recreativo: 14% fold, 24% call, 62% raise (números do Reel da Anatomia)
     const decisions = [
       ...Array(14).fill({ heroAction: "fold" }),
       ...Array(24).fill({ heroAction: "call" }),
@@ -13,10 +12,10 @@ describe("anatomia do torneio", () => {
     expect(a.callPct).toBe(24);
     expect(a.foldPct).toBe(14);
     expect(a.raisePct).toBe(62);
-    expect(a.note).toContain("~3× mais"); // recreativo paga 3x o padrão
+    expect(a.note).toContain("~3× mais");
   });
 
-  it("jogador com padrão pro: call dentro do ideal", () => {
+  it("jogador com call dentro da referência recebe leitura contextual", () => {
     const decisions = [
       ...Array(11).fill({ heroAction: "fold" }),
       ...Array(7).fill({ heroAction: "call" }),
@@ -24,16 +23,17 @@ describe("anatomia do torneio", () => {
     ];
     const a = anatomyFromDecisions(decisions);
     expect(a.callPct).toBe(7);
-    expect(a.note).toContain("padrão de torneio");
+    expect(a.note).toContain("spots analisados neste torneio");
+    expect(a.note).toContain("próxima da referência");
   });
 
   it("conta re-raises como subgrupo de raises (consecutivos)", () => {
     const decisions = [
       { heroAction: "raise" },
-      { heroAction: "raise" }, // re-raise contra raise anterior
+      { heroAction: "raise" },
       { heroAction: "fold" },
       { heroAction: "call" },
-      { heroAction: "raise" }, // não é re-raise (após fold)
+      { heroAction: "raise" },
     ];
     const a = anatomyFromDecisions(decisions);
     expect(a.counts.raises).toBe(3);
@@ -47,13 +47,12 @@ describe("anatomia do torneio", () => {
       { heroAction: "check" },
       { heroAction: "jam" },
     ]);
-    expect(a.counts.raises).toBe(2); // bet + jam
-    expect(a.counts.folds).toBe(1); // check = não investiu
+    expect(a.counts.raises).toBe(2);
+    expect(a.counts.folds).toBe(1);
   });
 
   it("amostra curta pede mais mãos", () => {
     const a = anatomyFromDecisions([{ heroAction: "fold" }, { heroAction: "call" }]);
     expect(a.note).toContain("Amostra curta");
   });
-
 });
