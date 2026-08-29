@@ -68,7 +68,7 @@ describe("composição do campo por buy-in", () => {
     expect(elite.tag).toBeGreaterThan(high.tag);
   });
 
-  it("Motor V2: a dureza do field cresce de forma monotônica $5 -> $109 -> $1.000 -> $10.300", () => {
+  it("Motor V2: composição fica progressivamente mais reg-heavy sem exigir mais de 100%", () => {
     const stakes = [5, 109, 1000, 10300];
     const regShare = stakes.map((buyIn) => {
       const w = fieldWeights(buyIn);
@@ -78,7 +78,8 @@ describe("composição do campo por buy-in", () => {
     });
     expect(regShare[1]).toBeGreaterThan(regShare[0]);
     expect(regShare[2]).toBeGreaterThan(regShare[1] + 0.08);
-    expect(regShare[3]).toBeGreaterThan(regShare[2] + 0.08);
+    expect(regShare[3]).toBeGreaterThan(regShare[2]);
+    expect(regShare[3]).toBeLessThanOrEqual(1);
   });
 
   it("Motor V2: no $10.300 fish representam menos de 5% do peso fish+reg", () => {
