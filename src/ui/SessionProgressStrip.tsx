@@ -1,23 +1,44 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProgressSummary } from "../app/progress";
+import {
+  calculateSessionProgress,
+  loadOrCreateSessionBaseline,
+  type SessionStorageLike,
+} from "../app/sessionProgress";
 import { trackEvent } from "../app/analytics";
 import { getTrainingDayStatus, markActiveToday } from "../train/streak";
 import "./sessionProgressStrip.css";
 
-export function SessionProgressStrip({ summary }: { summary: ProgressSummary }) {
-  const start = useRef({
+function currentBaseline(summary: ProgressSummary) {
+  return {
     hands: summary.hands,
     decisions: summary.decisions,
     good: summary.counts.boa + summary.counts.ok,
-  });
-  const lastMarkedHands = useRef(0);
-  const [trainingStatus, setTrainingStatus] = useState(() => getTrainingDayStatus());
+  };
+}
 
-  const hands = Math.max(0, summary.hands - start.current.hands);
-  const decisions = Math.max(0, summary.decisions - start.current.decisions);
-  const goodNow = summary.counts.boa + summary.counts.ok;
-  const good = Math.max(0, goodNow - start.current.good);
-  const accuracy = decisions > 0 ? Math.round((good / decisions) * 100) : 0;
+function browserSessionStorage(): SessionStorageLike | null {
+  try {
+    return typeof window !== "undefined" ? window.sessionStorage : null;
+  } catch {
+    return null;
+  }
+}
+
+export function SessionProgressStrip({ summary }: { summary: ProgressSummary }) {
+  const start = useRef(
+    (() => {
+      const storage = browserSessionStorage();
+      return storage ? loadOrCreateSessionBaseline(summary, storage) : currentBaseline(summary);
+    })(),
+  );
+  const session = calculateSessionProgress(summary, start.current);
+  const { hands, decisions, accuracy } = session;
+
+  // Se a faixa remontou ao voltar de outra aba, as mãos restauradas já foram
+  // registradas antes. Começar daqui evita duplicar eventos de analytics.
+  const lastMarkedHands = useRef(hands);
+  const [trainingStatus, setTrainingStatus] = useState(() => getTrainingDayStatus());
 
   // A primeira mão concluída na sessão já conta como treino do dia.
   // Mãos extras no mesmo dia são idempotentes no streak. O mesmo incremento
