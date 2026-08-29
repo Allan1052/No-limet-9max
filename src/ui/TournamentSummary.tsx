@@ -14,20 +14,12 @@ import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
 import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
-import { TrophyShareButton } from "./TrophyShareButton";
-import type { HandShareData, TrophyShareData } from "../app/handShareCard";
+import type { HandShareData } from "../app/handShareCard";
 
-/**
- * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
- * com a ação do herói e se foi correta. Usa as decisões da última mão jogada
- * (as que têm street preenchida) para contar a história da mão decisiva.
- */
 function buildTimelineFromSummary(summary: Summary): { street: string; action: string; correct: boolean }[] {
-  // Pega as decisões com street preenchida (só decisões pós-feedback têm street)
   const streeted = (summary.review ?? []).filter((d) => d.street && d.street !== "Resultado");
-  if (streeted.length < 2) return []; // precisa de 2+ ruas pra mostrar a timeline
+  if (streeted.length < 2) return [];
 
-  // Dedupe por rua: pega a última decisão de cada rua (na ordem do torneio)
   const byStreet = new Map<string, (typeof streeted)[0]>();
   for (const d of streeted) byStreet.set(d.street, d);
 
@@ -59,7 +51,6 @@ export function TournamentSummary({
   const num = (n: number) => Math.round(n).toLocaleString("en-US");
   const pts = (n: number) => Math.round(n).toLocaleString("pt-BR");
 
-  // Registro no ranking: roda uma única vez por torneio encerrado.
   const [ranking, setRanking] = useState<TournamentSubmitResult | null>(null);
   const [sending, setSending] = useState(false);
   const sent = useRef(false);
@@ -70,12 +61,9 @@ export function TournamentSummary({
 
     const nickname = getNickname();
     const isCircuit = summary.mode === "circuito";
-
-    // Sem apelido não dá para gravar no ranking (só acontece no Treino Livre).
     if (isCircuit && !nickname) return;
 
     setSending(true);
-    // Decisões detalhadas (mão + ação + posição) — hash anti-cheat real do ranking.
     const detail = summary.decisionsDetail ?? [];
     const decisions = detail.length
       ? detail.map((d) => ({ hand: d.hand, action: d.action, position: d.position }))
@@ -100,7 +88,6 @@ export function TournamentSummary({
   const anatomy: AnatomyResult = anatomyFromDecisions(summary.decisions ?? []);
   const a = (n: number) => `${n}%`;
 
-  // Dados para o Hand Share Card do resultado do torneio.
   const totalRated = summary.ratings.boa + summary.ratings.ok + summary.ratings.imprecisa + summary.ratings.ruim;
   const correctPct = totalRated > 0 ? Math.round(((summary.ratings.boa + summary.ratings.ok) / totalRated) * 100) : 0;
   const modeLabel = summary.mode === "circuito" ? "Circuito" : "Treino Livre";
@@ -114,31 +101,14 @@ export function TournamentSummary({
     coachTip: `${summary.handsPlayed} mãos · ${correctPct}% decisões corretas · VPIP ${summary.vpip}% · PFR ${summary.pfr}%`,
     street: "Resultado",
     tournamentInfo: `${modeLabel} ${stageLabel} · Faixa didática ${summary.buyIn} fichas · ${num(summary.entrants)} participantes`,
-    tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`, 
+    tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`,
     context: summary.inMoney ? `Resultado: ${virtualValue(summary.cash)}` : "Fora da faixa pontuável",
-    // NOVOS campos (para o card compartilhado):
-    position: "Mesa Final", // resultado do torneio — sem posição específica
+    position: "Mesa Final",
     stackBB: "—",
     stage: STAGES[summary.initialStage]?.label ?? "Torneio",
-    // Linha do tempo da mão decisiva: as ruas com feedback do replay final,
-    // usando a última mão da lista de mãos jogadas no torneio.
     decisions: buildTimelineFromSummary(summary),
   };
 
-  // Dados para o Card de Conquista (troféu): compartilhável quando chega ao
-  // dinheiro ou vence — prova social da conquista do jogador.
-  const trophyData: TrophyShareData = {
-    tournamentInfo: summary.mode === "circuito"
-      ? (summary.circuitStage ? `Circuito · Etapa ${summary.circuitStage}` : "Circuito") + ` — Buy-in $${summary.buyIn}`
-      : `Treino Livre · Buy-in $${summary.buyIn}`,
-    finishPlace: summary.finishPlace,
-    entrants: summary.entrants,
-    cash: summary.cash,
-    inMoney: summary.inMoney,
-  };
-
-  // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
-  // Sem filtro (null), mostra as "mãos para rever" (imprecisa + ruim).
   const [filter, setFilter] = useState<Rating | null>(null);
   const shown = filter ? summary.review.filter((r) => r.rating === filter) : summary.mistakes;
   const toggle = (r: Rating) => setFilter((cur) => (cur === r ? null : r));
@@ -160,7 +130,6 @@ export function TournamentSummary({
           )}
         </div>
 
-        {/* Painel do ranking: pontos ganhos, etapa cravada, ou o convite */}
         {summary.mode === "circuito" ? (
           <div className="rank-box">
             {sending ? (
@@ -187,12 +156,12 @@ export function TournamentSummary({
               </>
             ) : ranking?.reason === "no_cash" ? (
               <div className="rank-none">
-                Fora da faixa pontuável — sem pontos nesta. Nesta regra didática, só pontua quem{' '}
-                chega ao top da etapa{' '}
+                Fora da faixa pontuável — sem pontos nesta. Nesta regra didática, só pontua quem{" "}
+                chega ao top da etapa{" "}
                 {ranking.paidPlaces != null
                   ? `(posições ${a(1)}–${a(ranking.paidPlaces)} nesta mesa)`
                   : "nesta mesa"}
-                .{' '}
+                .{" "}
                 {ranking.wouldBeWorth > 0 ? (
                   <span className="rank-wouldbe">
                     Este resultado valeria {pts(ranking.wouldBeWorth)} pontos — faltou
@@ -226,148 +195,72 @@ export function TournamentSummary({
         <h3>Análise da sua jogada</h3>
 
         <div className="summary-stats">
-          <div className="ss-item">
-            <div className="ss-num">{summary.handsPlayed}</div>
-            <div className="ss-lbl">mãos disputadas</div>
-          </div>
-          <div className="ss-item">
-            <div className="ss-num">{summary.vpip}%</div>
-            <div className="ss-lbl">VPIP</div>
-          </div>
-          <div className="ss-item">
-            <div className="ss-num">{summary.pfr}%</div>
-            <div className="ss-lbl">PFR</div>
-          </div>
-          <div className="ss-item">
-            <div className="ss-num">{summary.threeBet}%</div>
-            <div className="ss-lbl">3-bet</div>
-          </div>
+          <div className="ss-item"><div className="ss-num">{summary.handsPlayed}</div><div className="ss-lbl">mãos disputadas</div></div>
+          <div className="ss-item"><div className="ss-num">{summary.vpip}%</div><div className="ss-lbl">VPIP</div></div>
+          <div className="ss-item"><div className="ss-num">{summary.pfr}%</div><div className="ss-lbl">PFR</div></div>
+          <div className="ss-item"><div className="ss-num">{summary.threeBet}%</div><div className="ss-lbl">3-bet</div></div>
         </div>
 
-        {/* Anatomia do torneio — o raio-X Fold/Call/Raise/Re-raise. */}
         <div className="anatomy-box">
           <div className="anatomy-title">Sua anatomia neste torneio</div>
-          <div className="anatomy-sub">Quando você decidiu, o que você fez:</div>
+          <div className="anatomy-sub">Em todas as mãos em que você tomou uma decisão:</div>
           <div className="anatomy-bars">
             <div className="an-row">
-              <span className="an-lbl">Fold</span>
-              <div className="an-track">
-                <div className="an-fill fold" style={{ width: `${Math.max(anatomy.foldPct, 2)}%` }} />
-              </div>
-              <span className="an-num">{a(anatomy.foldPct)}</span>
+              <span className="an-lbl">Fold</span><div className="an-track"><div className="an-fill fold" style={{ width: `${Math.max(anatomy.foldPct, 2)}%` }} /></div><span className="an-num">{a(anatomy.foldPct)}</span>
             </div>
             <div className="an-row">
-              <span className="an-lbl">Call</span>
-              <div className="an-track">
-                <div className="an-fill call" style={{ width: `${Math.max(anatomy.callPct, 2)}%` }} />
-              </div>
-              <span className="an-num">{a(anatomy.callPct)}</span>
+              <span className="an-lbl">Call</span><div className="an-track"><div className="an-fill call" style={{ width: `${Math.max(anatomy.callPct, 2)}%` }} /></div><span className="an-num">{a(anatomy.callPct)}</span>
             </div>
             <div className="an-row">
               <span className="an-lbl">Raise</span>
               <div className="an-track">
                 <div className="an-fill raise" style={{ width: `${Math.max(anatomy.raisePct, 2)}%` }} />
-                {anatomy.counts.reRaises > 0 && (
-                  <div className="an-reraise" title={`${anatomy.counts.reRaises} re-raises`}>↕ {anatomy.counts.reRaises}</div>
-                )}
+                {anatomy.counts.reRaises > 0 && (<div className="an-reraise" title={`${anatomy.counts.reRaises} re-raises`}>↕ {anatomy.counts.reRaises}</div>)}
               </div>
               <span className="an-num">{a(anatomy.raisePct)}</span>
             </div>
           </div>
-          <div className="anatomy-ref">
-            Padrão das mãos que você JOGOU: Fold {anatomy.ref.fold}% · Call {anatomy.ref.call}% · Raise {anatomy.ref.raise}%
-            {anatomy.counts.reRaises > 0 && ` · Você fez ${anatomy.counts.reRaises} re-raise`}
-          </div>
+          {anatomy.counts.reRaises > 0 && (
+            <div className="anatomy-ref">
+              Você fez {anatomy.counts.reRaises} {anatomy.counts.reRaises === 1 ? "re-raise" : "re-raises"} neste torneio.
+            </div>
+          )}
           <div className="anatomy-note">{anatomy.note}</div>
           <div className="anatomy-fine">{anatomy.finePrint}</div>
         </div>
 
-        <div className="summary-note">
-          <b>Estilo:</b> {summary.styleNote}
-        </div>
-        <div className="summary-note">
-          <b>Decisões:</b> {summary.qualityNote}
-        </div>
+        <div className="summary-note"><b>Estilo:</b> {summary.styleNote}</div>
+        <div className="summary-note"><b>Decisões:</b> {summary.qualityNote}</div>
 
         <div className="summary-ratings">
-          <span className="pill boa" title="As boas não são detalhadas">
-            Boas {summary.ratings.boa}
-          </span>
-          <button
-            className={`pill ok clickable ${filter === "ok" ? "active" : ""}`}
-            onClick={() => toggle("ok")}
-          >
-            Ok {summary.ratings.ok}
-          </button>
-          <button
-            className={`pill imprecisa clickable ${filter === "imprecisa" ? "active" : ""}`}
-            onClick={() => toggle("imprecisa")}
-          >
-            Imprecisas {summary.ratings.imprecisa}
-          </button>
-          <button
-            className={`pill ruim clickable ${filter === "ruim" ? "active" : ""}`}
-            onClick={() => toggle("ruim")}
-          >
-            Ruins {summary.ratings.ruim}
-          </button>
+          <span className="pill boa" title="As boas não são detalhadas">Boas {summary.ratings.boa}</span>
+          <button className={`pill ok clickable ${filter === "ok" ? "active" : ""}`} onClick={() => toggle("ok")}>Ok {summary.ratings.ok}</button>
+          <button className={`pill imprecisa clickable ${filter === "imprecisa" ? "active" : ""}`} onClick={() => toggle("imprecisa")}>Imprecisas {summary.ratings.imprecisa}</button>
+          <button className={`pill ruim clickable ${filter === "ruim" ? "active" : ""}`} onClick={() => toggle("ruim")}>Ruins {summary.ratings.ruim}</button>
         </div>
         <div className="summary-hint">👆 toque em Ok, Imprecisas ou Ruins para ver as decisões</div>
 
         {shown.length > 0 ? (
           <>
-            <h4>
-              {filter
-                ? `Decisões "${RATING_LABEL[filter]}" (${shown.length})`
-                : `Mãos para rever (${shown.length})`}
-            </h4>
+            <h4>{filter ? `Decisões "${RATING_LABEL[filter]}" (${shown.length})` : `Mãos para rever (${shown.length})`}</h4>
             {shown.map((it, i) => (
               <div key={i} className={`fb-item ${it.rating}`}>
-                <div className="fb-head">
-                  <span>
-                    {it.street}: {it.heroAction} (padrão: {it.advice})
-                  </span>
-                  <span className="tag">{RATING_LABEL[it.rating]}</span>
-                </div>
+                <div className="fb-head"><span>{it.street}: {it.heroAction} (padrão: {it.advice})</span><span className="tag">{RATING_LABEL[it.rating]}</span></div>
                 <div className="fb-text">{it.text}</div>
               </div>
             ))}
           </>
         ) : (
-          <div className="summary-note">
-            {filter
-              ? `Nenhuma decisão "${RATING_LABEL[filter]}" neste torneio. 👍`
-              : "Sem erros claros de EV para revisar — jogo consistente. 👏"}
-          </div>
+          <div className="summary-note">{filter ? `Nenhuma decisão "${RATING_LABEL[filter]}" neste torneio. 👍` : "Sem erros claros de EV para revisar — jogo consistente. 👏"}</div>
         )}
 
-        {/* Compartilhar resultado do torneio */}
         <div style={{ marginTop: 14, textAlign: "center" }}>
-          <HandShareButton
-            data={shareData}
-            label="📤 Compartilhar resultado"
-            className="btn primary"
-          />
+          <HandShareButton data={shareData} label="📤 Compartilhar resultado" className="btn primary" />
         </div>
 
-        {/* Card de Conquista (troféu): só quando chega ao dinheiro ou vence */}
-        {summary.inMoney && (
-          <div style={{ marginTop: 8, textAlign: "center" }}>
-            <TrophyShareButton
-              data={trophyData}
-              label={champ ? "🏆 Compartilhar conquista" : "🏆 Compartilhar resultado"}
-              className="btn primary"
-            />
-          </div>
-        )}
-
         <div style={{ marginTop: 10, display: "flex", gap: 8, justifyContent: "center" }}>
-          <button className="btn primary" onClick={onNewHand ?? onClose}>
-            🃏 Jogar nova mão
-          </button>
-          <button className="btn" onClick={onClose}>
-            Fechar e configurar novo torneio
-          </button>
+          <button className="btn primary" onClick={onNewHand ?? onClose}>🃏 Jogar nova mão</button>
+          <button className="btn" onClick={onClose}>Fechar e configurar novo torneio</button>
         </div>
       </div>
     </div>
