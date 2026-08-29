@@ -23,24 +23,25 @@
 
 - **Motor V2** no PR #19 / branch `motor-v2-realismo`.
 - Allan deu autorização explícita para continuar alterando o motor; não tratar engine/lógica como bloqueada por falta de autorização enquanto estivermos executando este plano aprovado.
-- O PR #19 está aberto e draft. Após o merge do pacote de produto no `main`, a branch do Motor V2 ficou divergente e precisa ser sincronizada antes da continuação técnica.
+- O PR #19 está aberto e draft. A sincronização com `main` foi iniciada; antes de mover a branch, está sendo montada uma árvore de merge que preserve os arquivos do Motor V2 e use do `main` as correções de produto já publicadas.
 
 ## Próximo passo exato
 
-1. Sincronizar `motor-v2-realismo` com o `main` atual sem force-push e sem perder os 20 commits existentes do V2.
-2. Confirmar que as correções de produto já presentes no `main` não serão reintroduzidas como divergência no PR #19.
-3. Rodar/confirmar baseline do Motor V2 após a sincronização.
+1. Finalizar a árvore de merge `main + Motor V2`, preservando os arquivos de motor e evitando duplicar as correções de produto.
+2. Mover `motor-v2-realismo` apenas por fast-forward para o commit de sincronização; **não usar force-push**.
+3. Confirmar o diff do PR #19 e rodar/confirmar baseline do Motor V2 após a sincronização.
 4. Retomar a sequência TDD do plano `docs/superpowers/plans/2026-08-29-motor-v2-realismo.md`: field por buy-in, ICM/all-in incremental, pós-flop, pré-flop/re-raises, range propagation, sizing e benchmark V1 x V2, respeitando o que já estiver concluído.
 5. Não fazer merge final do Motor V2 até a verificação completa.
 
 ## Git / PR relevante
 
 - Repositório: `Allan1052/No-limet-9max`
-- `main`: pacote de produto integrado em `9f119937d7fda0bbda6c81c51d0f97c40688e641` (há commit posterior apenas deste marcador de continuidade).
+- `main`: pacote de produto integrado em `9f119937d7fda0bbda6c81c51d0f97c40688e641`; commits posteriores neste arquivo são apenas atualização de continuidade.
 - PR #19: **Motor V2: realismo MTT por buy-in e decisão**
 - Branch: `motor-v2-realismo`
 - Head antes da sincronização: `ae9894e6d3d00ebf7f8a693b4fb475dfc95b0ef5`.
 - Estado observado antes da sincronização: 20 commits à frente e 2 atrás do `main`, `mergeable: false`.
+- Um commit de merge preparatório `d6beb239d0747cd68b57b9552970d98de92deb4a` foi criado como objeto Git, mas **não foi apontado pela branch** porque sua árvore não preservava o conteúdo do Motor V2. Ele não entrou no PR e não deve ser usado. A branch permanece intacta em `ae9894e...` até a árvore correta ser montada.
 
 ## Guardrails permanentes
 
