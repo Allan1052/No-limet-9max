@@ -25,14 +25,11 @@ export interface AnatomyResult {
   callPct: number;
   raisePct: number;
   reRaisePctOfRaises: number;
-  /** Anatomia de referência (MTT de pro — mesma régua do Reel "A Anatomia"). */
+  /** Referência interna usada apenas para contextualizar a frequência de call. */
   ref: { fold: number; call: number; raise: number };
-  /** Frase de leitura automática, na voz recreativa da marca. */
+  /** Frase de leitura automática baseada nos spots analisados. */
   note: string;
-  /** Linha explicativa curta que resolve a confusão do "82% raise": a anatomia
-   * conta só as decisões que o jogador tomou — as mãos em que ele não teve
-   * ação (mão chegou e ele foldou sem agir, ou o jogo nem chegou nele) não
-   * entram. Sem essa linha, o número assusta o recreativo. */
+  /** Explica exatamente qual é o denominador do gráfico. */
   finePrint: string;
 }
 
@@ -72,8 +69,6 @@ export function anatomyFromDecisions(
   }
   const n = counts.total;
   const pct = (v: number) => (n > 0 ? Math.round((v / n) * 100) : 0);
-  // Mesmo padrão do Reel "A Anatomia": o recreativo médio paga 3x mais do que
-  // devia (24% call vs 7% ideal) — e é o buraco por onde a stack derrete.
   const ref = { fold: 11, call: 7, raise: 82 };
   return {
     counts,
@@ -84,13 +79,13 @@ export function anatomyFromDecisions(
     ref,
     note: readableNote(counts, ref),
     finePrint:
-      "* Só contam as decisões que VOCÊ tomou — as mãos em que você nem jogou não entram. O fold geral continua sendo a maioria das mãos.",
+      "* Este gráfico considera somente as decisões registradas durante o torneio. Ele não é a frequência geral de todas as mãos recebidas.",
   };
 }
 
 /**
- * Lê a anatomia do recreativo: o número que mais importa é o CALL — o
- * recreativo paga bem mais do que devia, e é ali que a stack derrete.
+ * Lê a frequência de call sem transformar uma amostra em regra universal.
+ * O diagnóstico aponta revisão de spots; não presume que todo call extra é erro.
  */
 function readableNote(c: AnatomyCounts, ref: { fold: number; call: number; raise: number }): string {
   const n = c.total;
@@ -100,20 +95,19 @@ function readableNote(c: AnatomyCounts, ref: { fold: number; call: number; raise
   const refCalls = Math.max(1, Math.round((ref.call / 100) * n));
   const ratio = Math.round(c.calls / refCalls);
   if (c.calls <= refCalls + 1) {
-    return `Sua anatomia está perto do padrão de torneio: quando entrou no pote, você tomou a iniciativa (${c.raises} raises) e pagou só o necessário. É assim que a stack cresce.`;
+    return "Nos spots analisados neste torneio, sua frequência de call ficou próxima da referência. O principal é manter cada call ligado ao preço, à equity e ao contexto da mão.";
   }
   if (ratio >= 2) {
-    return `O buraco da sua stack é o call: você pagou ~${ratio}× mais do que o padrão. O recreativo paga demais — pagar é esperar o outro decidir por você. Ou toma a iniciativa (raise), ou larga barato (fold).`;
+    return `Nos spots analisados neste torneio, você pagou ~${ratio}× mais do que a referência de call. Isso indica calls que merecem revisão — principalmente quando preço, equity e contexto não justificavam continuar.`;
   }
-  return `Você pagou ${ratio}× mais do que o padrão neste torneio. Cada call a mais é fichas que saem sem decisão — o pro toma a iniciativa, o recreativo acompanha.`;
+  return "Nos spots analisados neste torneio, sua frequência de call ficou acima da referência. Vale revisar os calls marginais e confirmar se preço, equity e contexto justificavam continuar.";
 }
 
 // ===========================================================================
 // ANATOMIA POR FAIXA — números REAIS do motor para a aba "Estudar > Anatomia".
 //
 // Denominador: TODAS as mãos (aqui o Fold é a maioria, ~80%). Diferente de
-// anatomyFromDecisions acima, que mede só as mãos que o herói JOGOU (aí o raise
-// domina). São duas fotos válidas — a UI precisa rotular cada denominador.
+// anatomyFromDecisions acima, que mede só as decisões registradas do herói.
 // ===========================================================================
 
 import { cardsFromString, seededRng } from "../engine/cards";
