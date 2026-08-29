@@ -14,8 +14,7 @@ import { circuitStage } from "../tournament/circuit";
 import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy";
 import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
-import { TrophyShareButton } from "./TrophyShareButton";
-import type { HandShareData, TrophyShareData } from "../app/handShareCard";
+import type { HandShareData } from "../app/handShareCard";
 
 /**
  * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
@@ -23,11 +22,9 @@ import type { HandShareData, TrophyShareData } from "../app/handShareCard";
  * (as que têm street preenchida) para contar a história da mão decisiva.
  */
 function buildTimelineFromSummary(summary: Summary): { street: string; action: string; correct: boolean }[] {
-  // Pega as decisões com street preenchida (só decisões pós-feedback têm street)
   const streeted = (summary.review ?? []).filter((d) => d.street && d.street !== "Resultado");
-  if (streeted.length < 2) return []; // precisa de 2+ ruas pra mostrar a timeline
+  if (streeted.length < 2) return [];
 
-  // Dedupe por rua: pega a última decisão de cada rua (na ordem do torneio)
   const byStreet = new Map<string, (typeof streeted)[0]>();
   for (const d of streeted) byStreet.set(d.street, d);
 
@@ -70,12 +67,9 @@ export function TournamentSummary({
 
     const nickname = getNickname();
     const isCircuit = summary.mode === "circuito";
-
-    // Sem apelido não dá para gravar no ranking (só acontece no Treino Livre).
     if (isCircuit && !nickname) return;
 
     setSending(true);
-    // Decisões detalhadas (mão + ação + posição) — hash anti-cheat real do ranking.
     const detail = summary.decisionsDetail ?? [];
     const decisions = detail.length
       ? detail.map((d) => ({ hand: d.hand, action: d.action, position: d.position }))
@@ -100,7 +94,6 @@ export function TournamentSummary({
   const anatomy: AnatomyResult = anatomyFromDecisions(summary.decisions ?? []);
   const a = (n: number) => `${n}%`;
 
-  // Dados para o Hand Share Card do resultado do torneio.
   const totalRated = summary.ratings.boa + summary.ratings.ok + summary.ratings.imprecisa + summary.ratings.ruim;
   const correctPct = totalRated > 0 ? Math.round(((summary.ratings.boa + summary.ratings.ok) / totalRated) * 100) : 0;
   const modeLabel = summary.mode === "circuito" ? "Circuito" : "Treino Livre";
@@ -114,31 +107,14 @@ export function TournamentSummary({
     coachTip: `${summary.handsPlayed} mãos · ${correctPct}% decisões corretas · VPIP ${summary.vpip}% · PFR ${summary.pfr}%`,
     street: "Resultado",
     tournamentInfo: `${modeLabel} ${stageLabel} · Faixa didática ${summary.buyIn} fichas · ${num(summary.entrants)} participantes`,
-    tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`, 
+    tournamentResult: champ ? "🏆 CAMPEÃO" : `${summary.finishPlace}º de ${num(summary.entrants)}`,
     context: summary.inMoney ? `Resultado: ${virtualValue(summary.cash)}` : "Fora da faixa pontuável",
-    // NOVOS campos (para o card compartilhado):
-    position: "Mesa Final", // resultado do torneio — sem posição específica
+    position: "Mesa Final",
     stackBB: "—",
     stage: STAGES[summary.initialStage]?.label ?? "Torneio",
-    // Linha do tempo da mão decisiva: as ruas com feedback do replay final,
-    // usando a última mão da lista de mãos jogadas no torneio.
     decisions: buildTimelineFromSummary(summary),
   };
 
-  // Dados para o Card de Conquista (troféu): compartilhável quando chega ao
-  // dinheiro ou vence — prova social da conquista do jogador.
-  const trophyData: TrophyShareData = {
-    tournamentInfo: summary.mode === "circuito"
-      ? (summary.circuitStage ? `Circuito · Etapa ${summary.circuitStage}` : "Circuito") + ` — Buy-in $${summary.buyIn}`
-      : `Treino Livre · Buy-in $${summary.buyIn}`,
-    finishPlace: summary.finishPlace,
-    entrants: summary.entrants,
-    cash: summary.cash,
-    inMoney: summary.inMoney,
-  };
-
-  // Filtro: clicar em Ok/Imprecisas/Ruins mostra as decisões daquela categoria.
-  // Sem filtro (null), mostra as "mãos para rever" (imprecisa + ruim).
   const [filter, setFilter] = useState<Rating | null>(null);
   const shown = filter ? summary.review.filter((r) => r.rating === filter) : summary.mistakes;
   const toggle = (r: Rating) => setFilter((cur) => (cur === r ? null : r));
@@ -160,7 +136,6 @@ export function TournamentSummary({
           )}
         </div>
 
-        {/* Painel do ranking: pontos ganhos, etapa cravada, ou o convite */}
         {summary.mode === "circuito" ? (
           <div className="rank-box">
             {sending ? (
@@ -187,12 +162,12 @@ export function TournamentSummary({
               </>
             ) : ranking?.reason === "no_cash" ? (
               <div className="rank-none">
-                Fora da faixa pontuável — sem pontos nesta. Nesta regra didática, só pontua quem{' '}
-                chega ao top da etapa{' '}
+                Fora da faixa pontuável — sem pontos nesta. Nesta regra didática, só pontua quem{" "}
+                chega ao top da etapa{" "}
                 {ranking.paidPlaces != null
                   ? `(posições ${a(1)}–${a(ranking.paidPlaces)} nesta mesa)`
                   : "nesta mesa"}
-                .{' '}
+                .{" "}
                 {ranking.wouldBeWorth > 0 ? (
                   <span className="rank-wouldbe">
                     Este resultado valeria {pts(ranking.wouldBeWorth)} pontos — faltou
@@ -244,10 +219,9 @@ export function TournamentSummary({
           </div>
         </div>
 
-        {/* Anatomia do torneio — o raio-X Fold/Call/Raise/Re-raise. */}
         <div className="anatomy-box">
           <div className="anatomy-title">Sua anatomia neste torneio</div>
-          <div className="anatomy-sub">Quando você decidiu, o que você fez:</div>
+          <div className="anatomy-sub">Em todas as mãos em que você tomou uma decisão:</div>
           <div className="anatomy-bars">
             <div className="an-row">
               <span className="an-lbl">Fold</span>
@@ -274,10 +248,11 @@ export function TournamentSummary({
               <span className="an-num">{a(anatomy.raisePct)}</span>
             </div>
           </div>
-          <div className="anatomy-ref">
-            Padrão das mãos que você JOGOU: Fold {anatomy.ref.fold}% · Call {anatomy.ref.call}% · Raise {anatomy.ref.raise}%
-            {anatomy.counts.reRaises > 0 && ` · Você fez ${anatomy.counts.reRaises} re-raise`}
-          </div>
+          {anatomy.counts.reRaises > 0 && (
+            <div className="anatomy-ref">
+              Você fez {anatomy.counts.reRaises} {anatomy.counts.reRaises === 1 ? "re-raise" : "re-raises"} neste torneio.
+            </div>
+          )}
           <div className="anatomy-note">{anatomy.note}</div>
           <div className="anatomy-fine">{anatomy.finePrint}</div>
         </div>
@@ -341,7 +316,6 @@ export function TournamentSummary({
           </div>
         )}
 
-        {/* Compartilhar resultado do torneio */}
         <div style={{ marginTop: 14, textAlign: "center" }}>
           <HandShareButton
             data={shareData}
@@ -349,17 +323,6 @@ export function TournamentSummary({
             className="btn primary"
           />
         </div>
-
-        {/* Card de Conquista (troféu): só quando chega ao dinheiro ou vence */}
-        {summary.inMoney && (
-          <div style={{ marginTop: 8, textAlign: "center" }}>
-            <TrophyShareButton
-              data={trophyData}
-              label={champ ? "🏆 Compartilhar conquista" : "🏆 Compartilhar resultado"}
-              className="btn primary"
-            />
-          </div>
-        )}
 
         <div style={{ marginTop: 10, display: "flex", gap: 8, justifyContent: "center" }}>
           <button className="btn primary" onClick={onNewHand ?? onClose}>
