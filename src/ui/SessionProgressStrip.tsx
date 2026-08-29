@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProgressSummary } from "../app/progress";
+import { trackEvent } from "../app/analytics";
 import { getTrainingDayStatus, markActiveToday } from "../train/streak";
 import "./sessionProgressStrip.css";
 
@@ -19,10 +20,12 @@ export function SessionProgressStrip({ summary }: { summary: ProgressSummary }) 
   const accuracy = decisions > 0 ? Math.round((good / decisions) * 100) : 0;
 
   // A primeira mão concluída na sessão já conta como treino do dia.
-  // Mãos extras no mesmo dia são idempotentes no streak.
+  // Mãos extras no mesmo dia são idempotentes no streak. O mesmo incremento
+  // é o ponto confiável para registrar a conclusão da mão no funil do Umami.
   useEffect(() => {
     if (hands <= lastMarkedHands.current) return;
     lastMarkedHands.current = hands;
+    trackEvent("hand_completed", { session_hand: hands });
     const streak = markActiveToday();
     setTrainingStatus({ trainedToday: true, current: streak.current, best: streak.best });
   }, [hands]);
