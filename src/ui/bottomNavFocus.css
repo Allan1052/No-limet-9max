@@ -32,9 +32,50 @@
   font-weight: 800;
 }
 
+/* Uma mão por vez: entre mãos, a próxima decisão é o caminho dominante.
+   As ferramentas continuam acessíveis, mas deixam de competir visualmente
+   com o CTA principal. Nenhuma regra do motor ou do torneio muda aqui. */
+.play .action-row {
+  gap: 8px;
+  align-items: stretch;
+}
+
+.play .action-row > .btn.primary:first-child {
+  width: 100%;
+  min-height: 50px;
+  flex: 1 0 100%;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  border-color: var(--gold-bright, #f7e79b);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28), 0 0 18px rgba(212, 175, 55, 0.12);
+}
+
+.play .action-row > .btn:not(.primary) {
+  opacity: 0.72;
+  min-height: 38px;
+  font-size: 0.82rem;
+  padding-block: 7px;
+}
+
+.play .action-row > .btn:not(.primary):hover,
+.play .action-row > .btn:not(.primary):focus-visible {
+  opacity: 1;
+}
+
 @media (max-width: 420px) {
   .bottom-nav .bn-item.bn-primary .bn-ic {
     width: 34px;
     height: 34px;
+  }
+
+  .play .action-row > .btn.primary:first-child {
+    min-height: 52px;
+    font-size: 0.98rem;
+  }
+
+  .play .action-row > .btn:not(.primary) {
+    min-height: 36px;
+    font-size: 0.78rem;
   }
 }
