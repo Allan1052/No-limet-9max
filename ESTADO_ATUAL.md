@@ -9,36 +9,41 @@
 
 ## Última atualização
 
-29/08/2026 — regra de continuidade criada após uma conversa atingir o limite de contexto.
+29/08/2026 — pacote de sessão/Anatomia/resumo integrado ao `main`; retomada do Motor V2 autorizada pelo Allan.
 
-## Estado da conversa / trabalho atual
+## O que acabou de ser concluído
 
-- O funil/Umami **já foi feito** e não deve ser tratado como a etapa atual.
-- O pacote mais recente trabalhado na conversa anterior foi:
-  1. Persistir a sessão ao navegar/trocar de aba, preservando mãos, decisões e precisão.
-  2. Reescrever a Anatomia para diferenciar claramente todas as mãos dos spots em que o jogador entrou no pote/tomou decisão.
-  3. Tornar o diagnóstico de call menos absoluto e mais fiel aos spots analisados.
-  4. Corrigir a duplicação do botão **Compartilhar resultado**.
-  5. Validar tudo com testes e build.
-- A validação registrada na conversa foi: **CI #38 GREEN**, **3.732 testes passaram**, **1 skipped** e **build de produção aprovado**.
-- Essas alterações estavam validadas na branch do **PR #19**, mas ainda não estavam publicadas no APP naquele momento.
+- O pacote de correções foi separado com segurança do PR #19 do Motor V2.
+- PR #20 foi usado para validação e fechou GREEN no CI #39, mas permaneceu draft por uma falha da integração do GitHub ao mudar o status.
+- O mesmo conteúdo foi reaberto como PR #21, não-draft, e integrado ao `main` por squash.
+- Commit no `main`: `9f119937d7fda0bbda6c81c51d0f97c40688e641` (`9f11993`).
+- Entraram somente as correções de produto/UI/sessão:
+  1. persistência de mãos, decisões e precisão ao trocar de aba;
+  2. clareza da Anatomia sobre o denominador analisado;
+  3. diagnóstico de call contextual, sem generalizações absolutas;
+  4. remoção do compartilhamento duplicado no resumo do torneio;
+  5. testes de regressão correspondentes.
+- Validação do pacote: **CI #39 GREEN**, **3.719 testes passaram**, **1 skipped**, `tsc` aprovado, build de produção aprovado e **SELO GTO 61/61**.
+- O funil/Umami **já foi feito** e não deve ser retomado como etapa atual.
 
-## Git / PR relevante
+## Estado do Motor V2
 
-- Repositório: `Allan1052/No-limet-9max`
-- PR #19: **Motor V2: realismo MTT por buy-in e decisão**
-- Branch: `motor-v2-realismo`
-- Base: `main`
-- Em 29/08/2026 o PR estava aberto, draft, mergeável e ainda não integrado ao `main`.
-- **Não fazer merge automático do PR #19 só para publicar as correções acima**, porque o PR contém trabalho do Motor V2 e o próprio PR determina que o V2 seja verificado antes do merge.
+- O Allan confirmou novamente autorização total para continuar mexendo no Motor V2.
+- PR #19: **Motor V2: realismo MTT por buy-in e decisão**.
+- Branch: `motor-v2-realismo`.
+- Head atual: `ae9894e6d3d00ebf7f8a693b4fb475dfc95b0ef5`.
+- O PR continua aberto e draft.
+- Depois da integração do pacote no `main`, a branch do Motor V2 ficou **divergida**: 20 commits à frente e 2 commits atrás do `main`.
+- O GitHub marca o PR #19 como **não mergeável neste momento**; isso é esperado porque o `main` avançou e há sobreposição nos arquivos de sessão/Anatomia/resumo que já existiam na branch do V2.
+- Não fazer merge do PR #19 enquanto essa sincronização e a verificação do V2 não forem concluídas.
 
 ## Próximo passo exato
 
-Continuar a partir do estado acima, conferindo o conteúdo atual do PR #19 e separando com segurança o que é correção de produto/UI/sessão do que pertence ao Motor V2 antes de qualquer integração ao `main`.
+Sincronizar com segurança o trabalho do Motor V2 com o `main` atual, preservando as correções que já foram publicadas e mantendo apenas as mudanças reais de motor no PR #19. Depois continuar a sequência do V2: field por buy-in, ICM/all-in incremental, pós-flop, pré-flop/re-raises, range propagation, sizing e benchmark V1 x V2, sempre em TDD e com validação completa antes de merge.
 
 ## Guardrails permanentes
 
-- Não mexer em engine/lógica sem acordo explícito do Allan.
+- O Allan autorizou mudanças de engine/lógica no Motor V2; fora desse escopo, confirmar antes de mudanças de produto que não estejam combinadas.
 - Preservar o posicionamento humilde de estudo/recreação, sem dinheiro real.
 - Manter o **SELO GTO 61/61**.
 - Antes de liberar alteração: testes, TypeScript, build, `dist` recompilado e conferido, paridade dos arquivos do site quando aplicável e validação do deploy/CI.
