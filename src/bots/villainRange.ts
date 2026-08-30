@@ -35,10 +35,6 @@ function baseRangePct(preflopRaises: number): number {
  * - call remove parte das mãos sem equity/realização;
  * - bet comprime mais por representar valor + blefes selecionados;
  * - raise é a ação mais seletiva.
- *
- * A rua impõe apenas um pequeno custo adicional por sobrevivência. A parte mais
- * importante vem da sequência real de ações, então duas linhas no mesmo turn
- * não terminam automaticamente com o mesmo range.
  */
 export function rangePctFromActionLine(line: RangeActionLine): number {
   let pct = baseRangePct(line.preflopRaises);
@@ -56,20 +52,36 @@ export function rangePctFromActionLine(line: RangeActionLine): number {
   return Math.max(0.05, Math.min(0.60, pct));
 }
 
+/** Extrai somente as ações reconhecíveis do log legível do motor. */
+function actionLineFromLog(log: string[] | undefined): RangeLineAction[] {
+  if (!log || log.length === 0) return [];
+  const actions: RangeLineAction[] = [];
+  for (const raw of log) {
+    const line = raw.toLowerCase();
+    if (line.includes("passa (check)")) actions.push("check");
+    else if (line.includes(" paga ")) actions.push("call");
+    else if (line.includes("aumenta para") || line.includes("vai all-in em")) actions.push("raise");
+  }
+  return actions;
+}
+
 /**
- * Converte os sinais já existentes da mesa numa linha leve de ações. O estado
- * atual ainda não guarda histórico estruturado rua a rua; por isso usamos os
- * sinais confiáveis disponíveis (rua alcançada, iniciativa e aposta à frente)
- * sem tentar adivinhar cartas ou ações inexistentes.
+ * Converte o estado real da mesa numa linha leve de ações.
+ *
+ * Quando o motor possui log, o V2 usa a história efetivamente registrada.
+ * Estados sintéticos/legados sem log continuam usando os sinais de rua,
+ * preservando compatibilidade com os testes e consumidores existentes.
  */
 function actionLineFromTable(t: TableState, heroSeat: number): RangeActionLine {
   const street: RangeActionLine["street"] = t.board.length >= 5 ? "river" : t.board.length === 4 ? "turn" : "flop";
-  const actions: RangeLineAction[] = [];
+  const loggedActions = actionLineFromLog(t.log);
+  const actions: RangeLineAction[] = loggedActions.length > 0 ? loggedActions : [];
 
-  // Chegar às ruas posteriores implica pelo menos uma continuação anterior.
-  if (t.board.length >= 3) actions.push("call");
-  if (t.board.length >= 4) actions.push(t.lastStreetAggressor >= 0 ? "bet" : "check");
-  if (t.board.length >= 5) actions.push(t.lastStreetAggressor >= 0 ? "bet" : "check");
+  if (actions.length === 0) {
+    if (t.board.length >= 3) actions.push("call");
+    if (t.board.length >= 4) actions.push(t.lastStreetAggressor >= 0 ? "bet" : "check");
+    if (t.board.length >= 5) actions.push(t.lastStreetAggressor >= 0 ? "bet" : "check");
+  }
 
   const hero = t.players[heroSeat];
   const toCall = hero ? t.currentBet - hero.committed : 0;
