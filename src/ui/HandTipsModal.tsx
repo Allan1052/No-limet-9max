@@ -5,12 +5,12 @@ import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { findBlockers } from "../bots/blockers";
-import { classifyBoard } from "../bots/boardTexture";
 import { useMemo } from "react";
 import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
 import { getHandCommentary } from "./handCommentary";
+import { buildCoachV2PostHandDecision } from "./coachV2PostHand";
 
 type TipsMode = "free" | "technical";
 
@@ -52,18 +52,10 @@ export function HandTipsModal({
         : items;
   const tecnico = tipsMode === "technical";
 
-  // Leitura avançada do board (só no modo técnico): tamanho de aposta por
-  // textura + bloqueadores das suas cartas.
+  // Leitura complementar do board (só no modo técnico). Aqui ficam apenas
+  // bloqueadores realmente observáveis; sizing vem exclusivamente do feedback
+  // calculado pelo Motor V2 em cada decisão.
   const hasBoard = board.length >= 3;
-  const texture = tecnico && hasBoard ? classifyBoard(board) : null;
-  const sizePct = texture ? Math.round((0.33 + 0.4 * texture.wetness) * 100) : 0;
-  const texKey = texture
-    ? texture.wetness < 0.4
-      ? "tips.texDry"
-      : texture.wetness < 0.7
-        ? "tips.texMed"
-        : "tips.texWet"
-    : "";
   const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
 
   // Comentário PERSONALIZADO pela mão — voz anônima, estilo solver.
@@ -130,15 +122,9 @@ export function HandTipsModal({
           </div>
         ) : null}
         <div className="summary">{summarize(displayItems, userSubscriptionLevel)}</div>
-        {tecnico && texture ? (
+        {tecnico && hasBoard ? (
           <div className="board-read">
             <div className="br-head">🧠 {t("tips.boardRead")}</div>
-            <div className="br-line">
-              {t("tips.sizingLine", { tex: t(texKey as TransKey), pct: sizePct })}{" "}
-              <span className="br-why">
-                {texture.wetness < 0.5 ? t("tips.whyDry") : t("tips.whyWet")}
-              </span>
-            </div>
             {blockers.length > 0 ? (
               <ul className="br-blockers">
                 {blockers.map((b, i) => (
@@ -153,48 +139,30 @@ export function HandTipsModal({
         {displayItems.length === 0 ? (
           <div className="legend">{t("tips.empty")}</div>
         ) : (
-          displayItems.map((it, i) => (
-            <div key={i} className={`fb-item ${it.rating}`}>
-              <div className="fb-head">
-                <span>
-                  {it.street}: {it.heroAction}
-                </span>
-                <span className="tag">{ratingLabel(it.rating)}</span>
-              </div>
-              <div className="fb-text">
-                {it.text}
-                {tecnico && it.equity !== undefined ? ` (equity ${Math.round(it.equity * 100)}%` : ""}
-                {tecnico && it.equity !== undefined && it.potOdds !== undefined
-                  ? `, preço ${Math.round(it.potOdds * 100)}%)`
-                  : tecnico && it.equity !== undefined
-                    ? ")"
-                    : ""}
-              </div>
-              {it.betSizeBB && it.betSizeBB > 0 ? (
-                <div
-                  className="fb-size"
-                  style={{
-                    display: "inline-block",
-                    marginTop: 6,
-                    padding: "2px 10px",
-                    borderRadius: 9,
-                    fontSize: "0.85em",
-                    fontWeight: 700,
-                    color: "#0b0f0d",
-                    background: "linear-gradient(180deg,#ecd07a,#c9a227)",
-                  }}
-                >
-                  💰 aposte ~{Math.round((it.betSizePct ?? 0) * 100)}% do pote · ≈ {it.betSizeBB}bb
-                  {(it.betSizePct ?? 0) > 1 ? " (overbet)" : ""}
+          displayItems.map((it, i) => {
+            const view = buildCoachV2PostHandDecision(it, tecnico ? "technical" : "simple");
+            return (
+              <div key={i} className={`fb-item ${it.rating}`}>
+                <div className="fb-head">
+                  <span>{it.street}</span>
+                  <span className="tag">{ratingLabel(it.rating)}</span>
                 </div>
-              ) : null}
-              {tecnico && mixText(it.mix) ? (
-                <div className="fb-mix">
-                  {t("panel.strategyLabel")}: {mixText(it.mix)}
+                <div className="fb-text">
+                  <div>{view.heroLine}</div>
+                  <div>{view.coachLine}</div>
+                  <div>{view.reason}</div>
                 </div>
-              ) : null}
-            </div>
-          ))
+                {view.metrics.length > 0 ? (
+                  <div className="fb-mix">{view.metrics.join(" · ")}</div>
+                ) : null}
+                {tecnico && mixText(it.mix) ? (
+                  <div className="fb-mix">
+                    {t("panel.strategyLabel")}: {mixText(it.mix)}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
         )}
       </div>
     </div>
