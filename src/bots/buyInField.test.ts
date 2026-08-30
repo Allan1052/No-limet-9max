@@ -24,10 +24,10 @@ describe("campo por buy-in — dureza escala com o valor", () => {
   it("no alto ($109) vê menos flops e rouba mais", () => {
     const rec = profileById("recreativo");
     const adj = adjustProfileForBuyIn(rec, 109);
-    expect(adj.limpFactor).toBeLessThan(rec.limpFactor); // quase não limpa
-    expect(adj.coldCallFactor).toBeLessThan(rec.coldCallFactor); // menos flat
-    expect(adj.threeBetFactor).toBeGreaterThan(rec.threeBetFactor); // mais 3-bet
-    expect(adj.positional.BTN).toBeGreaterThan(rec.positional.BTN); // mais roubo no botão
+    expect(adj.limpFactor).toBeLessThan(rec.limpFactor);
+    expect(adj.coldCallFactor).toBeLessThan(rec.coldCallFactor);
+    expect(adj.threeBetFactor).toBeGreaterThan(rec.threeBetFactor);
+    expect(adj.positional.BTN).toBeGreaterThan(rec.positional.BTN);
     expect(adj.aggression).toBeGreaterThanOrEqual(rec.aggression);
   });
 
@@ -41,7 +41,6 @@ describe("campo por buy-in — dureza escala com o valor", () => {
   });
 
   it("comportamento: o recreativo entra em MENOS mãos no $109 que no $5 (menos flops)", () => {
-    // Conta VPIP (mãos que entram, não-fold) de MP, stack profundo.
     const entered = (buyIn: number) => {
       const profile = adjustProfileForBuyIn(profileById("recreativo"), buyIn);
       let n = 0;
@@ -58,5 +57,29 @@ describe("campo por buy-in — dureza escala com o valor", () => {
       return n;
     };
     expect(entered(109)).toBeLessThan(entered(5));
+  });
+
+  it("Motor V2 RED: o mesmo TAG fica mais competente de $109 para $1k e $10.3k", () => {
+    const base = profileById("tag");
+    const p109 = adjustProfileForBuyIn(base, 109);
+    const p1k = adjustProfileForBuyIn(base, 1000);
+    const p10k = adjustProfileForBuyIn(base, 10300);
+
+    expect(p1k.skill).toBeGreaterThan(p109.skill);
+    expect(p10k.skill).toBeGreaterThan(p1k.skill);
+    expect(p1k.threeBetFactor).toBeGreaterThan(p109.threeBetFactor);
+    expect(p10k.threeBetFactor).toBeGreaterThan(p1k.threeBetFactor);
+  });
+
+  it("Motor V2 RED: LAG elite ganha pressão sem virar agressão ilimitada", () => {
+    const base = profileById("lag");
+    const p109 = adjustProfileForBuyIn(base, 109);
+    const p1k = adjustProfileForBuyIn(base, 1000);
+    const p10k = adjustProfileForBuyIn(base, 10300);
+
+    expect(p1k.aggression).toBeGreaterThan(p109.aggression);
+    expect(p10k.aggression).toBeGreaterThan(p1k.aggression);
+    expect(p10k.aggression).toBeLessThanOrEqual(1);
+    expect(p10k.bluffFactor).toBeLessThanOrEqual(base.bluffFactor * 1.6);
   });
 });
