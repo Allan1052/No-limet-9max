@@ -2,20 +2,19 @@ import { describe, it, expect } from "vitest";
 import { postflopRequiredEquity } from "./postflopMath";
 
 describe("postflopRequiredEquity — fonte única do limiar de call", () => {
-  it("exige MAIS que as pot odds cruas (disciplina + reverse implied)", () => {
+  it("exige MAIS que as pot odds cruas no flop (disciplina + reverse implied)", () => {
     // Meio-pote no flop: preço cru = 2/(4+2) = 33%.
     const req = postflopRequiredEquity({ potBB: 4, toCall: 2, streetIdx: 0 });
     expect(req).toBeGreaterThan(0.33 + 0.1); // disciplina real, não ~4 pontos
     expect(req).toBeLessThan(0.6);
   });
 
-  it("river exige mais equity que o flop no mesmo preço", () => {
-    const flop = postflopRequiredEquity({ potBB: 6, toCall: 3, streetIdx: 0 });
+  it("river sem ICM usa o preço cru, sem sobretaxa artificial", () => {
     const river = postflopRequiredEquity({ potBB: 6, toCall: 3, streetIdx: 2 });
-    expect(river).toBeGreaterThan(flop);
+    expect(river).toBeCloseTo(3 / 9, 6);
   });
 
-  it("perfil grudento (station) exige menos; nit exige mais", () => {
+  it("perfil grudento (station) exige menos; nit exige mais no flop", () => {
     const base = { potBB: 6, toCall: 3, streetIdx: 0 };
     const station = postflopRequiredEquity({ ...base, stickiness: 0.85 });
     const neutral = postflopRequiredEquity({ ...base, stickiness: 0.5 });
@@ -24,7 +23,7 @@ describe("postflopRequiredEquity — fonte única do limiar de call", () => {
     expect(nit).toBeGreaterThan(neutral);
   });
 
-  it("multiway sobe a barra (alguém pode ter mão)", () => {
+  it("multiway sobe a barra no flop (alguém pode ter mão)", () => {
     const heads = postflopRequiredEquity({ potBB: 6, toCall: 3, streetIdx: 0, numOpp: 1 });
     const multi = postflopRequiredEquity({ potBB: 6, toCall: 3, streetIdx: 0, numOpp: 3 });
     expect(multi).toBeGreaterThan(heads);
@@ -37,7 +36,7 @@ describe("postflopRequiredEquity — fonte única do limiar de call", () => {
     expect(comProjeto).toBeLessThan(semProjeto);
   });
 
-  it("all-in usa o preço cru (ICM é somado à parte por quem chama)", () => {
+  it("all-in usa o preço cru (ICM é aplicado à parte por quem chama)", () => {
     const req = postflopRequiredEquity({ potBB: 4, toCall: 2, streetIdx: 1, isAllIn: true });
     expect(req).toBeCloseTo(2 / 6, 5);
   });
