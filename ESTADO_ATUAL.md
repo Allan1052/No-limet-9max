@@ -6,10 +6,11 @@
 > Antes de continuar trabalho no Call ou Fold em uma conversa nova, **ler este arquivo primeiro** e conferir o estado real no GitHub.
 > Ao terminar um bloco relevante de trabalho ou antes de encerrar/trocar uma conversa longa, **atualizar este arquivo** com o ponto exato em que o trabalho parou.
 > Não inferir o próximo passo apenas pelo último commit: registrar aqui também o contexto da conversa e as decisões do Allan.
+> Ler também `PROTOCOLO_EXECUCAO_CONTINUA.md` e seguir sua autorização operacional durante atualizações já aprovadas.
 
 ## Última atualização
 
-29/08/2026 — pacote de produto integrado e Motor V2 retomado.
+29/08/2026 — protocolo de execução contínua criado; Motor V2 sendo reconstruído em branch limpa sobre o `main` atual.
 
 ## Concluído
 
@@ -17,35 +18,36 @@
 - O pacote de sessão/Anatomia/resumo foi separado do Motor V2 e integrado ao `main` pelo PR #21, commit `9f119937d7fda0bbda6c81c51d0f97c40688e641`.
 - Esse pacote inclui persistência da sessão entre abas, clareza da Anatomia, diagnóstico de call contextual e remoção do compartilhamento duplicado.
 - Validação do pacote: CI #39 GREEN, 3.719 testes passaram, 1 skipped, TypeScript e build aprovados, SELO GTO 61/61.
-- O antigo PR #20 foi fechado sem merge apenas porque a integração falhou ao removê-lo de draft; o mesmo SHA validado foi integrado pelo PR #21.
+- Foi criado `PROTOCOLO_EXECUCAO_CONTINUA.md`, autorizando o agente a resolver problemas técnicos solucionáveis e seguir sem pedir confirmações repetidas.
 
 ## Em andamento
 
-- **Motor V2** no PR #19 / branch `motor-v2-realismo`.
-- Allan deu autorização explícita para continuar alterando o motor; não tratar engine/lógica como bloqueada por falta de autorização enquanto estivermos executando este plano aprovado.
-- O PR #19 está aberto e draft. A sincronização com `main` foi iniciada; antes de mover a branch, está sendo montada uma árvore de merge que preserve os arquivos do Motor V2 e use do `main` as correções de produto já publicadas.
+- **Motor V2**.
+- A branch antiga `motor-v2-realismo` / PR #19 ficou divergida e teve uma tentativa de sincronização inadequada; não será usada como base de continuação.
+- Estratégia ativa: branch limpa `motor-v2-realismo-clean`, criada a partir do `main` atual.
+- Já foram portados para a branch limpa os componentes reais do V2 `src/bots/field.ts` e `src/bots/profiles.ts`.
+- Allan autorizou explicitamente correções técnicas seguras e continuidade até o fim sem interrupções desnecessárias.
 
 ## Próximo passo exato
 
-1. Finalizar a árvore de merge `main + Motor V2`, preservando os arquivos de motor e evitando duplicar as correções de produto.
-2. Mover `motor-v2-realismo` apenas por fast-forward para o commit de sincronização; **não usar force-push**.
-3. Confirmar o diff do PR #19 e rodar/confirmar baseline do Motor V2 após a sincronização.
-4. Retomar a sequência TDD do plano `docs/superpowers/plans/2026-08-29-motor-v2-realismo.md`: field por buy-in, ICM/all-in incremental, pós-flop, pré-flop/re-raises, range propagation, sizing e benchmark V1 x V2, respeitando o que já estiver concluído.
-5. Não fazer merge final do Motor V2 até a verificação completa.
+1. Portar para `motor-v2-realismo-clean` os demais arquivos reais do Motor V2, sem reintroduzir os arquivos de produto que já estão no `main`.
+2. Conferir o diff da branch limpa contra `main`.
+3. Rodar baseline e retomar a sequência TDD respeitando o que já estiver concluído: field por buy-in, ICM/all-in incremental, pós-flop, pré-flop/re-raises, range propagation, sizing e benchmark V1 x V2.
+4. Corrigir automaticamente conflitos/testes/build solucionáveis dentro do escopo autorizado.
+5. Rodar validação completa: testes, SELO GTO 61/61, TypeScript, build, `dist`, paridade do site, CI.
+6. Integrar somente quando verificado e confirmar o deploy/versão realmente servida.
 
 ## Git / PR relevante
 
 - Repositório: `Allan1052/No-limet-9max`
-- `main`: pacote de produto integrado em `9f119937d7fda0bbda6c81c51d0f97c40688e641`; commits posteriores neste arquivo são apenas atualização de continuidade.
-- PR #19: **Motor V2: realismo MTT por buy-in e decisão**
-- Branch: `motor-v2-realismo`
-- Head antes da sincronização: `ae9894e6d3d00ebf7f8a693b4fb475dfc95b0ef5`.
-- Estado observado antes da sincronização: 20 commits à frente e 2 atrás do `main`, `mergeable: false`.
-- Um commit de merge preparatório `d6beb239d0747cd68b57b9552970d98de92deb4a` foi criado como objeto Git, mas **não foi apontado pela branch** porque sua árvore não preservava o conteúdo do Motor V2. Ele não entrou no PR e não deve ser usado. A branch permanece intacta em `ae9894e...` até a árvore correta ser montada.
+- Branch ativa nova: `motor-v2-realismo-clean`.
+- Branch antiga: `motor-v2-realismo` / PR #19, mantida apenas como fonte histórica durante a reconstrução.
+- Não usar force-push.
 
 ## Guardrails permanentes
 
-- Allan autorizou explicitamente o trabalho no Motor V2.
+- Allan autorizou explicitamente o trabalho no Motor V2 e correções técnicas necessárias dentro dessa atualização.
+- Seguir `PROTOCOLO_EXECUCAO_CONTINUA.md`.
 - Preservar o posicionamento humilde de estudo/recreação, sem dinheiro real.
 - Manter o **SELO GTO 61/61**.
 - Antes de liberar alteração: testes, TypeScript, build, `dist` recompilado e conferido, paridade dos arquivos do site quando aplicável e validação do deploy/CI.
@@ -54,9 +56,10 @@
 
 ## Regra de comunicação com Allan
 
-- **“Estou iniciando agora…”** significa que a execução começa na mesma resposta.
-- **“Concluído…”** significa que a etapa foi executada e conferida.
-- **“Preciso da sua decisão…”** significa que existe uma escolha real que exige Allan.
-- Quando Allan responder **“ok”, “seguir” ou “pode continuar”**, executar imediatamente a próxima etapa já definida; não responder apenas com confirmação.
+- **INICIANDO AGORA** = execução começa na mesma resposta.
+- **EM EXECUÇÃO** = já houve ação concreta e o trabalho continua no mesmo bloco.
+- **CONCLUÍDO E VALIDADO** = etapa executada e conferida.
+- **PRECISO DA SUA DECISÃO** = somente quando houver decisão real de produto/escopo, risco irreversível ou dependência externa.
+- Quando Allan responder **“ok”, “seguir”, “pode continuar”** ou **“modo contínuo”**, executar imediatamente a próxima etapa definida; não responder apenas com confirmação.
 
 O `CALL_OU_FOLD_PROJETO_MASTER.md` continua sendo o histórico amplo do projeto. Este `ESTADO_ATUAL.md` deve permanecer curto, operacional e atualizado para permitir retomada imediata quando uma conversa atingir o limite.
