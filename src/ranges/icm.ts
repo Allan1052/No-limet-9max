@@ -37,7 +37,6 @@ function finishDistribution(stacks: number[]): number[][] {
       }
     }
     const size = members.length;
-    // res[jogador][lugarRelativo]
     const res: number[][] = Array.from({ length: n }, () => new Array(size).fill(0));
 
     if (size === 1) {
@@ -46,16 +45,15 @@ function finishDistribution(stacks: number[]): number[][] {
       return res;
     }
     if (sum <= 0) {
-      // Stacks zerados: reparte igualmente (caso degenerado).
       for (const i of members) res[i].fill(1 / size);
       memo.set(setMask, res);
       return res;
     }
 
     for (const i of members) {
-      const pi = stacks[i] / sum; // prob. de i ficar em 1º entre os restantes
+      const pi = stacks[i] / sum;
       res[i][0] += pi;
-      const sub = h(setMask & ~(1 << i)); // subconjunto sem i, tamanho size-1
+      const sub = h(setMask & ~(1 << i));
       for (const j of members) {
         if (j === i) continue;
         for (let r = 0; r < size - 1; r++) {
@@ -70,10 +68,7 @@ function finishDistribution(stacks: number[]): number[][] {
   return h(full);
 }
 
-/**
- * Valor em prêmio ($) de cada stack. `payouts[0]` é o 1º lugar, etc. Lugares
- * sem prêmio recebem 0.
- */
+/** Valor em prêmio ($) de cada stack. */
 export function icmEquity(stacks: number[], payouts: number[]): number[] {
   const n = stacks.length;
   const dist = finishDistribution(stacks);
@@ -87,10 +82,6 @@ export function icmEquity(stacks: number[], payouts: number[]): number[] {
   return values;
 }
 
-/**
- * Equity de ICM se o herói VENCER ou PERDER um all-in contra um vilão, movendo
- * `chips` fichas de um para o outro. Devolve o valor $ do herói em cada caso.
- */
 function icmAfterAllIn(
   stacks: number[],
   payouts: number[],
@@ -106,8 +97,6 @@ function icmAfterAllIn(
   lose[hero] -= chips;
   lose[villain] += chips;
 
-  // Se algum stack zera, ele "termina" — o modelo já lida com stack 0 (fica em
-  // último entre iguais); para fidelidade, mantemos todos no cálculo.
   const winVals = icmEquity(win.map((s) => Math.max(0, s)), payouts);
   const loseVals = icmEquity(lose.map((s) => Math.max(0, s)), payouts);
   return { win: winVals[hero], lose: loseVals[hero] };
@@ -123,16 +112,50 @@ export interface IcmSpot {
 }
 
 /**
- * Equity de ICM necessária para pagar um all-in neste spot.
- *
- * Em fichas puras, você paga se sua equity ≥ pot odds. Com ICM, o risco de
- * quebrar vale mais que a recompensa de dobrar perto da bolha, então a equity
- * exigida sobe. Calculamos:
- *   Risco     = ICM agora − ICM se perder
- *   Ganho     = ICM se vencer − ICM agora
- *   equityReq = Risco / (Risco + Ganho)
- * Comparar a equity real com esse número já embute todo o efeito do ICM.
+ * Estados já reconstruídos da decisão. `foldStacks` representa o instante em
+ * que o Hero desiste: fichas já comprometidas permanecem perdidas e não voltam
+ * para o stack. `winStacks` e `loseStacks` representam os dois showdowns.
  */
+export interface IcmDecisionStates {
+  foldStacks: number[];
+  winStacks: number[];
+  loseStacks: number[];
+  payouts: number[];
+  hero: number;
+}
+
+/**
+ * Equity mínima para tornar call indiferente a fold em valor de ICM:
+ *   fold = q * win + (1-q) * lose
+ *   q = (fold - lose) / (win - lose)
+ *
+ * A reconstrução dos três estados fica no chamador, permitindo usar o risco
+ * Hero-vilão real sem recorrer ao menor stack global da mesa.
+ */
+export function requiredEquityForDecision(spot: IcmDecisionStates): number {
+  const n = spot.foldStacks.length;
+  if (
+    n === 0 ||
+    spot.winStacks.length !== n ||
+    spot.loseStacks.length !== n ||
+    spot.hero < 0 ||
+    spot.hero >= n
+  ) {
+    return 0.5;
+  }
+
+  const clean = (stacks: number[]) => stacks.map((s) => Math.max(0, Number.isFinite(s) ? s : 0));
+  const foldValue = icmEquity(clean(spot.foldStacks), spot.payouts)[spot.hero];
+  const winValue = icmEquity(clean(spot.winStacks), spot.payouts)[spot.hero];
+  const loseValue = icmEquity(clean(spot.loseStacks), spot.payouts)[spot.hero];
+  const denom = winValue - loseValue;
+
+  if (!Number.isFinite(foldValue) || !Number.isFinite(denom) || denom <= 0) return 0.5;
+  const required = (foldValue - loseValue) / denom;
+  return Math.max(0, Math.min(1, required));
+}
+
+/** Equity de ICM necessária para pagar um all-in no modelo legado. */
 export function requiredEquityToCall(spot: IcmSpot): number {
   const now = icmEquity(spot.stacks, spot.payouts)[spot.hero];
   const { win, lose } = icmAfterAllIn(
@@ -144,15 +167,11 @@ export function requiredEquityToCall(spot: IcmSpot): number {
   );
   const risk = now - lose;
   const reward = win - now;
-  if (risk + reward <= 0) return 0.5; // caso degenerado
+  if (risk + reward <= 0) return 0.5;
   return risk / (risk + reward);
 }
 
-/**
- * "Bubble factor": razão entre o que se arrisca e o que se ganha, em $ de ICM.
- * 1.0 = fichas valem linearmente (sem pressão). >1 = perto da bolha, arriscar
- * custa mais — quanto maior, mais apertado se deve jogar.
- */
+/** Bubble factor: custo em ICM de perder dividido pelo ganho de vencer. */
 export function bubbleFactor(spot: IcmSpot): number {
   const now = icmEquity(spot.stacks, spot.payouts)[spot.hero];
   const { win, lose } = icmAfterAllIn(
@@ -168,19 +187,14 @@ export function bubbleFactor(spot: IcmSpot): number {
   return risk / reward;
 }
 
-/**
- * Fator de aperto de range por ICM, em [minFactor..1], para multiplicar o alvo
- * de abertura/defesa. Deriva do bubble factor e da sensibilidade do perfil:
- * quanto maior a pressão e maior a `icmSensitivity`, mais aperta.
- */
+/** Fator de aperto de range por ICM, em [minFactor..1]. */
 export function icmTightenFactor(
   spot: IcmSpot,
   icmSensitivity: number,
   minFactor = 0.4,
 ): number {
   const bf = bubbleFactor(spot);
-  if (bf <= 1) return 1; // sem pressão (ou até prêmio de risco negativo)
-  // Excesso de risco sobre o neutro, amortecido pela sensibilidade do perfil.
+  if (bf <= 1) return 1;
   const excess = (bf - 1) * icmSensitivity;
   const factor = 1 / (1 + excess);
   return Math.max(minFactor, Math.min(1, factor));
