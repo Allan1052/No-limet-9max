@@ -9,7 +9,6 @@ import { useMemo } from "react";
 import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
-import { getHandCommentary } from "./handCommentary";
 import { buildCoachV2PostHandDecision } from "./coachV2PostHand";
 
 type TipsMode = "free" | "technical";
@@ -22,9 +21,9 @@ export function HandTipsModal({
   heroHand = [],
   board = [],
   userSubscriptionLevel,
-  heroPosition,
-  heroBB,
-  icmPhase,
+  heroPosition: _heroPosition,
+  heroBB: _heroBB,
+  icmPhase: _icmPhase,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
@@ -33,11 +32,11 @@ export function HandTipsModal({
   heroHand?: Card[];
   board?: Card[];
   userSubscriptionLevel: UserSubscriptionLevel;
-  /** Posição do herói no spot (ex.: UTG, BTN) — vem do replay/HandHistory */
+  /** Posição do herói no spot (ex.: UTG, BTN) — mantida por compatibilidade da API. */
   heroPosition?: string;
-  /** Stack do herói em big blinds no momento da decisão */
+  /** Stack do herói em big blinds — mantido por compatibilidade da API. */
   heroBB?: number;
-  /** Fase ICM do torneio — "bubble" perto da bolha, "itm" no dinheiro, "early" início/meio */
+  /** Fase ICM do torneio — mantida por compatibilidade da API. */
   icmPhase?: "early" | "bubble" | "itm";
 }) {
   const { t } = useT();
@@ -58,32 +57,6 @@ export function HandTipsModal({
   const hasBoard = board.length >= 3;
   const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
 
-  // Comentário PERSONALIZADO pela mão — voz anônima, estilo solver.
-  // Só aparece quando há exatamente 2 cartas de herói e
-  // há decisões avaliadas na rua atual.
-  // Âncora = último item com rating (a rua mais recente): o coach comenta a
-  // decisão atual, não o pré-flop.
-  let firstItem = displayItems.find((it) => it.rating) ?? displayItems[0];
-  const withRating = displayItems.filter((it) => it.rating);
-  if (withRating.length > 1) firstItem = withRating[withRating.length - 1];
-  const handCmt =
-    heroHand.length === 2 && firstItem
-      ? getHandCommentary(
-          {
-            heroHand,
-            heroAction: firstItem.heroAction,
-            position: heroPosition ?? (firstItem as any).position,
-            heroBB: heroBB ?? (firstItem as any).heroBB,
-            heroBetPct: (firstItem as any).betSizePct,
-            rating: firstItem.rating,
-            preflop: firstItem.street === "Pré-flop",
-            betLevelFaced: (firstItem as any).betLevelFaced,
-            icmPhase,
-            board,
-          },
-          tipsMode,
-        )
-      : null;
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay tips-modal" onClick={(e) => e.stopPropagation()}>
@@ -111,16 +84,6 @@ export function HandTipsModal({
           </button>
         </div>
 
-        {/* Comentário da mão — específico da mão jogada (voz anônima) */}
-        {handCmt ? (
-          <div className="hand-cmt">
-            <div className="hc-head">
-              <span className="hc-hand">🃏 {handCmt.handName}</span>
-              <span className="hc-pro">{handCmt.proLabel}</span>
-            </div>
-            <div className="hc-line">{handCmt.lines[0]}</div>
-          </div>
-        ) : null}
         <div className="summary">{summarize(displayItems, userSubscriptionLevel)}</div>
         {tecnico && hasBoard ? (
           <div className="board-read">
