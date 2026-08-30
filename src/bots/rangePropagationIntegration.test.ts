@@ -46,6 +46,8 @@ describe("Motor V2 — propagação integrada ao pós-flop", () => {
     const passiveCtx = postflopContextFor(passive, 0, BASELINE_PROFILE, () => 0.5, 50);
     const aggressiveCtx = postflopContextFor(aggressive, 0, BASELINE_PROFILE, () => 0.5, 50);
 
-    expect(aggressiveCtx.villainRangePct).toBeLessThan(passiveCtx.villainRangePct);
+    expect(aggressiveCtx.villainRangePct).toBeDefined();
+    expect(passiveCtx.villainRangePct).toBeDefined();
+    expect(aggressiveCtx.villainRangePct!).toBeLessThan(passiveCtx.villainRangePct!);
   });
 });
