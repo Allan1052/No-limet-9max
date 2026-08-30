@@ -8,11 +8,11 @@
 // ---------------------------------------------------------------------------
 import { useState } from "react";
 import { drawHandShareCard, type HandShareData, type ShareCardMode } from "../app/handShareCard";
+import { drawInstagramPremiumShareCard } from "../app/instagramPremiumShareCard";
 import { shareSpot, shareMulti, downloadBlob } from "../app/share";
 import { isXpUnlocked, loadXpState, saveXpState, processXpEvent } from "../app/achievements";
 import { buildCaption } from "../app/captionSuggestions";
 import { trackEvent } from "../app/analytics";
-
 
 const SHARE_TEXT = "Essa mão eu joguei no Call ou Fold — simulador grátis de poker. 🃏\nSem dinheiro real. Só estudo.";
 const SHARE_URL = "https://calloufold.com.br";
@@ -40,7 +40,7 @@ export function HandShareButton({
     setGenerating(true);
     trackEvent("share_started", { source: "hand", format: mode });
     try {
-      const blob = await drawHandShareCard(data, mode);
+      const blob = await drawInstagramPremiumShareCard(data, mode);
       if (!blob) {
         trackEvent("share_failed", { source: "hand", format: mode, reason: "card_generation" });
         return;
@@ -51,7 +51,6 @@ export function HandShareButton({
         trackEvent("share_succeeded", { source: "hand", format: mode, method: result });
         setDone(true);
         setTimeout(() => setDone(false), 3000);
-        // XP: achievement "Compartilhador"
         if (isXpUnlocked()) {
           const xpState = loadXpState();
           const xpResult = processXpEvent(xpState, { type: "shareHand" });
@@ -69,16 +68,15 @@ export function HandShareButton({
     }
   };
 
-  // CARROSSEL: card da decisão + card do histórico completo (que já inclui
-  // pote por rua, showdown e pote final). No Android/iOS com suporte, os 2
-  // cards saem juntos e o Instagram monta o carrossel automaticamente;
-  // quando o celular não aceita envio múltiplo, baixa os 2 PNGs prontos.
+  // CARROSSEL: primeiro card premium + narrativa completa já existente.
+  // No Android/iOS com suporte, os 2 cards saem juntos e o Instagram monta o
+  // carrossel automaticamente; sem suporte a envio múltiplo, baixa os PNGs.
   const handleCarousel = async () => {
     if (generating || !data.actionLog || data.actionLog.length < 2) return;
     setGenerating(true);
     trackEvent("share_started", { source: "hand", format: "carousel" });
     try {
-      const card1 = await drawHandShareCard(data, "simples", "decisao");
+      const card1 = await drawInstagramPremiumShareCard(data, "simples");
       const card2 = await drawHandShareCard(data, "simples", "narrativa");
       if (!card1 || !card2) {
         trackEvent("share_failed", { source: "hand", format: "carousel", reason: "card_generation" });
@@ -114,14 +112,9 @@ export function HandShareButton({
     }
   };
 
-  // A mão completa é o produto: se houver histórico de ação, o compartilhamento
-  // padrão é o CARROSSEL (decisão + histórico com showdown). O card único fica
-  // apenas para mãos que morreram no pré-flop, sem história para contar.
   const hasHistory = !!data.actionLog && data.actionLog.length >= 2;
   const showCarousel = showToggle && hasHistory;
 
-  // LEGENDA PRONTA: caption gerada com os dados da mão + botão copiar, pra
-  // postar direto no Instagram sem escrever nada.
   const caption = buildCaption({
     heroAction: data.heroAction,
     position: data.position,
@@ -148,7 +141,6 @@ export function HandShareButton({
       setTimeout(() => setDone(false), 3000);
     } catch {
       trackEvent("caption_copy_failed", { source: "hand" });
-      // ignorar — o usuário pode copiar manualmente do painel
     }
   };
 
@@ -215,12 +207,9 @@ export function HandShareButton({
 
 // ---------------------------------------------------------------------------
 // Painel da legenda pronta — aparece quando o dev-unlock do card está ativo.
-// Mostra a legenda gerada para a mão e o botão de copiar, tudo na mesma tela.
 // ---------------------------------------------------------------------------
 export function CaptionPanel({ data }: { data: HandShareData }) {
   const [copied, setCopied] = useState(false);
-  // Colapsível (pedido do Allan 16/08): só a linha de copiar visível;
-  // o texto da legenda aparece ao tocar, sem ocupar espaço.
   const [open, setOpen] = useState(false);
   const caption = buildCaption({
     heroAction: data.heroAction,
