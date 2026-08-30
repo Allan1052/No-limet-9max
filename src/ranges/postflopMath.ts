@@ -40,21 +40,23 @@ export interface RequiredEquityParams {
 }
 
 /**
- * Equity mínima (0..1) para PAGAR uma aposta pós-flop, com disciplina.
+ * Equity mínima (0..1) para PAGAR uma aposta pós-flop.
  *
- * Uma aposta representa força e há reverse implied odds, então paga-se com MAIS
- * equity que as pot odds cruas. Ruas adiantadas exigem mais. Perfil grudento
- * (calling station) exige menos; nit exige mais. Multiway sobe a barra. Projeto
- * forte ganha um desconto de implied odds (dinheiro extra quando completa),
- * escalado pelo stack atrás — nunca vira call-station.
+ * No river, sem cartas futuras e sem ICM neste módulo, a referência correta é
+ * simplesmente o preço do pote. Qualquer disciplina adicional deve vir da
+ * estimativa da range/equity do vilão, não de uma sobretaxa fixa que conte a
+ * força da aposta duas vezes.
  *
- * All-in devolve o preço cru (o ICM, quando existe, é somado por quem chama).
+ * Flop/turn mantêm a heurística conservadora enquanto o Motor V2 migra a
+ * realização de equity e implied odds para modelos mais explícitos.
+ *
+ * All-in devolve o preço cru (o ICM, quando existe, é aplicado por quem chama).
  */
 export function postflopRequiredEquity(p: RequiredEquityParams): number {
   const potOdds = p.toCall / (p.potBB + p.toCall);
-  if (p.isAllIn) return potOdds;
+  if (p.isAllIn || p.streetIdx === 2) return potOdds;
 
-  const streetPenalty = [0.04, 0.12, 0.2][p.streetIdx] ?? 0.12;
+  const streetPenalty = [0.04, 0.12][p.streetIdx] ?? 0.12;
   const stickiness = p.stickiness ?? 0.5;
   const discipline = (0.5 - stickiness) * 0.7; // nit +, station −
   const numOpp = p.numOpp ?? 1;
@@ -65,7 +67,7 @@ export function postflopRequiredEquity(p: RequiredEquityParams): number {
   // IMPLIED ODDS: projeto forte no flop/turn paga com um pouco menos de equity,
   // porque ganha fichas extras quando completa. Escalado pelo stack atrás (fundo
   // = mais implied) com cap pequeno.
-  if (p.streetIdx < 2 && (p.drawStrength ?? 0) > 0.5 && p.heroStackBehind !== undefined) {
+  if ((p.drawStrength ?? 0) > 0.5 && p.heroStackBehind !== undefined) {
     const spr = p.heroStackBehind / Math.max(1, p.potBB + p.toCall);
     const depth = clamp(spr / 4, 0, 1); // ~0 raso, 1 fundo (SPR≥4)
     const streetsLeft = p.streetIdx === 0 ? 1 : 0.6; // flop rende mais que turn
