@@ -10,6 +10,7 @@ import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
 import "./tableModern.css";
+import "./coachV2Hint.css";
 
 // Posições (%) dos 9 assentos. Mantemos todos um pouco mais para dentro do
 // oval para que, no celular, nenhum pod invada a faixa de classificação acima
