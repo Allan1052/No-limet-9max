@@ -14,4 +14,9 @@ describe("HandTipsModal integrado ao Coach V2", () => {
     expect(source).not.toContain("const sizePct = texture");
     expect(source).not.toContain('t("tips.sizingLine"');
   });
+
+  it("não mistura a sequência Coach V2 com o comentário paralelo antigo", () => {
+    expect(source).not.toContain("getHandCommentary");
+    expect(source).not.toContain("handCmt");
+  });
 });
