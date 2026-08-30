@@ -6,7 +6,7 @@ on:
       - motor-v2-realismo-clean
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-dist:
@@ -24,3 +24,14 @@ jobs:
           name: motor-v2-dist
           path: dist
           if-no-files-found: error
+      - name: Commit dist atualizado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A dist
+          if git diff --cached --quiet; then
+            echo "dist ja esta sincronizado"
+            exit 0
+          fi
+          git commit -m "build: atualiza dist do Motor V2"
+          git push origin HEAD:motor-v2-realismo-clean
