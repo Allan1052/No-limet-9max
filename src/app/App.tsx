@@ -73,6 +73,8 @@ import { UserSubscriptionLevel } from "./gameController";
 import { legalActions } from "../game/betting";
 import { addTournamentResult } from "./resultsLog";
 import { appendHandLog } from "./handHistoryLog";
+import { computeHeroCoachDecision } from "./coachV2Live";
+import { buildCoachV2HintView } from "../ui/coachV2Hint";
 import "../ui/theme.css";
 
 // Placeholder discreto para funcionalidades travadas atrás da senha de
@@ -331,19 +333,25 @@ export function App() {
   const selectedSpot =
     mode === "tecnico" && selectedSeat != null ? spots.find((s) => s.seat === selectedSeat) : null;
 
-  // Dica opcional: o que a linha de base recomendaria na sua vez.
-  const advice = heroTurn ? controller.computeHeroAdvice() : null;
-  // 20/08: quando o vilão JÁ ESTÁ all-in, a dica "raise/3-bet" não faz sentido
-  // (não existe raise contra all-in — só pagar, desistir ou ir all-in por cima).
-  // O texto da dica é ajustado aqui (camada de exibição, sem tocar no motor).
-  let adviceText = advice ? adviceLabel(advice.action) : undefined;
-  if (advice && (advice.action === "raise" || advice.action === "3bet")) {
+  // Dica V2: usa a recomendação estruturada do Motor V2 para o exato instante
+  // da decisão, sem recalcular estratégia e sem inventar métricas ausentes.
+  const coachDecision = heroTurn ? computeHeroCoachDecision(controller) : null;
+  const coachHintView = coachDecision ? buildCoachV2HintView(coachDecision) : null;
+  let coachActionLabel = coachHintView?.actionLabel;
+  // Quando o vilão já está all-in, "raise/3-bet" significa apenas empurrar por
+  // cima; mantemos a correção de exibição existente sem alterar a decisão-base.
+  if (coachDecision && (coachDecision.action === "raise" || coachDecision.action === "3bet")) {
     const villainAllIn = t.players.some((p) => !p.isHero && p.status === "allin");
     if (villainAllIn && la.canCall && la.callAmount > 0) {
-      adviceText = "All-in por cima";
+      coachActionLabel = "All-in por cima";
     }
   }
-  const hint = adviceText && !firstContactOverlay ? tr("hint.baseline", { action: adviceText }) : undefined;
+  const hint =
+    coachActionLabel && coachHintView && !firstContactOverlay
+      ? `Coach V2 · ${coachActionLabel} · ${coachHintView.contextLabel}${
+          coachHintView.metrics.length > 0 ? ` · ${coachHintView.metrics.join(" · ")}` : ""
+        }`
+      : undefined;
 
   // 17/08: splash NÃO-BLOQUEANTE — o app já monta por baixo enquanto a logo
   // aparece; o splash é só um overlay que some com fade (sem early return).
@@ -798,17 +806,4 @@ function downloadText(text: string): void {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-}
-
-function adviceLabel(a: string): string {
-  const map: Record<string, string> = {
-    fold: "Fold",
-    check: "Check",
-    call: "Call",
-    raise: "Raise",
-    bet: "Apostar",
-    "3bet": "3-bet",
-    jam: "All-in",
-  };
-  return map[a] ?? a;
 }
