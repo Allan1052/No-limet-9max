@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sizingV2 } from "./decision";
+import { sizingV2 } from "./sizingV2";
 
 describe("Motor V2 — sizing pós-flop", () => {
   it("SPR baixo comprime o sizing para evitar aposta artificialmente grande", () => {
