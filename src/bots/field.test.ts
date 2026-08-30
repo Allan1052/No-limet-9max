@@ -11,14 +11,16 @@ function seeded(seed: number) {
 
 const FISH = new Set(["recreativo", "station", "spewy"]);
 const REG = new Set(["tag", "lag", "nit", "abc"]);
+const FISH_ARR = ["recreativo", "station", "spewy"] as const;
+const REG_ARR = ["tag", "lag", "nit", "abc"] as const;
 
 describe("composição do campo por buy-in", () => {
   it("pesos: micro favorece peixe, alto favorece regular", () => {
     const micro = fieldWeights(5);
     const high = fieldWeights(109);
-    expect(micro.recreativo).toBeGreaterThan(micro.tag); // peixe > reg no micro
-    expect(high.tag).toBeGreaterThan(high.recreativo); // reg > peixe no alto
-    expect(high.recreativo).toBeLessThan(micro.recreativo); // menos peixe conforme sobe
+    expect(micro.recreativo).toBeGreaterThan(micro.tag);
+    expect(high.tag).toBeGreaterThan(high.recreativo);
+    expect(high.recreativo).toBeLessThan(micro.recreativo);
   });
 
   it("cada mesa tem apelidos distintos (sem nome repetido)", () => {
@@ -26,7 +28,6 @@ describe("composição do campo por buy-in", () => {
     expect(seats.length).toBe(8);
     const names = seats.map((s) => s.name);
     expect(new Set(names).size).toBe(names.length);
-    // todo profileId é um perfil válido
     for (const s of seats) expect(() => profileById(s.profileId)).not.toThrow();
   });
 
@@ -42,7 +43,7 @@ describe("composição do campo por buy-in", () => {
     };
     const microFish = countFish(5);
     const highFish = countFish(109);
-    expect(microFish).toBeGreaterThan(highFish + 1.5); // diferença nítida (~1.5+ peixes por mesa)
+    expect(microFish).toBeGreaterThan(highFish + 1.5);
   });
 
   it("comportamento: mesa de $109 tem MAIS regular que a de $5", () => {
@@ -63,10 +64,28 @@ describe("composição do campo por buy-in", () => {
     const elite = fieldWeights(10300);
     const fishHigh = FISH_ARR.reduce((s, a) => s + high[a], 0);
     const fishElite = FISH_ARR.reduce((s, a) => s + elite[a], 0);
-    expect(fishElite).toBeLessThan(fishHigh * 0.25); // peixe cai muito na elite
-    // e os regs concentram o campo
+    expect(fishElite).toBeLessThan(fishHigh * 0.25);
     expect(elite.tag).toBeGreaterThan(high.tag);
   });
-});
 
-const FISH_ARR = ["recreativo", "station", "spewy"] as const;
+  it("Motor V2: composição fica progressivamente mais reg-heavy sem exigir mais de 100%", () => {
+    const stakes = [5, 109, 1000, 10300];
+    const regShare = stakes.map((buyIn) => {
+      const w = fieldWeights(buyIn);
+      const reg = REG_ARR.reduce((s, a) => s + w[a], 0);
+      const fish = FISH_ARR.reduce((s, a) => s + w[a], 0);
+      return reg / (reg + fish);
+    });
+    expect(regShare[1]).toBeGreaterThan(regShare[0]);
+    expect(regShare[2]).toBeGreaterThan(regShare[1] + 0.08);
+    expect(regShare[3]).toBeGreaterThan(regShare[2]);
+    expect(regShare[3]).toBeLessThanOrEqual(1);
+  });
+
+  it("Motor V2: no $10.300 fish representam menos de 5% do peso fish+reg", () => {
+    const w = fieldWeights(10300);
+    const reg = REG_ARR.reduce((s, a) => s + w[a], 0);
+    const fish = FISH_ARR.reduce((s, a) => s + w[a], 0);
+    expect(fish / (fish + reg)).toBeLessThan(0.05);
+  });
+});

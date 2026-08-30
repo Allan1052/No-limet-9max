@@ -1,16 +1,12 @@
 // ---------------------------------------------------------------------------
 // Composição do CAMPO por buy-in. No micro ($5) a mesa é cheia de peixe
-// (recreativo/station/spewy) — muito flop, muito limp. No alto ($109) ela é
-// cheia de regular (tag/lag/nit/abc) — apertado-agressivo, pouco flop. É o que
-// faz o $109 "sentir" como GG/Stars, e não uma mesa igual a do micro.
-//
-// Amostramos os arquétipos por peso (com repetição — uma mesa de $5 REALMENTE
-// tem vários peixes), dando a cada assento um apelido distinto.
+// (recreativo/station/spewy). Conforme o buy-in sobe, regulares passam a
+// dominar sem transformar a dificuldade em trapaça: muda a composição do field,
+// nunca as cartas vistas pelo bot ou o baralho.
 // ---------------------------------------------------------------------------
 
 import { buyInToughness, fieldEliteness, type Archetype } from "./profiles";
 
-/** Apelidos por arquétipo (o 1º é o nome canônico do perfil). */
 const NAME_POOL: Record<Archetype, string[]> = {
   recreativo: ["O Casual", "Zé do Flop", "Turista", "Domingão"],
   station: ["Paga-Tudo", "Grude", "Xerife da Call", "Não Solto"],
@@ -22,7 +18,6 @@ const NAME_POOL: Record<Archetype, string[]> = {
   shover: ["Tudo ou Nada", "All-in Fácil", "Zero ou Cem", "Roleta"],
 };
 
-/** Peso de cada arquétipo em [micro, alto]; interpolado pela dureza do buy-in. */
 const MICRO_HIGH: Record<Archetype, [number, number]> = {
   recreativo: [5.0, 0.8],
   station: [4.0, 0.5],
@@ -35,9 +30,8 @@ const MICRO_HIGH: Record<Archetype, [number, number]> = {
 };
 
 const ARCHETYPES = Object.keys(MICRO_HIGH) as Archetype[];
-const MAX_PER_ARCHETYPE = 4; // evita mesa degenerada (6× o mesmo tipo)
+const MAX_PER_ARCHETYPE = 4;
 
-/** Pesos do campo para um buy-in (micro = peixe, alto = regular). */
 export function fieldWeights(buyIn?: number): Record<Archetype, number> {
   const t = buyInToughness(buyIn);
   const out = {} as Record<Archetype, number>;
@@ -45,15 +39,21 @@ export function fieldWeights(buyIn?: number): Record<Archetype, number> {
     const [lo, hi] = MICRO_HIGH[a];
     out[a] = lo * (1 - t) + hi * t;
   }
-  // ELITE ($1.000+): os peixes somem e os regulares dominam — "só a nata".
+
+  // Acima de $109 usamos uma curva separada. O expoente cúbico retira rápido
+  // os perfis recreativos, enquanto TAG/LAG/ABC crescem. Isso cria diferença
+  // perceptível entre $109, $1k e $10.3k sem dar informação extra aos bots.
   const e = fieldEliteness(buyIn);
   if (e > 0) {
+    const fishRetention = Math.pow(1 - e, 3);
     for (const a of ["recreativo", "station", "spewy"] as Archetype[]) {
-      out[a] *= (1 - e) * (1 - e); // peixe some rápido conforme sobe o rolê
+      out[a] *= fishRetention;
     }
-    for (const a of ["tag", "lag", "nit"] as Archetype[]) {
-      out[a] *= 1 + 0.8 * e; // regulares concentram o campo
-    }
+    out.tag *= 1 + 1.8 * e;
+    out.lag *= 1 + 1.6 * e;
+    out.abc *= 1 + 0.7 * e;
+    out.nit *= 1 + 0.35 * e;
+    out.shover *= 1 - 0.35 * e;
   }
   return out;
 }
@@ -76,7 +76,6 @@ function pickName(arch: Archetype, used: Set<string>): string {
   return `${NAME_POOL[arch][0]} ${k}`;
 }
 
-/** Monta os assentos dos bots (nome + profileId) pesados pelo buy-in. */
 export function buildFieldSeats(
   buyIn: number | undefined,
   count: number,
@@ -93,13 +92,11 @@ export function buildFieldSeats(
     counts[arch] = (counts[arch] ?? 0) + 1;
     const name = pickName(arch, used);
     used.add(name);
-    // Semente única por bot: cada um vira um estilo próprio (Camada 1).
     out.push({ name, profileId: arch, personalitySeed: 1 + Math.floor(rng() * 2_000_000_000) });
   }
   return out;
 }
 
-/** Escolhe UM substituto (reload de assento estourado) pesado pelo buy-in. */
 export function pickReplacement(
   buyIn: number | undefined,
   usedNames: Set<string>,
