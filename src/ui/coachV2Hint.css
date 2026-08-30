@@ -1,0 +1,17 @@
+.tbl-hint {
+  width: auto;
+  max-width: min(520px, 92vw);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+
+@media (max-width: 520px) {
+  .tbl-hint {
+    max-width: min(94vw, 430px);
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
