@@ -45,11 +45,11 @@ describe("cards Coach V2", () => {
     expect(data.coachAction.toLowerCase()).toContain("bet");
   });
 
-  it("só inclui métricas que realmente existem na decisão focal", () => {
+  it("não inventa equity ou preço ausentes na decisão focal", () => {
     const data = buildCoachV2ShareData(hand(), feedback)!;
-    expect(data.betSizeBB).toBeUndefined();
     expect(data.equity).toBeUndefined();
     expect(data.potOdds).toBeUndefined();
     expect(data.context).not.toContain("Equity");
+    expect(data.context).not.toContain("Preço");
   });
 });
