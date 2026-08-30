@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rangePctFromActionLine } from "./villainRange";
+import { rangePctFromActionLine, type RangeActionLine } from "./villainRange";
 
 describe("Motor V2 — propagação de ranges pós-flop", () => {
   it("sequências diferentes deixam ranges posteriores diferentes", () => {
@@ -33,9 +33,9 @@ describe("Motor V2 — propagação de ranges pós-flop", () => {
   });
 
   it("é determinístico para a mesma sequência", () => {
-    const line = {
+    const line: RangeActionLine = {
       preflopRaises: 1,
-      street: "river" as const,
+      street: "river",
       actions: ["call", "bet", "call", "bet", "call"],
     };
     expect(rangePctFromActionLine(line)).toBe(rangePctFromActionLine(line));
