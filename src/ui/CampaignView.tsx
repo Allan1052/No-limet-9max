@@ -199,9 +199,6 @@ export function CampaignView() {
       const { passed, progress: np } = recordStage(progress, stage.id, correct);
       saveCampaign(np);
       setProgress(np);
-      // Farmar áurea — só quando passa. Guarda no celular.
-      if (passed) {
-      }
       setDone({ passed, correct });
       // Toca som de vitória ou derrota
       if (passed) {

@@ -140,7 +140,7 @@ export function HandLab() {
 
   const trainThisSpot = () => {
     if (!result) return;
-    // O spot vira um treino 1×1 real: a decisão conta pro raio-x e f arma áurea.
+    // O spot vira um treino 1×1 real: a decisão conta pro raio-x.
     const key =
       result.recommended === "fold"
         ? "fold"

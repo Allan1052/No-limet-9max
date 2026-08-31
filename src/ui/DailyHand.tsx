@@ -1,5 +1,5 @@
 // Mão do dia — card no topo do Treino. Uma mão igual pra todo mundo, por dia.
-// Resolve uma vez; depois trava até amanhã. Ganha áurea, conta streak e dá pra
+// Resolve uma vez; depois trava até amanhã. Conta streak e dá pra
 // compartilhar (cada print é uma porta de entrada).
 import { useState, useEffect } from "react";
 import { CardView } from "./Card";
