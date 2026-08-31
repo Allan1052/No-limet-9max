@@ -1,21 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { heroActionForFeedback } from "../app/gameController";
+import type { FeedbackItem } from "./analyzer";
+import { feedbackHeroActionLabel } from "../ui/coachV2PostHand";
+
+function item(over: Partial<FeedbackItem>): FeedbackItem {
+  return {
+    street: "Flop",
+    heroAction: "Raise",
+    advice: "Aposta",
+    rating: "boa",
+    text: "Linha correta.",
+    kind: "postflop",
+    ...over,
+  };
+}
 
 describe("semântica da ação pós-flop", () => {
-  it("traduz raise técnico para bet quando não havia aposta para pagar", () => {
-    expect(heroActionForFeedback("raise", "flop", 0)).toBe("bet");
-    expect(heroActionForFeedback("raise", "river", 0)).toBe("bet");
+  it("mostra Aposta quando o raise técnico aconteceu sem aposta anterior", () => {
+    expect(feedbackHeroActionLabel(item({}))).toBe("Aposta");
   });
 
-  it("mantém raise quando já existia aposta para pagar", () => {
-    expect(heroActionForFeedback("raise", "flop", 120)).toBe("raise");
-    expect(heroActionForFeedback("raise", "river", 2400)).toBe("raise");
+  it("mantém Raise quando o spot realmente é de aumento", () => {
+    expect(feedbackHeroActionLabel(item({ heroAction: "Raise", advice: "Raise" }))).toBe("Raise");
   });
 
-  it("não altera fold check call ou allin", () => {
-    expect(heroActionForFeedback("fold", "flop", 0)).toBe("fold");
-    expect(heroActionForFeedback("check", "turn", 0)).toBe("check");
-    expect(heroActionForFeedback("call", "river", 10)).toBe("call");
-    expect(heroActionForFeedback("allin", "river", 10)).toBe("allin");
+  it("não altera outras ações", () => {
+    expect(feedbackHeroActionLabel(item({ heroAction: "Call", advice: "Call" }))).toBe("Call");
+    expect(feedbackHeroActionLabel(item({ heroAction: "Check", advice: "Check" }))).toBe("Check");
+    expect(feedbackHeroActionLabel(item({ heroAction: "Fold", advice: "Fold" }))).toBe("Fold");
   });
 });
