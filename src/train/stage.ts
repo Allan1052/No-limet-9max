@@ -28,18 +28,15 @@ import { type Stage, STAGES } from "../tournament/structure";
 import { stackDepthAdjust } from "../ranges/stackDepth";
 import { comboToHandType, type Position } from "../ranges/types";
 import { gradeDecision, type FeedbackItem } from "../feedback/analyzer";
+import { decisionConfidence, type DecisionConfidence } from "./confidence";
 
-// Estágio unificado com a taxonomia OFICIAL do torneio (não duplica): os 4
-// estágios reais — inicio, meio, bolha, mesa_final — cada um com stack médio e
-// pressão de ICM próprios (STAGES em src/tournament/structure.ts).
 export type StageKey = Stage;
 
-/** Estágio → stack efetivo padrão (bb) — vem da taxonomia oficial (avgBB). */
 export const STAGE_BB: Record<StageKey, number> = {
-  inicio: STAGES.inicio.avgBB, // 200
-  meio: STAGES.meio.avgBB, // 45
-  bolha: STAGES.bolha.avgBB, // 22
-  mesa_final: STAGES.mesa_final.avgBB, // 20
+  inicio: STAGES.inicio.avgBB,
+  meio: STAGES.meio.avgBB,
+  bolha: STAGES.bolha.avgBB,
+  mesa_final: STAGES.mesa_final.avgBB,
 };
 
 export const STAGE_LABEL: Record<StageKey, string> = {
@@ -49,12 +46,6 @@ export const STAGE_LABEL: Record<StageKey, string> = {
   mesa_final: "Mesa final · ICM",
 };
 
-/**
- * Rótulo HONESTO de pressão por fase (P0 do parecer da Manus): diz se o preço é
- * em FICHAS (chip-EV, início/meio) ou ajustado por PREMIAÇÃO SIMULADA (ICM,
- * bolha/mesa final). Deixa claro que o "meio" é uma leitura de TRANSIÇÃO — o ICM
- * de verdade só entra na bolha/mesa final (ou quando o jogador detalha a mesa).
- */
 export function phasePressureLabel(stage: StageKey): { tag: string; note: string } {
   switch (stage) {
     case "inicio":
@@ -68,12 +59,7 @@ export function phasePressureLabel(stage: StageKey): { tag: string; note: string
   }
 }
 
-/** Situações possíveis do spot (pré-flop, que o motor cobre hoje). */
-export type SituationKey =
-  | "open" // ninguém abriu: você é o primeiro a agir
-  | "vsopen" // um vilão abriu antes de você
-  | "vs3bet" // um vilão 3-betou (open + raise)
-  | "vsallin"; // um vilão deu all-in na sua frente (call/fold por equity + ICM)
+export type SituationKey = "open" | "vsopen" | "vs3bet" | "vsallin";
 
 export const SITUATION_LABEL: Record<SituationKey, string> = {
   open: "Ninguém abriu — você age primeiro",
@@ -87,53 +73,48 @@ export interface HandLabSpec {
   villainPosition: Position;
   situation: SituationKey;
   stage: StageKey;
-  stackBB: number; // stack EFETIVO em BB (o menor dos dois; o estágio dá um padrão, o usuário pode ajustar)
-  /**
-   * Stack REAL do vilão em BB, quando o usuário informa e ele é MAIOR que o do
-   * herói. O efetivo (stackBB) manda no preço; o stack do vilão só estima a
-   * LARGURA do range de shove — um vilão de 40bb que dá all-in tem range mais
-   * apertado que um de 12bb. Ausente ⇒ usa o efetivo.
-   */
+  stackBB: number;
   villainStackBB?: number;
-  hand: Card[]; // 2 cartas do herói
-  board?: Card[]; // cartas da mesa (3-5) para análise pós-flop
-  potBB?: number; // pote em BB (para calcular pot-odds)
-  villainBetBB?: number; // aposta do vilão em BB (para calcular pot-odds)
-  anteBB?: number; // dead money dos antes (bb) — alarga o roubo no MTT
-  /**
-   * Situação REAL da mesa final/bolha (opcional): quantos jogadores restam, sua
-   * posição em fichas e o formato dos stacks. Quando presente (e o estágio tem
-   * ICM), o motor calcula o ICM do SEU spot — "sou 3º de 6 com curtos atrás"
-   * aperta mais que uma mesa final genérica. Sem isso, usa a mesa representativa.
-   */
+  hand: Card[];
+  board?: Card[];
+  potBB?: number;
+  villainBetBB?: number;
+  anteBB?: number;
   finalTable?: FinalTableSpec;
 }
 
 export interface FinalTableSpec {
-  players: number; // jogadores restantes (2–9)
-  heroRank: number; // posição do herói em fichas (1 = líder … players = mais curto)
-  shape: "equilibrado" | "escalonado"; // stacks parecidos vs escalonado (com curtos)
+  players: number;
+  heroRank: number;
+  shape: "equilibrado" | "escalonado";
+}
+
+export interface HandAnalysisMetrics {
+  heroEquity?: number;
+  potOdds?: number;
+  requiredEquity?: number;
 }
 
 export interface HandAnalysis {
   spec: HandLabSpec;
-  handType: string; // ex. "AKo", "T9s"
-  context: string; // resumo do spot em texto
-  verdict: FeedbackItem; // avaliação da decisão recomendada pelo motor
-  recommended: string; // fold | call | raise | allin
-  simple: string; // explicação na voz do amigo
-  technical: string; // explicação no vocabulário técnico
-  /** "Por que não a alternativa?" — a linha oposta natural e por que ela perde. */
+  handType: string;
+  context: string;
+  verdict: FeedbackItem;
+  recommended: string;
+  simple: string;
+  technical: string;
   whyNot: { label: string; text: string } | null;
-  /** Frase-âncora didática contextual (aparece depois da decisão). */
   anchor: string;
-  /** Spot de FRONTEIRA: equity ~ preço (quase 50/50). A UI não deve prometer
-   *  "com folga"; é decisão apertada e a premissa manda. */
   borderline: boolean;
+  confidence: DecisionConfidence;
+  /** Métricas calculadas na MESMA execução da decisão; nunca recalculadas pela UI/card. */
+  metrics: HandAnalysisMetrics;
 }
 
-/** Traduz a ação do motor pro rótulo exibido ao jogador. */
-function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; action: string; borderline: boolean } {
+function analyze(
+  ctx: PreflopContext,
+  hand: Card[],
+): { item: FeedbackItem; action: string; borderline: boolean; metrics: HandAnalysisMetrics } {
   void hand;
   const d = preflopDecision(ctx);
   const advice = {
@@ -143,48 +124,35 @@ function analyze(ctx: PreflopContext, hand: Card[]): { item: FeedbackItem; actio
     mix: d.mix,
     effectiveBB: ctx.effectiveBB,
   };
-  // FRONTEIRA (bug do 66 pego pelo Allan/Manus): quando a equity real fica a
-  // menos de ~3 pontos do preço exigido, é um call/fold de FRONTEIRA — o texto
-  // NÃO pode dizer "com folga"/"de sobra". Só vale quando temos equity e preço
-  // (decisão de pagar all-in).
   const borderline =
     d.equity !== undefined && d.requiredEquity !== undefined && Math.abs(d.equity - d.requiredEquity) < 0.03;
-  // Devolve TAMBÉM a ação real do motor — o badge e as vozes têm que vir daqui,
-  // não de reparsear o texto do feedback (que gerava badge RAISE com texto Call).
-  return { item: gradeDecision("Pré-flop", "free", d.action, advice), action: d.action, borderline };
+  const potOdds =
+    ctx.callAmountBB !== undefined && ctx.contestablePotBB !== undefined
+      ? ctx.callAmountBB / (ctx.contestablePotBB + ctx.callAmountBB)
+      : undefined;
+  return {
+    item: gradeDecision("Pré-flop", "free", d.action, advice),
+    action: d.action,
+    borderline,
+    metrics: {
+      heroEquity: d.equity,
+      potOdds,
+      requiredEquity: d.requiredEquity,
+    },
+  };
 }
 
-/** Ação do motor → categoria do badge/voz (fold | call | raise | allin). */
 function recommendedFrom(action: string): string {
   if (action === "fold") return "fold";
   if (action === "call") return "call";
   if (action === "jam" || action === "allin") return "allin";
-  return "raise"; // raise / 3bet / 4bet / 5bet
+  return "raise";
 }
 
-/**
- * ICM representativo da FASE FINAL — pra a decisão sentir a pressão de mesa
- * final (arriscar o torneio custa mais que dobrar). É uma aproximação: mesa
- * final de 5 com prêmios escalonados e o herói no stack efetivo do spot. Só o
- * estágio "late" usa; "early"/"meio" jogam em fichas puras (chip-EV). O motor
- * já sabe usar ICM (requiredEquityToCall/icmFactor) — o HandLab é que não
- * estava passando esse dado (bug pego pelo Allan).
- */
 export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefined {
-  const kind = STAGES[stage].icm; // "none" | "bubble" | "final"
-  if (kind === "none") return undefined; // inicio/meio jogam em fichas puras
-  // Mesa final/bolha com stacks FIXOS (bb absolutos) — NÃO proporcionais ao
-  // confronto. O all-in arriscado é `chips` = min(stack do confronto, stack do
-  // herói): a pressão de ICM ESCALA com o tamanho do all-in (shove curto pesa
-  // pouco, grande pesa muito) e a decisão fica MONOTÔNICA. A versão proporcional
-  // anterior oscilava/apertava demais (bug pego pelo Allan). A BOLHA é mais
-  // apertada que a MESA FINAL: bustar na bolha = ganhar ZERO (você para antes do
-  // dinheiro); na mesa final você já premiou. Por isso os payouts da bolha caem
-  // mais rápido (o corte do dinheiro é brutal).
+  const kind = STAGES[stage].icm;
+  if (kind === "none") return undefined;
   if (kind === "bubble") {
-    // 6 jogadores, 4 pagos → 2 fora do dinheiro (a bolha). Herói é um stack
-    // MÉDIO (idx 3) — o mais pressionado: bustar = ficar de fora, mas foldando
-    // provavelmente premia. Por isso aperta mais que a mesa final.
     const heroStack = 20;
     return {
       stacks: [55, 40, 30, heroStack, 14, 10],
@@ -194,7 +162,6 @@ export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefin
       chips: Math.min(Math.max(1, effBB), heroStack),
     };
   }
-  // mesa_final: já no dinheiro — pressão moderada (marginais ~6-7bb, premium ~14bb).
   const heroStack = 40;
   return {
     stacks: [heroStack, 50, 32, 22, 16],
@@ -205,29 +172,17 @@ export function buildStageIcm(effBB: number, stage: StageKey): IcmSpot | undefin
   };
 }
 
-/** Escada de prêmios (top-heavy) para N jogadores — só a FORMA importa no ICM. */
 function ftPayouts(players: number): number[] {
   return Array.from({ length: players }, (_, i) => Math.pow(0.72, i) * 100);
 }
 
-/** Tamanhos relativos de stack por posição (índice 0 = líder). */
 function ftShapeStacks(players: number, shape: "equilibrado" | "escalonado"): number[] {
   if (shape === "equilibrado") {
-    // Spread suave: do líder (1.3) ao mais curto (0.6). Ninguém "prestes a quebrar".
     return Array.from({ length: players }, (_, i) => 1.3 - (players > 1 ? (i / (players - 1)) * 0.7 : 0));
   }
-  // Escalonado: líderes grandes, cauda curta (há stacks prestes a quebrar).
   return Array.from({ length: players }, (_, i) => Math.pow(0.6, i));
 }
 
-/**
- * ICM do SEU spot real de mesa final/bolha: a partir de quantos jogadores
- * restam, da sua posição em fichas e do formato dos stacks, monta o IcmSpot.
- * Captura o efeito que o Allan pediu: ser 3º de 6 COM CURTOS ATRÁS aperta o call
- * (você ladrilha o prêmio de graça quando eles quebram); ser o próprio curto
- * afrouxa (você é obrigado a gambar). O vilão default é o maior stack adversário
- * (o pior caso de ICM: quem te cobre coloca você em risco pelo torneio inteiro).
- */
 export function buildFinalTableIcm(ft: FinalTableSpec, heroStackBB: number): IcmSpot {
   const players = Math.max(2, Math.min(9, Math.round(ft.players)));
   const rank = Math.max(1, Math.min(players, Math.round(ft.heroRank)));
@@ -236,7 +191,6 @@ export function buildFinalTableIcm(ft: FinalTableSpec, heroStackBB: number): Icm
   const scale = heroStackBB / rel[heroIdx];
   const stacks = rel.map((r) => Math.max(1, r * scale));
   stacks[heroIdx] = heroStackBB;
-  // Vilão = maior stack adversário (cobre o herói → risco máximo de ICM).
   let villain = 0;
   for (let i = 0; i < stacks.length; i++) {
     if (i !== heroIdx && stacks[i] > (villain === heroIdx ? -1 : stacks[villain] ?? -1)) villain = i;
@@ -251,16 +205,11 @@ export function buildFinalTableIcm(ft: FinalTableSpec, heroStackBB: number): Icm
   };
 }
 
-/**
- * Analisa a mão reconstruída pelo jogador e devolve o veredito nas duas vozes.
- */
 export function analyzeHand(spec: HandLabSpec): HandAnalysis {
   const handType = comboToHandType(spec.hand[0], spec.hand[1]);
   const sd = stackDepthAdjust(spec.stackBB);
   const openSize = 2.3;
   const eff = spec.stackBB;
-  // ICM: se o jogador informou a situação REAL da mesa final/bolha, usa o spot
-  // dele; senão, a mesa representativa do estágio.
   const icmSpot =
     spec.finalTable && STAGES[spec.stage].icm !== "none"
       ? buildFinalTableIcm(spec.finalTable, eff)
@@ -271,8 +220,6 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     heroPosition: spec.heroPosition,
     hand: spec.hand,
     effectiveBB: eff,
-    // Stack real do vilão (só quando informado e MAIOR que o efetivo) para estimar
-    // a largura do shove pela profundidade de quem shova, não pelo efetivo.
     villainStackBB:
       spec.villainStackBB != null && spec.villainStackBB > eff ? spec.villainStackBB : undefined,
     profile: BASELINE_PROFILE,
@@ -283,12 +230,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     betLevelFaced: spec.situation === "vs3bet" ? 2 : facingAllin ? 1 : undefined,
     anteBB: spec.anteBB,
     icmSpot,
-    // RNG semeado por mão+stack: a análise da MESMA mão é sempre igual (não
-    // "pisca" entre reloads) e o threshold vs all-in não oscila por ruído do
-    // Monte Carlo de equity.
     rng: seededRng((((spec.hand[0] + 1) * 2654435761 + (spec.hand[1] + 1) * 40503 + Math.round(eff) * 2246822519) >>> 0)),
-    // Vilão deu all-in: a decisão vira call/fold por EQUITY vs range + pot odds
-    // (e ICM na fase final). Herói no BB já pôs 1bb; paga o resto.
     ...(facingAllin
       ? {
           allInsAhead: 1,
@@ -299,8 +241,7 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
       : {}),
   };
 
-  const { item, action, borderline } = analyze(ctx, spec.hand);
-  // O badge e as vozes vêm da DECISÃO REAL do motor — não de parsear o texto.
+  const { item, action, borderline, metrics } = analyze(ctx, spec.hand);
   const recommended = recommendedFrom(action);
 
   const stageCtx = stageContext(spec, handType, sd.pushFold);
@@ -318,6 +259,16 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     whyNot: whyNotAlternative(spec, recommended, handType),
     anchor: anchorPhrase(spec),
     borderline,
+    confidence: decisionConfidence({
+      situation: spec.situation,
+      stage: spec.stage,
+      stackBB: spec.stackBB,
+      handType,
+      borderline,
+      icmActive: STAGES[spec.stage].icm !== "none",
+      hasRealStacks: spec.finalTable != null,
+    }),
+    metrics,
   };
 }
 
@@ -325,10 +276,6 @@ function buildContext(spec: HandLabSpec): string {
   return `${spec.heroPosition} · ${spec.stackBB}bb · ${SITUATION_LABEL[spec.situation]}`;
 }
 
-/**
- * Selo de contexto — gerado do ESTADO REAL do spot (nunca escrito à mão): mostra
- * o formato, o estágio, o stack e se há ICM. Ex.: "MTT 9-max · Bolha · 15bb · ICM".
- */
 export function contextSeal(spec: HandLabSpec): string {
   const st = STAGES[spec.stage];
   const icm = st.icm === "bubble" ? " · ICM bolha" : st.icm === "final" ? " · ICM" : "";
@@ -336,7 +283,6 @@ export function contextSeal(spec: HandLabSpec): string {
   return `MTT 9-max · ${st.label} · ${Math.round(spec.stackBB)}bb${ante}${icm}`;
 }
 
-/** Frase de contexto ligada ao estágio — o porquê de ele mudar a decisão. */
 function stageContext(spec: HandLabSpec, handType: string, pushFold: boolean): string {
   if (pushFold) {
     return `stack curta: nesse ponto do torneio quem abre geralmente dá all-in — com ${handType} a escolha é ${pushFold ? "jam ou largar" : "preservar"}`;
@@ -353,16 +299,10 @@ function stageContext(spec: HandLabSpec, handType: string, pushFold: boolean): s
   return `torneio andando: preserve fichas — com ${handType}, ataque só quando tiver vantagem`;
 }
 
-/** O estágio ativa a pressão de ICM na decisão? */
 function stageHasIcm(stage: StageKey): boolean {
   return STAGES[stage].icm !== "none";
 }
 
-/**
- * Frase-âncora didática — uma verdade curta que fica na cabeça, contextual ao
- * spot. Aparece DEPOIS da decisão (nunca no card do quiz), como reforço mental.
- * (Formulações inspiradas na pesquisa de campo da Manus, ago/2026.)
- */
 function anchorPhrase(spec: HandLabSpec): string {
   if (spec.situation === "vsallin" && stageHasIcm(spec.stage)) {
     return "💡 Pot odds dizem quanto você precisa ganhar; o ICM diz quanto custa ser eliminado.";
@@ -379,11 +319,6 @@ function anchorPhrase(spec: HandLabSpec): string {
   return "💡 Abrir é roubar com plano: posição, stack e o que já há no pote decidem quais mãos valem a fila.";
 }
 
-/**
- * "Por que não a alternativa?" — pega a linha OPOSTA natural à recomendada e
- * explica por que ela perde. É o gancho didático: em vez de só dizer o certo,
- * mostra por que o outro caminho custa fichas. Voz simples, sem jargão.
- */
 function whyNotAlternative(
   spec: HandLabSpec,
   recommended: string,
@@ -394,7 +329,6 @@ function whyNotAlternative(
   const icmOn = stageHasIcm(spec.stage);
   const shortStack = spec.stackBB <= 15;
 
-  // Recomendado FOLD → por que não ENTRAR?
   if (recommended === "fold") {
     if (situ === "vsallin") {
       return {
@@ -411,7 +345,6 @@ function whyNotAlternative(
     return { label: "ABRIR", text: `${hand} fica fora do range de abertura de ${pos} — abrir cria um pote dominado e fora de posição, custando fichas no longo prazo.` };
   }
 
-  // Recomendado CALL → por que não FOLDAR?
   if (recommended === "call") {
     if (situ === "vsallin") {
       return {
@@ -422,7 +355,6 @@ function whyNotAlternative(
     return { label: "FOLDAR", text: `${hand} tem preço e equity pra continuar — foldar aqui é apertado demais e entrega um pote lucrativo.` };
   }
 
-  // Recomendado AGRESSIVO (raise/jam/3bet) → por que não uma linha mais passiva?
   if (situ === "open") {
     return { label: "FOLDAR", text: `${hand} está no range de abertura de ${pos} — foldar desperdiça um roubo lucrativo (com ante, ainda mais fichas mortas pra pegar).` };
   }
@@ -432,10 +364,6 @@ function whyNotAlternative(
   return { label: "FOLDAR", text: `${hand} sustenta a agressão aqui — recuar deixa valor e fold equity na mesa.` };
 }
 
-// ---------------------------------------------------------------------------
-// VOZES
-// ---------------------------------------------------------------------------
-
 function simpleVoice(
   action: string,
   hand: string,
@@ -444,14 +372,12 @@ function simpleVoice(
   borderline = false,
 ): string {
   const pos = spec.heroPosition;
-  // Vilão deu all-in: é call/fold puro por equity (e ICM na fase final).
   if (spec.situation === "vsallin") {
     const icm = spec.stage === "bolha"
       ? " Na bolha o ICM está no talo: quebrar aqui = ganhar zero, então o padrão aperta muito."
       : spec.stage === "mesa_final"
         ? " Na mesa final pesa o ICM: quebrar custa prêmio, então o padrão aperta."
         : "";
-    // FRONTEIRA: equity ~ preço. Sem linguagem de certeza — é quase 50/50.
     if (borderline) {
       return `É FRONTEIRA — quase 50/50. ${hand} contra o range de all-in dele fica praticamente EMPATADO com o preço, então ${action === "fold" ? "o padrão inclina levemente pra FOLD" : "o padrão inclina levemente pra CALL"}, mas é decisão apertada: os dois lados perdem/ganham pouco.${icm} Não é erro grave escolher o outro lado aqui.`;
     }
@@ -491,8 +417,6 @@ function technicalVoice(
 ): string {
   const depth = depthTalk(spec.stackBB);
   const stageTalk = stageTechnicalTalk(spec);
-  // Vilão all-in: call/fold por equity vs range de shove + pot odds; na fase
-  // final, a equity exigida sobe pelo ICM (requiredEquityToCall).
   if (spec.situation === "vsallin") {
     const icmOn = stageHasIcm(spec.stage);
     const decision = borderline
@@ -547,11 +471,6 @@ function depthTalk(bb: number): string {
   return "Abaixo de 30bb, o pré-flop domina a decisão: shove-or-fold e tamanhos de 3-bet curtos.";
 }
 
-// ---------------------------------------------------------------------------
-// Utilitários para a UI
-// ---------------------------------------------------------------------------
-
-/** Converte texto de mão ("AsKh", "T9s") em Cards; retorna null se inválida. */
 export function parseHand(text: string): Card[] | null {
   const s = text.replace(/\s+/g, "").toUpperCase();
   if (s.length < 4) return null;
@@ -573,17 +492,10 @@ export const SUIT_OPTIONS = [
   { key: "c", symbol: "♣", name: "Paus" },
 ];
 
-/** Rótulo bonito da mão, ex. "K♠ Q♥" → "KQo / KQs". */
 export function handLabel(cards: Card[]): string {
   return comboToHandType(cards[0], cards[1]);
 }
 
-
-// ---------------------------------------------------------------------------
-// PÓS-FLOP — análise quando o jogador informa o board.
-// ---------------------------------------------------------------------------
-
-/** Street atual baseado no tamanho do board. */
 export function boardStreet(board: Card[]): string {
   if (board.length === 3) return "Flop";
   if (board.length === 4) return "Turn";
@@ -591,22 +503,15 @@ export function boardStreet(board: Card[]): string {
   return "";
 }
 
-/**
- * Resultado da análise pós-flop.
- */
 export interface PostflopAnalysis {
-  equity: number; // % de equity do herói vs villain
-  potOdds: number | null; // % de pot odds (null se não tem aposta pra pagar)
-  evLabel: string; // "+EV" / "0" / "-EV"
-  recommendation: string; // fold | call | raise | check
+  equity: number;
+  potOdds: number | null;
+  evLabel: string;
+  recommendation: string;
   simpleText: string;
   technicalText: string;
 }
 
-/**
- * % de range do vilão baseada na situação (abertura genérica).
- * BTN abre largo (40%), MP aperto (25%), UTG muito aperto (15%), CO (30%).
- */
 function villainOpenPercent(pos: Position): number {
   const map: Record<string, number> = {
     UTG: 0.15,
@@ -620,10 +525,6 @@ function villainOpenPercent(pos: Position): number {
   return map[pos] ?? 0.25;
 }
 
-/**
- * Analisa a mão do herói contra o board e a range do vilão.
- * Usa Monte Carlo (2000 iterações) pra calcular equity.
- */
 export function analyzePostflop(spec: HandLabSpec): PostflopAnalysis {
   const board = spec.board ?? [];
   if (board.length === 0 || board.length > 5) {
@@ -637,16 +538,12 @@ export function analyzePostflop(spec: HandLabSpec): PostflopAnalysis {
     };
   }
 
-  // Range do vilão baseada na posição dele
   const vPercent = villainOpenPercent(spec.villainPosition);
   const villainRange: Range = buildTopRange(vPercent);
   const villainCombos: Card[][] = rangeCombos(villainRange);
-
-  // Equity do herói vs villain no board
   const eqResult = equityHandVsRange(spec.hand, villainCombos, board, 2000);
   const equity = Math.round(eqResult.equity * 100);
 
-  // Pot odds
   let potOdds: number | null = null;
   let potBB = spec.potBB ?? 0;
   let villainBetBB = spec.villainBetBB ?? 0;
@@ -654,20 +551,17 @@ export function analyzePostflop(spec: HandLabSpec): PostflopAnalysis {
     potOdds = Math.round((villainBetBB / (potBB + villainBetBB * 2)) * 100);
   }
 
-  // Recomendação
   let recommendation: string;
   let evLabel: string;
   if (potOdds === null) {
-    // Sem aposta pra pagar — check ou bet
     recommendation = equity > 60 ? "raise" : "check";
     evLabel = equity > 50 ? "+EV" : "-EV";
   } else {
-    // Tem aposta — precisa pagar. Equity > pot odds = call.
     if (equity >= potOdds + 5) {
       recommendation = equity > 70 ? "raise" : "call";
       evLabel = "+EV";
     } else if (equity >= potOdds - 5) {
-      recommendation = "call"; // borderline
+      recommendation = "call";
       evLabel = "0";
     } else {
       recommendation = "fold";
@@ -679,13 +573,11 @@ export function analyzePostflop(spec: HandLabSpec): PostflopAnalysis {
   const handType = comboToHandType(spec.hand[0], spec.hand[1]);
   const boardText = cardsToString(board);
 
-  // Voz simples
   const simpleText =
     potOdds !== null
       ? `${handType} no ${street} (${boardText}). Você tem ${equity}% de equity. O vilão aposta ${villainBetBB}bb num pote de ${potBB}bb — o preço é ${potOdds}%. ${equity > potOdds ? "Equity ganha do preço — paga!" : "Equity não paga o preço — fold é a escolha certa."}`
       : `${handType} no ${street} (${boardText}). Você tem ${equity}% de equity. ${equity > 60 ? "Você é favorito — aposta pra extrair valor!" : equity > 40 ? "Board é disputado — check e reavalie." : "Você está atrás — check ou fold se tomar aposta."}`;
 
-  // Voz técnica
   const rangeLabel = `${vPercent * 100}% das mãos`;
   const technicalText =
     potOdds !== null
