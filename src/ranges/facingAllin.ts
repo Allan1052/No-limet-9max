@@ -20,7 +20,35 @@ import type { Card } from "../engine/cards";
 import { equityHandVsRange, equityHandVsRangeMulti } from "../engine/equity";
 import { buildTopRange } from "./build";
 import { rangeCombos, type Position } from "./types";
-import { requiredEquityToCall, type IcmSpot } from "./icm";
+import { requiredEquityForDecision, type IcmSpot, type IcmDecisionStates } from "./icm";
+
+/**
+ * Monta os TRÊS estados de ICM da decisão (fold/ganhar/perder) a partir do spot
+ * herói×vilão. Os stacks já vêm SEM o que o herói comprometeu (fichas atrás).
+ *   • ganhar : herói +chips efetivos, vilão −chips (soma zero).
+ *   • perder : herói −chips, vilão +chips.
+ *   • foldar : herói fica com o que tem; as fichas que ELE já investiu neste
+ *     lance viram custo afundado e vão pro vilão (que leva o pote sem showdown).
+ *
+ * Com `heroCommittedBB = 0` isto é ALGEBRICAMENTE idêntico ao modelo legado
+ * (foldValue = valor do stack atual) — então não muda nenhuma decisão existente.
+ * Quando o herói já investiu (ex.: abriu, 3-betou e leva o shove), foldar passa
+ * a valer menos (pot-committed), baixando corretamente a equity exigida.
+ */
+function buildIcmDecisionStates(spot: IcmSpot, heroCommittedBB = 0): IcmDecisionStates {
+  const winStacks = spot.stacks.slice();
+  winStacks[spot.hero] += spot.chips;
+  winStacks[spot.villain] -= spot.chips;
+
+  const loseStacks = spot.stacks.slice();
+  loseStacks[spot.hero] -= spot.chips;
+  loseStacks[spot.villain] += spot.chips;
+
+  const foldStacks = spot.stacks.slice();
+  if (heroCommittedBB > 0) foldStacks[spot.villain] += heroCommittedBB;
+
+  return { foldStacks, winStacks, loseStacks, payouts: spot.payouts, hero: spot.hero };
+}
 
 /**
  * Largura de OPEN-SHOVE (primeiro a agir vai de all-in) por POSIÇÃO. Um all-in
@@ -88,6 +116,13 @@ export interface FacingAllinInput {
    * efetivo. Ausente ⇒ usa o efetivo.
    */
   shoverStackBB?: number;
+  /**
+   * Fichas (bb) que o herói JÁ investiu neste lance antes de decidir (custo
+   * afundado se ele foldar). Usado só no ICM incremental: quanto mais o herói já
+   * comprometeu, menos equity extra o ICM exige pra continuar. Ausente/0 ⇒
+   * comportamento idêntico ao legado.
+   */
+  heroCommittedBB?: number;
   /** Posição de quem deu o all-in — abre/fecha a largura do range de open-shove. */
   raiserPosition?: Position;
   /** Contexto de ICM: perto do dinheiro, a equity exigida sobe. */
@@ -125,7 +160,11 @@ export function facingAllinDecision(inp: FacingAllinInput): FacingAllinResult {
   // side pot (contestablePotBB). Aqui é só a razão call / (pote + call).
   let requiredEquity = inp.callBB / (inp.contestablePotBB + inp.callBB);
   if (inp.icmSpot) {
-    const icmReq = requiredEquityToCall(inp.icmSpot);
+    // ICM INCREMENTAL: avalia foldar-agora × pagar-agora do ponto atual, com os
+    // stacks reais herói×vilão e o que o herói já investiu (custo afundado).
+    const icmReq = requiredEquityForDecision(
+      buildIcmDecisionStates(inp.icmSpot, inp.heroCommittedBB ?? 0),
+    );
     if (icmReq > requiredEquity) requiredEquity = icmReq;
   }
 

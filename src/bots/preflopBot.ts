@@ -121,6 +121,9 @@ export function preflopContextFor(
     potBB: totalPot(t) / bb,
     anteBB: t.ante > 0 ? (t.ante * t.players.filter((o) => o.status !== "out").length) / bb : undefined,
     rng: seededRng(seed),
+    // Fichas que o herói já investiu nesta mão (custo afundado se foldar) — o ICM
+    // incremental usa isto pra avaliar foldar-agora × pagar-agora do ponto atual.
+    heroCommittedBB: p.totalCommitted / bb,
     icmSpot: buildIcmSpot(t, seat, ctx.payouts),
     variant: t.variant ?? "holdem",
   };

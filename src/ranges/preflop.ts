@@ -79,6 +79,12 @@ export interface PreflopContext {
   /** Contexto de ICM para o confronto herói×vilão (opcional). */
   icmSpot?: IcmSpot;
   /**
+   * Fichas (bb) que o herói já comprometeu neste lance antes de decidir (custo
+   * afundado se foldar). Alimenta o ICM incremental ao pagar um all-in. 0/ausente
+   * = idêntico ao legado.
+   */
+  heroCommittedBB?: number;
+  /**
    * O herói ABRIU e agora enfrenta um 3-bet. `raiserPosition` passa a ser quem
    * deu o 3-bet e `openSizeBB` o tamanho do 3-bet em bb. A decisão vira
    * 4-bet / pagar / foldar.
@@ -217,6 +223,7 @@ function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision
     callBB: ctx.callAmountBB,
     effectiveBB: ctx.effectiveBB,
     shoverStackBB: ctx.villainStackBB,
+    heroCommittedBB: ctx.heroCommittedBB,
     raiserPosition: ctx.raiserPosition,
     icmSpot: ctx.icmSpot,
     rng: ctx.rng,
