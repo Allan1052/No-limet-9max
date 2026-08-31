@@ -28,6 +28,7 @@ import { type Stage, STAGES } from "../tournament/structure";
 import { stackDepthAdjust } from "../ranges/stackDepth";
 import { comboToHandType, type Position } from "../ranges/types";
 import { gradeDecision, type FeedbackItem } from "../feedback/analyzer";
+import { decisionConfidence, type DecisionConfidence } from "./confidence";
 
 // Estágio unificado com a taxonomia OFICIAL do torneio (não duplica): os 4
 // estágios reais — inicio, meio, bolha, mesa_final — cada um com stack médio e
@@ -130,6 +131,8 @@ export interface HandAnalysis {
   /** Spot de FRONTEIRA: equity ~ preço (quase 50/50). A UI não deve prometer
    *  "com folga"; é decisão apertada e a premissa manda. */
   borderline: boolean;
+  /** Selo de confiança da decisão (alta/média/aproximação) + motivo honesto. */
+  confidence: DecisionConfidence;
 }
 
 /** Traduz a ação do motor pro rótulo exibido ao jogador. */
@@ -318,6 +321,15 @@ export function analyzeHand(spec: HandLabSpec): HandAnalysis {
     whyNot: whyNotAlternative(spec, recommended, handType),
     anchor: anchorPhrase(spec),
     borderline,
+    confidence: decisionConfidence({
+      situation: spec.situation,
+      stage: spec.stage,
+      stackBB: spec.stackBB,
+      handType,
+      borderline,
+      icmActive: STAGES[spec.stage].icm !== "none",
+      hasRealStacks: spec.finalTable != null,
+    }),
   };
 }
 
