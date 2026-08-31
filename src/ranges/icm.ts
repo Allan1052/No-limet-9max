@@ -155,6 +155,42 @@ export function requiredEquityForDecision(spot: IcmDecisionStates): number {
   return Math.max(0, Math.min(1, required));
 }
 
+/**
+ * Monta os TRÊS estados de ICM (foldar/ganhar/perder) a partir de um IcmSpot
+ * herói×vilão, pra alimentar `requiredEquityForDecision`.
+ *
+ *   • ganhar / perder: showdown — herói ±chips efetivos, vilão ∓chips (idêntico
+ *     ao modelo legado; não mexe no que já roda).
+ *   • foldar: o herói fica só com o que tem ATRÁS; as fichas que ELE já investiu
+ *     viram custo afundado e vão pro vilão (leva o pote sem showdown).
+ *
+ * `stacksIncludeCommitted` diz se `spot.stacks[hero]` JÁ inclui o que o herói
+ * investiu (pós-flop monta assim) ou não (pré-flop usa o stack atrás). Com
+ * `heroCommittedBB = 0` o estado de fold = stacks atuais ⇒ ALGEBRICAMENTE
+ * idêntico a `requiredEquityToCall` (nenhuma decisão existente muda).
+ */
+export function icmStatesFromSpot(
+  spot: IcmSpot,
+  heroCommittedBB = 0,
+  stacksIncludeCommitted = false,
+): IcmDecisionStates {
+  const winStacks = spot.stacks.slice();
+  winStacks[spot.hero] += spot.chips;
+  winStacks[spot.villain] -= spot.chips;
+
+  const loseStacks = spot.stacks.slice();
+  loseStacks[spot.hero] -= spot.chips;
+  loseStacks[spot.villain] += spot.chips;
+
+  const foldStacks = spot.stacks.slice();
+  if (heroCommittedBB > 0) {
+    if (stacksIncludeCommitted) foldStacks[spot.hero] -= heroCommittedBB;
+    foldStacks[spot.villain] += heroCommittedBB;
+  }
+
+  return { foldStacks, winStacks, loseStacks, payouts: spot.payouts, hero: spot.hero };
+}
+
 /** Equity de ICM necessária para pagar um all-in no modelo legado. */
 export function requiredEquityToCall(spot: IcmSpot): number {
   const now = icmEquity(spot.stacks, spot.payouts)[spot.hero];

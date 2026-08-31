@@ -30,7 +30,7 @@ import type { BotProfile } from "./profiles";
 import { buildTopRange } from "../ranges/build";
 import { omahaPreflopScore } from "../ranges/omahaPreflop";
 import { rangeCombos } from "../ranges/types";
-import { requiredEquityToCall, type IcmSpot } from "../ranges/icm";
+import { requiredEquityForDecision, icmStatesFromSpot, type IcmSpot } from "../ranges/icm";
 import { postflopRequiredEquity } from "../ranges/postflopMath";
 import { classifyBoard, type BoardTexture } from "./boardTexture";
 import { sizingV2 } from "./sizingV2";
@@ -61,6 +61,12 @@ export interface PostflopContext {
   villainRangePct?: number;
   /** Contexto de ICM: se pagar for all-in, a equity exigida sobe perto da bolha. */
   icmSpot?: IcmSpot;
+  /**
+   * Fichas (bb) que o herói já investiu nesta mão (pré-flop + ruas anteriores).
+   * Custo afundado se foldar — alimenta o ICM incremental num all-in pós-flop.
+   * Os stacks do icmSpot pós-flop JÁ incluem o committed. 0/ausente = legado.
+   */
+  heroCommittedBB?: number;
   rng?: () => number;
   equityIterations?: number;
   /** Variante do jogo: "holdem" (2 cartas) ou "omaha" (4 cartas). */
@@ -188,7 +194,11 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     let required = potOdds;
     let icmNote = "";
     if (isAllInCall && ctx.icmSpot) {
-      const icmReq = requiredEquityToCall(ctx.icmSpot);
+      // ICM INCREMENTAL: foldar-agora × pagar-agora do ponto atual. Os stacks do
+      // spot pós-flop já incluem o committed, então passamos true na convenção.
+      const icmReq = requiredEquityForDecision(
+        icmStatesFromSpot(ctx.icmSpot, ctx.heroCommittedBB ?? 0, true),
+      );
       if (icmReq > required) {
         required = icmReq;
         icmNote = ` [ICM exige ${pct(icmReq)}]`;

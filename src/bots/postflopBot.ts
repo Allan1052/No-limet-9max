@@ -94,6 +94,8 @@ export function postflopContextFor(
     // Range do vilão que estreita rua a rua conforme a linha avança.
     villainRangePct: estimateVillainRangePct(t, seat),
     icmSpot: buildPostflopIcmSpot(t, seat, payouts),
+    // Fichas já investidas nesta mão (custo afundado) — ICM incremental num all-in.
+    heroCommittedBB: p.totalCommitted / (t.bigBlind || 1),
     rng,
     equityIterations,
     variant: t.variant,
