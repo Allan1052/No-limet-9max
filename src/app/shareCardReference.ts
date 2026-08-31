@@ -122,6 +122,43 @@ function suitMark(suitIndex: number, cx: number, cy: number, size: number, color
   return `${open}<path d="M0 -48 C-12 -31 -43 -9 -43 17 C-43 37 -18 46 0 29 C18 46 43 37 43 17 C43 -9 12 -31 0 -48 Z"/><path d="M-12 22 H12 C11 34 17 42 27 49 H-27 C-17 42 -11 34 -12 22 Z"/></g>`;
 }
 
+// Colunas dos naipes centrais (fração da largura da carta) e o layout canônico
+// de cada rank — a carta de verdade mostra 7 naipes no 7, 8 no 8, etc.
+const PIP_L = 0.31, PIP_C = 0.5, PIP_R = 0.69;
+const PIP_LAYOUT: Record<string, [number, number][]> = {
+  "2": [[PIP_C, 0.27], [PIP_C, 0.73]],
+  "3": [[PIP_C, 0.25], [PIP_C, 0.5], [PIP_C, 0.75]],
+  "4": [[PIP_L, 0.27], [PIP_R, 0.27], [PIP_L, 0.73], [PIP_R, 0.73]],
+  "5": [[PIP_L, 0.27], [PIP_R, 0.27], [PIP_C, 0.5], [PIP_L, 0.73], [PIP_R, 0.73]],
+  "6": [[PIP_L, 0.26], [PIP_R, 0.26], [PIP_L, 0.5], [PIP_R, 0.5], [PIP_L, 0.74], [PIP_R, 0.74]],
+  "7": [[PIP_L, 0.26], [PIP_R, 0.26], [PIP_C, 0.38], [PIP_L, 0.5], [PIP_R, 0.5], [PIP_L, 0.74], [PIP_R, 0.74]],
+  "8": [[PIP_L, 0.24], [PIP_R, 0.24], [PIP_C, 0.37], [PIP_L, 0.5], [PIP_R, 0.5], [PIP_C, 0.63], [PIP_L, 0.76], [PIP_R, 0.76]],
+  "9": [[PIP_L, 0.23], [PIP_R, 0.23], [PIP_L, 0.41], [PIP_R, 0.41], [PIP_C, 0.5], [PIP_L, 0.59], [PIP_R, 0.59], [PIP_L, 0.77], [PIP_R, 0.77]],
+  "T": [[PIP_L, 0.22], [PIP_R, 0.22], [PIP_C, 0.33], [PIP_L, 0.40], [PIP_R, 0.40], [PIP_L, 0.60], [PIP_R, 0.60], [PIP_C, 0.67], [PIP_L, 0.78], [PIP_R, 0.78]],
+};
+
+/** Um naipe posicionado; naipes da metade de baixo entram girados 180° (carta real). */
+function pip(suitIndex: number, cx: number, cy: number, size: number, color: string, flip: boolean): string {
+  const mark = suitMark(suitIndex, cx, cy, size, color);
+  return flip ? `<g transform="rotate(180 ${cx} ${cy})">${mark}</g>` : mark;
+}
+
+/** Miolo da carta: layout de naipes (número), naipe único grande (Ás) ou letra (J/Q/K). */
+function cardCenter(rank: string, suitIndex: number, x: number, y: number, w: number, h: number, color: string): string {
+  const layout = PIP_LAYOUT[rank];
+  if (layout) {
+    const size = h * 0.115;
+    return layout.map(([cf, rf]) => pip(suitIndex, x + cf * w, y + rf * h, size, color, rf > 0.5)).join("");
+  }
+  if (rank === "A") {
+    return suitMark(suitIndex, x + w / 2, y + h * 0.52, h * 0.32, color);
+  }
+  // Figuras (J/Q/K): letra grande + naipe abaixo (tratamento "nobre", sem ilustração).
+  const cx = x + w / 2;
+  return `<text x="${cx}" y="${y + h * 0.58}" font-family="${SERIF}" font-size="${Math.round(h * 0.42)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
+    ${suitMark(suitIndex, cx, y + h * 0.72, h * 0.12, color)}`;
+}
+
 function cardFace(card: Card, x: number, y: number, w: number, h: number, rotation: number): string {
   const suitIndex = suitOf(card);
   const rank = RANKS[rankOf(card) - 2];
@@ -131,16 +168,37 @@ function cardFace(card: Card, x: number, y: number, w: number, h: number, rotati
   const cornerX = x + w * 0.15;
   const cornerRankY = y + h * 0.17;
   const cornerSuitY = y + h * 0.255;
-  return `<g transform="rotate(${rotation} ${cx} ${cy})" filter="url(#cardShadow)">
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.08)}" fill="${CARD_FACE}" stroke="${GOLD}" stroke-opacity=".65" stroke-width="2"/>
+  const corner = (rot: boolean) => `<g${rot ? ` transform="rotate(180 ${cx} ${cy})"` : ""}>
     <text x="${cornerX}" y="${cornerRankY}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
     ${suitMark(suitIndex, cornerX, cornerSuitY, h * 0.082, color)}
-    ${suitMark(suitIndex, cx, y + h * 0.55, h * 0.28, color)}
-    <g transform="rotate(180 ${cx} ${cy})">
-      <text x="${cornerX}" y="${cornerRankY}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
-      ${suitMark(suitIndex, cornerX, cornerSuitY, h * 0.082, color)}
-    </g>
   </g>`;
+  return `<g transform="rotate(${rotation} ${cx} ${cy})" filter="url(#cardShadow)">
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.08)}" fill="${CARD_FACE}" stroke="${GOLD}" stroke-opacity=".65" stroke-width="2"/>
+    <rect x="${x + 7}" y="${y + 7}" width="${w - 14}" height="${h - 14}" rx="${Math.round(w * 0.065)}" fill="none" stroke="${color}" stroke-opacity=".10" stroke-width="1.5"/>
+    ${corner(false)}
+    ${corner(true)}
+    ${cardCenter(rank, suitIndex, x, y, w, h, color)}
+  </g>`;
+}
+
+/** Ficha de pôquer vista de lado (disco fino). Empilhadas dão o ar "premium". */
+function chip(cx: number, cy: number, r: number, base: string, edge: string): string {
+  const t = r * 0.2; // disco fino (proporção real de ficha)
+  const ry = r * 0.4;
+  return `<g>
+    <rect x="${cx - r}" y="${cy - t}" width="${2 * r}" height="${2 * t}" fill="${base}"/>
+    <rect x="${cx - r}" y="${cy - t}" width="${2 * r}" height="${2 * t}" fill="#000" fill-opacity=".18"/>
+    <ellipse cx="${cx}" cy="${cy + t}" rx="${r}" ry="${ry}" fill="${base}"/>
+    <ellipse cx="${cx}" cy="${cy - t}" rx="${r}" ry="${ry}" fill="${base}" stroke="${edge}" stroke-width="2.5"/>
+    <ellipse cx="${cx}" cy="${cy - t}" rx="${r * 0.58}" ry="${ry * 0.58}" fill="none" stroke="${edge}" stroke-width="2" stroke-opacity=".75"/>
+  </g>`;
+}
+
+function chipStack(cx: number, baseY: number, r: number, count: number, base: string, edge: string): string {
+  const step = r * 0.42; // separação entre fichas empilhadas
+  let out = "";
+  for (let i = 0; i < count; i++) out += chip(cx, baseY - i * step, r, base, edge);
+  return out;
 }
 
 function textLines(text: string, maxChars: number): string[] {
@@ -205,6 +263,9 @@ function slideOne(model: ReferenceCardModel, format: ReferenceCardFormat): strin
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     ${background(width, height)}
     ${header(width, headerY, model.context)}
+    ${chipStack(cardsX + cardW * 0.04, cardsY + cardH * 0.9, tall ? 56 : 50, 6, "#0e3f2b", GOLD)}
+    ${chipStack(cardsX + cardW * 1.6, cardsY + cardH * 0.94, tall ? 52 : 47, 5, "#8a6a1c", "#f0d77f")}
+    ${chipStack(cardsX + cardW * 1.42, cardsY + cardH * 1.0, tall ? 44 : 40, 3, "#0e3f2b", GOLD)}
     ${cardFace(model.hand[0], cardsX, cardsY, cardW, cardH, -7)}
     ${cardFace(model.hand[1], cardsX + cardW * 0.72, cardsY + 8, cardW, cardH, 7)}
     <text x="${center}" y="${headlineY}" font-family="${SERIF}" font-size="${tall ? 104 : 88}" font-weight="900" fill="${INK}" text-anchor="middle">Call ou Fold?</text>
