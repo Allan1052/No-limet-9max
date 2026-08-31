@@ -47,6 +47,15 @@ describe("Card de referência — dados reais do Motor", () => {
     expect(model.requiredEquity).toBe(metrics?.requiredEquity);
     expect(model.icmPremium).toBe(metrics?.icmPremium);
     expect(model.confidence).toBe(analysis.confidence);
+
+    console.log("[SHARE PREVIEW DATA]", JSON.stringify({
+      hand: "As7s",
+      finalVerdict: analysis.recommended,
+      earlyVerdict: a7s("inicio").recommended,
+      confidence: analysis.confidence,
+      metrics,
+      simple: analysis.simple,
+    }));
   });
 
   it("exporta feed e stories nas dimensões aprovadas e sem foreignObject", () => {
