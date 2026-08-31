@@ -17,7 +17,8 @@ describe("Coach V2 — dica legível no celular", () => {
     expect(css).toContain("border-radius: 12px");
   });
 
-  it("limita a dica à largura útil da mesa", () => {
-    expect(css).toContain("max-width: min(520px, 92vw)");
+  it("mantém a dica compacta para não cobrir os assentos laterais", () => {
+    expect(css).toContain("max-width: min(300px, 68vw)");
+    expect(css).toContain("max-width: min(260px, 66vw)");
   });
 });
