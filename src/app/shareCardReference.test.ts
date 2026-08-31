@@ -3,6 +3,7 @@ import { analyzeHand, parseHand } from "../train/stage";
 import {
   SHARE_CARD_FORMATS,
   buildReferenceCardModel,
+  referenceMetricsFromAnalysis,
   renderReferenceCardSvg,
 } from "./shareCardReference";
 
@@ -30,19 +31,21 @@ describe("Card de referência — dados reais do Motor", () => {
     expect(finalTable.confidence.level).toBe("aproximacao");
   });
 
-  it("analyzeHand expõe as métricas calculadas pelo motor sem o card recalcular", () => {
+  it("usa as métricas calculadas pelo mesmo motor do analyzeHand sem número digitado no card", () => {
     const analysis = a7s("mesa_final");
+    const metrics = referenceMetricsFromAnalysis(analysis);
 
-    expect(analysis.metrics?.heroEquity).toBeTypeOf("number");
-    expect(analysis.metrics?.potOdds).toBeTypeOf("number");
-    expect(analysis.metrics?.requiredEquity).toBeTypeOf("number");
-    expect(analysis.metrics?.icmPremium).toBeTypeOf("number");
+    expect(metrics?.heroEquity).toBeTypeOf("number");
+    expect(metrics?.potOdds).toBeTypeOf("number");
+    expect(metrics?.requiredEquity).toBeTypeOf("number");
+    expect(metrics?.icmPremium).toBeTypeOf("number");
 
     const model = buildReferenceCardModel(analysis, a7s("inicio"));
     expect(model.verdict).toBe(analysis.recommended);
-    expect(model.equity).toBe(analysis.metrics?.heroEquity);
-    expect(model.potOdds).toBe(analysis.metrics?.potOdds);
-    expect(model.requiredEquity).toBe(analysis.metrics?.requiredEquity);
+    expect(model.equity).toBe(metrics?.heroEquity);
+    expect(model.potOdds).toBe(metrics?.potOdds);
+    expect(model.requiredEquity).toBe(metrics?.requiredEquity);
+    expect(model.icmPremium).toBe(metrics?.icmPremium);
     expect(model.confidence).toBe(analysis.confidence);
   });
 
