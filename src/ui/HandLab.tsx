@@ -94,6 +94,33 @@ export function HandLab() {
           setStage(s.stage);
           setCustomBB(s.stackBB);
           if (s.villainStackBB) setVillainBB(s.villainStackBB);
+          // Cartas do spot (ex.: a mão do dia) — deixa o HandLab já montado com elas.
+          if (typeof s.cards === "string" && s.cards.length >= 4) {
+            setRank1(s.cards[0]);
+            setSuit1(s.cards[1]);
+            setRank2(s.cards[2]);
+            setSuit2(s.cards[3]);
+          }
+          // Veio da MÃO DO DIA: já analisa na hora, pra o jogador ver a decisão e
+          // o porquê (e testar a alternativa em "por que não…").
+          if (s.fromDaily && typeof s.cards === "string") {
+            const dailyHand = parseHand(s.cards);
+            if (dailyHand) {
+              const eff = s.villainStackBB != null ? Math.min(s.stackBB, s.villainStackBB) : s.stackBB;
+              setResult(
+                analyzeHand({
+                  heroPosition: s.heroPosition,
+                  villainPosition: s.villainPosition,
+                  situation: s.situation,
+                  stage: s.stage,
+                  stackBB: eff,
+                  hand: dailyHand,
+                  anteBB: 1,
+                  villainStackBB: s.villainStackBB ?? undefined,
+                }),
+              );
+            }
+          }
         }
       }
     } catch {
