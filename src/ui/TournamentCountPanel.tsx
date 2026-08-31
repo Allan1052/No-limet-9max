@@ -35,11 +35,11 @@ interface TierCount {
 }
 
 const TIER_BUYINS: Record<string, string> = {
-  micro: "5 fichas simuladas",
-  baixa: "11 fichas simuladas",
-  media: "22 e 55 fichas simuladas",
-  alta: "109 fichas simuladas",
-  elite: "1.000+ fichas simuladas",
+  micro: "5 FS",
+  baixa: "11 FS",
+  media: "22 e 55 FS",
+  alta: "109 FS",
+  elite: "1.000+ FS",
 };
 
 /**

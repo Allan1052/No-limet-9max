@@ -9,12 +9,14 @@ import { topPrizes, type TournamentResultRecord } from "../app/resultsLog";
 const MEDAL = ["", "🥇", "🥈", "🥉"];
 
 const num = (n: number) => Math.round(n).toLocaleString("en-US");
-const virtualValue = (n: number) => `${num(n)} fichas simuladas`;
+// FS = fichas simuladas (abreviado nos rótulos repetitivos; o termo por extenso
+// segue no subtítulo do painel, pra não perder a clareza da honestidade).
+const virtualValue = (n: number) => `${num(n)} FS`;
 
 function recLabel(rec: TournamentResultRecord): string {
   const mode = rec.mode === "circuito" ? "Circuito" : "Treino Livre";
-  const stage = rec.circuitStage ? ` · Etapa ${rec.circuitStage}` : "";
-  return `${mode}${stage} · Faixa didática ${num(rec.buyIn)} fichas simuladas`;
+  const stage = rec.circuitStage ? ` · Et. ${rec.circuitStage}` : "";
+  return `${mode}${stage} · ${num(rec.buyIn)} FS`;
 }
 
 function dateLabel(ts: number): string {

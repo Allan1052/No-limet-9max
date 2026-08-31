@@ -39,7 +39,7 @@ export function CircuitPicker({
     <div className="circuit">
       <div className="panel circuit-head">
         <div className="ultra-badge">🏆 Circuito {seasonLabel(season)}</div>
-        <h3>Faixa didática {tierLabel(tier)} · {buyIn} fichas simuladas</h3>
+        <h3>Faixa didática {tierLabel(tier)} · {buyIn} FS</h3>
         <p className="ultra-sub">
           10 etapas. Conquistou uma, ela sai da sua lista. Só torneio jogado desde o
           início conta — um circuito de estudo inspirado no poker. Fichas e pontos são simulados.

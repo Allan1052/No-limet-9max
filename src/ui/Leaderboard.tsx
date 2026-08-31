@@ -37,11 +37,11 @@ interface LeaderboardEntry {
 }
 
 const TIERS: { id: Tier; label: string; buyin: string }[] = [
-  { id: "micro", label: "Micro", buyin: "5 fichas simuladas" },
-  { id: "baixa", label: "Baixa", buyin: "11 fichas simuladas" },
-  { id: "media", label: "Média", buyin: "22 e 55 fichas simuladas" },
-  { id: "alta", label: "Alta", buyin: "109 fichas simuladas" },
-  { id: "elite", label: "Elite", buyin: "1.000+ fichas simuladas" },
+  { id: "micro", label: "Micro", buyin: "5 FS" },
+  { id: "baixa", label: "Baixa", buyin: "11 FS" },
+  { id: "media", label: "Média", buyin: "22 e 55 FS" },
+  { id: "alta", label: "Alta", buyin: "109 FS" },
+  { id: "elite", label: "Elite", buyin: "1.000+ FS" },
 ];
 
 const AV = ["🦈", "🎩", "🧊", "👁️", "🌵", "🔥", "🌊", "🃏", "🎯", "🐺", "👑", "💀"];
