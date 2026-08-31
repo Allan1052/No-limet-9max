@@ -18,4 +18,11 @@ jobs:
           node-version: "20"
       - run: npm install
       - run: npm test
+      - name: Anexar previews visuais do card de referência
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-card-preview
+          path: preview/*.svg
+          if-no-files-found: ignore
       - run: npm run build
