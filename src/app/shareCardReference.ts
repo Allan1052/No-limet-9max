@@ -44,6 +44,7 @@ const CALL = "#74A981";
 const SERIF = "Fraunces, Georgia, 'Times New Roman', serif";
 const MONO = "'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace";
 const RANKS = "23456789TJQKA";
+const BRAND_LOGO = "/brand-apple-touch.png";
 
 function esc(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -176,7 +177,10 @@ function background(width: number, height: number): string {
 
 function header(width: number, y: number, context?: string): string {
   const center = width / 2;
-  return `${suitMark(3, center - 178, y - 12, 28, GOLD)}
+  const logoSize = 58;
+  const logoX = center - 226;
+  const logoY = y - 43;
+  return `<image href="${BRAND_LOGO}" x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>
     <text x="${center + 18}" y="${y}" font-family="${SERIF}" font-size="36" font-weight="900" letter-spacing="3" fill="${GOLD}" text-anchor="middle">CALL OU FOLD</text>
     ${context ? `<text x="${center}" y="${y + 55}" font-family="${MONO}" font-size="22" font-weight="600" letter-spacing="1.5" fill="${MUTED}" text-anchor="middle">${esc(context)}</text>` : ""}`;
 }
@@ -267,7 +271,7 @@ export function renderReferenceCardSvg(
   return slide === 1 ? slideOne(model, format) : slideTwo(model, format);
 }
 
-/** SVG puro → img → canvas → PNG, sem foreignObject e sem recurso cross-origin. */
+/** SVG puro → img → canvas → PNG, sem foreignObject e com a logo oficial same-origin. */
 export async function renderReferenceCardPng(
   model: ReferenceCardModel,
   format: ReferenceCardFormat,
