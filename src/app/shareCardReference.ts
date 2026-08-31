@@ -43,7 +43,6 @@ const FOLD = "#C96B60";
 const CALL = "#74A981";
 const SERIF = "Fraunces, Georgia, 'Times New Roman', serif";
 const MONO = "'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace";
-const SUITS = ["♣", "♦", "♥", "♠"];
 const RANKS = "23456789TJQKA";
 
 function esc(value: string): string {
@@ -103,21 +102,42 @@ export function buildA7sReferencePreview(): { finalTable: HandAnalysis; early: H
   return { finalTable, early, model: buildReferenceCardModel(finalTable, early) };
 }
 
+/**
+ * Naipe em vetor puro. Não depende de glifo Unicode/fallback de fonte, então
+ * rasteriza igual em canvas, Android e browsers que não têm ♠/♥/♦/♣ na fonte.
+ */
+function suitMark(suitIndex: number, cx: number, cy: number, size: number, color: string): string {
+  const scale = size / 100;
+  const open = `<g transform="translate(${cx} ${cy}) scale(${scale})" fill="${color}">`;
+  if (suitIndex === 1) {
+    return `${open}<path d="M0 -48 L43 0 L0 48 L-43 0 Z"/></g>`;
+  }
+  if (suitIndex === 2) {
+    return `${open}<path d="M0 43 C-11 29 -43 8 -43 -17 C-43 -37 -18 -49 0 -28 C18 -49 43 -37 43 -17 C43 8 11 29 0 43 Z"/></g>`;
+  }
+  if (suitIndex === 0) {
+    return `${open}<circle cx="0" cy="-23" r="23"/><circle cx="-24" cy="6" r="23"/><circle cx="24" cy="6" r="23"/><path d="M-12 14 H12 C11 30 17 39 28 48 H-28 C-17 39 -11 30 -12 14 Z"/></g>`;
+  }
+  return `${open}<path d="M0 -48 C-12 -31 -43 -9 -43 17 C-43 37 -18 46 0 29 C18 46 43 37 43 17 C43 -9 12 -31 0 -48 Z"/><path d="M-12 22 H12 C11 34 17 42 27 49 H-27 C-17 42 -11 34 -12 22 Z"/></g>`;
+}
+
 function cardFace(card: Card, x: number, y: number, w: number, h: number, rotation: number): string {
   const suitIndex = suitOf(card);
-  const suit = SUITS[suitIndex];
   const rank = RANKS[rankOf(card) - 2];
   const color = suitIndex === 1 || suitIndex === 2 ? RED_SUIT : BLACK_SUIT;
   const cx = x + w / 2;
   const cy = y + h / 2;
+  const cornerX = x + w * 0.15;
+  const cornerRankY = y + h * 0.17;
+  const cornerSuitY = y + h * 0.255;
   return `<g transform="rotate(${rotation} ${cx} ${cy})" filter="url(#cardShadow)">
     <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.08)}" fill="${CARD_FACE}" stroke="${GOLD}" stroke-opacity=".65" stroke-width="2"/>
-    <text x="${x + w * 0.15}" y="${y + h * 0.17}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
-    <text x="${x + w * 0.15}" y="${y + h * 0.27}" font-family="${SERIF}" font-size="${Math.round(h * 0.11)}" fill="${color}" text-anchor="middle">${suit}</text>
-    <text x="${cx}" y="${y + h * 0.64}" font-family="${SERIF}" font-size="${Math.round(h * 0.34)}" fill="${color}" text-anchor="middle">${suit}</text>
+    <text x="${cornerX}" y="${cornerRankY}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
+    ${suitMark(suitIndex, cornerX, cornerSuitY, h * 0.082, color)}
+    ${suitMark(suitIndex, cx, y + h * 0.55, h * 0.28, color)}
     <g transform="rotate(180 ${cx} ${cy})">
-      <text x="${x + w * 0.15}" y="${y + h * 0.17}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
-      <text x="${x + w * 0.15}" y="${y + h * 0.27}" font-family="${SERIF}" font-size="${Math.round(h * 0.11)}" fill="${color}" text-anchor="middle">${suit}</text>
+      <text x="${cornerX}" y="${cornerRankY}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
+      ${suitMark(suitIndex, cornerX, cornerSuitY, h * 0.082, color)}
     </g>
   </g>`;
 }
@@ -156,7 +176,8 @@ function background(width: number, height: number): string {
 
 function header(width: number, y: number, context?: string): string {
   const center = width / 2;
-  return `<text x="${center}" y="${y}" font-family="${SERIF}" font-size="36" font-weight="900" letter-spacing="3" fill="${GOLD}" text-anchor="middle">♠  CALL OU FOLD</text>
+  return `${suitMark(3, center - 178, y - 12, 28, GOLD)}
+    <text x="${center + 18}" y="${y}" font-family="${SERIF}" font-size="36" font-weight="900" letter-spacing="3" fill="${GOLD}" text-anchor="middle">CALL OU FOLD</text>
     ${context ? `<text x="${center}" y="${y + 55}" font-family="${MONO}" font-size="22" font-weight="600" letter-spacing="1.5" fill="${MUTED}" text-anchor="middle">${esc(context)}</text>` : ""}`;
 }
 
@@ -176,6 +197,7 @@ function slideOne(model: ReferenceCardModel, format: ReferenceCardFormat): strin
   const cardsY = tall ? 430 : 300;
   const cardsX = center - cardW + 36;
   const headlineY = cardsY + cardH + (tall ? 170 : 125);
+  const ctaY = headlineY + 105;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     ${background(width, height)}
     ${header(width, headerY, model.context)}
@@ -183,8 +205,9 @@ function slideOne(model: ReferenceCardModel, format: ReferenceCardFormat): strin
     ${cardFace(model.hand[1], cardsX + cardW * 0.72, cardsY + 8, cardW, cardH, 7)}
     <text x="${center}" y="${headlineY}" font-family="${SERIF}" font-size="${tall ? 104 : 88}" font-weight="900" fill="${INK}" text-anchor="middle">Call ou Fold?</text>
     <text x="${center}" y="${headlineY + 62}" font-family="${MONO}" font-size="25" fill="${MUTED}" text-anchor="middle">A maioria erra essa.</text>
-    <rect x="${center - 245}" y="${headlineY + 105}" width="490" height="72" rx="36" fill="${GOLD}"/>
-    <text x="${center}" y="${headlineY + 151}" font-family="${MONO}" font-size="23" font-weight="900" fill="#0B160F" text-anchor="middle">COMENTA SUA RESPOSTA ↓</text>
+    <rect x="${center - 245}" y="${ctaY}" width="490" height="72" rx="36" fill="${GOLD}"/>
+    <text x="${center - 10}" y="${ctaY + 46}" font-family="${MONO}" font-size="23" font-weight="900" fill="#0B160F" text-anchor="middle">COMENTA SUA RESPOSTA</text>
+    <path d="M${center + 188} ${ctaY + 27} V${ctaY + 47} M${center + 178} ${ctaY + 39} L${center + 188} ${ctaY + 49} L${center + 198} ${ctaY + 39}" fill="none" stroke="#0B160F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
     ${footer(width, height - 70)}
   </svg>`;
 }
@@ -226,7 +249,7 @@ function slideTwo(model: ReferenceCardModel, format: ReferenceCardFormat): strin
     <text x="${boxX + 34}" y="${boxY + 62}" font-family="${MONO}" font-size="22" font-weight="800" fill="${GOLD}">POR QUÊ</text>
     ${multiline(whyLines, boxX + 34, boxY + 104, 32, `font-family="${MONO}" font-size="20" fill="${MUTED}"`)}
     ${metricRow("PREÇO DO POTE", po, boxX + 34, boxY + (tall ? 350 : 285), boxW - 68)}
-    ${metricRow("SUA EQUITY VS ICM", eq, boxX + 34, boxY + (tall ? 470 : 390), boxW - 68)}
+    ${metricRow("SUA EQUITY", eq, boxX + 34, boxY + (tall ? 470 : 390), boxW - 68)}
     ${metricRow("EXIGÊNCIA COM ICM", req, boxX + 34, boxY + (tall ? 590 : 495), boxW - 68)}
     <line x1="${boxX + 34}" y1="${boxY + boxH - 150}" x2="${boxX + boxW - 34}" y2="${boxY + boxH - 150}" stroke="${GOLD}" stroke-opacity=".22"/>
     <text x="${boxX + 34}" y="${boxY + boxH - 100}" font-family="${MONO}" font-size="22" font-weight="800" fill="${GOLD}">SELO DE CONFIANÇA</text>
