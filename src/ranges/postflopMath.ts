@@ -37,6 +37,14 @@ export interface RequiredEquityParams {
   drawStrength?: number;
   /** Fichas ATRÁS depois de pagar (pra escalar implied odds pelo SPR). */
   heroStackBehind?: number;
+  /**
+   * Largura estimada do range do vilão (0..1) DEPOIS da linha de apostas dele.
+   * Anti-dupla-penalização: se a agressão do vilão já estreitou a range (e a
+   * equity do herói já reflete isso), parte do "aposta = força" já foi contada —
+   * então reduzimos só a parcela redundante do colchão fixo. Ausente ou range
+   * largo ⇒ colchão cheio (comportamento idêntico ao anterior).
+   */
+  villainRangePct?: number;
 }
 
 /**
@@ -62,7 +70,16 @@ export function postflopRequiredEquity(p: RequiredEquityParams): number {
   const numOpp = p.numOpp ?? 1;
   const multiwayPenalty = Math.min(0.16, 0.08 * (numOpp - 1));
 
-  let required = clamp(potOdds + 0.11 + streetPenalty + discipline + multiwayPenalty, 0.13, 0.8);
+  // COLCHÃO FIXO ("aposta = força" + reverse implied). Anti-dupla-penalização:
+  // quando o range do vilão JÁ está estreito pela linha agressiva (a equity do
+  // herói já caiu por causa disso), parte desse colchão já foi contada no cálculo
+  // da equity — então reduzimos só a fração redundante (no máximo metade). Range
+  // largo/ausente ⇒ colchão cheio (0.11), idêntico ao comportamento anterior.
+  const vr = p.villainRangePct ?? 0.5;
+  const alreadyPriced = clamp((0.45 - vr) / 0.35, 0, 1); // 0 se ≥45%; 1 se ≤10%
+  const baseCushion = 0.11 * (1 - 0.5 * alreadyPriced);
+
+  let required = clamp(potOdds + baseCushion + streetPenalty + discipline + multiwayPenalty, 0.13, 0.8);
 
   // IMPLIED ODDS: projeto forte no flop/turn paga com um pouco menos de equity,
   // porque ganha fichas extras quando completa. Escalado pelo stack atrás (fundo

@@ -135,8 +135,12 @@ export interface FacingAllinResult {
   action: "call" | "fold";
   /** Equity real do herói (0..1) contra o range estimado, no nº de oponentes. */
   heroEquity: number;
-  /** Equity exigida pelo preço (pot odds com side pot, elevada por ICM). */
+  /** Equity exigida no TOTAL (o maior entre preço do pote e o exigido pelo ICM). */
   requiredEquity: number;
+  /** Preço do pote PURO (pot odds com side pot), SEM ICM. Pra exibir separado. */
+  potOdds: number;
+  /** Prêmio de ICM: quanto a premiação eleva a exigência além do preço (0 se não pesa). */
+  icmPremium: number;
   /** Largura do range estimado do vilão (0..1), para exibição/auditoria. */
   villainRangePct: number;
   /** Texto com a CONTA (transparente): "equity 15% < preço 25% → fold". */
@@ -156,26 +160,39 @@ export function facingAllinDecision(inp: FacingAllinInput): FacingAllinResult {
       ? equityHandVsRangeMulti(inp.hero, villain, nOpp, [], iters, rng).equity
       : equityHandVsRange(inp.hero, villain, [], iters, rng).equity;
 
-  // Preço com SIDE POT: o pote que o herói disputa já vem capado pela lógica de
-  // side pot (contestablePotBB). Aqui é só a razão call / (pote + call).
-  let requiredEquity = inp.callBB / (inp.contestablePotBB + inp.callBB);
+  // PREÇO DO POTE (pot odds) com SIDE POT: o pote que o herói disputa já vem
+  // capado pela lógica de side pot (contestablePotBB). É só call / (pote + call).
+  // Este é o preço PURO — nunca embute ICM.
+  const potOdds = inp.callBB / (inp.contestablePotBB + inp.callBB);
+  // PRÊMIO DE ICM (risk premium): quanto a premiação EXIGE além do preço do pote.
+  // Fica separado do preço pra não misturar as duas coisas na explicação.
+  let icmRequired = potOdds;
   if (inp.icmSpot) {
     // ICM INCREMENTAL: avalia foldar-agora × pagar-agora do ponto atual, com os
     // stacks reais herói×vilão e o que o herói já investiu (custo afundado).
-    const icmReq = requiredEquityForDecision(
+    icmRequired = requiredEquityForDecision(
       buildIcmDecisionStates(inp.icmSpot, inp.heroCommittedBB ?? 0),
     );
-    if (icmReq > requiredEquity) requiredEquity = icmReq;
   }
+  const requiredEquity = Math.max(potOdds, icmRequired);
+  const icmPremium = Math.max(0, requiredEquity - potOdds); // 0 quando ICM não pesa
 
   const call = heroEquity >= requiredEquity;
   const p = (x: number) => `${Math.round(x * 100)}%`;
+  // Explicação HONESTA: separa preço do pote do prêmio de ICM. Só cita ICM quando
+  // ele realmente elevou a barra (senão "preço" é exatamente as pot odds).
+  const priceText =
+    icmPremium >= 0.01
+      ? `preço do pote ${p(potOdds)} + ICM (prêmio de risco) → exige ${p(requiredEquity)}`
+      : `preço ${p(requiredEquity)}`;
   return {
     action: call ? "call" : "fold",
     heroEquity,
     requiredEquity,
+    potOdds,
+    icmPremium,
     villainRangePct: pct,
-    reason: `${call ? "Paga" : "Folda"}: equity ${p(heroEquity)} ${call ? "≥" : "<"} preço ${p(requiredEquity)}${
+    reason: `${call ? "Paga" : "Folda"}: equity ${p(heroEquity)} ${call ? "≥" : "<"} ${priceText}${
       nOpp >= 2 ? ` (${nOpp} oponentes)` : ""
     }.`,
   };

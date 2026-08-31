@@ -79,6 +79,25 @@ function committedTable(): TableState {
   return t;
 }
 
+describe("Honestidade da conta — preço do pote separado do ICM", () => {
+  it("quando o ICM pesa, a explicação SEPARA preço do pote do prêmio de ICM", () => {
+    const r = facingAllinDecision({ ...baseInput(), heroCommittedBB: 0, rng: seededRng(4) });
+    // Neste spot de bolha o ICM eleva a barra acima do preço puro.
+    expect(r.icmPremium).toBeGreaterThan(0);
+    expect(r.potOdds).toBeLessThan(r.requiredEquity);
+    expect(r.reason).toContain("preço do pote");
+    expect(r.reason).toContain("ICM");
+  });
+
+  it("sem pressão de ICM, o preço mostrado É a pot odds pura (nada de número inflado)", () => {
+    // Sem icmSpot: requiredEquity == potOdds e a explicação não inventa ICM.
+    const r = facingAllinDecision({ ...baseInput(), icmSpot: undefined, rng: seededRng(5) });
+    expect(r.icmPremium).toBe(0);
+    expect(r.potOdds).toBeCloseTo(r.requiredEquity, 6);
+    expect(r.reason).not.toContain("ICM");
+  });
+});
+
 describe("ICM incremental — committed real flui do preflopBot", () => {
   it("o herói pot-committed leva as 7bb investidas pro contexto (heroCommittedBB)", () => {
     const ctx = preflopContextFor(committedTable(), 4, BASELINE_PROFILE, { payouts: [100, 60, 40, 20] });

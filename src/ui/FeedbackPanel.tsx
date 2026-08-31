@@ -32,7 +32,7 @@ export function FeedbackPanel({ items, userSubscriptionLevel }: { items: Feedbac
               {it.text}
               {tecnico && it.equity !== undefined ? ` (equity ${Math.round(it.equity * 100)}%` : ""}
               {tecnico && it.equity !== undefined && it.potOdds !== undefined
-                ? `, preço ${Math.round(it.potOdds * 100)}%)`
+                ? `, eq. necessária ${Math.round(it.potOdds * 100)}%)`
                 : tecnico && it.equity !== undefined
                   ? ")"
                   : ""}

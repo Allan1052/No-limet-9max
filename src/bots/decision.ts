@@ -211,6 +211,9 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
         numOpp,
         drawStrength: draw.strength,
         heroStackBehind: Math.max(0, ctx.heroStack - ctx.toCall),
+        // Range já estreitado pela linha do vilão — evita contar "aposta = força"
+        // duas vezes (na equity E no colchão).
+        villainRangePct: villainPct,
       });
     }
 
@@ -249,8 +252,9 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
         return decision("raise", size, equity, required, texture, villainPct, mix,
           `Mão forte (equity ${pct(equity)} ≥ ${pct(required)}): aumenta por valor/proteção.${icmNote}`);
       }
+      const priceNote = required > potOdds + 0.005 ? ` (preço do pote ${pct(potOdds)})` : "";
       return decision("call", undefined, equity, required, texture, villainPct, mix,
-        `Equity ${pct(equity)} paga o preço de ${pct(required)}: paga.${icmNote}`);
+        `Equity ${pct(equity)} cobre os ${pct(required)} necessários${priceNote}: paga.${icmNote}`);
     }
 
     // Sem preço direto: considerar aumento de SEMI-BLEFE — mas SÓ com projeto de
@@ -267,8 +271,9 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       return decision("raise", size, equity, required, texture, villainPct, mix,
         `Semi-blefe: equity ${pct(equity)} com projeto em board molhado (perfil ${ctx.profile.archetype}).`);
     }
+    const priceNoteFold = required > potOdds + 0.005 ? ` (preço do pote ${pct(potOdds)})` : "";
     return decision("fold", undefined, equity, required, texture, villainPct, mix,
-      `Equity ${pct(equity)} não paga o preço de ${pct(required)}: fold.${icmNote}`);
+      `Equity ${pct(equity)} abaixo dos ${pct(required)} necessários${priceNoteFold}: fold.${icmNote}`);
   }
 
   // ---------- Caso B: ação passada até o herói (pode apostar ou dar check) ----------
