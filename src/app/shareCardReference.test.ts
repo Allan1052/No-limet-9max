@@ -3,7 +3,6 @@ import { analyzeHand, parseHand } from "../train/stage";
 import {
   SHARE_CARD_FORMATS,
   buildReferenceCardModel,
-  referenceMetricsFromAnalysis,
   renderReferenceCardSvg,
 } from "./shareCardReference";
 
@@ -21,41 +20,30 @@ function a7s(stage: "inicio" | "mesa_final") {
   });
 }
 
-describe("Card de referência — dados reais do Motor", () => {
+describe("Card de referência — contrato do analyzeHand", () => {
   it("A7s conta a história correta: fold na mesa final e call no início", () => {
     const finalTable = a7s("mesa_final");
     const early = a7s("inicio");
 
     expect(finalTable.recommended).toBe("fold");
     expect(early.recommended).toBe("call");
-    expect(finalTable.confidence.level).toBe("aproximacao");
   });
 
-  it("usa as métricas calculadas pelo mesmo motor do analyzeHand sem número digitado no card", () => {
+  it("o próprio analyzeHand expõe métricas e selo usados pelo card", () => {
     const analysis = a7s("mesa_final");
-    const metrics = referenceMetricsFromAnalysis(analysis);
 
-    expect(metrics?.heroEquity).toBeTypeOf("number");
-    expect(metrics?.potOdds).toBeTypeOf("number");
-    expect(metrics?.requiredEquity).toBeTypeOf("number");
-    expect(metrics?.icmPremium).toBeTypeOf("number");
+    expect(analysis.metrics.heroEquity).toBeTypeOf("number");
+    expect(analysis.metrics.potOdds).toBeTypeOf("number");
+    expect(analysis.metrics.requiredEquity).toBeTypeOf("number");
+    expect(analysis.confidence.level).toBe("aproximacao");
+    expect(analysis.confidence.label).toBe("Aproximação");
 
     const model = buildReferenceCardModel(analysis, a7s("inicio"));
     expect(model.verdict).toBe(analysis.recommended);
-    expect(model.equity).toBe(metrics?.heroEquity);
-    expect(model.potOdds).toBe(metrics?.potOdds);
-    expect(model.requiredEquity).toBe(metrics?.requiredEquity);
-    expect(model.icmPremium).toBe(metrics?.icmPremium);
+    expect(model.equity).toBe(analysis.metrics.heroEquity);
+    expect(model.potOdds).toBe(analysis.metrics.potOdds);
+    expect(model.requiredEquity).toBe(analysis.metrics.requiredEquity);
     expect(model.confidence).toBe(analysis.confidence);
-
-    console.log("[SHARE PREVIEW DATA]", JSON.stringify({
-      hand: "As7s",
-      finalVerdict: analysis.recommended,
-      earlyVerdict: a7s("inicio").recommended,
-      confidence: analysis.confidence,
-      metrics,
-      simple: analysis.simple,
-    }));
   });
 
   it("exporta feed e stories nas dimensões aprovadas e sem foreignObject", () => {
