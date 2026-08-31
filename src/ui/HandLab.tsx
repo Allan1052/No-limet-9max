@@ -11,9 +11,8 @@
 // Botão "Treinar esse spot" → leva ao Treino 1×1 já configurado na mesma
 // situação (via localStorage cof-sua-mao-spec, lido pelo UltraTrainer).
 // ---------------------------------------------------------------------------
-import { cardsToString } from '../engine/cards';
-import { TrainingShareButton } from './TrainingShareButton';
 import { InstagramAnswerCardActions } from './InstagramAnswerCardActions';
+import { HandLabReferenceShare } from "./HandLabReferenceShare";
 import { useEffect, useMemo, useState } from "react";
 
 import { POSITIONS, type Position } from "../ranges/types";
@@ -158,7 +157,6 @@ export function HandLab() {
     window.dispatchEvent(new CustomEvent("cof-open-ultra"));
   };
 
-
   return (
     <div className="handlab">
       <header className="handlab-head">
@@ -229,12 +227,10 @@ export function HandLab() {
           ))}
         </div>
 
-        {/* ICM do SEU spot: só na bolha/mesa final, onde o ICM pesa. */}
         {(stage === "bolha" || stage === "mesa_final") && (
           <FinalTableSituation value={ftSit} onChange={setFtSit} />
         )}
 
-        {/* Ante (MTT): dead money que alarga o roubo. */}
         <label className="hl-label">Ante (torneio)</label>
         <div className="hl-stage-row">
           <button
@@ -303,7 +299,6 @@ export function HandLab() {
               {bb}bb
             </button>
           ))}
-          {/* Campo pra DIGITAR o valor exato (ex.: 15bb) — destaque dourado. */}
           <input
             type="number"
             inputMode="numeric"
@@ -335,7 +330,6 @@ export function HandLab() {
           </span>
         </div>
 
-        {/* Conversor por fichas: fichas ÷ big blind = stack em bb. */}
         <div
           className="hl-chips-row"
           style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}
@@ -378,7 +372,6 @@ export function HandLab() {
               {bb}bb
             </button>
           ))}
-          {/* Campo pra DIGITAR o stack exato do vilão (deixa o spot verdadeiro). */}
           <input
             type="number"
             inputMode="numeric"
@@ -416,7 +409,6 @@ export function HandLab() {
 
       {result && (
         <section className="hl-result">
-          {/* Selo de contexto — premissas REAIS do spot (formato · estágio · stack · ICM). */}
           <div
             style={{
               display: "inline-block",
@@ -493,7 +485,6 @@ export function HandLab() {
             </div>
           )}
 
-          {/* Frase-âncora didática (reforço mental do conceito). */}
           <p
             style={{
               margin: "10px 2px 0",
@@ -506,7 +497,6 @@ export function HandLab() {
             {result.anchor}
           </p>
 
-          {/* "Por que não a alternativa?" — o usuário pensa, depois revela. */}
           {mode === "simple" && result.whyNot ? (
             <div style={{ margin: "10px 0 4px" }}>
               {!showWhyNot ? (
@@ -546,7 +536,6 @@ export function HandLab() {
             </div>
           ) : null}
 
-          {/* A mesma mão recalculada nas 3 fases — mostra o efeito do ICM. */}
           <div style={{ margin: "10px 0 4px" }}>
             {!showPhases ? (
               <button
@@ -637,7 +626,6 @@ export function HandLab() {
           >
             🛣️ <b style={{ color: "#e6c454" }}>Rua por Rua disponível em breve.</b> Estamos validando o acesso público; por enquanto, use o treino 1×1 e o replayer da mão.
           </div>
-          {/* Gerador antigo privado preservado para o modo de manutenção; não é CTA público. */}
           {isGenEnabled() && (
             <div style={{ marginTop: 8 }}>
               <button
@@ -676,20 +664,7 @@ export function HandLab() {
             </div>
           )}
           <InstagramAnswerCardActions spec={result.spec} />
-                  {/* Compartilhar resultado */}
-          <div className="mt-4">
-            <TrainingShareButton
-              data={{
-                trainingType: "Hand Lab",
-                spot: `${result.spec.heroPosition} vs ${result.spec.villainPosition} · ${result.spec.stackBB}bb${villainBB ? ` (vilão ${villainBB}bb)` : ""}`,
-                score: result.recommended.toUpperCase(),
-                accuracy: "—",
-                rating: result.handType,
-                heroCards: cardsToString(result.spec.hand),
-              }}
-              label="📤 Compartilhar análise"
-            />
-          </div>
+          <HandLabReferenceShare analysis={result} />
         </section>
       )}
     </div>
