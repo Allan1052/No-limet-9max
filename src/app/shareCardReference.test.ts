@@ -59,6 +59,7 @@ describe("Card de referência — contrato do analyzeHand", () => {
         expect(svg).not.toContain("foreignObject");
         expect(svg).not.toContain("♠");
         expect(svg).not.toContain("↓");
+        expect(svg).toContain("/brand-apple-touch.png");
         expect(svg).toContain("CALL OU FOLD");
         expect(svg).toContain("calloufold.com.br");
         if (slide === 2) {
