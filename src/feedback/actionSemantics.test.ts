@@ -1,28 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { gradeDecision } from "./analyzer";
+import { heroActionForFeedback } from "../app/gameController";
 
 describe("semântica da ação pós-flop", () => {
-  it("mostra Aposta quando o herói é o primeiro agressor da rua", () => {
-    const item = gradeDecision("Flop", "free", "bet", {
-      kind: "postflop",
-      action: "bet",
-      reason: "Aposta por valor.",
-      equity: 0.92,
-      potOdds: 0,
-    });
-    expect(item.heroAction).toBe("Aposta");
-    expect(item.advice).toBe("Aposta");
+  it("traduz raise técnico para bet quando não havia aposta para pagar", () => {
+    expect(heroActionForFeedback("raise", "flop", 0)).toBe("bet");
+    expect(heroActionForFeedback("raise", "river", 0)).toBe("bet");
   });
 
-  it("continua mostrando Raise quando existe aposta anterior para aumentar", () => {
-    const item = gradeDecision("River", "free", "raise", {
-      kind: "postflop",
-      action: "raise",
-      reason: "Aumenta por valor.",
-      equity: 0.92,
-      potOdds: 0.25,
-    });
-    expect(item.heroAction).toBe("Raise");
-    expect(item.advice).toBe("Raise");
+  it("mantém raise quando já existia aposta para pagar", () => {
+    expect(heroActionForFeedback("raise", "flop", 120)).toBe("raise");
+    expect(heroActionForFeedback("raise", "river", 2400)).toBe("raise");
+  });
+
+  it("não altera fold check call ou allin", () => {
+    expect(heroActionForFeedback("fold", "flop", 0)).toBe("fold");
+    expect(heroActionForFeedback("check", "turn", 0)).toBe("check");
+    expect(heroActionForFeedback("call", "river", 10)).toBe("call");
+    expect(heroActionForFeedback("allin", "river", 10)).toBe("allin");
   });
 });
