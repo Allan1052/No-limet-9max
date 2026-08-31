@@ -1,9 +1,7 @@
-import { rankOf, suitOf, seededRng, type Card } from "../engine/cards";
-import { facingAllinDecision } from "../ranges/facingAllin";
+import { rankOf, suitOf, type Card } from "../engine/cards";
 import {
   analyzeHand,
-  buildFinalTableIcm,
-  buildStageIcm,
+  parseHand,
   type HandAnalysis,
   type HandLabSpec,
 } from "../train/stage";
@@ -17,13 +15,6 @@ export const SHARE_CARD_FORMATS = {
 export type ReferenceCardFormat = keyof typeof SHARE_CARD_FORMATS;
 export type ReferenceCardSlide = 1 | 2;
 
-export interface ReferenceMotorMetrics {
-  heroEquity: number;
-  potOdds: number;
-  requiredEquity: number;
-  icmPremium: number;
-}
-
 export interface ReferenceCardModel {
   hand: Card[];
   context: string;
@@ -33,7 +24,6 @@ export interface ReferenceCardModel {
   equity?: number;
   potOdds?: number;
   requiredEquity?: number;
-  icmPremium?: number;
   confidence: DecisionConfidence;
   why: string;
   stage: string;
@@ -74,56 +64,10 @@ function actionContext(spec: HandLabSpec): string {
   return "POTE NÃO ABERTO";
 }
 
-function seededAnalysisRng(spec: HandLabSpec): () => number {
-  const eff = spec.stackBB;
-  const seed = (((spec.hand[0] + 1) * 2654435761 + (spec.hand[1] + 1) * 40503 + Math.round(eff) * 2246822519) >>> 0);
-  return seededRng(seed);
-}
-
-/**
- * Extrai as métricas do MESMO motor usado pelo analyzeHand para enfrentar all-in.
- * Não há número estratégico no renderer. Para outros tipos de spot, omite métricas.
- */
-export function referenceMetricsFromAnalysis(analysis: HandAnalysis): ReferenceMotorMetrics | undefined {
-  const spec = analysis.spec;
-  if (spec.situation !== "vsallin") return undefined;
-
-  const eff = spec.stackBB;
-  const icmSpot = spec.finalTable && (spec.stage === "bolha" || spec.stage === "mesa_final")
-    ? buildFinalTableIcm(spec.finalTable, eff)
-    : buildStageIcm(eff, spec.stage);
-
-  const d = facingAllinDecision({
-    hero: spec.hand,
-    betLevelFaced: 1,
-    numContesting: 1,
-    contestablePotBB: eff + 0.5,
-    callBB: Math.max(0.5, eff - 1),
-    effectiveBB: eff,
-    shoverStackBB: spec.villainStackBB != null && spec.villainStackBB > eff ? spec.villainStackBB : undefined,
-    raiserPosition: spec.villainPosition,
-    icmSpot,
-    rng: seededAnalysisRng(spec),
-    iterations: 2500,
-  });
-
-  if (d.action !== analysis.recommended) {
-    throw new Error(`Divergência entre analyzeHand (${analysis.recommended}) e motor de métricas (${d.action}).`);
-  }
-
-  return {
-    heroEquity: d.heroEquity,
-    potOdds: d.potOdds,
-    requiredEquity: d.requiredEquity,
-    icmPremium: d.icmPremium,
-  };
-}
-
 export function buildReferenceCardModel(
   analysis: HandAnalysis,
   comparison?: HandAnalysis,
 ): ReferenceCardModel {
-  const metrics = referenceMetricsFromAnalysis(analysis);
   const comparisonDiffers = comparison && comparison.recommended !== analysis.recommended;
   return {
     hand: analysis.spec.hand,
@@ -131,10 +75,9 @@ export function buildReferenceCardModel(
     verdict: analysis.recommended,
     comparisonVerdict: comparisonDiffers ? comparison.recommended : undefined,
     comparisonStage: comparisonDiffers ? stageLabel(comparison.spec.stage) : undefined,
-    equity: metrics?.heroEquity,
-    potOdds: metrics?.potOdds,
-    requiredEquity: metrics?.requiredEquity,
-    icmPremium: metrics?.icmPremium,
+    equity: analysis.metrics.heroEquity,
+    potOdds: analysis.metrics.potOdds,
+    requiredEquity: analysis.metrics.requiredEquity,
     confidence: analysis.confidence,
     why: analysis.simple,
     stage: stageLabel(analysis.spec.stage),
@@ -143,9 +86,10 @@ export function buildReferenceCardModel(
   };
 }
 
-/** Prévia oficial A7s: os dois resultados são calculados, nunca digitados. */
+/** Prévia oficial A7s: decisões e números vêm do analyzeHand. */
 export function buildA7sReferencePreview(): { finalTable: HandAnalysis; early: HandAnalysis; model: ReferenceCardModel } {
-  const hand: Card[] = [51, 47]; // As, 7s na codificação interna; valores visuais não estratégicos.
+  const hand = parseHand("As7s");
+  if (!hand) throw new Error("Falha ao montar A7s da prévia");
   const base: Omit<HandLabSpec, "stage"> = {
     heroPosition: "BB",
     villainPosition: "BTN",
@@ -167,7 +111,7 @@ function cardFace(card: Card, x: number, y: number, w: number, h: number, rotati
   const cx = x + w / 2;
   const cy = y + h / 2;
   return `<g transform="rotate(${rotation} ${cx} ${cy})" filter="url(#cardShadow)">
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.08)}" fill="${CARD_FACE}" stroke="rgba(230,196,84,.65)" stroke-width="2"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.round(w * 0.08)}" fill="${CARD_FACE}" stroke="${GOLD}" stroke-opacity=".65" stroke-width="2"/>
     <text x="${x + w * 0.15}" y="${y + h * 0.17}" font-family="${SERIF}" font-size="${Math.round(h * 0.15)}" font-weight="900" fill="${color}" text-anchor="middle">${rank}</text>
     <text x="${x + w * 0.15}" y="${y + h * 0.27}" font-family="${SERIF}" font-size="${Math.round(h * 0.11)}" fill="${color}" text-anchor="middle">${suit}</text>
     <text x="${cx}" y="${y + h * 0.64}" font-family="${SERIF}" font-size="${Math.round(h * 0.34)}" fill="${color}" text-anchor="middle">${suit}</text>
@@ -271,7 +215,6 @@ function slideTwo(model: ReferenceCardModel, format: ReferenceCardFormat): strin
   const eq = pct(model.equity);
   const po = pct(model.potOdds);
   const req = pct(model.requiredEquity);
-  const premium = pct(model.icmPremium);
   const confidence = model.confidence.label.toUpperCase();
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     ${background(width, height)}
@@ -282,10 +225,9 @@ function slideTwo(model: ReferenceCardModel, format: ReferenceCardFormat): strin
     <rect x="${boxX}" y="${boxY}" width="${boxW}" height="${boxH}" rx="24" fill="#07150E" fill-opacity=".64" stroke="${GOLD}" stroke-opacity=".55"/>
     <text x="${boxX + 34}" y="${boxY + 62}" font-family="${MONO}" font-size="22" font-weight="800" fill="${GOLD}">POR QUÊ</text>
     ${multiline(whyLines, boxX + 34, boxY + 104, 32, `font-family="${MONO}" font-size="20" fill="${MUTED}"`)}
-    ${metricRow("PREÇO DO POTE", po, boxX + 34, boxY + (tall ? 330 : 260), boxW - 68)}
-    ${metricRow("SUA EQUITY", eq, boxX + 34, boxY + (tall ? 430 : 350), boxW - 68)}
-    ${metricRow("EXIGÊNCIA COM ICM", req, boxX + 34, boxY + (tall ? 530 : 440), boxW - 68)}
-    ${premium && model.icmPremium !== undefined && model.icmPremium > 0 ? metricRow("PRÊMIO DE RISCO ICM", premium, boxX + 34, boxY + (tall ? 630 : 530), boxW - 68) : ""}
+    ${metricRow("PREÇO DO POTE", po, boxX + 34, boxY + (tall ? 350 : 285), boxW - 68)}
+    ${metricRow("SUA EQUITY VS ICM", eq, boxX + 34, boxY + (tall ? 470 : 390), boxW - 68)}
+    ${metricRow("EXIGÊNCIA COM ICM", req, boxX + 34, boxY + (tall ? 590 : 495), boxW - 68)}
     <line x1="${boxX + 34}" y1="${boxY + boxH - 150}" x2="${boxX + boxW - 34}" y2="${boxY + boxH - 150}" stroke="${GOLD}" stroke-opacity=".22"/>
     <text x="${boxX + 34}" y="${boxY + boxH - 100}" font-family="${MONO}" font-size="22" font-weight="800" fill="${GOLD}">SELO DE CONFIANÇA</text>
     <text x="${boxX + boxW - 34}" y="${boxY + boxH - 100}" font-family="${MONO}" font-size="23" font-weight="900" fill="${INK}" text-anchor="end">${esc(confidence)}</text>
