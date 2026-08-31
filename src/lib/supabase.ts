@@ -53,7 +53,7 @@ export interface PlayerProfile {
 export interface TournamentScore {
   id?: number;
   player_id: string;
-  tier: "micro" | "baixa" | "media" | "alta";
+  tier: "micro" | "baixa" | "media" | "alta" | "elite" | "super";
   points: number;
   season: string;
   timestamp?: string;

@@ -39,7 +39,8 @@ const TIER_BUYINS: Record<string, string> = {
   baixa: "11 FS",
   media: "22 e 55 FS",
   alta: "109 FS",
-  elite: "1.000+ FS",
+  elite: "1.000 FS",
+  super: "10.000+ FS",
 };
 
 /**
@@ -107,6 +108,7 @@ export function TournamentCountPanel() {
         "media",
         "alta",
         "elite",
+        "super",
       ];
       try {
         const entries = await fetchTournamentEntries(tiers, nick);

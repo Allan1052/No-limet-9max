@@ -575,7 +575,7 @@ export async function fetchMissionLeaderboard(
 //   mensal/anual. Aqui queremos a trajetória COMPLETA do jogador na faixa —
 //   todos os meses, sem janela — então a consulta é direta por tier + apelido.
 export async function fetchTournamentEntries(
-  tiers: Array<"micro" | "baixa" | "media" | "alta" | "elite">,
+  tiers: Array<"micro" | "baixa" | "media" | "alta" | "elite" | "super">,
   nickname: string
 ): Promise<
   Array<{

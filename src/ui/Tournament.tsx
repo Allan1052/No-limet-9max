@@ -37,7 +37,8 @@ function num(n: number): string {
 }
 
 function didacticBand(n: number): string {
-  const label = n <= 5 ? "Micro" : n <= 11 ? "Baixa" : n <= 55 ? "Média" : n <= 109 ? "Alta" : "Elite";
+  // 1K e 10K são faixas separadas (ranking próprio) — não mais "Elite" junto.
+  const label = n <= 5 ? "Micro" : n <= 11 ? "Baixa" : n <= 55 ? "Média" : n <= 109 ? "Alta" : n >= 10000 ? "10K" : "1K";
   return `${label} · ${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
 }
 
