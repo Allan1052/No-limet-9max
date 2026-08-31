@@ -1,4 +1,5 @@
 import type { FeedbackItem, Rating } from "../feedback/analyzer";
+import { feedbackHeroActionLabel } from "./coachV2PostHand";
 import "./handResultSummary.css";
 
 function isGood(rating: Rating): boolean {
@@ -16,6 +17,7 @@ export function HandResultSummary({
 
   const item = feedback[feedback.length - 1];
   const good = isGood(item.rating);
+  const heroAction = feedbackHeroActionLabel(item);
 
   return (
     <section className={`hand-result-summary ${good ? "is-good" : "is-review"}`} aria-label="Resultado da sua decisão">
@@ -25,7 +27,7 @@ export function HandResultSummary({
       </div>
       <div className="hrs-actions">
         <span className="hrs-label">Sua ação</span>
-        <strong>{item.heroAction}</strong>
+        <strong>{heroAction}</strong>
         <span className="hrs-arrow" aria-hidden="true">→</span>
         <span className="hrs-label">Melhor ação</span>
         <strong className="hrs-best">{item.advice}</strong>
