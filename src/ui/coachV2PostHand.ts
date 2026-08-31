@@ -18,6 +18,23 @@ function signedBB(value: number): string {
   return `${rounded >= 0 ? "+" : ""}${rounded}bb`;
 }
 
+/**
+ * O motor de apostas representa tanto BET quanto RAISE com a ação técnica
+ * "raise". No pós-flop, quando a recomendação do próprio spot é "Aposta",
+ * sabemos que não havia aposta anterior para pagar; nesse caso, mostrar
+ * "Raise" ao jogador é só um vazamento de implementação e vira "Aposta".
+ */
+export function feedbackHeroActionLabel(item: FeedbackItem): string {
+  if (
+    item.kind === "postflop" &&
+    item.heroAction.toLowerCase() === "raise" &&
+    item.advice.toLowerCase() === "aposta"
+  ) {
+    return "Aposta";
+  }
+  return item.heroAction;
+}
+
 export function buildCoachV2PostHandDecision(
   item: FeedbackItem,
   mode: CoachV2PostHandMode,
@@ -34,7 +51,7 @@ export function buildCoachV2PostHandDecision(
   }
 
   return {
-    heroLine: `Você fez: ${item.heroAction}`,
+    heroLine: `Você fez: ${feedbackHeroActionLabel(item)}`,
     coachLine: `Coach V2: ${item.advice}`,
     reason: item.text,
     metrics,
