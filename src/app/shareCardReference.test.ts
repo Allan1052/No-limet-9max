@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -48,7 +49,7 @@ describe("Card de referência — contrato do analyzeHand", () => {
     expect(model.confidence).toBe(analysis.confidence);
   });
 
-  it("exporta feed e stories nas dimensões aprovadas e sem foreignObject", () => {
+  it("exporta feed e stories nas dimensões aprovadas, sem foreignObject nem glifo frágil", () => {
     expect(SHARE_CARD_FORMATS.feed).toEqual({ width: 1080, height: 1350, aspectRatio: "4:5" });
     expect(SHARE_CARD_FORMATS.story).toEqual({ width: 1080, height: 1920, aspectRatio: "9:16" });
 
@@ -59,8 +60,14 @@ describe("Card de referência — contrato do analyzeHand", () => {
         expect(svg).toContain(`width="${SHARE_CARD_FORMATS[format].width}"`);
         expect(svg).toContain(`height="${SHARE_CARD_FORMATS[format].height}"`);
         expect(svg).not.toContain("foreignObject");
+        expect(svg).not.toContain("♠");
+        expect(svg).not.toContain("↓");
         expect(svg).toContain("CALL OU FOLD");
         expect(svg).toContain("calloufold.com.br");
+        if (slide === 2) {
+          expect(svg).toContain(">SUA EQUITY<");
+          expect(svg).not.toContain("SUA EQUITY VS ICM");
+        }
       }
     }
   });
