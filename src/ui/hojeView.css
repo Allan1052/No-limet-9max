@@ -1,0 +1,59 @@
+/* HOJE — a porta de entrada. Enxuta: saudação + streak, a Mão do dia, e um
+   atalho pra "Sua Mão". Usa os tokens do tema (--gold etc.). */
+.hoje-view{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:14px 14px 8px;
+  max-width:520px;
+  margin:0 auto;
+}
+.hoje-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.hoje-greeting{ min-width:0; }
+.hoje-title{
+  font-size:22px;
+  font-weight:800;
+  line-height:1.1;
+  color:var(--ink, #ece9e0);
+}
+.hoje-sub{
+  font-size:13px;
+  color:var(--muted, #9aa39a);
+  margin-top:2px;
+}
+.hoje-streak{
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 13px;
+  border-radius:999px;
+  border:1px solid rgba(230,196,84,.18);
+  background:rgba(255,255,255,.04);
+  color:var(--muted, #9aa39a);
+  font-variant-numeric:tabular-nums;
+}
+.hoje-streak.on{
+  border-color:rgba(230,196,84,.45);
+  background:rgba(230,196,84,.12);
+  color:var(--gold, #e6c454);
+}
+.hoje-streak-fire{ font-size:15px; filter:saturate(.85); }
+.hoje-streak.on .hoje-streak-fire{ filter:none; }
+.hoje-streak-n{ font-size:16px; font-weight:800; }
+
+.hoje-shortcut{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  padding:13px 16px;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:600;
+}

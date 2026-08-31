@@ -11,6 +11,7 @@ import type { TransKey } from "../i18n/translations";
 import "./bottomNavFocus.css";
 
 export type AppView =
+  | "hoje"
   | "play"
   | "icm"
   | "torneio"
@@ -38,26 +39,37 @@ type Hub = {
 };
 
 // Views avançadas que ficam escondidas atrás do botão "Mais" (pra não sobrecarregar o recreativo)
-const ADVANCED_VIEWS: AppView[] = ["campanha", "icm", "drill", "ft"];
+const ADVANCED_VIEWS: AppView[] = ["icm", "drill", "ft"];
 
+// ⚠ REESTRUTURAÇÃO (decisão do Allan): as 5 abas viraram 3 + Perfil, com a home
+// "Hoje" (Mão do dia) como porta de entrada. Fim do "empurra aba, aba, aba".
+// Mapa completo: docs/REESTRUTURACAO-NAV.md. NADA foi apagado — só reorganizado.
+//
+// Estrutura ANTERIOR (5 abas), preservada pra reverter numa linha se preciso:
+//   { id: "jogar",   icon: "🃏",  labelKey: "nav.play",       views: ["play", "torneio"] },
+//   { id: "treinar", icon: "🎯",  labelKey: "nav.train",      views: ["treino", "ultra", "drill", "campanha", "ft"] },
+//   { id: "suamao",  icon: "♠",   labelKey: "nav.sub.suamao", views: ["suamao"] },
+//   { id: "estudar", icon: "📚",  labelKey: "nav.study",      views: ["anatomia", "ranges", "aprenda", "icm"] },
+//   { id: "mais",    icon: "•••", label: "Mais",              views: ["importar", "ranking", "perfil", "missoes"] },
+//
+// ⚠ "street" (Rua por Rua) segue REMOVIDO da navegação (decisão do Allan, 15/08):
+// o treino começa na "Sua Mão", que carrega mão/posição/stack reais do spot.
+//
 // Ordem = ordem na barra. O primeiro view de cada hub é o "destino padrão".
-// A hierarquia agora segue o caminho principal do produto:
-// Jogar → Treinar → Sua Mão → Estudar → Mais.
+// Hoje (porta de entrada) → Treinar (pratica) → Estudar (entende) → Perfil.
 export const HUBS: Hub[] = [
-  { id: "jogar", icon: "🃏", labelKey: "nav.play", views: ["play", "torneio"] },
-  // ⚠ "street" (Rua por Rua) foi REMOVIDO da navegação (decisão do Allan, 15/08):
-  // o treino sempre começa na aba "Sua Mão", que carrega a mão, a posição e o
-  // stack reais do spot. O acesso solto pela sub-nav "zerava" o treino.
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "ultra", "drill", "campanha", "ft"] },
-  { id: "suamao", icon: "♠", labelKey: "nav.sub.suamao", views: ["suamao"] },
-  { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["anatomia", "ranges", "aprenda", "icm"] },
-  // Importação, ranking e perfil continuam acessíveis, mas deixam de competir
-  // com a jornada principal na barra inferior.
-  { id: "mais", icon: "•••", label: "Mais", views: ["importar", "ranking", "perfil", "missoes"] },
+  { id: "hoje", icon: "🏠", labelKey: "nav.today", views: ["hoje"] },
+  // Treinar: o Circuito (campanha) fica AQUI e VISÍVEL — o Allan gosta de jogar
+  // pra treinar. Torneio 1×1 e treinos entram junto; ft/drill ficam em "Mais".
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["play", "torneio", "treino", "campanha", "ultra", "ft", "drill"] },
+  { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["suamao", "anatomia", "ranges", "aprenda", "icm"] },
+  // Perfil (canto): ranking, missões e importar deixam de competir com a jornada.
+  { id: "perfil", icon: "☰", label: "Perfil", views: ["perfil", "ranking", "missoes", "importar"] },
 ];
 
 // Rótulo de cada sub-view (reaproveita as chaves tab.* onde faz sentido).
 const SUB_LABEL: Record<AppView, TransKey> = {
+  hoje: "nav.today",
   play: "tab.play",
   torneio: "tab.tournament",
   treino: "tab.train",
@@ -97,7 +109,7 @@ export function BottomNav({
       {HUBS.map((h) => (
         <button
           key={h.id}
-          className={`bn-item${activeHub === h.id ? " on" : ""}${h.id === "jogar" ? " bn-primary" : ""}${h.id === "suamao" ? " bn-focus" : ""}`}
+          className={`bn-item${activeHub === h.id ? " on" : ""}${h.id === "hoje" ? " bn-primary" : ""}`}
           onClick={() => setView(h.views[0])}
           aria-current={activeHub === h.id ? "page" : undefined}
         >

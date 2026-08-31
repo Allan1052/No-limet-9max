@@ -48,6 +48,7 @@ import {
   FinalTableTrainer,
 } from "./LazyViews";
 import { BottomNav, HubSubNav, type AppView } from "../ui/BottomNav";
+import { HojeView } from "../ui/HojeView";
 import { ProgressPanel } from "../ui/ProgressPanel";
 import { Onboarding } from "../ui/Onboarding";
 import { markFirstOpen } from "../ui/AvatarSelector";
@@ -195,7 +196,7 @@ export function App() {
   const [leakTrainingSession, setLeakTrainingSession] = useState<{ session: any; focus: string; leakId: string; leakTitle: string } | null>(null);
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
-  const [view, setView] = useState<AppView>("play");
+  const [view, setView] = useState<AppView>("hoje");
   const [, startNavigationTransition] = useTransition();
   const firstContactOverlay = !onboarded || !guidedDone;
   const navigate = (nextView: AppView) => {
@@ -386,7 +387,9 @@ export function App() {
 
             <HubSubNav view={view} setView={setView} info={playInfo} />
       <div key={view} className="view-enter">
-      {view === "icm" ? (
+      {view === "hoje" ? (
+        <HojeView setView={setView} />
+      ) : view === "icm" ? (
         <Suspense><IcmCalculator /></Suspense>
       ) : view === "ultra" ? (
         <Suspense><UltraTrainer /></Suspense>

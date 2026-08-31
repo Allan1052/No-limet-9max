@@ -7,8 +7,10 @@ const focusCss = readFileSync(new URL("./bottomNavFocus.css", import.meta.url), 
 const appSource = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8");
 
 describe("Uma mão por vez", () => {
-  it("mantém jogar como destino principal da navegação", () => {
-    expect(appSource).toContain('const [view, setView] = useState<AppView>("play")');
+  it("abre na home 'Hoje' (Mão do dia) como porta de entrada", () => {
+    // Reestruturação: a porta de entrada é a home "Hoje" (uma decisão por vez),
+    // não mais o jogo. O destaque (bn-primary) fica na aba Hoje.
+    expect(appSource).toContain('const [view, setView] = useState<AppView>("hoje")');
     expect(focusCss).toContain(".bottom-nav .bn-item.bn-primary");
   });
 
