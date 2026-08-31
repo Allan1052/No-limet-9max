@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { analyzeHand, parseHand } from "../train/stage";
 import {
@@ -59,6 +61,21 @@ describe("Card de referência — contrato do analyzeHand", () => {
         expect(svg).not.toContain("foreignObject");
         expect(svg).toContain("CALL OU FOLD");
         expect(svg).toContain("calloufold.com.br");
+      }
+    }
+  });
+
+  it("gera os quatro SVGs reais para inspeção visual do PR", () => {
+    const model = buildReferenceCardModel(a7s("mesa_final"), a7s("inicio"));
+    const out = resolve(process.cwd(), "preview");
+    mkdirSync(out, { recursive: true });
+
+    for (const format of ["feed", "story"] as const) {
+      for (const slide of [1, 2] as const) {
+        const svg = renderReferenceCardSvg(model, format, slide);
+        const file = resolve(out, `reference-${format}-slide-${slide}.svg`);
+        writeFileSync(file, svg, "utf8");
+        expect(svg.length).toBeGreaterThan(1000);
       }
     }
   });
