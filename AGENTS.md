@@ -55,5 +55,14 @@ combinar (risco de quebrar a calibração).
 
 ---
 
+## 🟣 REGRA Nº 5 — ANOTE O QUE MUDOU NO `MUDANCAS.md`
+**Todo push que muda o app** (UI, motor, site ou textos) tem que vir com uma
+entrada nova no arquivo **`MUDANCAS.md`** (na raiz), escrita **em português**
+pro Allan entender — o que mudou, por que, e em qual tela. Mais novo em cima.
+É assim que o Allan acompanha quem mexeu no quê e um agente não atrapalha o
+outro. **Não subir sem anotar.**
+
+---
+
 Dúvida de fluxo? Fale com o Allan. O registro completo do projeto está no
 `CLAUDE.md`.

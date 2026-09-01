@@ -29,6 +29,13 @@ commitar o `dist` junto** — o app é servido do `dist` commitado; sem rebuild,
 mudança fica no repo mas NÃO vai pro ar. Regras completas para os dois agentes
 (Claude + Manus) no arquivo **`AGENTS.md`** na raiz.
 
+## ⚠️ REGISTRO OBRIGATÓRIO — `MUDANCAS.md`
+**Todo push que muda o app** (UI, motor, site ou textos) exige uma entrada nova
+no arquivo **`MUDANCAS.md`** (na raiz), em **português**, curta, pro Allan
+entender: o que mudou, por que e em qual tela. Mais novo em cima. É a forma de
+o Allan acompanhar tudo e de os dois agentes não se atrapalharem. Regra completa
+no `AGENTS.md` (Regra Nº 5).
+
 ## Guardrails de qualidade (não quebrar)
 - **SELO GTO deve continuar 61/61** (src/ranges/_calibration/gtoBenchmark.test.ts).
 - Rodar a suíte antes de deployar (`npx vitest run`) — hoje ~3660+ testes.
