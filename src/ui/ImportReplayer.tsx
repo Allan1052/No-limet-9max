@@ -31,9 +31,9 @@ function famOf(label:string):"fold"|"check"|"call"|"aggro" { const t=label.toLow
 export function ImportReplayer({hands,reports,session,startIndex=0,onBack,onNewSession,_previewStep}:{hands:ParsedHand[];reports:{handId:string;feedback?:FeedbackItem;heroCardsText:string;effectiveBB:number;situation:string;skipped?:string}[];session?:SessionReport;startIndex?:number;onBack?:()=>void;onNewSession?:()=>void;_previewStep?:number;}) {
   const {t}=useT(); const [handIdx,setHandIdx]=useState(startIndex); const [showDiag,setShowDiag]=useState(false); const hand=hands[handIdx]; const report=reports[handIdx]; const frames=useMemo(()=>parsedHandToReplay(hand),[hand]); const [stepIdx,setStepIdx]=useState(_previewStep??0); const frame=frames[Math.min(stepIdx,Math.max(0,frames.length-1))]; const atEnd=stepIdx>=frames.length-1; const isLastHand=handIdx===hands.length-1;
   const streetFb=useMemo(()=>analyzePostflopStreets(hand,"free"),[hand]); const fb=report?.feedback;
-  // O estado real da mesa possui a rua técnica "showdown". Para feedback e rótulos,
-  // o showdown pertence à última rua jogável (river), mantendo o contrato do importador.
-  const curStreet: Street = frame?.street === "showdown" ? "river" : (frame?.street ?? "preflop");
+  // O replay possui ruas técnicas de encerramento ("showdown"/"complete").
+  // Para feedback e rótulos, ambas pertencem à última rua jogável (river).
+  const curStreet: Street = frame?.street === "showdown" || frame?.street === "complete" ? "river" : (frame?.street ?? "preflop");
   const revealing=!!frame?.state.handOver;
   const coachFb=curStreet==="flop"||curStreet==="turn"||curStreet==="river"?streetFb[curStreet]:fb;
   const mistakeFixBB=useMemo(()=>{const isBad=(it:FeedbackItem)=>{const good=it.rating==="boa"||it.rating==="ok";const matched=!!it.heroAction&&famOf(it.heroAction)===famOf(it.advice);return !good&&!matched;};const worst={bb:0};for(const street of ["flop","turn","river"] as const){const it=streetFb[street];if(it&&isBad(it)&&(it.betSizeBB??0)>worst.bb)worst.bb=it.betSizeBB??0;}if(coachFb&&isBad(coachFb)&&(coachFb.betSizeBB??0)>worst.bb)worst.bb=coachFb.betSizeBB??0;return worst.bb>0?worst.bb:undefined;},[streetFb,coachFb]);
