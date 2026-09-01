@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — ChatGPT — Benchmark externo ampliado para caçar vazamentos
+- Ampliei o teste independente de cerca de 210 para **554 spots pré-flop**, com foco em stacks de 25–45bb, defesa de BB/SB, 3-bet, 4-bet, tamanho da abertura e ante.
+- O motor não foi alterado. A nova grade encontrou **3 divergências** na defesa do BB contra BTN 2.2x (J6o 30bb, T7o 40bb e 96o 45bb), todas registradas com ressalva para confirmar a frequência exata da referência antes de qualquer correção.
+- Onde: ajuste interno de calibração/benchmark; sem mudança visual no app.
+
 ## 2026-09-01 — Claude — Conserto do motor: defesa do BB a ~20bb (achado do benchmark)
 - O benchmark externo tinha apontado que o motor **foldava T9s** (e mãos suited
   parecidas) na defesa do BB com ~17–21bb, quando a teoria **defende**. Corrigido:
