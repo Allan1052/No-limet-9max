@@ -130,12 +130,12 @@ export function HandTipsModal({
             );
           })
         )}
+        {onNewHand ? (
+          <button className="btn primary tips-newhand" onClick={onNewHand}>
+            {t("btn.newHand")}
+          </button>
+        ) : null}
       </div>
-      {onNewHand ? (
-        <button className="btn primary tips-newhand" onClick={onNewHand}>
-          {t("btn.newHand")}
-        </button>
-      ) : null}
     </div>
   );
 }

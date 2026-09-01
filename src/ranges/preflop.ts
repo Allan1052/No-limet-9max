@@ -1061,6 +1061,19 @@ function holdemVsThreeBet(
 
   // Stack curto: joga jam/fold. Premium+ jamam; o resto folda (não se paga 3-bet raso).
   if (short) {
+    // PISO DE SEGURANÇA (bug do JJ que o Allan pegou): mão FORTE de defesa
+    // (JJ/TT/99, AQs/AJs/KQs… — o leque de call vs 3-bet) enfrentando um 3-bet
+    // com o pote já COMPROMETIDO NUNCA folda. Sem preço pra fugir do 3-bet e com
+    // SPR baixo, a jogada é get-it-in: all-in em vez de largar valor claro.
+    const callSet = inPos ? VS3BET_IP_CALL : VS3BET_OOP_CALL;
+    if (callSet.has(handType)) {
+      return {
+        action: "jam",
+        sizeBB: eff,
+        reason: `${handType}: forte demais pra largar o 3-bet e o pote já está comprometido — all-in (o preço não deixa foldar).`,
+        handType,
+      };
+    }
     const jamPct = Math.min(0.14, Math.max(0.06, (25 - eff) * 0.006 + 0.06));
     if (freqIn(buildTopRange(jamPct), handType) > 0) {
       return { action: "jam", sizeBB: eff, reason: `${handType}: com stack curto, 4-bet all-in vs 3-bet.`, handType };

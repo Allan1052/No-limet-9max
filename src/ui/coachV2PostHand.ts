@@ -48,9 +48,16 @@ function decisionLineFor(item: FeedbackItem): string {
   const hero = feedbackHeroActionLabel(item);
   const rec = item.advice;
   const good = item.rating === "boa" || item.rating === "ok";
-  const same = hero.toLowerCase() === rec.toLowerCase();
+  // "Mesma jogada" é por FAMÍLIA (fold/check/call/aggro), não pelo rótulo: um
+  // "Raise" e um "3-bet" são a MESMA jogada (agressão) — dizer "dá pra jogar
+  // Raise, mas 3-bet é o padrão" soa contraditório. Só quando as famílias
+  // diferem de verdade (ex.: Call vs Raise) é que há um "desvio".
+  const same =
+    item.heroFam && item.adviceFam
+      ? item.heroFam === item.adviceFam
+      : hero.toLowerCase() === rec.toLowerCase();
 
-  if (good && same) return `✔ Boa! ${rec} era o caminho.`;
+  if (good && same) return `✔ Boa! ${hero} era o caminho.`;
   if (good && !same) return `✔ Dá pra jogar ${hero} — mas ${rec} é o padrão.`;
   return `✗ Melhor era ${rec}. Você fez ${hero}.`;
 }

@@ -288,10 +288,11 @@ export function App() {
 
   // Feedback pós-mão sobreposto à mesa: quando a mão termina (transição
   // false→true) e há decisões avaliadas, abre o modal de dicas por cima da
-  // mesa automaticamente — o Allan não precisa mais rolar a aba pra baixo pra
-  // achar a avaliação. Só dispara na transição (não reabre ao fechar).
+  // mesa — mas com um RESPIRO (~2,3s) pra o jogador VER o showdown/board antes
+  // de a aba subir. Só dispara na transição (não reabre ao fechar).
   const prevHandOver = useRef(false);
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (
       view === "play" &&
       handOver &&
@@ -299,9 +300,12 @@ export function App() {
       !firstContactOverlay &&
       controller.feedback.length > 0
     ) {
-      setTipsOpen(true);
+      timer = setTimeout(() => setTipsOpen(true), 2300);
     }
     prevHandOver.current = handOver;
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [handOver, view, firstContactOverlay, controller.feedback.length]);
 
   // Atualização do app: avisa quando há versão nova e recarrega num momento

@@ -874,8 +874,8 @@ body {
    centralizado na tela sem transbordar. */
 .replay.seat-stats,
 .replay.tips-modal {
-  width: min(440px, 92vw);
-  max-height: 86vh;
+  width: min(480px, 94vw);
+  max-height: 90vh;
   overflow: hidden auto;
 }
 .replay.progress-modal { width: min(400px, 92vw); }

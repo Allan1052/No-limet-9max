@@ -23,6 +23,18 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Correções (modal de dicas, texto do coach, JJ vs 3-bet)
+- **Modal de dicas pós-mão**: agora espera ~2,3s depois da mão pra você **ver o
+  showdown** antes de ele abrir; o botão "Nova mão" voltou pra DENTRO do modal
+  (estava solto na mesa) e o modal ficou maior (mais tela cheia).
+- **Texto do coach**: corrigida a contradição "dá pra jogar Raise, mas 3-bet é o
+  padrão" — Raise e 3-bet são a mesma jogada (agressão); agora só aponta desvio
+  quando a jogada é de fato diferente (ex.: Call vs Raise).
+- **Motor (bug do JJ)**: mão forte (JJ/TT/99, AQs/AJs/KQs) enfrentando um 3-bet
+  com o **pote comprometido** NÃO folda mais — vai de all-in (o preço não deixa
+  largar). Era o que você pegou: preço barato e o motor mandando foldar.
+- Onde: mesa/torneio (modal e dica), motor (resposta a 3-bet). SELO 61/61 ok.
+
 ## 2026-09-01 — Claude — Tendência por posição: "onde você perde mais ficha"
 - Novo bloco que mostra, **por posição** (UTG…BB), sua **% de acerto** (ordenado
   da pior cadeira pra melhor) e, quando você erra, se é por **agressivo demais**
