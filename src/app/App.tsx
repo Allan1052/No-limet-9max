@@ -379,6 +379,63 @@ export function App() {
         }`
       : undefined;
 
+  // Ações de fim de mão — usadas EMBAIXO da mesa E dentro do modal de dicas
+  // (pedido do Allan: tudo num lugar só). Os botões que abrem outra tela ou
+  // começam nova mão também FECHAM o modal de dicas (no-op quando ele já
+  // está fechado, embaixo da mesa).
+  const postHandActions = handOver ? (
+    <>
+      <button
+        className="btn primary"
+        onClick={() => {
+          setTipsOpen(false);
+          trackEvent("new_hand_started");
+          if (controller.tournamentOver) dismissSummary();
+          newHand();
+        }}
+      >
+        {tr("btn.newHand")}
+      </button>
+      {hasFirstPlayedHand ? (
+        <>
+          <button
+            className="btn"
+            disabled={!controller.lastHand}
+            onClick={() => { setTipsOpen(false); setReplayOpen(true); }}
+          >
+            {tr("btn.reviewHand")}
+          </button>
+          {controller.lastHand ? (
+            <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+          ) : null}
+          <button className="btn" onClick={() => { setTipsOpen(false); setProgressOpen(true); }}>
+            📊 {tr("btn.progress")}
+          </button>
+          {isXpUnlocked() ? (
+            <button className="btn" onClick={() => { setTipsOpen(false); setAchievementsOpen(true); }}>
+              🏆 Conquistas
+            </button>
+          ) : null}
+          <button className="btn" onClick={() => { setTipsOpen(false); setHistoryOpen(true); }}>
+            📋 Mãos desta sessão
+          </button>
+          <button className="btn" onClick={() => { setTipsOpen(false); setLeaksOpen(true); }}>
+            🎯 Pontos fracos
+          </button>
+          <button
+            className="btn"
+            onClick={() => downloadText(controller.exportSessionText())}
+          >
+            {tr("btn.exportHands")} ({controller.handLog.length})
+          </button>
+        </>
+      ) : null}
+      {controller.messageKey ? (
+        <div className="message">{tr(controller.messageKey, controller.messageVars)}</div>
+      ) : null}
+    </>
+  ) : null;
+
   // 17/08: splash NÃO-BLOQUEANTE — o app já monta por baixo enquanto a logo
   // aparece; o splash é só um overlay que some com fade (sem early return).
   // Assim a abertura fica instantânea: nada bloqueia a montagem do React.
@@ -509,44 +566,7 @@ export function App() {
           ) : null}
 
           {handOver ? (
-            <div className="controls action-row">
-              <button className="btn primary" onClick={() => { trackEvent("new_hand_started"); if (controller.tournamentOver) dismissSummary(); newHand(); }}>
-                {tr("btn.newHand")}
-              </button>
-              {hasFirstPlayedHand ? (
-                <>
-                  <button className="btn" disabled={!controller.lastHand} onClick={() => setReplayOpen(true)}>
-                    {tr("btn.reviewHand")}
-                  </button>
-                  {controller.lastHand ? (
-                    <HandActions hand={controller.lastHand} feedback={controller.feedback} />
-                  ) : null}
-                  <button className="btn" onClick={() => setProgressOpen(true)}>
-                    📊 {tr("btn.progress")}
-                  </button>
-                  {isXpUnlocked() ? (
-                    <button className="btn" onClick={() => setAchievementsOpen(true)}>
-                      🏆 Conquistas
-                    </button>
-                  ) : null}
-                  <button className="btn" onClick={() => setHistoryOpen(true)}>
-                    📋 Mãos desta sessão
-                  </button>
-                  <button className="btn" onClick={() => setLeaksOpen(true)}>
-                    🎯 Pontos fracos
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => downloadText(controller.exportSessionText())}
-                  >
-                    {tr("btn.exportHands")} ({controller.handLog.length})
-                  </button>
-                </>
-              ) : null}
-              {controller.messageKey ? (
-                <div className="message">{tr(controller.messageKey, controller.messageVars)}</div>
-              ) : null}
-            </div>
+            <div className="controls action-row">{postHandActions}</div>
           ) : (
             <Controls
               legal={la}
@@ -668,12 +688,7 @@ export function App() {
             return left <= paid * 2.5 && paid > 0 ? "bubble" : "early";
           })()}
           onClose={() => setTipsOpen(false)}
-          onNewHand={() => {
-            setTipsOpen(false);
-            trackEvent("new_hand_started");
-            if (controller.tournamentOver) dismissSummary();
-            newHand();
-          }}
+          actions={postHandActions}
         />
       ) : null}
 

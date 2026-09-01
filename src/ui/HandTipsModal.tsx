@@ -1,6 +1,6 @@
 // Modal com as DICAS COMPLETAS da mão — abre pelo botão no centro da mesa
 // depois do river/showdown. Reúne o resumo e cada decisão sua avaliada.
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { summarize, mixText, type FeedbackItem } from "../feedback/analyzer";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
@@ -24,14 +24,15 @@ export function HandTipsModal({
   heroPosition: _heroPosition,
   heroBB: _heroBB,
   icmPhase: _icmPhase,
-  onNewHand,
+  actions,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
   itemsTechnical?: FeedbackItem[];
   onClose: () => void;
-  /** "Nova mão" dentro do modal (fecha + distribui a próxima). */
-  onNewHand?: () => void;
+  /** Ações de fim de mão (Nova mão, Rever, Compartilhar, Evolução…) — as mesmas
+   *  que ficam embaixo da mesa, agora também dentro do modal. */
+  actions?: ReactNode;
   heroHand?: Card[];
   board?: Card[];
   userSubscriptionLevel: UserSubscriptionLevel;
@@ -53,6 +54,11 @@ export function HandTipsModal({
         ? itemsTechnical
         : items;
   const tecnico = tipsMode === "technical";
+  // O RESUMO do topo segue a ABA escolhida (Simples/Técnico), não o nível global
+  // do app — antes ele ficava igual nas duas abas (o Allan percebeu que "técnico
+  // = simples"). Ultra continua ultra; a aba só alterna entre simples e técnico.
+  const summaryLevel: UserSubscriptionLevel =
+    userSubscriptionLevel === "ultra" ? "ultra" : tecnico ? "technical" : "free";
 
   // Leitura complementar do board (só no modo técnico). Aqui ficam apenas
   // bloqueadores realmente observáveis; sizing vem exclusivamente do feedback
@@ -87,7 +93,7 @@ export function HandTipsModal({
           </button>
         </div>
 
-        <div className="summary">{summarize(displayItems, userSubscriptionLevel)}</div>
+        <div className="summary">{summarize(displayItems, summaryLevel)}</div>
         {tecnico && hasBoard ? (
           <div className="board-read">
             <div className="br-head">🧠 {t("tips.boardRead")}</div>
@@ -130,10 +136,8 @@ export function HandTipsModal({
             );
           })
         )}
-        {onNewHand ? (
-          <button className="btn primary tips-newhand" onClick={onNewHand}>
-            {t("btn.newHand")}
-          </button>
+        {actions ? (
+          <div className="tips-actions controls action-row">{actions}</div>
         ) : null}
       </div>
     </div>

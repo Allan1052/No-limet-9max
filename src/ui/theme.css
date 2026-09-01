@@ -754,15 +754,14 @@ body {
   .play-coach-bar { font-size: 12px; padding: 7px 11px; }
 }
 
-/* "Nova mão" dentro do modal de dicas pós-mão (sobreposto à mesa). Fica
-   ancorado embaixo do modal, bem visível. */
-.tips-newhand {
-  display: block;
-  width: calc(100% - 24px);
-  margin: 10px auto 4px;
-  font-size: 15px;
-  font-weight: 800;
+/* Ações de fim de mão DENTRO do modal de dicas (Nova mão, Rever, Compartilhar,
+   Evolução…) — tudo num lugar só, sem precisar rolar pra baixo da mesa. */
+.tips-actions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
+.tips-actions .btn.primary { font-size: 15px; font-weight: 800; }
 
 /* Mão do dia (1×1): linha de botões pra espiar cada jogada na MESMA mão. */
 .ultra-peek {

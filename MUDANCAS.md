@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Modal de dicas vira o "centro" pós-mão + Simples×Técnico
+- Agora o modal de **Dicas da mão** traz TUDO num lugar só: além das dicas, os
+  botões que ficavam embaixo da mesa (Nova mão, Rever mão, Compartilhar mão,
+  Evolução, Conquistas, Mãos desta sessão, Pontos fracos, Exportar). Não precisa
+  mais rolar pra baixo — clicou em "Ver dicas", tem tudo ali.
+- **Simples × Técnico** agora diferem de verdade: o resumo do topo do modal
+  seguia o modo global do app (ficava técnico mesmo na aba Simples). Corrigido —
+  o resumo segue a ABA escolhida. As explicações por decisão já mudavam.
+- Onde: mesa/torneio (modal de dicas pós-mão).
+
 ## 2026-09-01 — Claude — Correções (modal de dicas, texto do coach, JJ vs 3-bet)
 - **Modal de dicas pós-mão**: agora espera ~2,3s depois da mão pra você **ver o
   showdown** antes de ele abrir; o botão "Nova mão" voltou pra DENTRO do modal
