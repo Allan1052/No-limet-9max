@@ -25,6 +25,7 @@ import {
 } from "../train/scenarios";
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
+import { recordProgress } from "../train/progress";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -168,6 +169,13 @@ export function UltraTrainer() {
     setViewedKey(key);
     markActiveToday();
     recordDecision(key);
+    // Base de EVOLUÇÃO ("Seu jogo"): o 1×1 e a mão do dia também contam.
+    recordProgress({
+      kind: "preflop",
+      stage: scenario.spec.stage ?? "inicio",
+      effectiveBB: scenario.spec.effectiveBB,
+      correct: ok,
+    });
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     // Errou = o carrasco leva o pote. Um tranco háptico pra doer de verdade.
     if (!isCorrect(item)) {

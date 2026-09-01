@@ -59,6 +59,7 @@ import {
   type FieldStatus,
 } from "../tournament/field";
 import { recordTournamentWin } from "../tournament/eliteUnlock";
+import { recordProgress } from "../train/progress";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
 import type { HeroRead } from "../bots/adapt";
 import type { Archetype } from "../bots/profiles";
@@ -897,6 +898,14 @@ export class GameController {
       // se está pagando contra um all-in, e se já é mesa final.
       const heroP = this.table.players[this.heroSeat];
       const heroBB = (heroP.stack + heroP.committed) / this.table.bigBlind;
+      // Alimenta a base de EVOLUÇÃO ("Seu jogo") — cada decisão avaliada entra
+      // nos baldes (rua/faixa de stack/estágio) pra comparar o hoje com antes.
+      recordProgress({
+        kind: item.kind ?? (this.table.street === "preflop" ? "preflop" : "postflop"),
+        stage: this.tournament?.stage ?? "inicio",
+        effectiveBB: heroBB,
+        correct: item.rating === "boa" || item.rating === "ok",
+      });
       const facingAllin = this.table.players.some(
         (p) => p.seat !== this.heroSeat && p.status === "allin",
       );

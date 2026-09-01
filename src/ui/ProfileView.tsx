@@ -14,6 +14,7 @@ import { AvatarSelector, getHeroAvatarData } from "./AvatarSelector";
 import { SupportPix } from "./SupportPix";
 import { TopPrizesPanel } from "./TopPrizesPanel";
 import { TournamentCountPanel } from "./TournamentCountPanel";
+import { SeuJogoPanel } from "./SeuJogoPanel";
 import { syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
 import { trackEvent } from "../app/analytics";
@@ -142,6 +143,9 @@ export function ProfileView({
             🏆 Conquistas
           </button>
         </div>
+
+        {/* Prova de evolução: acerto por tipo de spot + maior oportunidade. */}
+        <SeuJogoPanel />
 
         {/* Trajetória por buy-in: quantos torneios do Circuito disputados
             (e quantos no dinheiro) em cada faixa — a jornada completa. */}

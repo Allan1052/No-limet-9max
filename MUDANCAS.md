@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Painel "Seu jogo" (prova de evolução) + base de dados
+- Novo painel **"Seu jogo"** no Perfil: mostra sua **% de acerto por tipo de
+  spot** (pré-flop, faixas de stack, estágios do torneio) e se você está
+  **melhorando** (seta ↑/↓ comparando o agora com antes). Aponta sua **maior
+  oportunidade** e tem um botão **"Treinar isso agora"** que abre o 1×1 já
+  naquele tipo de spot. (Recomendações nº 1 e nº 2 da auditoria.)
+- Por baixo: toda decisão avaliada (torneio, 1×1 e mão do dia) passa a ser
+  registrada em "baldes" pra alimentar essa evolução. Tudo local, deste
+  aparelho, e só mostra número com amostra suficiente (honestidade).
+- Onde: Perfil (painel "Seu jogo"); grava a partir do Torneio e do 1×1.
+
 ## 2026-09-01 — Claude — Coach mais claro + selo mais honesto (auditoria)
 - **Feedback pós-mão reorganizado**: agora lidera com a **decisão** (✔ Boa! / ✗
   Melhor era…), depois o **motivo** em linguagem simples, e a **matemática só no

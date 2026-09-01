@@ -1365,6 +1365,30 @@ body {
 .fb-item.imprecisa .tag { color: var(--warn); }
 .fb-item.ruim { border-left-color: var(--bad); }
 .fb-item.ruim .tag { color: var(--bad); }
+/* ---- "Seu jogo": prova de evolução por tipo de spot ---- */
+.sj-panel { margin: 6px 0 10px; }
+.sj-empty { color: var(--text-dim); font-size: 13px; line-height: 1.45; margin: 4px 2px 0; }
+.sj-opp {
+  border: 1px solid var(--gold, #e6c454);
+  background: rgba(230, 196, 84, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.sj-opp-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold-soft, #cbb26a); }
+.sj-opp-body { font-size: 14px; margin: 3px 0 8px; color: var(--text, #f2eede); }
+.sj-opp-btn { width: 100%; }
+.sj-list { display: flex; flex-direction: column; gap: 9px; }
+.sj-row-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.sj-label { font-size: 13px; color: var(--text, #f2eede); }
+.sj-pct { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gold-bright, #f7e79b); }
+.sj-bar { height: 7px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.sj-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #4f9d63, #7ec58a); }
+.sj-delta { font-size: 11px; font-weight: 700; margin-left: 4px; }
+.sj-delta.up { color: #7ec58a; }
+.sj-delta.down { color: #d98a7a; }
+.sj-foot { font-size: 11px; color: var(--text-dim); margin: 10px 2px 0; opacity: 0.8; }
+
 .fb-item .fb-text { color: var(--text-dim); line-height: 1.4; }
 /* A decisão lidera o feedback (regra: decisão → motivo → matemática). */
 .fb-item .fb-decision {
