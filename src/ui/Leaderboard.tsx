@@ -14,6 +14,7 @@
 // ---------------------------------------------------------------------------
 import { useState, useEffect, useMemo } from "react";
 import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
+import { runExternalBenchmark } from "../ranges/_calibration/externalBenchmark";
 import { useT } from "../i18n";
 import {
   fetchTournamentLeaderboard,
@@ -349,15 +350,29 @@ export function Leaderboard() {
 // ---------------------------------------------------------------------------
 export function GtoValidationSection() {
   const cal = useMemo(() => runCalibration(), []);
+  const ext = useMemo(() => runExternalBenchmark(), []);
   const pct = Math.round(cal.score * 100);
+  const extPct = Math.round(ext.score * 100);
   return (
-    <p className="lb-gto">
-      <b>As recomendações não são chute.</b> O motor de equity é conferido contra
-      valores exatos conhecidos (AA vs KK = 82% etc.) e as decisões de range são
-      comparadas com a teoria num banco <b>nosso</b> de {cal.total} spots de
-      referência. Hoje batem em {pct}% deles ({cal.matched} de {cal.total}). É um{" "}
-      <b>teste interno de qualidade</b> — não é certificação externa nem nos torna
-      um solver. Somos um app de estudo: usamos a teoria como guia, com humildade.
-    </p>
+    <>
+      <p className="lb-gto">
+        <b>As recomendações não são chute.</b> O motor de equity é conferido
+        contra valores exatos conhecidos (AA vs KK = 82% etc.) e as decisões de
+        range são comparadas com a teoria num banco <b>nosso</b> de {cal.total}{" "}
+        spots de referência. Hoje batem em {pct}% deles ({cal.matched} de{" "}
+        {cal.total}). É um <b>teste interno de qualidade</b> — não é certificação
+        externa nem nos torna um solver. Somos um app de estudo: usamos a teoria
+        como guia, com humildade.
+      </p>
+      <p className="lb-gto">
+        <b>E fazemos um teste externo, aberto.</b> Comparamos o motor com uma
+        referência <b>independente</b> (push/fold no estilo Nash + teoria
+        consolidada) em {ext.total} spots de 8 a 20bb. Hoje ele bate em{" "}
+        {extPct}%. Onde ainda <b>aproximamos</b>, a gente mostra em vez de
+        esconder: no momento, {ext.misses.length === 1 ? "1 spot foge" : `${ext.misses.length} spots fogem`} da
+        referência (defesa de BB com stack médio) — e está no nosso radar pra
+        melhorar. Transparência vale mais do que escrever "GTO" em letra grande.
+      </p>
+    </>
   );
 }

@@ -28,6 +28,20 @@ Regras do registro:
 - A escolha fica salva neste aparelho e entra no funil; ela prepara a personalização futura das mãos sem alterar o motor agora.
 - Onde: onboarding / primeira abertura.
 
+## 2026-09-01 — Claude — Benchmark externo do motor (transparência)
+- Novo teste que compara o motor com uma **referência independente** (push/fold
+  no estilo Nash + teoria consolidada) numa grade ampla (~210 spots, 8–20bb,
+  várias posições). Diferente do selo interno: o objetivo é ser **honesto** e
+  mostrar **onde o motor ainda aproxima**, não dar 100%.
+- Hoje bate em ~99%. As decisões universais (premium empurra / lixo folda) dão
+  100% (guarda de regressão). O teste já **encontrou 1 divergência real**: o
+  motor folda T9s na defesa de BB com ~20bb, quando a teoria defende — fica
+  documentado e no radar pra melhorar.
+- No app, o texto "Como a pontuação funciona" agora mostra esse teste externo e
+  admite abertamente onde aproximamos. (Recomendação nº 6 da auditoria.)
+- Onde: "Como a pontuação funciona" (ranking) e testes do motor.
+>>>>>>> 948733c (feat(motor): benchmark externo transparente (nº 6 da auditoria))
+
 ## 2026-09-01 — Claude — Painel "Seu jogo" (prova de evolução) + base de dados
 - Novo painel **"Seu jogo"** no Perfil: mostra sua **% de acerto por tipo de
   spot** (pré-flop, faixas de stack, estágios do torneio) e se você está
