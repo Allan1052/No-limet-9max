@@ -61,6 +61,8 @@ export function PokerTable({
   onUpdate,
   rangeSeats = [],
   buyIn,
+  readOnly = false,
+  replayActorSeat,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -73,6 +75,8 @@ export function PokerTable({
   onUpdate?: () => void;
   rangeSeats?: number[];
   buyIn?: number;
+  readOnly?: boolean;
+  replayActorSeat?: number;
 }) {
   const { t } = useT();
 
@@ -160,17 +164,20 @@ export function PokerTable({
         const pos = SEAT_POS[p.seat] ?? { top: "50%", left: "50%" };
         const isOmaha = table.variant === "omaha";
         const SeatComponent = isOmaha ? OmahaSeat : Seat;
+        const acting = replayActorSeat != null
+          ? replayActorSeat === p.seat
+          : table.toAct === p.seat && !table.handOver;
         return (
           <SeatComponent
             key={p.seat}
             player={p}
-            acting={table.toAct === p.seat && !table.handOver}
+            acting={acting}
             reveal={reveal}
             lastAction={lastActionLabel[p.seat]}
             bigBlind={table.bigBlind}
             position={positions[p.seat]}
             rangeMarked={rangeSeats.includes(p.seat)}
-            onSelect={onSelectSeat}
+            onSelect={readOnly ? undefined : onSelectSeat}
             style={{ top: pos.top, left: pos.left }}
             isOmaha={isOmaha}
           />
