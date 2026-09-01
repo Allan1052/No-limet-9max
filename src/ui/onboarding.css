@@ -1,0 +1,124 @@
+.onboard-goal {
+  width: min(92vw, 440px);
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.onboard-goal-kicker {
+  margin-bottom: 8px;
+  color: #d4af37;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.onboard-goal h3 {
+  margin-bottom: 8px;
+}
+
+.onboard-goal-question {
+  margin: 6px 0 4px;
+  color: #f3efe3;
+  font-size: clamp(20px, 5vw, 24px);
+  font-weight: 800;
+  line-height: 1.18;
+}
+
+.onboard-goal-help {
+  margin: 0 0 16px;
+  color: #c7cbbf;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.onboard-goal-list {
+  display: grid;
+  gap: 9px;
+  margin: 0 0 18px;
+}
+
+.onboard-goal-option {
+  display: flex;
+  min-height: 54px;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #f3efe3;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.onboard-goal-option:active {
+  transform: scale(0.99);
+}
+
+.onboard-goal-option.selected {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.onboard-goal-option:focus-visible,
+.onboard-goal-cta:focus-visible {
+  outline: 3px solid rgba(212, 175, 55, 0.45);
+  outline-offset: 2px;
+}
+
+.onboard-goal-check {
+  display: inline-grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  color: #0a1f14;
+  background: #d4af37;
+  font-weight: 900;
+}
+
+.onboard-goal-option:not(.selected) .onboard-goal-check {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.onboard-goal-cta {
+  width: 100%;
+  min-height: 50px;
+}
+
+.onboard-goal-cta:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.onboard-goal-foot {
+  margin: 12px 0 0;
+  color: #aeb5aa;
+  font-size: 11.5px;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .onboard-goal {
+    padding: 19px 16px;
+  }
+
+  .onboard-goal-list {
+    gap: 7px;
+  }
+
+  .onboard-goal-option {
+    min-height: 50px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
