@@ -20,6 +20,15 @@ export interface ReplayAdvice {
   nBet?: string;
 }
 
+/** Retrato compacto de um assento no instante de um evento (para replay na mesa
+ *  real). Capturado ao vivo — já reflete blinds/antes/side-pot sem recalcular. */
+export interface SeatSnap {
+  stack: number;
+  committed: number;
+  totalCommitted: number;
+  status: "active" | "folded" | "allin" | "out";
+}
+
 export interface ReplayEvent {
   street: string;
   seat: number;
@@ -27,6 +36,10 @@ export interface ReplayEvent {
   isHero: boolean;
   /** Rótulo do que o jogador fez (ex.: "Raise 115"). */
   actionLabel: string;
+  /** Retrato de TODOS os assentos DEPOIS desta ação (indexado por assento).
+   *  Opcional: presente nas mãos gravadas na sessão atual (removido ao persistir
+   *  pra não pesar). Quando ausente, cai no replayer simples. */
+  seats?: SeatSnap[];
   /** Tipo cru da ação (fold/check/call/raise/allin) para comparar com o ótimo. */
   actionType: string;
   /** Board no momento da ação. */

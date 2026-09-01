@@ -796,6 +796,18 @@ export class GameController {
     }
     const streetBefore = this.table.street;
     applyAction(this.table, action);
+    // Retrato dos assentos DEPOIS da ação — pro replay rodar na mesa real. É
+    // o estado verdadeiro (já com blinds/antes/side-pot), então a reconstrução
+    // não precisa recalcular nada.
+    const lastEv = this.history[this.history.length - 1];
+    if (lastEv) {
+      lastEv.seats = this.table.players.map((p) => ({
+        stack: p.stack,
+        committed: p.committed,
+        totalCommitted: p.totalCommitted,
+        status: p.status,
+      }));
+    }
     // Virou a rua: as fichas da rua anterior foram recolhidas ao pote, então os
     // rótulos de ação ("Raise 3.3bb" etc.) somem JUNTO com elas — senão ficariam
     // grudados na caixinha do jogador, sobrepondo as apostas da rua seguinte.
@@ -1149,8 +1161,13 @@ export class GameController {
       tournamentResult: this.tournamentResult,
       tournamentFinishPlace: this.tournamentFinishPlace,
       // Guarda as últimas mãos para o export continuar após retomar (limita
-      // para o save não crescer demais).
-      handLog: this.handLog.slice(-80),
+      // para o save não crescer demais). Remove os retratos de assento por
+      // evento (`seats`) — são só para o replay na mesa real da sessão atual e
+      // pesariam demais no localStorage.
+      handLog: this.handLog.slice(-80).map((h) => ({
+        ...h,
+        events: h.events.map(({ seats, ...ev }) => { void seats; return ev; }),
+      })),
       variant: this.table.variant,
       savedAt: new Date().toISOString(),
     };

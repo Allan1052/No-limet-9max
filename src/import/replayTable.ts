@@ -15,6 +15,7 @@
 import type { Card } from "../engine/cards";
 import type { PlayerState, TableState, Street as GameStreet } from "../game/state";
 import type { ParsedHand, ParsedAction, Street as ParsedStreet } from "./handHistory";
+import type { HandHistory, ReplayEvent } from "../app/replay";
 
 export interface ReplayFrame {
   /** Estado da mesa NESTE passo, no formato que a PokerTable renderiza. */
@@ -182,6 +183,114 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
   finalState.board = hand.board.slice();
   finalState.handOver = true;
   frames.push({ state: finalState, label: "Resultado", actorSeat: -1, street: finalState.street });
+
+  return frames;
+}
+
+// ---------------------------------------------------------------------------
+// Mãos do TORNEIO DO APP → mesa real. Cada evento gravado carrega um retrato de
+// todos os assentos (SeatSnap) capturado ao vivo; a reconstrução é direta.
+// ---------------------------------------------------------------------------
+
+function streetFromBoard(boardLen: number): GameStreet {
+  if (boardLen >= 5) return "river";
+  if (boardLen === 4) return "turn";
+  if (boardLen >= 3) return "flop";
+  return "preflop";
+}
+
+export function handHistoryToReplay(h: HandHistory): ReplayFrame[] {
+  const seatNums = Object.keys(h.names).map(Number).sort((a, b) => a - b);
+  const nameOf = (seat: number) => h.names[seat] ?? `Assento ${seat}`;
+  const holeOf = (seat: number, reveal: boolean): Card[] => {
+    if (seat === h.heroSeat) return (h.holeCards[seat] ?? []).slice();
+    return reveal ? (h.holeCards[seat] ?? []).slice() : [];
+  };
+
+  const baseState = (
+    seatsData: ReplayEvent["seats"],
+    board: Card[],
+    toAct: number,
+    reveal: boolean,
+    handOver: boolean,
+  ): TableState => {
+    const players: PlayerState[] = seatNums.map((seat) => {
+      const snap = seatsData?.[seat];
+      return {
+        seat,
+        name: nameOf(seat),
+        isHero: seat === h.heroSeat,
+        stack: snap?.stack ?? h.startingStacks?.[seat] ?? 0,
+        committed: snap?.committed ?? 0,
+        totalCommitted: snap?.totalCommitted ?? 0,
+        acted: false,
+        status: snap?.status ?? "active",
+        holeCards: holeOf(seat, reveal),
+      };
+    });
+    return {
+      players,
+      buttonSeat: h.buttonSeat,
+      smallBlind: Math.round(h.bigBlind / 2),
+      bigBlind: h.bigBlind,
+      ante: 0,
+      board: board.slice(),
+      street: streetFromBoard(board.length),
+      currentBet: Math.max(0, ...players.map((p) => p.committed)),
+      preflopRaises: 0,
+      minRaiseAmount: h.bigBlind,
+      toAct,
+      lastAggressor: -1,
+      preflopAggressor: -1,
+      lastStreetAggressor: -1,
+      deck: [],
+      handOver,
+      result: handOver ? h.result : undefined,
+      log: [],
+      variant: "holdem",
+    };
+  };
+
+  const frames: ReplayFrame[] = [];
+
+  // Estado inicial (stacks de partida, sem ação ainda).
+  frames.push({
+    state: baseState(undefined, [], -1, false, false),
+    label: "Mão distribuída",
+    actorSeat: -1,
+    street: "preflop",
+  });
+
+  let lastBoardLen = 0;
+  for (const ev of h.events) {
+    // Abriu uma rua nova? (board cresceu) — quadro de "abre rua".
+    if (ev.board.length > lastBoardLen && ev.board.length >= 3) {
+      lastBoardLen = ev.board.length;
+      const label = ev.board.length === 3 ? "Flop" : ev.board.length === 4 ? "Turn" : "River";
+      // Usa o retrato do próprio evento pra manter os stacks coerentes.
+      frames.push({
+        state: baseState(ev.seats, ev.board, -1, false, false),
+        label,
+        actorSeat: -1,
+        street: streetFromBoard(ev.board.length),
+      });
+    }
+    frames.push({
+      state: baseState(ev.seats, ev.board, ev.seat, false, false),
+      label: `${ev.name}: ${ev.actionLabel}`,
+      actorSeat: ev.seat,
+      street: streetFromBoard(ev.board.length),
+    });
+  }
+
+  // Quadro final: board cheio, cartas reveladas, resultado.
+  const lastSeats = h.events.length ? h.events[h.events.length - 1].seats : undefined;
+  frames.push({
+    state: baseState(lastSeats, h.finalBoard, -1, true, true),
+    label: "Resultado",
+    actorSeat: -1,
+    street: streetFromBoard(h.finalBoard.length),
+  });
 
   return frames;
 }
