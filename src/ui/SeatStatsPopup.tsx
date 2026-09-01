@@ -1,7 +1,11 @@
 // Popup de estatísticas de um jogador (toque no assento). Mostra VPIP/PFR/3-bet
-// e uma leitura simples do estilo — funciona para os vilões e para o herói.
+// e, para vilões conhecidos do simulador, o conselho de exploração derivado do
+// perfil real. Nenhuma estratégia é recalculada aqui: a UI apenas exibe o motor.
 import { useT } from "../i18n";
 import type { StatRow } from "../feedback/stats";
+import { exploitAdvice } from "../bots/exploit";
+import { PROFILES, profileById } from "../bots/profiles";
+import "./exploitAdvicePanel.css";
 
 function styleHint(row: StatRow): string {
   if (row.hands < 6) return "Amostra curta ainda.";
@@ -13,6 +17,9 @@ function styleHint(row: StatRow): string {
 
 export function SeatStatsPopup({ row, onClose }: { row: StatRow; onClose: () => void }) {
   const { t } = useT();
+  const matchedProfile = !row.isHero ? PROFILES.find((profile) => profile.name === row.name) : undefined;
+  const advice = !row.isHero && matchedProfile ? exploitAdvice(profileById(matchedProfile.id)) : null;
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay seat-stats" onClick={(e) => e.stopPropagation()}>
@@ -41,6 +48,32 @@ export function SeatStatsPopup({ row, onClose }: { row: StatRow; onClose: () => 
           </div>
         </div>
         <div className="summary-note">{styleHint(row)}</div>
+
+        {advice ? (
+          <section className="exploit-panel" aria-label="Como explorar este vilão">
+            <div className="exploit-kicker">Como explorar este vilão</div>
+            <div className="exploit-headline">{advice.headline}</div>
+            <div className="exploit-key-stat">{advice.keyStat}</div>
+            <div className="exploit-columns">
+              <div className="exploit-list exploit-list-do">
+                <h4>✅ Faça</h4>
+                <ul>
+                  {advice.dos.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="exploit-list exploit-list-dont">
+                <h4>❌ Não faça</h4>
+                <ul>
+                  {advice.donts.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );
