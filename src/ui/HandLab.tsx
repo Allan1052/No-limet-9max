@@ -34,6 +34,7 @@ import {
   type FinalTableSpec,
 } from "../train/stage";
 import { FinalTableSituation } from "./FinalTableSituation";
+import { decisionSweeps } from "../train/decisionSweep";
 
 type Mode = "simple" | "technical";
 
@@ -73,6 +74,7 @@ export function HandLab() {
   const [mode, setMode] = useState<Mode>("simple");
   const [showWhyNot, setShowWhyNot] = useState(false);
   const [showPhases, setShowPhases] = useState(false);
+  const [showSweeps, setShowSweeps] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof analyzeHand> | null>(null);
   const [err, setErr] = useState<string | null>(null);
   // Situação real da mesa final/bolha (ICM do spot do jogador) — opcional.
@@ -132,6 +134,13 @@ export function HandLab() {
     () => parseHand(cardText(rank1, suit1) + cardText(rank2, suit2)),
     [rank1, suit1, rank2, suit2],
   );
+  // "O que muda esta decisão?" — só calcula quando o painel é aberto (roda o
+  // motor várias vezes; lazy pra não pesar antes do clique).
+  const sweeps = useMemo(
+    () => (result && showSweeps ? decisionSweeps(result.spec) : []),
+    [result, showSweeps],
+  );
+
   const stackBB = customBB ?? STAGE_BB[stage];
   // Stack EFETIVO do confronto = o menor dos dois. Se o vilão é mais curto, é o
   // stack dele que manda na ação (por isso digitar o vilão deixa mais verdadeiro).
@@ -142,6 +151,7 @@ export function HandLab() {
     setResult(null);
     setShowWhyNot(false);
     setShowPhases(false);
+    setShowSweeps(false);
     if (!hand) {
       setErr("Cartas inválidas — escolha duas cartas diferentes.");
       return;
@@ -628,6 +638,56 @@ export function HandLab() {
                 <p style={{ margin: "8px 0 0", color: "#b8b29a", fontSize: 12, fontStyle: "italic" }}>
                   Mesma mão — o que muda é a pressão de premiação (ICM). No <b>Início/Meio</b> o preço é
                   em <b>fichas</b>; o ICM de verdade entra na <b>Bolha/Mesa Final</b> (ou quando você detalha a mesa).
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div style={{ margin: "10px 0 4px" }}>
+            {!showSweeps ? (
+              <button
+                onClick={() => setShowSweeps(true)}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 12,
+                  border: "1px dashed #7a5f1e", background: "rgba(230,196,84,0.06)",
+                  color: "#e6c454", fontWeight: 700, fontSize: 14, cursor: "pointer",
+                }}
+              >
+                🔀 O que muda esta decisão?
+              </button>
+            ) : (
+              <div style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #7a5f1e", background: "rgba(230,196,84,0.05)" }}>
+                {sweeps.length === 0 ? (
+                  <p style={{ margin: 0, color: "#b8b29a", fontSize: 13 }}>
+                    Neste spot a resposta é firme — mudar stack, fase ou quem abriu <b>não muda</b> a decisão.
+                  </p>
+                ) : (
+                  sweeps.map((sw) => (
+                    <div key={sw.key} style={{ marginBottom: 12 }}>
+                      <p style={{ margin: "0 0 6px", color: "#e6c454", fontWeight: 700, fontSize: 12.5 }}>{sw.title}</p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {sw.bands.map((b, i) => {
+                          const col = b.action === "FOLD" ? "#e07b6b" : b.action === "CALL" ? "#57b06a" : "#e6c454";
+                          return (
+                            <div
+                              key={i}
+                              style={{
+                                padding: "5px 9px", borderRadius: 9, fontSize: 11.5, lineHeight: 1.25,
+                                background: b.current ? "rgba(230,196,84,0.16)" : "rgba(0,0,0,0.25)",
+                                border: b.current ? "1px solid #e6c454" : "1px solid rgba(255,255,255,0.06)",
+                              }}
+                            >
+                              <span style={{ color: "#b8b29a" }}>{b.current ? "➤ " : ""}{b.label}</span>
+                              <span style={{ color: col, fontWeight: 800, marginLeft: 6 }}>{b.action}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+                <p style={{ margin: "2px 0 0", color: "#8a7f5a", fontSize: 11, fontStyle: "italic" }}>
+                  ➤ = onde a sua mão cai agora. É o mesmo motor, mudando uma coisa por vez.
                 </p>
               </div>
             )}
