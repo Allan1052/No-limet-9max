@@ -24,11 +24,14 @@ export function HandTipsModal({
   heroPosition: _heroPosition,
   heroBB: _heroBB,
   icmPhase: _icmPhase,
+  onNewHand,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
   itemsTechnical?: FeedbackItem[];
   onClose: () => void;
+  /** "Nova mão" dentro do modal (fecha + distribui a próxima). */
+  onNewHand?: () => void;
   heroHand?: Card[];
   board?: Card[];
   userSubscriptionLevel: UserSubscriptionLevel;
@@ -128,6 +131,11 @@ export function HandTipsModal({
           })
         )}
       </div>
+      {onNewHand ? (
+        <button className="btn primary tips-newhand" onClick={onNewHand}>
+          {t("btn.newHand")}
+        </button>
+      ) : null}
     </div>
   );
 }

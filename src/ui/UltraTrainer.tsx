@@ -34,21 +34,22 @@ import type { FeedbackItem } from "../feedback/analyzer";
 
 export function UltraTrainer() {
   const { t } = useT();
-  const [prefill, setPrefill] = useState<ScenarioSpec | null>(null);
+  const [prefill, setPrefill] = useState<{ spec: ScenarioSpec; daily: boolean } | null>(null);
 
-  // "Treinar esse spot" da Sua Mão: o HandLab grava o spec do spot
-  // (cof-sua-mao-spec) e dispara cof-open-ultra — aqui ele é capturado
-  // e a sessão 1×1 começa já configurada no spot analisado.
+  // "Treinar esse spot" da Sua Mão / "Analisar minha mão" da Hoje: gravam o
+  // spec do spot (cof-sua-mao-spec) e disparam cof-open-ultra — aqui ele é
+  // capturado e a sessão 1×1 começa já configurada no spot. Quando vem da Mão
+  // do dia (fromDaily), entra em "modo mão do dia".
   useEffect(() => {
     // O spec da Sua Mão é um HandLabSpec (da análise) — converte pra um
     // ScenarioSpec do Treino 1×1 (mesmos campos de posição/stack/abertura).
-    const readSpec = (): ScenarioSpec | null => {
+    const readSpec = (): { spec: ScenarioSpec; daily: boolean } | null => {
       const raw = localStorage.getItem("cof-sua-mao-spec");
       if (!raw) return null;
       try {
         const s = JSON.parse(raw) as HandLabSpec;
         const facingAllin = s.situation === "vsallin";
-        return {
+        const spec = {
           heroPosition: s.heroPosition,
           effectiveBB: s.stackBB,
           raiserPosition: s.situation === "open" ? undefined : s.villainPosition,
@@ -64,6 +65,7 @@ export function UltraTrainer() {
           stage: s.stage,
           icmSpot: buildStageIcm(s.stackBB, s.stage),
         } as ScenarioSpec;
+        return { spec, daily: s.fromDaily === true };
       } catch {
         return null;
       }
@@ -90,21 +92,29 @@ export function UltraTrainer() {
   const [result, setResult] = useState<FeedbackItem | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
   const [villain, setVillain] = useState<Villain>(VILLAINS[0]);
+  // "Modo mão do dia": a mesma mão do dia; o jogador já respondeu e agora pode
+  // ver a explicação de CADA ação (Fold/Call/Raise/Re-raise) sem mexer no placar.
+  const [daily, setDaily] = useState(false);
+  // Ação que está sendo exibida no momento (a escolhida ou uma "espiada").
+  const [viewedKey, setViewedKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!prefill) return;
-    setActiveSpec(prefill);
+    setActiveSpec(prefill.spec);
+    setDaily(prefill.daily);
     setVillain(pickVillain());
     setSession({ correct: 0, total: 0 });
     setResult(null);
+    setViewedKey(null);
     // 1ª mão = a que o jogador montou (fixedHand); a decisão é a ação real.
-    setScenario(buildScenarioFromSpec(prefill, Math.random));
+    setScenario(buildScenarioFromSpec(prefill.spec, Math.random));
     setPrefill(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
 
   const next = () => {
     setResult(null);
+    setViewedKey(null);
     if (!activeSpec) return;
     // Próximas mãos: mesmo spot (posição/stack/all-in/ICM), mão nova.
     setScenario(buildScenarioFromSpec({ ...activeSpec, fixedHand: undefined }, Math.random));
@@ -112,6 +122,14 @@ export function UltraTrainer() {
   const back = () => {
     setScenario(null);
     setResult(null);
+    setViewedKey(null);
+  };
+  // Modo mão do dia: espia a explicação de OUTRA ação na MESMA mão, sem contar
+  // no placar (não é uma nova resposta — é estudo da própria mão).
+  const peekAction = (key: "fold" | "call" | "raise" | "allin") => {
+    if (!scenario) return;
+    setResult(evaluateChoice(scenario, key));
+    setViewedKey(key);
   };
   const startExample = () => {
     const example: ScenarioSpec = {
@@ -147,6 +165,7 @@ export function UltraTrainer() {
     const item = evaluateChoice(scenario, key);
     const ok = isCorrect(item);
     setResult(item);
+    setViewedKey(key);
     markActiveToday();
     recordDecision(key);
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
@@ -259,7 +278,9 @@ export function UltraTrainer() {
         <div className={`arena ${result ? (isCorrect(result) ? "won" : "lost") : ""}`}>
           <div className="arena-top">
             <span className="arena-title">
-              🏆 {s.stage ? `TREINO · ${STAGE_LABEL[s.stage]}` : t("ultra.mainEvent")}
+              {daily
+                ? `📅 MÃO DO DIA${s.stage ? ` · ${STAGE_LABEL[s.stage]}` : ""}`
+                : `🏆 ${s.stage ? `TREINO · ${STAGE_LABEL[s.stage]}` : t("ultra.mainEvent")}`}
             </span>
             <span className="arena-badges">
               <span className="arena-ring">{t("ultra.fullring")}</span>
@@ -350,12 +371,36 @@ export function UltraTrainer() {
         ) : (
           <div className="train-result">
             <div className={`train-verdict ${isCorrect(result) ? "ok" : "bad"}`}>
-              {isCorrect(result) ? t("train.correct") : t("train.wrong")}
+              {daily
+                ? isCorrect(result)
+                  ? "✔ Essa é a jogada recomendada"
+                  : "✘ Não é a melhor jogada aqui"
+                : isCorrect(result)
+                  ? t("train.correct")
+                  : t("train.wrong")}
             </div>
             <div className={`fb-item ${result.rating}`}>
               <div className="fb-text">{result.text}</div>
             </div>
-            {isCorrect(result) ? (
+            {/* Mão do dia: espia a explicação de cada ação NA MESMA mão. Assim o
+                Allan vê o porquê de Fold, Call, Raise e Re-raise sem trocar de mão. */}
+            {daily ? (
+              <div className="ultra-peek">
+                <div className="ultra-peek-label">Toque pra ver cada jogada nesta mão:</div>
+                <div className="ultra-peek-actions">
+                  {scenario.actions.map((a) => (
+                    <button
+                      key={a.key}
+                      className={`btn tiny ${viewedKey === a.key ? "primary" : ""}`}
+                      onClick={() => peekAction(a.key)}
+                    >
+                      {t(a.labelKey as TransKey)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {!daily && isCorrect(result) ? (
               <button className="btn hit-share-btn" onClick={onShareHit}>
                 📣 {t("share.hitBtn")}
               </button>

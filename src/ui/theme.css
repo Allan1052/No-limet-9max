@@ -735,6 +735,55 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(212, 175, 55, 0.2);
   font-family: 'Playfair Display', serif;
 }
+/* Faixa da dica do coach ACIMA da mesa (não mais no centro do feltro, que
+   tampava pote/assentos). Compacta, no fluxo, some junto entre as mãos. */
+.play-coach-bar {
+  margin: 2px 8px 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(10, 15, 10, 0.92);
+  border: 1px solid var(--gold, #e6c454);
+  color: var(--gold-bright, #f7e79b);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+@media (max-width: 520px) {
+  .play-coach-bar { font-size: 12px; padding: 7px 11px; }
+}
+
+/* "Nova mão" dentro do modal de dicas pós-mão (sobreposto à mesa). Fica
+   ancorado embaixo do modal, bem visível. */
+.tips-newhand {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 10px auto 4px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Mão do dia (1×1): linha de botões pra espiar cada jogada na MESMA mão. */
+.ultra-peek {
+  margin: 10px 0 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ultra-peek-label {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.ultra-peek-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
 .tbl-blinds {
   font-size: 11px;
   color: rgba(212, 175, 55, 0.55);

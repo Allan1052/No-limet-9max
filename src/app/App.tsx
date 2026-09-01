@@ -286,6 +286,24 @@ export function App() {
     window.__HAND_OVER = handOver;
   }, [handOver]);
 
+  // Feedback pós-mão sobreposto à mesa: quando a mão termina (transição
+  // false→true) e há decisões avaliadas, abre o modal de dicas por cima da
+  // mesa automaticamente — o Allan não precisa mais rolar a aba pra baixo pra
+  // achar a avaliação. Só dispara na transição (não reabre ao fechar).
+  const prevHandOver = useRef(false);
+  useEffect(() => {
+    if (
+      view === "play" &&
+      handOver &&
+      !prevHandOver.current &&
+      !firstContactOverlay &&
+      controller.feedback.length > 0
+    ) {
+      setTipsOpen(true);
+    }
+    prevHandOver.current = handOver;
+  }, [handOver, view, firstContactOverlay, controller.feedback.length]);
+
   // Atualização do app: avisa quando há versão nova e recarrega num momento
   // seguro (entre mãos, na tela de jogo) para não interromper uma decisão nem
   // fazer perder algo digitado em outra aba (ex.: colar mãos no Importar).
@@ -347,9 +365,12 @@ export function App() {
       coachActionLabel = "All-in por cima";
     }
   }
+  // Dica curta: só a AÇÃO + a conta (equity/preço/EV). O contexto (posição/
+  // stack/situação) já está visível na mesa, então some daqui pra não ficar
+  // gigante. Mostrada numa faixa acima da mesa (não mais no centro do feltro).
   const hint =
     coachActionLabel && coachHintView && !firstContactOverlay
-      ? `Coach V2 · ${coachActionLabel} · ${coachHintView.contextLabel}${
+      ? `${coachActionLabel}${
           coachHintView.metrics.length > 0 ? ` · ${coachHintView.metrics.join(" · ")}` : ""
         }`
       : undefined;
@@ -459,10 +480,13 @@ export function App() {
       ) : (
         <div className="play">
           <SessionProgressStrip summary={progress()} />
+          {heroTurn && hint ? (
+            <div className="play-coach-bar">💡 {hint}</div>
+          ) : null}
           <PokerTable
             table={t}
             lastActionLabel={controller.lastActionLabel}
-            hint={heroTurn ? hint : undefined}
+            hint={undefined}
             onSelectSeat={setSelectedSeat}
             onShowTips={() => setTipsOpen(true)}
             showTips={handOver && controller.feedback.length > 0}
@@ -640,6 +664,12 @@ export function App() {
             return left <= paid * 2.5 && paid > 0 ? "bubble" : "early";
           })()}
           onClose={() => setTipsOpen(false)}
+          onNewHand={() => {
+            setTipsOpen(false);
+            trackEvent("new_hand_started");
+            if (controller.tournamentOver) dismissSummary();
+            newHand();
+          }}
         />
       ) : null}
 

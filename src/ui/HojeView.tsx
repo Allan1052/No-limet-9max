@@ -7,15 +7,17 @@ import { useState, useEffect } from "react";
 import { DailyHand } from "./DailyHand";
 import { getTrainingDayStatus } from "../train/streak";
 import { buildDailyScenario } from "../train/daily";
-import { cardsToString } from "../engine/cards";
 import { useT } from "../i18n";
 import type { AppView } from "./BottomNav";
 import "./hojeView.css";
 
-// Manda a MÃO DO DIA pré-carregada pro HandLab ("Sua Mão"). Grava o spot num
-// slot que o HandLab lê ao montar (o mesmo canal do "Treinar esse spot"). Como
-// a mão do dia é determinística pela data, ela só troca no dia seguinte.
-function openDailyInHandLab(setView: (v: AppView) => void) {
+// Abre a MÃO DO DIA direto no TREINO 1×1 (não passa mais pela tela de análise).
+// Grava o spec no canal que o UltraTrainer lê ao montar (o mesmo do "Treinar
+// esse spot"), com `hand` (Card[]) e a marca `fromDaily` pra o 1×1 entrar em
+// "modo mão do dia": mesma mão, o jogador pode ver Fold/Call/Raise/Re-raise e o
+// porquê de cada um. Como a mão do dia é determinística pela data, ela só troca
+// no dia seguinte. O 1×1 GERAL (aba Treinar) continua separado, sem spec.
+function openDailyIn1x1(setView: (v: AppView) => void) {
   try {
     const { scenario } = buildDailyScenario();
     const sp = scenario.spec;
@@ -27,14 +29,16 @@ function openDailyInHandLab(setView: (v: AppView) => void) {
         situation: sp.raiserPosition ? "vsopen" : "open",
         stage: "inicio",
         stackBB: sp.effectiveBB,
-        cards: cardsToString(scenario.hand),
+        hand: scenario.hand,
         fromDaily: true,
       }),
     );
   } catch {
-    /* se falhar, abre o HandLab normal */
+    /* se falhar, abre o 1×1 vazio (tela de montar a mão) */
   }
-  setView("suamao");
+  setView("ultra");
+  // Reforço: se o UltraTrainer já estiver montado, o evento faz ele reler o spec.
+  window.dispatchEvent(new CustomEvent("cof-open-ultra"));
 }
 
 export function HojeView({ setView }: { setView: (v: AppView) => void }) {
@@ -65,8 +69,8 @@ export function HojeView({ setView }: { setView: (v: AppView) => void }) {
 
       <DailyHand />
 
-      <button className="btn hoje-shortcut" onClick={() => openDailyInHandLab(setView)}>
-        <span>✍️ {t("hoje.analyze")}</span>
+      <button className="btn hoje-shortcut" onClick={() => openDailyIn1x1(setView)}>
+        <span>🎯 {t("hoje.analyze")}</span>
         <span aria-hidden="true">›</span>
       </button>
     </div>

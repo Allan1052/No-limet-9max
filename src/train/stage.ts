@@ -81,6 +81,8 @@ export interface HandLabSpec {
   villainBetBB?: number;
   anteBB?: number;
   finalTable?: FinalTableSpec;
+  /** Marca o spec que veio da "Mão do dia" (Hoje) — abre o 1×1 em modo diário. */
+  fromDaily?: boolean;
 }
 
 export interface FinalTableSpec {
