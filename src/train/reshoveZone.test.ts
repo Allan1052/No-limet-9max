@@ -62,4 +62,22 @@ describe("Zona de re-shove (13–22bb) enfrentando uma abertura", () => {
     const a = analyzeHand(s({ heroPosition: "SB", villainPosition: "BTN", stackBB: 12, hand: parseHand("As8d")!, anteBB: 1 }));
     expect(a.recommended).toBe("allin");
   });
+
+  // Conserto achado pelo benchmark externo: no topo da faixa (≥17bb), o BB fecha
+  // a ação por um ótimo preço contra um abridor LARGO — as suited que flopam bem
+  // FLATAM em vez de foldar. O lixo offsuit dominado segue jam-ou-fold.
+  it("T9s do BB vs BTN a 20bb FLATA (ótimo preço, suited que flopa bem)", () => {
+    const a = analyzeHand(s({ villainPosition: "BTN", stackBB: 20, hand: parseHand("Ts9s")! }));
+    expect(a.recommended).toBe("call");
+  });
+
+  it("mesma T9s vs UTG (abridor apertado) NÃO flata — segue jam-ou-fold", () => {
+    const a = analyzeHand(s({ villainPosition: "UTG", stackBB: 20, hand: parseHand("Ts9s")! }));
+    expect(a.recommended).not.toBe("call");
+  });
+
+  it("lixo offsuit (KJo) do BB vs BTN a 20bb NÃO vira flat — só suited entram", () => {
+    const a = analyzeHand(s({ villainPosition: "BTN", stackBB: 20, hand: parseHand("KsJd")! }));
+    expect(a.recommended).not.toBe("call");
+  });
 });

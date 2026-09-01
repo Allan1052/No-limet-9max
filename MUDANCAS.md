@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Conserto do motor: defesa do BB a ~20bb (achado do benchmark)
+- O benchmark externo tinha apontado que o motor **foldava T9s** (e mãos suited
+  parecidas) na defesa do BB com ~17–21bb, quando a teoria **defende**. Corrigido:
+  nessa faixa, o BB fechando a ação por **ótimo preço** contra um abridor **largo**
+  (CO/BTN/SB) agora **flata** as suited que flopam bem (conectores, broadways,
+  ases suited). O lixo offsuit dominado (KJo/ATo) e a defesa contra abridor
+  apertado (UTG) seguem como antes (jam-ou-fold) — sem reabrir aqueles leaks.
+- Resultado: o benchmark externo passou de ~99% pra **100%** (0 divergências),
+  sem mexer no SELO 61/61. Foi o ciclo completo: o teste achou, a gente consertou.
+- Onde: decisão do motor (defesa do BB em stack médio) — Torneio, 1×1, Sua Mão.
+
 ## 2026-09-01 — ChatGPT — Onboarding pelo principal problema
 - Na primeira abertura, o app agora pergunta qual situação mais faz o jogador perder fichas e oferece cinco escolhas simples.
 - A escolha fica salva neste aparelho e entra no funil; ela prepara a personalização futura das mãos sem alterar o motor agora.

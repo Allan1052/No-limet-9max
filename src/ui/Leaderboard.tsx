@@ -368,10 +368,20 @@ export function GtoValidationSection() {
         <b>E fazemos um teste externo, aberto.</b> Comparamos o motor com uma
         referência <b>independente</b> (push/fold no estilo Nash + teoria
         consolidada) em {ext.total} spots de 8 a 20bb. Hoje ele bate em{" "}
-        {extPct}%. Onde ainda <b>aproximamos</b>, a gente mostra em vez de
-        esconder: no momento, {ext.misses.length === 1 ? "1 spot foge" : `${ext.misses.length} spots fogem`} da
-        referência (defesa de BB com stack médio) — e está no nosso radar pra
-        melhorar. Transparência vale mais do que escrever "GTO" em letra grande.
+        {extPct}%.{" "}
+        {ext.misses.length === 0 ? (
+          <>
+            Quando algum spot foge da referência, a gente <b>mostra aqui</b> em
+            vez de esconder — é assim que a gente melhora o motor com honestidade.
+          </>
+        ) : (
+          <>
+            Onde ainda <b>aproximamos</b>, a gente mostra em vez de esconder: no
+            momento, {ext.misses.length === 1 ? "1 spot foge" : `${ext.misses.length} spots fogem`}{" "}
+            da referência — e está no radar pra melhorar.
+          </>
+        )}{" "}
+        Transparência vale mais do que escrever "GTO" em letra grande.
       </p>
     </>
   );

@@ -386,6 +386,19 @@ function freqIn(range: Range, handType: string): number {
 }
 
 
+// BB fechando a ação por um ótimo preço no TOPO da faixa de re-shove (17–21bb):
+// mãos SUITED que flopam bem preferem FLATAR a foldar (o preço paga a
+// jogabilidade OOP). Só suited de propósito — as offsuit dominadas (KJo/ATo)
+// seguem jam-ou-fold, que foi o leak que a faixa de re-shove veio corrigir.
+const BB_RESHOVE_FLAT = new Set<string>([
+  // conectores e one-gappers suited
+  "54s", "65s", "76s", "87s", "98s", "T9s", "97s", "T8s", "J9s", "JTs",
+  // broadways suited
+  "QTs", "QJs", "KTs", "KJs", "K9s", "Q9s",
+  // ases suited (potencial de nut flush, realizam bem)
+  "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s",
+]);
+
 export function preflopDecision(ctx: PreflopContext): PreflopDecision {
   // Omaha tem cérebro próprio: modelo de força de mão cobrindo as 9 cadeiras.
   if (ctx.variant === "omaha") return omahaPreflopDecision(ctx);
@@ -764,6 +777,25 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
           reason: `${handType}: ${Math.round(ctx.effectiveBB)}bb é curto demais pra flatar — re-shove (all-in) sobre a abertura de ${ctx.raiserPosition}. Flatar joga um pote OOP com SPR minúsculo; o all-in soma valor e fold equity.`,
           handType,
           mix: bandMix("jam", jamPct, handType, "fold"),
+        };
+      }
+      // BB fecha a ação barato: no topo da faixa (≥17bb), com abertura pequena
+      // (ótimo preço) e contra um abridor LARGO (CO/BTN/SB — range que não
+      // domina), as suited que flopam bem FLATAM em vez de foldar. Contra
+      // abridor cedo/apertado (UTG..HJ), o range domina e segue jam-ou-fold.
+      if (
+        ctx.heroPosition === "BB" &&
+        ctx.effectiveBB >= 17 &&
+        (ctx.openSizeBB ?? BASE_OPEN_BB) <= 2.5 &&
+        raiserWide >= 0.28 &&
+        BB_RESHOVE_FLAT.has(handType)
+      ) {
+        return {
+          action: "call",
+          sizeBB: openSize,
+          reason: `${handType}: o BB fecha a ação por um ótimo preço — a ${Math.round(ctx.effectiveBB)}bb, flatar essa suited que flopa bem vale mais que foldar (dar all-in seria largo demais).`,
+          handType,
+          mix: bandMix("call", 0.5, handType, "fold"),
         };
       }
       return {

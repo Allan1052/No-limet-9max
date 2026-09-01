@@ -3,16 +3,13 @@ import { runExternalBenchmark, EXTERNAL_SPOTS } from "./externalBenchmark";
 
 // ---------------------------------------------------------------------------
 // Divergências CONHECIDAS e ACEITAS do motor vs a referência independente.
-// O benchmark existe pra ser HONESTO: aqui ficam, à vista, os spots em que o
-// motor ainda aproxima. Uma divergência NOVA (fora desta lista) quebra o teste
-// — é sinal de regressão ou de leak a investigar. Se um destes for corrigido,
-// o teste também avisa (pra a gente tirar da lista).
+// O benchmark existe pra ser HONESTO: aqui ficariam, à vista, os spots em que o
+// motor ainda aproxima. Hoje está VAZIO — o motor bate com a referência em
+// todos os spots do banco (a divergência do T9s na defesa de BB foi corrigida).
+// Uma divergência NOVA (fora desta lista) quebra o teste: é sinal de regressão
+// ou de leak a investigar; aí a gente conserta ou documenta aqui, à vista.
 // ---------------------------------------------------------------------------
-const KNOWN_DIVERGENCES = new Set<string>([
-  // BB 20bb vs BTN 2.2bb: a teoria defende T9s; o motor ainda folda (mais
-  // apertado que o ideal na defesa de BB com stack médio). Achado a investigar.
-  "T9s|BB|20",
-]);
+const KNOWN_DIVERGENCES = new Set<string>([]);
 
 const keyOf = (m: { hand: string; pos: string; effBB: number }) => `${m.hand}|${m.pos}|${m.effBB}`;
 
