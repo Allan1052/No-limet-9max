@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — ChatGPT — Onboarding pelo principal problema
+- Na primeira abertura, o app agora pergunta qual situação mais faz o jogador perder fichas e oferece cinco escolhas simples.
+- A escolha fica salva neste aparelho e entra no funil; ela prepara a personalização futura das mãos sem alterar o motor agora.
+- Onde: onboarding / primeira abertura.
+
 ## 2026-09-01 — Claude — Painel "Seu jogo" (prova de evolução) + base de dados
 - Novo painel **"Seu jogo"** no Perfil: mostra sua **% de acerto por tipo de
   spot** (pré-flop, faixas de stack, estágios do torneio) e se você está

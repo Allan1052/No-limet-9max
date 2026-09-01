@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import onboardingSource from "./Onboarding.tsx?raw";
-import appSource from "../app/App.tsx?raw";
 import {
   ONBOARDING_GOALS,
   loadOnboardingGoal,
@@ -61,8 +60,7 @@ describe("Onboarding pelo principal problema do recreativo", () => {
     expect(onboardingSource).toContain('aria-pressed={selectedGoal === goal.id}');
   });
 
-  it("o funil registra a escolha junto da conclusão do onboarding", () => {
-    expect(appSource).toContain("onboarding_completed");
-    expect(appSource).toContain("goal");
+  it("registra a escolha no funil sem duplicar o evento de conclusão do App", () => {
+    expect(onboardingSource).toContain('trackEvent("onboarding_goal_selected", { goal: selectedGoal })');
   });
 });
