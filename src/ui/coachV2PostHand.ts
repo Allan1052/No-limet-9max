@@ -3,9 +3,14 @@ import type { FeedbackItem } from "../feedback/analyzer";
 export type CoachV2PostHandMode = "simple" | "technical";
 
 export interface CoachV2PostHandDecisionView {
-  heroLine: string;
-  coachLine: string;
+  /**
+   * A DECISÃO primeiro (regra pedagógica do Coach: decisão → motivo →
+   * matemática). Traz o veredito e a jogada recomendada, sem jargão nem número.
+   */
+  decisionLine: string;
+  /** O MOTIVO, em linguagem simples (o "porquê"). */
   reason: string;
+  /** A MATEMÁTICA por último — só no modo técnico. */
   metrics: string[];
 }
 
@@ -35,6 +40,21 @@ export function feedbackHeroActionLabel(item: FeedbackItem): string {
   return item.heroAction;
 }
 
+/**
+ * Monta o veredito que LIDERA o feedback: certo/errado + a jogada recomendada.
+ * Sem número e sem jargão — o recreativo lê a decisão antes de qualquer conta.
+ */
+function decisionLineFor(item: FeedbackItem): string {
+  const hero = feedbackHeroActionLabel(item);
+  const rec = item.advice;
+  const good = item.rating === "boa" || item.rating === "ok";
+  const same = hero.toLowerCase() === rec.toLowerCase();
+
+  if (good && same) return `✔ Boa! ${rec} era o caminho.`;
+  if (good && !same) return `✔ Dá pra jogar ${hero} — mas ${rec} é o padrão.`;
+  return `✗ Melhor era ${rec}. Você fez ${hero}.`;
+}
+
 export function buildCoachV2PostHandDecision(
   item: FeedbackItem,
   mode: CoachV2PostHandMode,
@@ -51,8 +71,7 @@ export function buildCoachV2PostHandDecision(
   }
 
   return {
-    heroLine: `Você fez: ${feedbackHeroActionLabel(item)}`,
-    coachLine: `Coach V2: ${item.advice}`,
+    decisionLine: decisionLineFor(item),
     reason: item.text,
     metrics,
   };

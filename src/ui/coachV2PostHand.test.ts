@@ -16,13 +16,21 @@ const base: FeedbackItem = {
 };
 
 describe("Coach V2 pós-mão", () => {
-  it("no modo simples mostra Você fez, Coach V2 e uma razão curta", () => {
+  it("no modo simples lidera com a decisão (veredito + jogada), motivo, e SEM números", () => {
     const view = buildCoachV2PostHandDecision(base, "simple");
 
-    expect(view.heroLine).toBe("Você fez: Call");
-    expect(view.coachLine).toBe("Coach V2: Call");
+    // rating "boa" + herói fez o recomendado (Call): veredito positivo.
+    expect(view.decisionLine).toBe("✔ Boa! Call era o caminho.");
     expect(view.reason).toBe(base.text);
     expect(view.metrics).toEqual([]);
+  });
+
+  it("quando a jogada não foi a ideal, o veredito mostra o recomendado", () => {
+    const view = buildCoachV2PostHandDecision(
+      { ...base, heroAction: "Call", advice: "Fold", rating: "ruim" },
+      "simple",
+    );
+    expect(view.decisionLine).toBe("✗ Melhor era Fold. Você fez Call.");
   });
 
   it("no modo técnico mostra apenas métricas realmente presentes no feedback", () => {

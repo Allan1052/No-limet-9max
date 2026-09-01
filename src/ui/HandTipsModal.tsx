@@ -114,8 +114,8 @@ export function HandTipsModal({
                   <span className="tag">{ratingLabel(it.rating)}</span>
                 </div>
                 <div className="fb-text">
-                  <div>{view.heroLine}</div>
-                  <div>{view.coachLine}</div>
+                  {/* Ordem pedagógica: 1) decisão  2) motivo  3) matemática */}
+                  <div className="fb-decision">{view.decisionLine}</div>
                   <div>{view.reason}</div>
                 </div>
                 {view.metrics.length > 0 ? (
@@ -141,9 +141,10 @@ export function HandTipsModal({
 }
 
 // ---------------------------------------------------------------------------
-// Selo de confiança: o motor é medido contra a teoria GTO num banco de
-// spots-referência e o placar de concordância aparece como chip verde.
-// Númérico sempre dinâmico (lido de runCalibration) — nunca fixo.
+// Selo de confiança: teste INTERNO de qualidade. Comparamos as decisões de
+// range com a teoria num banco nosso de spots de referência. Número sempre
+// dinâmico (runCalibration). Honestidade: é controle de qualidade nosso, NÃO
+// certificação externa de GTO nem promessa de solver.
 // ---------------------------------------------------------------------------
 export function GtoSealChip() {
   const cal = useMemo(() => runCalibration(), []);
@@ -162,10 +163,10 @@ export function GtoSealChip() {
         background: "rgba(80,160,95,0.08)",
         borderRadius: 20,
         padding: "3px 12px",
-        whiteSpace: "nowrap",
+        textAlign: "center",
       }}
     >
-      ✓ Motor auditado em {cal.total} spots-referência · {pct}% de concordância com o GTO
+      ✓ Bate com a teoria em {pct}% de {cal.total} spots · teste interno
     </div>
   );
 }

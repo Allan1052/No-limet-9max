@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Coach mais claro + selo mais honesto (auditoria)
+- **Feedback pós-mão reorganizado**: agora lidera com a **decisão** (✔ Boa! / ✗
+  Melhor era…), depois o **motivo** em linguagem simples, e a **matemática só no
+  modo técnico e por último**. Tirei rótulos técnicos ("Coach V2:", "Você fez:").
+  No modo simples não começa mais por número. (Recomendação nº 3 da auditoria.)
+- **Selo de confiança mais humilde**: em vez de "100% de concordância com o GTO",
+  agora diz que é **teste interno de qualidade** ("bate com a teoria em X% dos
+  nossos spots"), deixando claro que **não é certificação externa nem solver**.
+  Alinha com a nossa regra de claims honestas.
+- Onde: feedback pós-mão (modal de dicas) e o texto "Como a pontuação funciona".
+
 ## 2026-09-01 — Claude — Recuperado: card de quiz + gerador de reels (Instagram)
 - Trouxe pra `main` (e pro ar) um trabalho que tinha ficado preso numa branch
   antiga e nunca foi publicado: o **card de quiz** (a pergunta pro Instagram,

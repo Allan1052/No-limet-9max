@@ -1366,6 +1366,13 @@ body {
 .fb-item.ruim { border-left-color: var(--bad); }
 .fb-item.ruim .tag { color: var(--bad); }
 .fb-item .fb-text { color: var(--text-dim); line-height: 1.4; }
+/* A decisão lidera o feedback (regra: decisão → motivo → matemática). */
+.fb-item .fb-decision {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text, #f2eede);
+  margin-bottom: 3px;
+}
 
 .legend { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
 .legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }

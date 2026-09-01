@@ -5,8 +5,8 @@ describe("HandTipsModal integrado ao Coach V2", () => {
   it("usa a apresentação Coach V2 em cada decisão", () => {
     expect(source).toContain('import { buildCoachV2PostHandDecision } from "./coachV2PostHand"');
     expect(source).toContain("buildCoachV2PostHandDecision(it, tecnico ? \"technical\" : \"simple\")");
-    expect(source).toContain("view.heroLine");
-    expect(source).toContain("view.coachLine");
+    expect(source).toContain("view.decisionLine");
+    expect(source).toContain("view.reason");
     expect(source).toContain("view.metrics");
   });
 

@@ -354,9 +354,10 @@ export function GtoValidationSection() {
     <p className="lb-gto">
       <b>As recomendações não são chute.</b> O motor de equity é conferido contra
       valores exatos conhecidos (AA vs KK = 82% etc.) e as decisões de range são
-      medidas contra a teoria GTO num banco de spots-referência. Hoje: {pct}% de
-      concordância em {cal.total} spots-referência ({cal.matched} de {cal.total}{" "}
-      acertos diretos).
+      comparadas com a teoria num banco <b>nosso</b> de {cal.total} spots de
+      referência. Hoje batem em {pct}% deles ({cal.matched} de {cal.total}). É um{" "}
+      <b>teste interno de qualidade</b> — não é certificação externa nem nos torna
+      um solver. Somos um app de estudo: usamos a teoria como guia, com humildade.
     </p>
   );
 }
