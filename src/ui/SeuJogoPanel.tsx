@@ -10,6 +10,8 @@
 // ---------------------------------------------------------------------------
 import { useMemo } from "react";
 import { progressReport, biggestOpportunity, type BucketProgress } from "../train/progress";
+import { positionStatsReport } from "../train/positionStats";
+import { PositionTendencyList } from "./PositionTendencyList";
 import type { StageKey } from "../train/stage";
 
 // Do balde da oportunidade → um spot representativo pra treinar no 1×1.
@@ -69,6 +71,7 @@ function DeltaTag({ delta }: { delta: number | null }) {
 export function SeuJogoPanel() {
   const report = useMemo(() => progressReport(), []);
   const opp = useMemo(() => biggestOpportunity(), []);
+  const posReport = useMemo(() => positionStatsReport(), []);
 
   return (
     <div className="sj-panel">
@@ -106,6 +109,8 @@ export function SeuJogoPanel() {
               </div>
             ))}
           </div>
+
+          <PositionTendencyList report={posReport} />
 
           <p className="sj-foot">Baseado nas suas decisões neste aparelho.</p>
         </>

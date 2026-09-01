@@ -1389,6 +1389,34 @@ body {
 .sj-delta.down { color: #d98a7a; }
 .sj-foot { font-size: 11px; color: var(--text-dim); margin: 10px 2px 0; opacity: 0.8; }
 
+/* ---- Tendência por posição ("onde perde mais ficha") ---- */
+.pt-block { margin: 12px 0 6px; }
+.pt-title { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: var(--text, #f2eede); }
+.pt-empty { font-size: 12px; color: var(--text-dim); margin: 4px 2px; }
+.pt-callout {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid #7a4a3a; background: rgba(217, 138, 122, 0.10);
+  border-radius: 12px; padding: 9px 12px; margin-bottom: 10px;
+}
+.pt-callout-pos {
+  font-weight: 900; font-size: 15px; color: #f2c6ba;
+  min-width: 40px; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.12); padding-right: 10px;
+}
+.pt-callout-body { font-size: 12.5px; line-height: 1.35; color: var(--text, #f2eede); }
+.pt-list { display: flex; flex-direction: column; gap: 7px; }
+.pt-row { display: flex; align-items: center; gap: 8px; }
+.pt-pos { width: 38px; font-size: 12px; font-weight: 700; color: var(--gold-bright, #f7e79b); }
+.pt-bar { flex: 1; height: 7px; border-radius: 5px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pt-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #4f9d63, #7ec58a); }
+.pt-pct { width: 38px; text-align: right; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pt-tag { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 8px; white-space: nowrap; min-width: 20px; }
+.pt-tag.aggr { color: #f2c6ba; background: rgba(217,138,122,0.15); }
+.pt-tag.pass { color: #a9c8e6; background: rgba(120,170,220,0.15); }
+.pt-tag.bal { color: var(--text-dim); background: rgba(255,255,255,0.06); }
+.pt-tag.empty { background: transparent; }
+.pt-fine { font-size: 11px; color: var(--text-dim); margin: 8px 2px 0; opacity: 0.8; }
+
 .fb-item .fb-text { color: var(--text-dim); line-height: 1.4; }
 /* A decisão lidera o feedback (regra: decisão → motivo → matemática). */
 .fb-item .fb-decision {

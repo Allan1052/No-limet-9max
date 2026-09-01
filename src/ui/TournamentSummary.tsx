@@ -15,6 +15,8 @@ import { anatomyFromDecisions, type AnatomyResult } from "../tournament/anatomy"
 import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
+import { PositionTendencyList } from "./PositionTendencyList";
+import { reportFromRecords } from "../train/positionTendency";
 
 /**
  * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
@@ -256,6 +258,12 @@ export function TournamentSummary({
           <div className="anatomy-note">{anatomy.note}</div>
           <div className="anatomy-fine">{anatomy.finePrint}</div>
         </div>
+
+        <PositionTendencyList
+          report={reportFromRecords(summary.positional ?? [])}
+          title="📍 Sua tendência por posição neste torneio"
+          emptyHint="Poucas mãos por posição pra apontar tendência neste torneio — jogue um pouco mais."
+        />
 
         <div className="summary-note">
           <b>Estilo:</b> {summary.styleNote}

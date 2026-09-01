@@ -60,6 +60,8 @@ import {
 } from "../tournament/field";
 import { recordTournamentWin } from "../tournament/eliteUnlock";
 import { recordProgress } from "../train/progress";
+import { recordPositionResult } from "../train/positionStats";
+import type { PositionalRecord } from "../train/positionTendency";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
 import type { HeroRead } from "../bots/adapt";
 import type { Archetype } from "../bots/profiles";
@@ -198,6 +200,8 @@ export interface TournamentSummary {
   decisions: Array<{ heroAction: string }>;
   /** Decisões detalhadas (mão do herói, ação, posição) — alimenta o hash anti-cheat do ranking. */
   decisionsDetail?: Array<{ hand: string; action: string; position: string }>;
+  /** Tendência por posição deste torneio — "onde você perde mais ficha". */
+  positional?: PositionalRecord[];
 }
 
 /** Estado serializável para salvar/retomar um torneio (entre mãos). */
@@ -218,6 +222,7 @@ export interface GameSnapshot {
    *  sobreviver ao retomar, senão o raio-X e o ranking subcontam. */
   sessionDecisions?: Array<{ heroAction: string }>;
   sessionDecisionDetails?: Array<{ hand: string; action: string; position: string }>;
+  sessionPositional?: PositionalRecord[];
   sessionFeedbackFree: FeedbackItem[];
   sessionFeedbackTechnical: FeedbackItem[];
   tournamentResult: "eliminado" | "campeao" | null;
@@ -280,6 +285,9 @@ export class GameController {
   // Todas as ações do herói na sessão — a "anatomia" de fim de torneio.
   private sessionDecisions: Array<{ heroAction: string }> = [];
   private sessionDecisionDetails: Array<{ hand: string; action: string; position: string }> = [];
+  // Tendência por posição DESTE torneio (posição, acerto, família da ação e da
+  // recomendada) — alimenta a revisão de fim de torneio "onde você perde mais".
+  private sessionPositional: PositionalRecord[] = [];
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
@@ -415,6 +423,7 @@ export class GameController {
     this.sessionReview = [];
     this.sessionDecisions = [];
     this.sessionDecisionDetails = [];
+    this.sessionPositional = [];
     this.tournamentResult = null;
     this.tournamentFinishPlace = null;
     this.setMessage("msg.tourneyConfigured", { stage: stageInfo.label });
@@ -900,12 +909,25 @@ export class GameController {
       const heroBB = (heroP.stack + heroP.committed) / this.table.bigBlind;
       // Alimenta a base de EVOLUÇÃO ("Seu jogo") — cada decisão avaliada entra
       // nos baldes (rua/faixa de stack/estágio) pra comparar o hoje com antes.
+      const decisionCorrect = item.rating === "boa" || item.rating === "ok";
       recordProgress({
         kind: item.kind ?? (this.table.street === "preflop" ? "preflop" : "postflop"),
         stage: this.tournament?.stage ?? "inicio",
         effectiveBB: heroBB,
-        correct: item.rating === "boa" || item.rating === "ok",
+        correct: decisionCorrect,
       });
+      // Tendência por posição: guarda no torneio (revisão) e no acumulado (Perfil).
+      const heroPos = posMap.get(this.heroSeat);
+      const posRecord: PositionalRecord = {
+        position: heroPos ?? "",
+        correct: decisionCorrect,
+        heroFam: item.heroFam,
+        adviceFam: item.adviceFam,
+      };
+      if (heroPos) {
+        this.sessionPositional.push(posRecord);
+        recordPositionResult(posRecord);
+      }
       const facingAllin = this.table.players.some(
         (p) => p.seat !== this.heroSeat && p.status === "allin",
       );
@@ -1113,6 +1135,7 @@ export class GameController {
       review: [...this.sessionReview],
       decisions: [...this.sessionDecisions],
       decisionsDetail: [...this.sessionDecisionDetails],
+      positional: [...this.sessionPositional],
     };
   }
 
@@ -1165,6 +1188,7 @@ export class GameController {
       sessionReview: this.sessionReview,
       sessionDecisions: this.sessionDecisions,
       sessionDecisionDetails: this.sessionDecisionDetails,
+      sessionPositional: this.sessionPositional,
       sessionFeedbackFree: this.feedbackFree,
       sessionFeedbackTechnical: this.feedbackTechnical,
       tournamentResult: this.tournamentResult,
@@ -1214,6 +1238,7 @@ export class GameController {
     this.sessionReview = snap.sessionReview ?? [];
     this.sessionDecisions = snap.sessionDecisions ?? [];
     this.sessionDecisionDetails = snap.sessionDecisionDetails ?? [];
+    this.sessionPositional = snap.sessionPositional ?? [];
     this.feedbackFree = snap.sessionFeedbackFree ?? [];
     this.feedbackTechnical = snap.sessionFeedbackTechnical ?? [];
     this.tournamentResult = snap.tournamentResult;

@@ -26,6 +26,7 @@ import {
 import { markActiveToday } from "../train/streak";
 import { recordDecision } from "../train/decisionStats";
 import { recordProgress } from "../train/progress";
+import { recordPositionResult } from "../train/positionStats";
 import { drawSpotImage } from "../app/handImage";
 import { shareSpot } from "../app/share";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -175,6 +176,12 @@ export function UltraTrainer() {
       stage: scenario.spec.stage ?? "inicio",
       effectiveBB: scenario.spec.effectiveBB,
       correct: ok,
+    });
+    recordPositionResult({
+      position: scenario.spec.heroPosition,
+      correct: ok,
+      heroFam: item.heroFam,
+      adviceFam: item.adviceFam,
     });
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
     // Errou = o carrasco leva o pote. Um tranco háptico pra doer de verdade.

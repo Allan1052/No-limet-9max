@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Tendência por posição: "onde você perde mais ficha"
+- Novo bloco que mostra, **por posição** (UTG…BB), sua **% de acerto** (ordenado
+  da pior cadeira pra melhor) e, quando você erra, se é por **agressivo demais**
+  (call/raise quando era fold) ou **passivo demais** (fold quando era continuar).
+- Aparece em **DOIS lugares**: (1) na **revisão do fim de torneio** — a tendência
+  daquele torneio; (2) no **"Seu jogo" (Perfil)** — o acumulado de todas as suas
+  decisões. Ex.: "Sua posição mais fraca: BTN, acerta 48% — aqui seus erros são
+  por dar call/raise demais."
+- Honestidade: só aponta com amostra suficiente; tudo local, deste aparelho.
+- Onde: revisão de fim de torneio e painel "Seu jogo" (Perfil).
+
 ## 2026-09-01 — Claude — Revisão das 3 divergências do benchmark (veredito)
 - Conferi as 3 divergências que a ampliação da ChatGPT achou (J6o 30bb, T7o 40bb,
   96o 45bb, todas na defesa do BB vs BTN min-raise). Veredito: **não são leaks**.
