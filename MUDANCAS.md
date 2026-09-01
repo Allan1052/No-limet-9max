@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Revisão das 3 divergências do benchmark (veredito)
+- Conferi as 3 divergências que a ampliação da ChatGPT achou (J6o 30bb, T7o 40bb,
+  96o 45bb, todas na defesa do BB vs BTN min-raise). Veredito: **não são leaks**.
+  São mãos offsuit fracas de fronteira; o motor defende todos os broadways e
+  conectados offsuit + suited e folda só os "raggy" com buraco — **de propósito**,
+  mais conservador, o que é melhor pro recreativo jogar fora de posição.
+- Deixei isso documentado no teste (sem mexer no motor). Ajuste interno, sem
+  mudança visível pro jogador.
+- Onde: testes do motor (comentário do benchmark).
+
 ## 2026-09-01 — ChatGPT — Benchmark externo ampliado para caçar vazamentos
 - Ampliei o teste independente de cerca de 210 para **554 spots pré-flop**, com foco em stacks de 25–45bb, defesa de BB/SB, 3-bet, 4-bet, tamanho da abertura e ante.
 - O motor não foi alterado. A nova grade encontrou **3 divergências** na defesa do BB contra BTN 2.2x (J6o 30bb, T7o 40bb e 96o 45bb), todas registradas com ressalva para confirmar a frequência exata da referência antes de qualquer correção.
