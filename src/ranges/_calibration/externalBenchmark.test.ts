@@ -20,8 +20,9 @@ describe("BENCHMARK EXTERNO — motor vs referência independente (transparênci
     expect(EXTERNAL_SPOTS.some((s) => s.effBB >= 25 && s.effBB <= 45)).toBe(true);
   });
 
-  it("cobre defesa vs 3-bet, sensibilidade a sizing e ante", () => {
-    expect(EXTERNAL_SPOTS.some((s) => s.opts?.threeBet && s.opts?.betLevelFaced === 2)).toBe(true);
+  it("cobre 3-bet, 4-bet, sensibilidade a sizing e ante", () => {
+    expect(EXTERNAL_SPOTS.some((s) => s.opts?.threeBet && s.opts?.betLevelFaced === 2 && (s.opts?.openSizeBB ?? 0) >= 7)).toBe(true);
+    expect(EXTERNAL_SPOTS.some((s) => s.opts?.threeBet && s.opts?.betLevelFaced === 3 && (s.opts?.openSizeBB ?? 0) >= 18)).toBe(true);
     expect(EXTERNAL_SPOTS.some((s) => s.opts?.openSizeBB === 2.2)).toBe(true);
     expect(EXTERNAL_SPOTS.some((s) => s.opts?.openSizeBB === 3)).toBe(true);
     expect(EXTERNAL_SPOTS.some((s) => s.opts?.anteBB === 1)).toBe(true);
