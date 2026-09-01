@@ -7,7 +7,17 @@ import { runExternalBenchmark, EXTERNAL_SPOTS } from "./externalBenchmark";
 // motor ainda aproxima. Uma divergência NOVA quebra o teste até ser revisada e
 // documentada aqui — sem alterar o motor nesta tarefa.
 // ---------------------------------------------------------------------------
-const KNOWN_DIVERGENCES = new Set<string>([]);
+const KNOWN_DIVERGENCES = new Set<string>([
+  // BB vs BTN 2.2x: charts por sizing defendem J6o a 30bb; motor folda.
+  // OBS: offsuit marginal pode variar em frequência entre charts — Claude deve confirmar.
+  "J6o|BB|30",
+  // BB vs BTN 2.2x: charts por sizing defendem T7o a 40bb; motor folda.
+  // OBS: confirmar a frequência exata da referência antes de corrigir o motor.
+  "T7o|BB|40",
+  // BB vs BTN 2.2x: charts por sizing defendem 96o a 45bb; motor folda.
+  // OBS: confirmar a frequência exata da referência antes de corrigir o motor.
+  "96o|BB|45",
+]);
 
 const keyOf = (m: { hand: string; pos: string; effBB: number }) => `${m.hand}|${m.pos}|${m.effBB}`;
 
