@@ -40,7 +40,6 @@ Regras do registro:
 - No app, o texto "Como a pontuação funciona" agora mostra esse teste externo e
   admite abertamente onde aproximamos. (Recomendação nº 6 da auditoria.)
 - Onde: "Como a pontuação funciona" (ranking) e testes do motor.
->>>>>>> 948733c (feat(motor): benchmark externo transparente (nº 6 da auditoria))
 
 ## 2026-09-01 — Claude — Painel "Seu jogo" (prova de evolução) + base de dados
 - Novo painel **"Seu jogo"** no Perfil: mostra sua **% de acerto por tipo de
