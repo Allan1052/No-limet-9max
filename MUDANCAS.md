@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Recuperado: card de quiz + gerador de reels (Instagram)
+- Trouxe pra `main` (e pro ar) um trabalho que tinha ficado preso numa branch
+  antiga e nunca foi publicado: o **card de quiz** (a pergunta pro Instagram,
+  além do card de resposta que já existia) e o **gerador de reels** a partir do
+  card. É a raia visual/Instagram.
+- Motivo: a branch antiga era a "porta da frente" do GitHub e ficou 253 mudanças
+  atrás da `main`; esse recurso nunca tinha migrado.
+- Onde: geração de cards do Instagram (aba Sua Mão / ferramentas de card).
+- Ajuste interno junto: contrato de eventos do funil (teste) alinhado à `main`.
+
 ## 2026-09-01 — Claude — Feedback na mesa + Mão do dia direto no 1×1
 - Quando a mão do torneio acaba, a explicação das suas jogadas **abre sozinha
   por cima da mesa** — não precisa mais rolar a tela pra baixo pra achar.

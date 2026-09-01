@@ -15,6 +15,7 @@ describe("Umami activation funnel", () => {
 
   it("tracks a completed hand when session progress increases", () => {
     expect(progressSource).toContain('trackEvent("hand_completed"');
+  });
 
   it("keeps the existing share funnel", () => {
     expect(shareSource).toContain('trackEvent("share_started"');
