@@ -171,15 +171,49 @@ function facingThreeBetSpots(): ExtBenchSpot[] {
       for (const hand of ["AA", "KK"]) {
         out.push({
           hand, pos, effBB, expect: "aggro", tier: "exato", ref: `${ref}: AA/KK 4-bet`,
-          opts: { raiserPosition, openSizeBB: 2.2, threeBet: true, betLevelFaced: 2 },
+          opts: { raiserPosition, openSizeBB: 8, threeBet: true, betLevelFaced: 2 },
+        });
+      }
+      for (const hand of ["QQ", "JJ", "AKs", "AKo", "AQs"]) {
+        out.push({
+          hand, pos, effBB, expect: "defend", tier: "consenso", ref: `${ref}: topo do range não folda`,
+          opts: { raiserPosition, openSizeBB: 8, threeBet: true, betLevelFaced: 2 },
         });
       }
       for (const hand of ["A5o", "K5o", "Q7o", "72o"]) {
         out.push({
           hand, pos, effBB, expect: "fold", tier: "consenso", ref: `${ref}: offsuit fraco folda`,
-          opts: { raiserPosition, openSizeBB: 2.2, threeBet: true, betLevelFaced: 2 },
+          opts: { raiserPosition, openSizeBB: 8, threeBet: true, betLevelFaced: 2 },
         });
       }
+    }
+  }
+  return out;
+}
+
+function facingFourBetSpots(): ExtBenchSpot[] {
+  const out: ExtBenchSpot[] = [];
+  for (const effBB of [40, 45]) {
+    for (const hand of ["AA", "KK"]) {
+      out.push({
+        hand, pos: "BTN", effBB, expect: "aggro", tier: "exato",
+        ref: "Teoria padrão BTN vs 4-bet BB: AA/KK continua agressivo",
+        opts: { raiserPosition: "BB", openSizeBB: 20, threeBet: true, betLevelFaced: 3 },
+      });
+    }
+    for (const hand of ["QQ", "AKs", "AKo"]) {
+      out.push({
+        hand, pos: "BTN", effBB, expect: "defend", tier: "consenso",
+        ref: "Teoria padrão BTN vs 4-bet BB: QQ/AK não folda",
+        opts: { raiserPosition: "BB", openSizeBB: 20, threeBet: true, betLevelFaced: 3 },
+      });
+    }
+    for (const hand of ["A5o", "K5o", "Q7o", "72o"]) {
+      out.push({
+        hand, pos: "BTN", effBB, expect: "fold", tier: "consenso",
+        ref: "Teoria padrão BTN vs 4-bet BB: offsuit fraco folda",
+        opts: { raiserPosition: "BB", openSizeBB: 20, threeBet: true, betLevelFaced: 3 },
+      });
     }
   }
   return out;
@@ -188,11 +222,11 @@ function facingThreeBetSpots(): ExtBenchSpot[] {
 const OPEN_SIZE_SENSITIVITY: ExtBenchSpot[] = [
   { hand: "Q5o", pos: "BB", effBB: 35, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
   { hand: "Q5o", pos: "BB", effBB: 35, expect: "fold", tier: "consenso", ref: "BB defense vs BTN 3.0x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 3.0 } },
-  { hand: "J6o", pos: "BB", effBB: 30, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
+  { hand: "J6o", pos: "BB", effBB: 30, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing; confirmar frequência exata com Claude", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
   { hand: "J6o", pos: "BB", effBB: 30, expect: "fold", tier: "consenso", ref: "BB defense vs BTN 3.0x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 3.0 } },
-  { hand: "T7o", pos: "BB", effBB: 40, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
+  { hand: "T7o", pos: "BB", effBB: 40, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing; confirmar frequência exata com Claude", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
   { hand: "T7o", pos: "BB", effBB: 40, expect: "fold", tier: "consenso", ref: "BB defense vs BTN 3.0x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 3.0 } },
-  { hand: "96o", pos: "BB", effBB: 45, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
+  { hand: "96o", pos: "BB", effBB: 45, expect: "defend", tier: "consenso", ref: "BB defense vs BTN 2.2x — charts por sizing; confirmar frequência exata com Claude", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
   { hand: "96o", pos: "BB", effBB: 45, expect: "fold", tier: "consenso", ref: "BB defense vs BTN 3.0x — charts por sizing", opts: { raiserPosition: "BTN", openSizeBB: 3.0 } },
   { hand: "KQo", pos: "BB", effBB: 35, expect: "defend", tier: "exato", ref: "Teoria padrão: KQo nunca folda BB vs BTN 3x", opts: { raiserPosition: "BTN", openSizeBB: 3.0 } },
   { hand: "72o", pos: "BB", effBB: 35, expect: "fold", tier: "exato", ref: "Teoria padrão: 72o folda BB vs BTN 2.2x", opts: { raiserPosition: "BTN", openSizeBB: 2.2 } },
@@ -222,6 +256,7 @@ export const EXTERNAL_SPOTS: ExtBenchSpot[] = [
   ...deepRfiSpots(),
   ...mediumDeepBlindDefense(),
   ...facingThreeBetSpots(),
+  ...facingFourBetSpots(),
   ...OPEN_SIZE_SENSITIVITY,
   ...ANTE_SPOTS,
 ];
