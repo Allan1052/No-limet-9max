@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-01 — Claude — Mesa não corta mais os controles no celular
+- Na tela de jogo, a mesa estava alta demais e **empurrava os botões (Fold/Call/
+  Raise + slider) pra fora da tela** — ficavam cortados embaixo. Limitei a altura
+  da mesa no celular pra a área de ação **sempre caber**. Testei renderizando de
+  verdade num celular: antes os controles iam até 822px numa tela de 780; agora
+  vão até 716px, com folga.
+- Conferi as outras abas (Hoje, Treinar, Estudar, Perfil): são telas que
+  **rolam** normalmente — nada cortado; o corte era só na tela de jogo.
+- Onde: mesa de jogo (Torneio/Jogar) no celular.
+
 ## 2026-09-01 — Claude — Modal de dicas vira o "centro" pós-mão + Simples×Técnico
 - Agora o modal de **Dicas da mão** traz TUDO num lugar só: além das dicas, os
   botões que ficavam embaixo da mesa (Nova mão, Rever mão, Compartilhar mão,
