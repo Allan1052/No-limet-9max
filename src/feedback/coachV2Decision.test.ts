@@ -30,4 +30,34 @@ describe("CoachV2Decision", () => {
     expect(d.evBB).toBeUndefined();
     expect(d.betSizePct).toBeUndefined();
   });
+
+  it("mostra o porque so quando o FOLD tem preco barato (spot que engana)", () => {
+    // KJo do SB: preco barato (paga 1.5 num pote de 6.6 ~ 19%) mas o motor folda.
+    const advice: HeroAdvice = {
+      kind: "preflop",
+      action: "fold",
+      reason: "KJo: sem posição e sem valor de 3-bet, foldar é melhor que pagar dominado.",
+      heroPosition: "SB",
+      effectiveBB: 49,
+    };
+    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 6.6, toCallBB: 1.5 });
+    expect(d.trapNote).toBeDefined();
+    expect(d.trapNote).toMatch(/^Tá barato, mas /);
+    // usa o motivo REAL do motor (sem o prefixo do codigo da mao "KJo:").
+    expect(d.trapNote).toContain("sem posição");
+    expect(d.trapNote).not.toContain("KJo");
+  });
+
+  it("nao mostra o porque quando o preco do fold e caro", () => {
+    const advice: HeroAdvice = { kind: "preflop", action: "fold", reason: "KQo: fora do range de defesa.", heroPosition: "BB", effectiveBB: 30 };
+    // Paga 6 num pote de 6 = 50% (caro): nao e o "ta barato" que engana.
+    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 6, toCallBB: 6 });
+    expect(d.trapNote).toBeUndefined();
+  });
+
+  it("nao mostra o porque em jogadas que nao sao fold", () => {
+    const advice: HeroAdvice = { kind: "preflop", action: "call", reason: "AJs: paga barato o botao.", heroPosition: "BB", effectiveBB: 40 };
+    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 8, toCallBB: 1 });
+    expect(d.trapNote).toBeUndefined();
+  });
 });

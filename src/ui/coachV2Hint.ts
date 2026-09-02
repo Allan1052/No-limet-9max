@@ -5,6 +5,8 @@ export interface CoachV2HintView {
   contextLabel: string;
   reason: string;
   metrics: string[];
+  /** "Porquê" curto mostrado ao vivo só nos spots que enganam (fold barato). */
+  trapNote?: string;
 }
 
 function fmtBB(value: number): string {
@@ -51,5 +53,6 @@ export function buildCoachV2HintView(decision: CoachV2Decision): CoachV2HintView
     contextLabel: decision.contextLabel,
     reason: decision.reason,
     metrics,
+    trapNote: decision.trapNote,
   };
 }

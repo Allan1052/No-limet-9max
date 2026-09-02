@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — "Porquê" na hora nos spots que enganam (fold barato)
+- Quando o coach manda **Fold** mas o **preço está barato** (aquele "ah, tá
+  barato, deixa eu pagar" que engana), a faixa de dica agora mostra uma **frase
+  curta explicando o porquê** — ex.: "Tá barato, mas sem posição e sem valor de
+  3-bet, foldar é melhor que pagar dominado". Assim dá pra entender **na hora**
+  por que não compensa pagar, antes de agir.
+- A frase vem do **motivo real do motor** (nada inventado), sem números, e só
+  aparece **nesses spots que enganam** — nas jogadas óbvias a dica continua
+  limpa, só com a ação (Raise/Call/Fold).
+- Onde: faixa de dica durante a mão (Torneio/Jogar).
+
 ## 2026-09-02 — Claude — Ganho líquido, all-in no feedback, versão no topo, HUD embaixo
 Quatro ajustes que o Allan pediu (a partir dos prints do torneio):
 - **Ganho da mão agora é LÍQUIDO.** Antes mostrava o pote inteiro ("ganhou

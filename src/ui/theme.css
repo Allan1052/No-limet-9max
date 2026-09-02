@@ -753,6 +753,19 @@ body {
 @media (max-width: 520px) {
   .play-coach-bar { font-size: 12px; padding: 7px 11px; }
 }
+/* Quando há "porquê" (spot que engana), a faixa vira duas linhas: a ação em
+   cima e a explicação curta embaixo, mais discreta (menor e sem o dourado forte). */
+.play-coach-bar.has-why { display: flex; flex-direction: column; gap: 3px; }
+.play-coach-bar .coach-why {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gold, #e6c454);
+  opacity: 0.9;
+  line-height: 1.3;
+}
+@media (max-width: 520px) {
+  .play-coach-bar .coach-why { font-size: 11px; }
+}
 
 /* Ações de fim de mão DENTRO do modal de dicas (Nova mão, Rever, Compartilhar,
    Evolução…) — tudo num lugar só, sem precisar rolar pra baixo da mesa. */

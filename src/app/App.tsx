@@ -355,6 +355,9 @@ export function App() {
   // discreta acima da mesa.
   const hint =
     coachActionLabel && coachHintView && !firstContactOverlay ? coachActionLabel : undefined;
+  // "Porquê" curto só nos spots que enganam (ex.: fold com preço barato). Vem do
+  // motivo real do motor — não aparece nas jogadas óbvias.
+  const coachTrapNote = hint ? coachHintView?.trapNote : undefined;
 
   // "Nova mão" isolado: é o único controle que fica EMBAIXO da mesa depois da
   // mão (continuar rápido). Todo o resto (dicas + ações) fica só no modal.
@@ -534,7 +537,10 @@ export function App() {
         <div className="play">
           <SessionProgressStrip summary={progress()} />
           {heroTurn && hint ? (
-            <div className="play-coach-bar">💡 {hint}</div>
+            <div className={`play-coach-bar${coachTrapNote ? " has-why" : ""}`}>
+              <span className="coach-action">💡 {hint}</span>
+              {coachTrapNote ? <span className="coach-why">{coachTrapNote}</span> : null}
+            </div>
           ) : null}
           <PokerTable
             table={t}
