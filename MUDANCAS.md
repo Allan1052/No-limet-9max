@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Fim da duplicata das dicas + mesa se adapta a cada tela
+- **Sem duplicata:** o feedback e as ações de fim de mão não aparecem mais
+  embaixo da mesa (era o que se via rolando). Agora ficam **só no modal** (botão
+  "Ver dicas"). Embaixo da mesa sobra só o **Nova mão** pra continuar rápido.
+- **Mesa automática por tela:** troquei o limite fixo por um cálculo que
+  **reserva o espaço dos controles e usa o resto da altura real do aparelho**
+  (dvh) pra mesa. Testei em 3 tamanhos de tela (640/780/900): a mesa cresce ou
+  encolhe sozinha e os controles **sempre cabem**, com folga.
+- Onde: mesa de jogo (Torneio/Jogar) no celular.
+
 ## 2026-09-01 — Claude — Mesa não corta mais os controles no celular
 - Na tela de jogo, a mesa estava alta demais e **empurrava os botões (Fold/Call/
   Raise + slider) pra fora da tela** — ficavam cortados embaixo. Limitei a altura

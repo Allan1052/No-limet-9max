@@ -12,7 +12,6 @@ import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
 import { HandActions } from "../ui/HandActions";
-import { HandResultSummary } from "../ui/HandResultSummary";
 import { SessionProgressStrip } from "../ui/SessionProgressStrip";
 import { AchievementToastPopup } from "../ui/AchievementToast";
 import { isXpUnlocked } from "./achievements";
@@ -379,10 +378,25 @@ export function App() {
         }`
       : undefined;
 
-  // Ações de fim de mão — usadas EMBAIXO da mesa E dentro do modal de dicas
-  // (pedido do Allan: tudo num lugar só). Os botões que abrem outra tela ou
-  // começam nova mão também FECHAM o modal de dicas (no-op quando ele já
-  // está fechado, embaixo da mesa).
+  // "Nova mão" isolado: é o único controle que fica EMBAIXO da mesa depois da
+  // mão (continuar rápido). Todo o resto (dicas + ações) fica só no modal.
+  const newHandButton = handOver ? (
+    <button
+      className="btn primary"
+      onClick={() => {
+        setTipsOpen(false);
+        trackEvent("new_hand_started");
+        if (controller.tournamentOver) dismissSummary();
+        newHand();
+      }}
+    >
+      {tr("btn.newHand")}
+    </button>
+  ) : null;
+
+  // Ações de fim de mão — agora SÓ dentro do modal de dicas (pedido do Allan:
+  // sem duplicar embaixo da mesa). Os botões que abrem outra tela ou começam
+  // nova mão também FECHAM o modal.
   const postHandActions = handOver ? (
     <>
       <button
@@ -558,15 +572,11 @@ export function App() {
             buyIn={controller.tournament?.buyIn}
           />
 
-          {handOver && controller.feedback.length > 0 ? (
-            <HandResultSummary
-              feedback={controller.feedback}
-              onOpenTips={() => setTipsOpen(true)}
-            />
-          ) : null}
-
+          {/* Nada de dicas/ações duplicadas embaixo da mesa: o feedback e TODAS
+              as ações de fim de mão vivem só no modal (botão "Ver dicas"). Aqui
+              embaixo fica só o "Nova mão" pra continuar rápido sem abrir nada. */}
           {handOver ? (
-            <div className="controls action-row">{postHandActions}</div>
+            <div className="controls action-row">{newHandButton}</div>
           ) : (
             <Controls
               legal={la}

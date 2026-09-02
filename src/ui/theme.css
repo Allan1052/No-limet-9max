@@ -1755,10 +1755,13 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   /* Mesa: tamanho cheio no mobile (os controles cabem porque Simples/versão/
      idiomas ficam numa linha só, liberando espaço vertical). */
   .table-wrap { aspect-ratio: 3 / 4; width: 100%; max-width: min(100%, 50vh); }
-  /* Durante o JOGO a mesa é limitada em ALTURA pra os controles (Fold/Call/
-     Raise/slider) nunca ficarem cortados embaixo. Sem isso, a mesa 3/4 ficava
-     alta demais e empurrava os botões pra fora da tela (bug que o Allan viu). */
-  .play .table-wrap:not(.ir-table) { max-height: 48dvh; }
+  /* Durante o JOGO a mesa se ADAPTA À TELA: reserva ~360px pro resto (topo,
+     abas, faixa de sessão, dica do coach e os controles Fold/Call/Raise+slider)
+     e usa o que sobra da altura real do aparelho (dvh) pra mesa. Assim os
+     botões NUNCA ficam cortados, em qualquer tamanho de celular, e a mesa fica
+     o maior possível que ainda deixa tudo caber. Piso de 240px pra telas bem
+     baixas não deixarem a mesa minúscula (aí o resto rola). */
+  .play .table-wrap:not(.ir-table) { max-height: max(240px, calc(100dvh - 390px)); }
   /* Replayer de importação mantém a mesa horizontal (9 assentos em círculo). */
   .table-wrap.ir-table { aspect-ratio: 16 / 10; max-width: min(100%, 640px); }
   .tbl-rank { font-size: 15px; }
