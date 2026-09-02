@@ -1151,6 +1151,23 @@ export class GameController {
   }
 
   /**
+   * Placar do TORNEIO ATUAL pro topo da mesa (mãos · decisões · precisão). Lê os
+   * acumulados do torneio (handsDealt + heroRatings), que já são zerados só ao
+   * INICIAR um torneio e restaurados no snapshot ao sair/voltar — então nunca
+   * zeram no meio (pedido do Allan). Null fora de torneio (aí a faixa usa a
+   * contagem da sessão do navegador, como antes).
+   */
+  tournamentProgress(): { hands: number; decisions: number; accuracy: number } | null {
+    if (!this.tournament) return null;
+    const r = this.heroRatings;
+    const decisions = r.boa + r.ok + r.imprecisa + r.ruim;
+    const correct = r.boa + r.ok;
+    const hands = this.stats[this.heroSeat]?.handsDealt ?? 0;
+    const accuracy = decisions > 0 ? Math.round((correct / decisions) * 100) : 0;
+    return { hands, decisions, accuracy };
+  }
+
+  /**
    * Situação do herói no CAMPO do torneio agora: vivos restantes, classificação
    * estimada, se está no dinheiro e o prêmio garantido. Null fora de torneio.
    */

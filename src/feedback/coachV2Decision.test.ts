@@ -40,12 +40,25 @@ describe("CoachV2Decision", () => {
       heroPosition: "SB",
       effectiveBB: 49,
     };
-    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 6.6, toCallBB: 1.5 });
+    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 6.6, toCallBB: 1.5, heroHandTempting: true });
     expect(d.trapNote).toBeDefined();
     expect(d.trapNote).toMatch(/^Tá barato, mas /);
     // usa o motivo REAL do motor (sem o prefixo do codigo da mao "KJo:").
     expect(d.trapNote).toContain("sem posição");
     expect(d.trapNote).not.toContain("KJo");
+  });
+
+  it("NAO mostra o porque em mao lixo (82o) mesmo com preco barato", () => {
+    // Mesmo spot barato, mas mao que nao tenta ninguem: sem nota (pedido do Allan).
+    const advice: HeroAdvice = {
+      kind: "preflop",
+      action: "fold",
+      reason: "82o: fora do range de re-shove; flatar dominado é pior que foldar.",
+      heroPosition: "CO",
+      effectiveBB: 16,
+    };
+    const d = buildCoachV2Decision(advice, { street: "preflop", potBB: 4.5, toCallBB: 2, heroHandTempting: false });
+    expect(d.trapNote).toBeUndefined();
   });
 
   it("nao mostra o porque quando o preco do fold e caro", () => {

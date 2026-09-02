@@ -8,6 +8,9 @@ export interface CoachV2Context {
   potBB?: number;
   toCallBB?: number;
   spr?: number;
+  /** A mão do herói é forte o bastante pra "tentar" a pagar barato? Só quando
+   *  true mostramos o "porquê" do fold-barato — pra lixo óbvio (82o) fica off. */
+  heroHandTempting?: boolean;
 }
 
 export interface CoachV2Decision {
@@ -87,17 +90,18 @@ export function buildCoachV2Decision(advice: HeroAdvice, context: CoachV2Context
   const faced = facedLabel(advice.betLevelFaced);
   if (faced) parts.push(faced);
 
-  // "Spot que engana": FOLD com preço BARATO. O preço vem do que há pra pagar
-  // (toCall) sobre o pote — barato = pagar ~1/3 ou menos do pote (2:1 ou melhor).
-  // É o caso do KJo que o Allan pegou: o preço convida, mas a mão perde no longo
-  // prazo. Só aqui mostramos o "porquê" ao vivo.
+  // "Spot que engana": FOLD com preço BARATO em mão que TENTA (broadway/ás/par).
+  // O preço vem do que há pra pagar (toCall) sobre o pote — barato = pagar ~1/3
+  // ou menos do pote (2:1 ou melhor). É o caso do KJo que o Allan pegou: o preço
+  // convida, mas a mão perde no longo prazo. Lixo óbvio (82o) NÃO entra — ninguém
+  // se tenta, então a nota só faria barulho.
   const toCall = context.toCallBB ?? 0;
   const pot = context.potBB ?? advice.potBB ?? 0;
   const priceFrac = toCall > 0 && pot > 0 ? toCall / (pot + toCall) : undefined;
+  const isCheapFold =
+    advice.action === "fold" && priceFrac !== undefined && priceFrac <= 0.34;
   const trapNote =
-    advice.action === "fold" && priceFrac !== undefined && priceFrac <= 0.34
-      ? buildCheapFoldNote(advice.reason)
-      : undefined;
+    isCheapFold && context.heroHandTempting ? buildCheapFoldNote(advice.reason) : undefined;
 
   return {
     street: context.street,

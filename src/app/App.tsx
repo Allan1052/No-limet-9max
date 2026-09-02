@@ -535,7 +535,7 @@ export function App() {
         /></Suspense>
       ) : (
         <div className="play">
-          <SessionProgressStrip summary={progress()} />
+          <SessionProgressStrip summary={progress()} tournament={controller.tournamentProgress()} />
           {heroTurn && hint ? (
             <div className={`play-coach-bar${coachTrapNote ? " has-why" : ""}`}>
               <span className="coach-action">💡 {hint}</span>

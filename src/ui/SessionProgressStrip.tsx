@@ -25,7 +25,16 @@ function browserSessionStorage(): SessionStorageLike | null {
   }
 }
 
-export function SessionProgressStrip({ summary }: { summary: ProgressSummary }) {
+export function SessionProgressStrip({
+  summary,
+  tournament,
+}: {
+  summary: ProgressSummary;
+  /** Placar do TORNEIO atual (mãos · decisões · precisão). Quando presente, a
+   *  faixa mostra ISTO — que só zera ao iniciar outro torneio e persiste ao
+   *  sair/voltar. Ausente (fora de torneio) → contagem da sessão, como antes. */
+  tournament?: { hands: number; decisions: number; accuracy: number } | null;
+}) {
   const start = useRef(
     (() => {
       const storage = browserSessionStorage();
@@ -33,7 +42,9 @@ export function SessionProgressStrip({ summary }: { summary: ProgressSummary }) 
     })(),
   );
   const session = calculateSessionProgress(summary, start.current);
-  const { hands, decisions, accuracy } = session;
+  const hands = tournament ? tournament.hands : session.hands;
+  const decisions = tournament ? tournament.decisions : session.decisions;
+  const accuracy = tournament ? tournament.accuracy : session.accuracy;
 
   // Se a faixa remontou ao voltar de outra aba, as mãos restauradas já foram
   // registradas antes. Começar daqui evita duplicar eventos de analytics.

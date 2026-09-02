@@ -23,6 +23,17 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Dica "tá barato" só em mão que tenta + placar POR TORNEIO
+- **A explicação "tá barato, mas..." agora só aparece em mãos que realmente
+  tentam** (broadways, ases, pares, mãos do topo). Antes ela saía em QUALQUER
+  fold — até 82o, 43o, 42o, que são fold óbvio e ninguém se tenta a pagar. Agora
+  lixo não recebe a nota; ela fica reservada pros spots que de fato enganam.
+  Onde: faixa de dica durante a mão.
+- **Placar do topo (Sessão · Decisões · Precisão) agora é POR TORNEIO.** Antes
+  zerava quando você saía da mesa e voltava. Agora conta só as mãos e decisões
+  DAQUELE torneio, **persiste** quando você sai e volta quantas vezes quiser, e
+  **só zera ao iniciar um torneio novo**. Onde: faixa no topo da mesa (Jogar).
+
 ## 2026-09-02 — Claude — HUD do torneio vira linha fina + "Seu jogo" mais claro
 - **HUD do torneio agora é uma linha FININHA** colada nos botões (Fold/Call/Raise).
   Antes tinha uma barra de progresso grande que roubava espaço e cortava o
