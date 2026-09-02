@@ -16,13 +16,14 @@ function fmtPct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
+// Termos PADRÃO de poker (pedido do Allan) — os mesmos usados nas mesas.
 function baseActionLabel(action: string): string {
   switch (action.toLowerCase()) {
-    case "fold": return "Foldar";
-    case "check": return "Passar";
-    case "call": return "Pagar";
-    case "bet": return "Apostar";
-    case "raise": return "Aumentar";
+    case "fold": return "Fold";
+    case "check": return "Check";
+    case "call": return "Call";
+    case "bet": return "Bet";
+    case "raise": return "Raise";
     case "3bet": return "3-bet";
     case "jam":
     case "allin": return "All-in";

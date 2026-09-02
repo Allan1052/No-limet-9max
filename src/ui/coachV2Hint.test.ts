@@ -20,7 +20,7 @@ function decision(overrides: Partial<CoachV2Decision> = {}): CoachV2Decision {
 describe("Dica visual Coach V2", () => {
   it("mostra ação, contexto e números reais do spot", () => {
     const view = buildCoachV2HintView(decision());
-    expect(view.actionLabel).toBe("Pagar");
+    expect(view.actionLabel).toBe("Call");
     expect(view.contextLabel).toBe("Flop · BTN · 42bb");
     expect(view.metrics).toContain("Pote 12bb");
     expect(view.metrics).toContain("Pagar 4bb");
@@ -31,7 +31,7 @@ describe("Dica visual Coach V2", () => {
 
   it("mostra sizing quando o motor recomenda apostar", () => {
     const view = buildCoachV2HintView(decision({ action: "bet", betSizeBB: 7.5, betSizePct: 0.62 }));
-    expect(view.actionLabel).toBe("Apostar ~7.5bb");
+    expect(view.actionLabel).toBe("Bet ~7.5bb");
     expect(view.metrics).toContain("62% pote");
   });
 

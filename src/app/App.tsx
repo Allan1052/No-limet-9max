@@ -347,18 +347,14 @@ export function App() {
   if (coachDecision && (coachDecision.action === "raise" || coachDecision.action === "3bet")) {
     const villainAllIn = t.players.some((p) => !p.isHero && p.status === "allin");
     if (villainAllIn && la.canCall && la.callAmount > 0) {
-      coachActionLabel = "All-in por cima";
+      coachActionLabel = "All-in";
     }
   }
-  // Dica curta: só a AÇÃO + a conta (equity/preço/EV). O contexto (posição/
-  // stack/situação) já está visível na mesa, então some daqui pra não ficar
-  // gigante. Mostrada numa faixa acima da mesa (não mais no centro do feltro).
+  // Dica curta: SÓ A AÇÃO, em termo padrão de poker (Raise/Call/Fold/3-bet/
+  // All-in). Sem pote/preço/equity — o Allan já vê isso na mesa central. Faixa
+  // discreta acima da mesa.
   const hint =
-    coachActionLabel && coachHintView && !firstContactOverlay
-      ? `${coachActionLabel}${
-          coachHintView.metrics.length > 0 ? ` · ${coachHintView.metrics.join(" · ")}` : ""
-        }`
-      : undefined;
+    coachActionLabel && coachHintView && !firstContactOverlay ? coachActionLabel : undefined;
 
   // "Nova mão" isolado: é o único controle que fica EMBAIXO da mesa depois da
   // mão (continuar rápido). Todo o resto (dicas + ações) fica só no modal.

@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Dica do coach com termos padrão de poker + mais limpa
+- A faixa de dica acima da mesa agora usa os **termos padrão de poker**: Raise,
+  Call, Fold, Check, Bet, 3-bet, All-in (no lugar de Aumentar/Pagar/Foldar).
+- **Removida a info de pote/preço** da faixa ("Pote X · Pagar Y") — fica só a
+  ação, já que esses números aparecem na mesa central.
+- Onde: faixa de dica durante a mão (Torneio/Jogar).
+
 ## 2026-09-02 — Claude — Auditoria do motor: corrige decisões inconsistentes
 - Fiz uma auditoria pesada no motor com **invariantes objetivas** (regras que só
   um bug quebra) varrendo milhares de spots. Corrigidos:
