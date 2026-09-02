@@ -457,7 +457,13 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       const pushFoldWidth = sd.pushFold
         ? Math.min(1.15, 1 + Math.max(0, 15 - ctx.effectiveBB) * 0.015)
         : 1;
-      const shoveBonus = sd.pushFold && ctx.effectiveBB <= 10 ? 0.04 : 0;
+      // Bônus de shove (pares/suited connectors valem mais pela fold equity):
+      // CONSTANTE em toda a zona de push/fold. Antes era um DEGRAU seco em ≤10bb,
+      // que reordenava a range só ali e derrubava mãos — quebrando a regra "mais
+      // curto = mais largo" (mão abria a 11bb e foldava a 10bb). Constante, a
+      // única variação por stack é a largura (que cresce quando encurta), então
+      // a range a 10bb sempre contém a de 11bb (monotônica).
+      const shoveBonus = sd.pushFold ? 0.03 : 0;
       const range = rfiRange(ctx.heroPosition, {
         widthFactor,
         stackFactor: sd.factor * pushFoldWidth,
