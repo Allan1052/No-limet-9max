@@ -23,6 +23,20 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Auditoria do motor: corrige decisões inconsistentes
+- Fiz uma auditoria pesada no motor com **invariantes objetivas** (regras que só
+  um bug quebra) varrendo milhares de spots. Corrigidos:
+  1. **Inversões de kicker** na abertura: o motor abria K3s mas foldava K4s (a
+     mais forte!), idem Q2s/Q3s, T8o/T9o, K2o/K3o, Q8o/Q9o. Causa: a força das
+     mãos vinha de um sorteio com ruído maior que a diferença entre kickers
+     vizinhos. Agora a ordenação é corrigida pra nunca inverter.
+  2. **Range de stack curto** não crescia direito: uma mão abria a 11bb e sumia
+     a 10bb (o contrário do certo — mais curto = mais largo). Corrigido.
+- Onde: motor de decisão pré-flop (Torneio, 1×1, Sua Mão). SELO 61/61 e o
+  benchmark externo seguem intactos; novo teste trava a monotonicidade.
+- O que ficou limpo na auditoria (sem bug): enfrentar all-in, defesa por
+  tamanho de aposta, ordem das posições e resposta a 3-bet.
+
 ## 2026-09-02 — Claude — Dicas NÃO abrem mais sozinhas + mesa maior/controles menores
 - O modal de dicas **não abre mais automático** — só aparece quando você toca no
   botão **"Ver dicas"** na mesa. Assim você vê o showdown e decide se quer as dicas.
