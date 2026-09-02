@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Ganho líquido, all-in no feedback, versão no topo, HUD embaixo
+Quatro ajustes que o Allan pediu (a partir dos prints do torneio):
+- **Ganho da mão agora é LÍQUIDO.** Antes mostrava o pote inteiro ("ganhou
+  4.7bb") somando as fichas que eram do próprio Allan. Agora mostra **quanto a
+  pilha realmente subiu** na mão (o pote menos o que ele investiu). Em pote
+  dividido que só devolve o investido, a mensagem avisa "pote dividido".
+  Onde: mensagem de fim de mão (Torneio/Jogar).
+- **Feedback contra all-in.** Quando o Allan folda (ou paga) e o vilão veio de
+  **all-in**, a dica de fim de mão agora diz "(vilão foi all-in)" — assim as duas
+  linhas de "Pré-flop" da mesma mão não ficam iguais e o fold fica justificado.
+  Onde: modal de dicas (fim de mão).
+- **Botão da versão no topo do Perfil.** Não precisa mais rolar a tela até o fim
+  pra ver/atualizar a versão — o botão 🔄 subiu pro começo do Perfil.
+  Onde: aba Perfil.
+- **Classificação do torneio foi pra BAIXO.** A faixa "12º/74 · 29 p/ faixa · 
+  blinds" saiu do topo (estava cobrindo a mesa) e foi pra perto do botão de
+  raise, embaixo. Onde: mesa durante a mão (Torneio/Jogar).
+
 ## 2026-09-02 — Claude — Dica do coach com termos padrão de poker + mais limpa
 - A faixa de dica acima da mesa agora usa os **termos padrão de poker**: Raise,
   Call, Fold, Check, Bet, 3-bet, All-in (no lugar de Aumentar/Pagar/Foldar).

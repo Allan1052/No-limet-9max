@@ -69,6 +69,9 @@ export interface FeedbackContext {
   heroBB?: number;
   /** Estágio do torneio: "inicio" | "meio" | "bolha" | "mesa_final". */
   stage?: string;
+  /** No momento da decisão, um vilão já está ALL-IN à frente do herói (a aposta
+   *  a pagar é um all-in). Serve pra narração deixar o fold/call óbvio. */
+  facingAllin?: boolean;
 }
 
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
@@ -117,6 +120,9 @@ export interface FeedbackItem {
   /** Nível de aposta ENFRENTADO no pré-flop (0=RFI, 1=open, 2=3-bet, 3=4-bet).
    *  Repassado à narração do coach para distinguir open-fold de fold-a-3bet. */
   betLevelFaced?: number;
+  /** A aposta que o herói enfrentava era um ALL-IN de um vilão. Deixa o coach
+   *  explicar o fold/call ("o vilão veio de all-in"). */
+  facingAllin?: boolean;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -279,6 +285,7 @@ function gradeCore(
     betSizePct: af === "aggro" ? advice.betSizePct : undefined,
     betSizeBB: af === "aggro" ? advice.betSizeBB : undefined,
     betLevelFaced: advice.betLevelFaced,
+    facingAllin: ctx?.facingAllin,
   };
 
   // ----- All-in FUNDO quando o certo era um raise/3-bet NORMAL (não jam) -----

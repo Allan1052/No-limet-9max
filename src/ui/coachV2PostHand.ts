@@ -57,9 +57,16 @@ function decisionLineFor(item: FeedbackItem): string {
       ? item.heroFam === item.adviceFam
       : hero.toLowerCase() === rec.toLowerCase();
 
-  if (good && same) return `✔ Boa! ${hero} era o caminho.`;
-  if (good && !same) return `✔ Dá pra jogar ${hero} — mas ${rec} é o padrão.`;
-  return `✗ Melhor era ${rec}. Você fez ${hero}.`;
+  // Quando a aposta enfrentada era um ALL-IN, deixamos isso EXPLÍCITO na
+  // decisão — assim o herói entende que o fold (ou o call) foi contra um
+  // all-in, e as duas linhas de "Pré-flop" da mesma mão não ficam idênticas
+  // (pedido do Allan: "na segunda tinha que mostrar que o jogador veio de
+  // all-in, aí justifica meu fold").
+  const vsAllin = item.facingAllin ? " (vilão foi all-in)" : "";
+
+  if (good && same) return `✔ Boa! ${hero} era o caminho${vsAllin}.`;
+  if (good && !same) return `✔ Dá pra jogar ${hero} — mas ${rec} é o padrão${vsAllin}.`;
+  return `✗ Melhor era ${rec}. Você fez ${hero}${vsAllin}.`;
 }
 
 export function buildCoachV2PostHandDecision(

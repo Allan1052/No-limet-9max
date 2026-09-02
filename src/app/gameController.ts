@@ -890,10 +890,21 @@ export class GameController {
       // Contexto da mão p/ o texto do feedback (posição, stack, estágio) —
       // UI-only, não altera nota nem decisão.
       const posMap = seatPositions(this.table);
+      // A aposta que o herói enfrenta AGORA é um all-in? (um vilão com status
+      // "allin" bancou o valor a pagar). Usado só na narração do feedback pra
+      // justificar o fold/call contra all-in — não muda nota nem decisão.
+      const heroFacingAllinBet = this.table.players.some(
+        (p) =>
+          p.seat !== this.heroSeat &&
+          p.status === "allin" &&
+          p.committed >= this.table.currentBet - 1e-9 &&
+          this.table.currentBet > this.table.bigBlind,
+      );
       const feedbackCtx: FeedbackContext = {
         heroPosition: posMap.get(this.heroSeat),
         heroBB: (this.table.players[this.heroSeat].stack + this.table.players[this.heroSeat].committed) / (this.table.bigBlind || 1),
         stage: this.tournament?.stage,
+        facingAllin: heroFacingAllinBet,
       };
       const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice, feedbackCtx);
       this.feedback.push(item);
@@ -1333,8 +1344,17 @@ export class GameController {
     const r = this.table.result;
     const hero = this.table.players[this.heroSeat];
     const heroWin = r?.winningsBySeat[this.heroSeat] ?? 0;
-    if (heroWin > 0) {
-      this.setMessage("msg.wonHand", { amount: toBB(heroWin, this.table.bigBlind) });
+    // GANHO LÍQUIDO (não o pote bruto): quanto a pilha do herói SUBIU nesta mão.
+    // O pote inclui as fichas do próprio herói — mostrar o bruto ("ganhou 4.7bb"
+    // quando 2bb eram dele) confundia o Allan. Líquido = pilha atual − pilha no
+    // início da mão. Nesse ponto a pilha já recebeu o que foi arrecadado.
+    const heroStart = this.handStartStacks[this.heroSeat] ?? hero.stack;
+    const heroNet = hero.stack - heroStart;
+    if (heroWin > 0 && heroNet > 0) {
+      this.setMessage("msg.wonHand", { amount: toBB(heroNet, this.table.bigBlind) });
+    } else if (heroWin > 0) {
+      // Levou o pote mas empatou (ex.: split que devolve o que investiu).
+      this.setMessage("msg.splitHand");
     } else if (hero.status === "folded") {
       this.setMessage("msg.foldedHand");
     } else {

@@ -459,7 +459,7 @@ export function App() {
         ) : null}
       </div>
 
-            <HubSubNav view={view} setView={setView} info={playInfo} />
+            <HubSubNav view={view} setView={setView} />
       <div key={view} className="view-enter">
       {view === "hoje" ? (
         <HojeView setView={setView} />
@@ -549,6 +549,11 @@ export function App() {
             rangeSeats={participantSeats}
             buyIn={controller.tournament?.buyIn}
           />
+
+          {/* HUD do torneio (posição/faixa/blinds) EMBAIXO, junto dos controles —
+              pedido do Allan: no topo estava escondendo a mesa. Aqui fica logo
+              acima do botão de raise, sem cobrir nada. */}
+          {playInfo ? <div className="play-tstatus">{playInfo}</div> : null}
 
           {/* Nada de dicas/ações duplicadas embaixo da mesa: o feedback e TODAS
               as ações de fim de mão vivem só no modal (botão "Ver dicas"). Aqui

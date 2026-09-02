@@ -4340,6 +4340,11 @@ body {
 /* HUD do torneio à direita da linha das abas — estilo GGPoker. */
 .hub-info { margin-left: auto; flex: 0 1 auto; min-width: 0; }
 .tstatus { display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
+/* HUD do torneio movido pra BAIXO (junto dos controles): centraliza a faixa,
+   dá um respiro acima dos botões e deixa a barra de progresso crescer. */
+.play-tstatus { width: 100%; margin: 4px 0 6px; }
+.play-tstatus .tstatus { justify-content: center; flex-wrap: wrap; gap: 5px; }
+.play-tstatus .ts-progress { flex: 1 1 90px; min-width: 70px; max-width: 200px; }
 .ts-seg {
   font-size: 10px;
   font-weight: 700;

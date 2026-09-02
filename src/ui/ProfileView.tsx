@@ -134,6 +134,16 @@ export function ProfileView({
           </div>
         </div>
 
+        {/* Versão / Atualizar — logo no TOPO (pedido do Allan: sem precisar rolar
+            a tela até o fim pra checar/atualizar a versão). */}
+        <div className="profile-setting profile-version-row">
+          <span className="ps-label">{t("profile.version")}</span>
+          <button className="btn tiny" onClick={onCheckUpdate}>
+            🔄 {buildLabel}
+          </button>
+          <span className="ps-note">Atualizado em {fullBuildLabel}</span>
+        </div>
+
         {/* Progressão — XP + Conquistas */}
         <div className="profile-progress-row">
           <button className="btn profile-evolution" onClick={onOpenProgress}>
@@ -283,14 +293,6 @@ export function ProfileView({
         <div className="profile-setting profile-install-row">
           <span className="ps-label">{t("profile.install")}</span>
           <InstallButton />
-        </div>
-
-        <div className="profile-setting">
-          <span className="ps-label">{t("profile.version")}</span>
-          <button className="btn tiny" onClick={onCheckUpdate}>
-            🔄 {buildLabel}
-          </button>
-          <span className="ps-note">Atualizado em {fullBuildLabel}</span>
         </div>
 
         <div className="profile-help">
