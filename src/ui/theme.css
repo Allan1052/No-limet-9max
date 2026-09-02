@@ -1380,6 +1380,9 @@ body {
 /* ---- "Seu jogo": prova de evolução por tipo de spot ---- */
 .sj-panel { margin: 6px 0 10px; }
 .sj-empty { color: var(--text-dim); font-size: 13px; line-height: 1.45; margin: 4px 2px 0; }
+/* Legenda em português de gente: explica o que a % do "Seu jogo" significa. */
+.sj-legend { color: var(--text-dim); font-size: 12.5px; line-height: 1.5; margin: 2px 2px 12px; }
+.sj-legend b { color: var(--gold-soft, #cbb26a); font-weight: 700; }
 .sj-opp {
   border: 1px solid var(--gold, #e6c454);
   background: rgba(230, 196, 84, 0.08);
@@ -4353,11 +4356,13 @@ body {
 /* HUD do torneio à direita da linha das abas — estilo GGPoker. */
 .hub-info { margin-left: auto; flex: 0 1 auto; min-width: 0; }
 .tstatus { display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
-/* HUD do torneio movido pra BAIXO (junto dos controles): centraliza a faixa,
-   dá um respiro acima dos botões e deixa a barra de progresso crescer. */
-.play-tstatus { width: 100%; margin: 4px 0 6px; }
-.play-tstatus .tstatus { justify-content: center; flex-wrap: wrap; gap: 5px; }
-.play-tstatus .ts-progress { flex: 1 1 90px; min-width: 70px; max-width: 200px; }
+/* HUD do torneio embaixo, junto dos controles, como uma LINHA FININHA colada nos
+   botões (pedido do Allan): sem a barra de progresso grande, fonte menor e altura
+   mínima pra não roubar espaço do botão de raise/slider. */
+.play-tstatus { width: 100%; margin: 0 0 3px; }
+.play-tstatus .tstatus { justify-content: center; flex-wrap: wrap; gap: 5px; line-height: 1.1; }
+.play-tstatus .ts-progress { display: none; } /* linha fina: dispensa a barra grande */
+.play-tstatus .ts-seg { font-size: 10px; padding: 1px 6px; }
 .ts-seg {
   font-size: 10px;
   font-weight: 700;

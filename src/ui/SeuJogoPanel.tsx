@@ -84,6 +84,14 @@ export function SeuJogoPanel() {
         </p>
       ) : (
         <>
+          {/* O que os números querem dizer — em português de gente, pro
+              recreativo não ficar perdido (pedido do Allan). */}
+          <p className="sj-legend">
+            Cada número é <b>quanto das suas decisões bateram com a jogada que o
+            app recomenda</b>. Quanto maior, melhor — <b>100%</b> quer dizer que
+            você fez a jogada certa em todas as mãos daquele tipo.
+          </p>
+
           {opp ? (
             <div className="sj-opp">
               <div className="sj-opp-head">Sua maior chance de melhorar</div>

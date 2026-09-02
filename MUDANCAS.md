@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — HUD do torneio vira linha fina + "Seu jogo" mais claro
+- **HUD do torneio agora é uma linha FININHA** colada nos botões (Fold/Call/Raise).
+  Antes tinha uma barra de progresso grande que roubava espaço e cortava o
+  slider do raise embaixo. Tirei a barra grande; ficou só a linha compacta
+  (posição · faixa/ITM · blinds), sem empurrar nada. Onde: mesa durante a mão.
+- **Painel "Seu jogo" mais claro** (Perfil): 
+  - Coloquei uma explicação em português de gente dizendo **o que a % significa**
+    ("quanto das suas decisões bateram com a jogada recomendada; 100% = fez a
+    jogada certa em todas").
+  - Tirei a contradição do "📍 Onde você perde mais ficha" (mostrava 75–100%, que
+    não é perder ficha). Virou **"📍 Seu acerto por posição"**, e o destaque agora
+    fala em **"posição com mais espaço pra melhorar"** com a % de decisões certas
+    — e, quando você vai bem em tudo, ele elogia em vez de te chamar de "fraco".
+  - Onde: Perfil → Seu jogo (e a mesma lista na revisão do torneio).
+
 ## 2026-09-02 — Claude — "Porquê" na hora nos spots que enganam (fold barato)
 - Quando o coach manda **Fold** mas o **preço está barato** (aquele "ah, tá
   barato, deixa eu pagar" que engana), a faixa de dica agora mostra uma **frase

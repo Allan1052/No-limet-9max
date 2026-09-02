@@ -14,7 +14,7 @@ function tendencyChip(t: Tendency): { icon: string; label: string; cls: string }
 
 export function PositionTendencyList({
   report,
-  title = "📍 Onde você perde mais ficha",
+  title = "📍 Seu acerto por posição",
   emptyHint,
 }: {
   report: PositionReport[];
@@ -27,16 +27,32 @@ export function PositionTendencyList({
 
   const worst = report[0];
   const worstChip = tendencyChip(worst.tendency);
+  const worstPct = Math.round(worst.accuracy * 100);
+  // Se até a posição mais fraca já vai bem (>=90%), não faz sentido chamar de
+  // "fraca" — isso confundia o Allan. Falamos de "espaço pra crescer", não de
+  // erro, e sempre explicando que a % é de DECISÕES CERTAS.
+  const doingWell = worst.accuracy >= 0.9;
 
   return (
     <div className="pt-block">
       <div className="pt-title">{title}</div>
 
-      {/* Destaque da pior posição — a "maior sangria". */}
+      {/* Destaque da posição com mais espaço pra evoluir (a de menor acerto). */}
       <div className="pt-callout">
         <div className="pt-callout-pos">{worst.position}</div>
         <div className="pt-callout-body">
-          Sua posição mais fraca: acerta <b>{Math.round(worst.accuracy * 100)}%</b>.
+          {doingWell ? (
+            <>
+              Você vai bem em todas as posições 👏 A que ainda tem mais espaço pra
+              crescer é a <b>{worst.position}</b> — <b>{worstPct}%</b> das decisões
+              certas.
+            </>
+          ) : (
+            <>
+              Posição com mais espaço pra melhorar: você acerta <b>{worstPct}%</b>{" "}
+              das decisões aqui.
+            </>
+          )}
           {worst.tendency && worst.leakLabel ? <> Aqui, {worst.leakLabel}.</> : null}
         </div>
       </div>
