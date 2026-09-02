@@ -122,17 +122,18 @@
 }
 
 @media (max-width: 640px) {
-  .controls-v2 { gap: 6px; }
-  .action-panel, .raise-control-panel { padding: 6px; border-radius: 10px; }
-  .control-section-label { margin-bottom: 4px; font-size: 8px; }
+  .controls-v2 { gap: 5px; }
+  .action-panel, .raise-control-panel { padding: 5px 6px; border-radius: 10px; }
+  .control-section-label { margin-bottom: 3px; font-size: 8px; }
   .action-row-primary { gap: 5px; }
   .action-choice { min-height: 48px; padding: 4px; }
   .action-choice-label { font-size: 11px; }
   .action-choice-value { font-size: 9px; }
-  .raise-control-heading { gap: 5px; margin-bottom: 3px; }
-  .raise-control-panel .raise-amount { padding: 3px 6px; font-size: 10px; }
-  .unit-toggle-secondary { min-height: 28px; padding: 3px 6px; font-size: 8px; }
-  .slider-row-v2 input[type="range"] { min-height: 24px; }
+  .raise-control-heading { gap: 5px; margin-bottom: 2px; }
+  .raise-control-panel .raise-amount { padding: 2px 6px; font-size: 10px; }
+  .unit-toggle-secondary { min-height: 26px; padding: 3px 6px; font-size: 8px; }
+  /* Slider mais fino: economiza altura sem perder o toque. */
+  .slider-row-v2 input[type="range"] { min-height: 20px; }
 }
 
 /* Celular deitado: comprime apenas os controles; a mesa ganha a largura disponível. */

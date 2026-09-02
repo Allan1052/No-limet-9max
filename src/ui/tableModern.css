@@ -207,6 +207,10 @@
 
   .app.nav-hidden .play .controls {
     margin-top: 0;
+    /* Durante o jogo a nav some — o padding de baixo dos controles fica só na
+       área segura do aparelho (some o vão de ~40px que sobrava). Seletor
+       específico pra vencer a regra base e liberar altura pra mesa. */
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
 }
 

@@ -285,27 +285,9 @@ export function App() {
     window.__HAND_OVER = handOver;
   }, [handOver]);
 
-  // Feedback pós-mão sobreposto à mesa: quando a mão termina (transição
-  // false→true) e há decisões avaliadas, abre o modal de dicas por cima da
-  // mesa — mas com um RESPIRO (~2,3s) pra o jogador VER o showdown/board antes
-  // de a aba subir. Só dispara na transição (não reabre ao fechar).
-  const prevHandOver = useRef(false);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (
-      view === "play" &&
-      handOver &&
-      !prevHandOver.current &&
-      !firstContactOverlay &&
-      controller.feedback.length > 0
-    ) {
-      timer = setTimeout(() => setTipsOpen(true), 2300);
-    }
-    prevHandOver.current = handOver;
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [handOver, view, firstContactOverlay, controller.feedback.length]);
+  // O modal de dicas NÃO abre mais sozinho (pedido do Allan): só aparece quando
+  // ele toca no botão "Ver dicas" na mesa. Assim ele vê o showdown e decide se
+  // quer as dicas — sem nada subindo por cima automaticamente.
 
   // Atualização do app: avisa quando há versão nova e recarrega num momento
   // seguro (entre mãos, na tela de jogo) para não interromper uma decisão nem

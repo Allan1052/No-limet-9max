@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-02 — Claude — Dicas NÃO abrem mais sozinhas + mesa maior/controles menores
+- O modal de dicas **não abre mais automático** — só aparece quando você toca no
+  botão **"Ver dicas"** na mesa. Assim você vê o showdown e decide se quer as dicas.
+- **Mesa maior, controles menores:** a área de ação (Fold/Call/Raise + slider)
+  tinha um vão de ~40px sobrando embaixo e o painel do slider estava alto.
+  Compactei (controles de ~200px pra ~155px) e dei o espaço pra a mesa crescer.
+  Verificado com render real: mesa maior e os controles sempre cabem, em telas
+  de 640/780/900px de altura.
+- Onde: mesa de jogo (Torneio/Jogar) no celular.
+
 ## 2026-09-02 — Claude — Fim da duplicata das dicas + mesa se adapta a cada tela
 - **Sem duplicata:** o feedback e as ações de fim de mão não aparecem mais
   embaixo da mesa (era o que se via rolando). Agora ficam **só no modal** (botão

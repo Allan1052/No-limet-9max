@@ -1761,7 +1761,7 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
      botões NUNCA ficam cortados, em qualquer tamanho de celular, e a mesa fica
      o maior possível que ainda deixa tudo caber. Piso de 240px pra telas bem
      baixas não deixarem a mesa minúscula (aí o resto rola). */
-  .play .table-wrap:not(.ir-table) { max-height: max(240px, calc(100dvh - 390px)); }
+  .play .table-wrap:not(.ir-table) { max-height: max(280px, calc(100dvh - 325px)); }
   /* Replayer de importação mantém a mesa horizontal (9 assentos em círculo). */
   .table-wrap.ir-table { aspect-ratio: 16 / 10; max-width: min(100%, 640px); }
   .tbl-rank { font-size: 15px; }
@@ -1784,8 +1784,9 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .card.sm .suit { font-size: 11px; }
   .dealer-btn { width: 18px; height: 18px; font-size: 10px; }
 
-  /* Controles e ICM empilham. */
-  .controls { padding: 8px; gap: 6px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  /* Controles e ICM empilham. Durante o jogo a nav some, então o padding de
+     baixo é pequeno (só a área segura do aparelho) — libera altura pra mesa. */
+  .controls { padding: 8px; gap: 6px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
   .btn { padding: 9px 12px; font-size: 13px; }
   .slider-wrap { flex: 1 1 100%; }
   .raise-btn { width: 100%; padding: 11px; font-size: 14px; }
