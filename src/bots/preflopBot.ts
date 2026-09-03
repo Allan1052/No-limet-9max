@@ -54,9 +54,20 @@ function buildIcmSpot(t: TableState, seat: number, payouts?: number[]): IcmSpot 
   const heroIdx = filteredSeats.indexOf(seat);
   if (heroIdx < 0) return undefined;
 
-  // Estado de fold: só as fichas que ainda estão atrás. O que já foi investido
-  // é custo afundado e não volta para o stack do Hero.
-  const stacks = live.map((p) => p.stack);
+  // UNIDADE: tudo em BB (não em fichas). O estado de FOLD desconta o committed
+  // do herói (heroCommittedBB, que também vem em BB) — se os stacks viessem em
+  // fichas, essa subtração de "7bb" de um stack de "30000 fichas" seria quase
+  // zero (mistura de unidades) e o custo afundado não valeria nada. Em BB tudo
+  // casa. (icmEquity é invariante de escala, então o preço/ICM não muda por isso.)
+  const bb = t.bigBlind || 1;
+  // Stacks TOTAIS de cada jogador em BB (fichas atrás + o que já está no pote
+  // nesta mão). Mesma convenção do pós-flop: ganhar/perder o showdown partem do
+  // stack total ± fichas em jogo, e o FOLD desconta o committed do herói (via
+  // stacksIncludeCommitted=true no facingAllinDecision). Antes usava só as
+  // fichas atrás e o herói que já pagou o blind ficava com o estado de "perder"
+  // subcontado — o ICM inflava e mandava foldar mãos que pagam fácil e barato
+  // (KQs no BB por 0.7bb num pote de 3.6bb, achado do Allan).
+  const stacks = live.map((p) => (p.stack + p.committed) / bb);
 
   // O vilão do ICM é o agressor real dentro da mesma lista filtrada.
   let villainIdx = t.lastAggressor >= 0 ? filteredSeats.indexOf(t.lastAggressor) : -1;
@@ -67,10 +78,11 @@ function buildIcmSpot(t: TableState, seat: number, payouts?: number[]): IcmSpot 
 
   const hero = live[heroIdx];
   const villain = live[villainIdx];
-  // Risco do confronto Hero-vilão, nunca o menor stack de um terceiro alheio.
-  const heroAvailable = hero.stack;
-  const villainAvailable = villain.stack + villain.committed;
-  const chips = Math.max(0, Math.min(heroAvailable, villainAvailable));
+  // Fichas em jogo no confronto Hero×vilão (BB) = o menor stack TOTAL entre os
+  // dois (o all-in curto capa o pote), nunca o menor stack de um terceiro alheio.
+  const heroTotal = (hero.stack + hero.committed) / bb;
+  const villainTotal = (villain.stack + villain.committed) / bb;
+  const chips = Math.max(0, Math.min(heroTotal, villainTotal));
 
   return { stacks, payouts, hero: heroIdx, villain: villainIdx, chips };
 }

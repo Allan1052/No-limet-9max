@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-03 — Claude — 🐛 CORREÇÃO GRAVE: ICM mandava foldar call barato (KQs/77)
+**O que estava errado (achado do Allan):** contra um all-in curto, o motor mandava
+**FOLDAR mãos fortes que pagam fácil e barato** — ex.: KQs no BB pagando só 0.7bb
+num pote de 3.6bb (você até já tinha o Broadway!), e 77 no SB pagando barato. Isso
+é erro grave e podia custar torneio.
+
+**Causa:** a conta de ICM no call de all-in usava, no pré-flop, os stacks de um
+jeito inconsistente (fichas "atrás" em vez do total, e mistura de unidade fichas×BB
+no custo do fold). Com isso o estado de "se eu pagar e perder" ficava **pior do que
+a realidade**, o ICM inflava a equity exigida (chegava a pedir 53% onde o certo era
+~22%) e mandava foldar mão boa.
+
+**Corrigido:** o call de all-in agora usa os stacks totais em BB, igual ao pós-flop,
+e desconta certo o que você já pagou (custo afundado). Resultado nos spots do Allan:
+KQs passou a **PAGAR** (exige ~22%, tem 57%), 77 passou a **PAGAR** (exige ~46%,
+tem 60%). Onde: decisão/dica em qualquer all-in pré-flop (Torneio/Jogar). Blindado
+com testes novos pra nunca voltar. SELO GTO segue 61/61.
+
 ## 2026-09-02 — Claude — Dica "tá barato" só em mão que tenta + placar POR TORNEIO
 - **A explicação "tá barato, mas..." agora só aparece em mãos que realmente
   tentam** (broadways, ases, pares, mãos do topo). Antes ela saía em QUALQUER

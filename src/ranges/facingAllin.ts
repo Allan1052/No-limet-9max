@@ -142,9 +142,11 @@ export function facingAllinDecision(inp: FacingAllinInput): FacingAllinResult {
   if (inp.icmSpot) {
     // ICM INCREMENTAL: avalia foldar-agora × pagar-agora do ponto atual, com os
     // stacks reais herói×vilão e o que o herói já investiu (custo afundado).
-    // Pré-flop: os stacks do spot já vêm SEM o committed (fichas atrás).
+    // Os stacks do spot são TOTAIS (fichas atrás + committed) — mesma convenção
+    // do pós-flop — então ganhar/perder partem do total ± fichas em jogo e o
+    // estado de FOLD desconta o committed do herói (stacksIncludeCommitted=true).
     icmRequired = requiredEquityForDecision(
-      icmStatesFromSpot(inp.icmSpot, inp.heroCommittedBB ?? 0, false),
+      icmStatesFromSpot(inp.icmSpot, inp.heroCommittedBB ?? 0, true),
     );
   }
   const requiredEquity = Math.max(potOdds, icmRequired);

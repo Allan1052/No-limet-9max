@@ -4,6 +4,7 @@ import { cardsFromString } from "../engine/cards";
 import type { TableState } from "../game/state";
 import { BASELINE_PROFILE } from "./profiles";
 import { preflopContextFor } from "./preflopBot";
+import { icmStatesFromSpot } from "../ranges/icm";
 
 function makeSpot(shortUnrelatedBB: number): TableState {
   const bb = 1000;
@@ -85,9 +86,20 @@ describe("Motor V2 — integração ICM real no preflopBot", () => {
     expect(tiny.icmSpot?.chips).toBeGreaterThan(2);
   });
 
-  it("não devolve ao Hero as 7bb já investidas ao reconstruir o estado ICM", () => {
+  it("stacks do ICM vêm em BB e TOTAIS (atrás + committed): herói 30bb", () => {
+    // Herói: 23000 atrás + 7000 committed = 30000 fichas = 30bb (bb=1000).
     const ctx = preflopContextFor(makeSpot(2), 4, BASELINE_PROFILE, { payouts });
     expect(ctx.icmSpot).toBeTruthy();
-    expect(ctx.icmSpot?.stacks[ctx.icmSpot!.hero]).toBe(23000);
+    expect(ctx.icmSpot?.stacks[ctx.icmSpot!.hero]).toBeCloseTo(30, 6);
+  });
+
+  it("no estado de FOLD o herói não recupera as 7bb investidas (custo afundado)", () => {
+    // O total (30bb) alimenta ganhar/perder; ao FOLDAR o herói fica só com as
+    // fichas atrás (23bb) — o committed vira custo afundado, descontado em BB.
+    const ctx = preflopContextFor(makeSpot(2), 4, BASELINE_PROFILE, { payouts });
+    const committedBB = ctx.heroCommittedBB ?? 0;
+    expect(committedBB).toBeCloseTo(7, 6);
+    const states = icmStatesFromSpot(ctx.icmSpot!, committedBB, true);
+    expect(states.foldStacks[ctx.icmSpot!.hero]).toBeCloseTo(23, 6);
   });
 });

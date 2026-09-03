@@ -2,9 +2,28 @@ import { describe, it, expect } from "vitest";
 import {
   icmEquity,
   requiredEquityToCall,
+  requiredEquityForDecision,
+  icmStatesFromSpot,
   bubbleFactor,
   icmTightenFactor,
 } from "./icm";
+
+describe("ICM — call barato do BB não é inflado (bug KQs do Allan)", () => {
+  // Herói no BB, total 6.5bb (5.5 atrás + 1 blind já pago). Vilão all-in 1.7bb.
+  // 6 vivos, perto do dinheiro. Pagar custa só 0.7bb — jamais deveria exigir
+  // uma equity gigante. O bug: usar os stacks ATRÁS subcontava o estado de
+  // "perder" (herói caía de 5.5→3.8 em vez de 6.5→4.8), inflando a exigência.
+  const payouts = [100, 60, 40, 25, 15, 0];
+  const villainIdx = 3;
+  it("a convenção de stacks TOTAIS exige menos equity que a antiga (atrás)", () => {
+    const totais = { stacks: [6.5, 12, 5, 1.7, 9, 12], payouts, hero: 0, villain: villainIdx, chips: 1.7 };
+    const atras = { stacks: [5.5, 12, 5, 0, 9, 12], payouts, hero: 0, villain: villainIdx, chips: 1.7 };
+    const reqTotais = requiredEquityForDecision(icmStatesFromSpot(totais, 1.0, true));
+    const reqAtras = requiredEquityForDecision(icmStatesFromSpot(atras, 1.0, false));
+    expect(reqTotais).toBeLessThan(reqAtras); // corrigido exige menos
+    expect(reqTotais).toBeLessThan(0.58); // pagável por KQs (~57% de equity)
+  });
+});
 
 describe("ICM — valores de prêmio", () => {
   it("os valores somam o prêmio total", () => {
