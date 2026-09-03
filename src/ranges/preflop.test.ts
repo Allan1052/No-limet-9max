@@ -366,4 +366,28 @@ describe("pré-flop — all-in por equity real (Pilar 1 ligado)", () => {
     });
     expect(d.action).toBe("call");
   });
+
+  // BUG do Allan (Mão 8): DEEP (200bb), A4s 6-betou 74.5bb e enfrentou all-in.
+  // Pelo PREÇO puro "fecharia" (pot-committed do blefe), e o caminho por equity
+  // com o ICM corrigido passou a PAGAR — empilhando 200bb com A4s. Errado: após
+  // uma guerra de 5-bet+, só AA/KK/QQ/AK continuam. O portão de guerra tem que
+  // valer TAMBÉM no caminho por equity (com os dados da mesa presentes).
+  it("A4s NÃO afunda o stack deep numa guerra de 6-bet, mesmo pot-committed", () => {
+    const d = decide("As4s", "MP", {
+      effectiveBB: 200, raiserPosition: "BB", openSizeBB: 200, betLevelFaced: 6,
+      numContesting: 1, contestablePotBB: 277, callAmountBB: 125.5, heroCommittedBB: 74.5,
+      rng: seededRng(5),
+    });
+    expect(d.action).toBe("fold");
+  });
+  it("QQ/AK ainda PAGAM a guerra deep pelo caminho por equity (premium empilha)", () => {
+    for (const h of ["QsQd", "AsKd"]) {
+      const d = decide(h, "MP", {
+        effectiveBB: 200, raiserPosition: "BB", openSizeBB: 200, betLevelFaced: 6,
+        numContesting: 1, contestablePotBB: 277, callAmountBB: 125.5, heroCommittedBB: 74.5,
+        rng: seededRng(5),
+      });
+      expect(d.action).toBe("call");
+    }
+  });
 });

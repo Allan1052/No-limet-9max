@@ -23,6 +23,25 @@ Regras do registro:
 
 ---
 
+## 2026-09-03 — Claude — 🐛 CORREÇÃO GRAVE: bot afundava 200bb com A4 (guerra de re-raise)
+**Achado do Allan (Mão 8):** deep, 200bb, um bot entrou numa guerra de
+open→3bet→4bet→5bet→6bet e **pagou o all-in de 200bb com A4s**. Isso é absurdo —
+ninguém empilha 200bb com A4.
+
+**Causa (honesta):** foi um efeito colateral do meu conserto de ICM de ontem.
+Existe um portão no motor — "depois de guerra de 5-bet+, só AA/KK/QQ/AK
+continuam" — mas o caminho novo de decisão por preço/equity rodava ANTES e
+**furava** esse portão. Antes, a conta de ICM (bugada) exigia 99% e foldava tudo,
+então o furo não aparecia. Quando corrigi o ICM (baixando a exigência pro nível
+certo, o que resolveu o KQs/77), o furo ficou exposto: com A4s já tendo inflado o
+pote, o "preço fechava" (pot-committed) e o bot pagava.
+
+**Corrigido:** o portão de guerra agora vale TAMBÉM no caminho por equity. Numa
+guerra de 5-bet+, mão fora de AA/KK/QQ/AK **folda**, ponto — não importa o preço.
+Verificado: A4s na guerra → FOLD; QQ/AK → CALL (premium empilha certo); e o
+conserto de ontem seguiu de pé (KQs/77 pagam o all-in barato). SELO 61/61,
+3881 testes. Travado com testes de regressão no spot exato do Allan.
+
 ## 2026-09-03 — Claude — 🐛 CORREÇÃO GRAVE: ICM mandava foldar call barato (KQs/77)
 **O que estava errado (achado do Allan):** contra um all-in curto, o motor mandava
 **FOLDAR mãos fortes que pagam fácil e barato** — ex.: KQs no BB pagando só 0.7bb

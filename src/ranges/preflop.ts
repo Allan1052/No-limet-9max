@@ -229,6 +229,29 @@ function equityAllinCall(ctx: PreflopContext, handType: string): PreflopDecision
     rng: ctx.rng,
     iterations: 2500,
   });
+
+  // PORTÃO DE GUERRA DE RE-RAISES (5-bet+): decisão BINÁRIA — só o topo premium
+  // (AA/KK/QQ/AK) continua; o resto FOLDA, mesmo que as pot odds "fechem". Depois
+  // de uma guerra de 5-bet+, quem empurra tem range premium e a mão marginal está
+  // dominada — e, principalmente, você NÃO afunda um stack fundo com lixo só
+  // porque já inflou o pote (pot-committed de um blefe). Sem este portão, o
+  // cálculo por preço deixava o bot empilhar 200bb com A4s num pote de 6-bet
+  // (achado do Allan). Calculamos a equity ANTES (pra manter a conta no card
+  // técnico) e só então travamos a ação. KQs/77 NÃO passam aqui (betLevel 1-2).
+  if (isReRaiseWar(ctx.betLevelFaced) && !WAR_PREMIUM_CALL.has(handType)) {
+    // Mantém a CONTA (equity vs preço) pro card técnico, mas sem o verbo
+    // "Paga/Folda" do cálculo cru (a ação aqui é sempre fold pelo portão).
+    const conta = d.reason.replace(/^(Paga|Folda):\s*/, "").replace(/[.\s]+$/, "");
+    return {
+      action: "fold",
+      sizeBB: 0,
+      reason: `${handType}: ${conta}. Após uma guerra de 5-bet+, só AA/KK/QQ/AK continuam — ${handType} está dominado, então fold (não se afunda o stack).`,
+      handType,
+      equity: d.heroEquity,
+      requiredEquity: d.requiredEquity,
+    };
+  }
+
   return {
     action: d.action,
     sizeBB: d.action === "call" ? ctx.effectiveBB : 0,
