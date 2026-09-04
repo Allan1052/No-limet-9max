@@ -22,10 +22,49 @@ describe("Motor V3 external promotion gate", () => {
     });
   }
 
-  it("BW1-BW5 global fixtures remain shadow-only", () => {
-    for (const fixture of BLIND_WAR_BENCHMARKS) {
+  it("BW1-BW4 remain shadow-only while BW5 exposes only certified pure cells", () => {
+    for (const fixture of BLIND_WAR_BENCHMARKS.slice(0, 4)) {
       expect(fixture.handActionFreq).toBeUndefined();
     }
+
+    expect(Object.keys(BLIND_WAR_BENCHMARKS[4].handActionFreq ?? {}).sort()).toEqual([
+      "72o",
+      "A4s",
+      "T3s",
+    ]);
+  });
+
+  it("BW5 certified pure cells can cross the live hand gate", () => {
+    const bw5 = BLIND_WAR_BENCHMARKS[4];
+    const expected = {
+      T3s: { raise: 1 },
+      A4s: { limp: 1 },
+      "72o": { fold: 1 },
+    } as const;
+
+    for (const [handType, semanticMix] of Object.entries(expected)) {
+      const live = livePreflopV3({
+        node: bw5.node,
+        context: bw5.context,
+        priorActions: bw5.priorActions,
+        handType,
+      });
+      expect(live.source).toBe("V3_CERTIFIED_HAND");
+      expect(live.benchmarkId).toBe("BW5");
+      expect(live.semanticMix).toEqual(semanticMix);
+    }
+  });
+
+  it("uncertified BW5 hands still fall back to V2", () => {
+    const bw5 = BLIND_WAR_BENCHMARKS[4];
+    const live = livePreflopV3({
+      node: bw5.node,
+      context: bw5.context,
+      priorActions: bw5.priorActions,
+      handType: "AKo",
+    });
+
+    expect(live.source).toBe("FALLBACK_V2");
   });
 
   it("never promotes an unmatched nearby stack as certified", () => {
