@@ -92,7 +92,11 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
       // Pure cells visually certified in the official GTO Wizard 40bb / 25%-field SB grid.
       T3s: { raise: 1 },
       A4s: { limp: 1 },
+      A3s: { limp: 1 },
+      K4s: { limp: 1 },
       "72o": { fold: 1 },
+      "62o": { fold: 1 },
+      "52o": { fold: 1 },
     },
     tolerance: 0.005,
     notes: [
