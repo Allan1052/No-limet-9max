@@ -3,7 +3,11 @@ import { cardsFromString } from "../engine/cards";
 import { BASELINE_PROFILE } from "../bots/profiles";
 import { BLIND_WAR_BENCHMARKS } from "../v3/benchmarks/blindWar";
 import type { LivePreflopV3Result } from "../v3/livePreflopBridge";
-import { mapCertifiedV3PreflopDecision, preflopDecision } from "./preflop";
+import { preflopDecision } from "./preflop";
+import {
+  mapCertifiedV3PreflopDecision,
+  preflopDecisionV3Aware,
+} from "./preflopV3Adapter";
 
 function sbBase() {
   return {
@@ -20,7 +24,7 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
     const ctx = sbBase();
     const legacy = preflopDecision(ctx);
     const bw1 = BLIND_WAR_BENCHMARKS[0];
-    const withV3 = preflopDecision({
+    const withV3 = preflopDecisionV3Aware({
       ...ctx,
       v3Node: bw1.node,
       v3TournamentContext: bw1.context,
@@ -45,7 +49,7 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
       semanticMix: { limp: 1 },
     };
 
-    const mapped = mapCertifiedV3PreflopDecision("72o", certified);
+    const mapped = mapCertifiedV3PreflopDecision("72o", certified, 20);
     expect(mapped?.action).toBe("call");
     expect(mapped?.sizeBB).toBe(1);
     expect(mapped?.semanticAction).toBe("limp");
@@ -58,6 +62,6 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
       source: "FALLBACK_V2",
       evidence: { level: "FALLBACK_V2" },
     };
-    expect(mapCertifiedV3PreflopDecision("AKo", fallback)).toBeNull();
+    expect(mapCertifiedV3PreflopDecision("AKo", fallback, 20)).toBeNull();
   });
 });
