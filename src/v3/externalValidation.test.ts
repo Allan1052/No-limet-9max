@@ -28,12 +28,16 @@ describe("Motor V3 external promotion gate", () => {
     }
 
     expect(Object.keys(BLIND_WAR_BENCHMARKS[4].handActionFreq ?? {}).sort()).toEqual([
+      "42o",
       "52o",
       "62o",
       "72o",
+      "A2s",
       "A3s",
       "A4s",
+      "K3s",
       "K4s",
+      "Q4s",
       "T3s",
     ]);
   });
@@ -44,10 +48,14 @@ describe("Motor V3 external promotion gate", () => {
       T3s: { raise: 1 },
       A4s: { limp: 1 },
       A3s: { limp: 1 },
+      A2s: { limp: 1 },
       K4s: { limp: 1 },
+      K3s: { limp: 1 },
+      Q4s: { limp: 1 },
       "72o": { fold: 1 },
       "62o": { fold: 1 },
       "52o": { fold: 1 },
+      "42o": { fold: 1 },
     } as const;
 
     for (const [handType, semanticMix] of Object.entries(expected)) {
