@@ -49,4 +49,31 @@ describe("Blind War external fixtures", () => {
     expect(handCertified.handActionFreq?.AKo.raise).toBe(1);
     expect(handCertified.handActionFreq?.["72o"].fold).toBe(1);
   });
+
+  it("stores certified sizing as a distribution without changing BW5 semantics", () => {
+    const bw5 = BLIND_WAR_BENCHMARKS[4];
+    expect(bw5.actionSizing).toEqual({
+      raise: [{ sizeBB: 3, freq: 1 }],
+    });
+    expect("actionSizeBB" in bw5).toBe(false);
+  });
+
+  it("fixture contract can represent two sizings for one action", () => {
+    const multi: ExternalBenchmarkFixture = {
+      ...BLIND_WAR_BENCHMARKS[0],
+      id: "TEST_MULTI_SIZING",
+      actionSizing: {
+        raise: [
+          { sizeBB: 3.5, freq: 0.65 },
+          { sizeBB: 7, freq: 0.35 },
+        ],
+      },
+      handSizingFreq: {
+        A5s: { raise: { 3.5: 0.4, 7: 0.6 } },
+      },
+    };
+
+    expect(multi.actionSizing?.raise).toHaveLength(2);
+    expect(multi.handSizingFreq?.A5s.raise?.[7]).toBe(0.6);
+  });
 });
