@@ -47,8 +47,7 @@ function semanticMixToPreflopMix(
 /**
  * Converte somente uma estratégia PURA de mão certificada em uma decisão legal
  * do motor atual. Estratégias mistas continuam em shadow nesta entrega.
- * O primeiro boundary cobre RFI Blind War: fold / limp / shove. Raise precisa
- * de sizing certificado explícito no contrato e, por isso, ainda cai no V2.
+ * Raise só atravessa quando o próprio fixture traz sizing certificado explícito.
  */
 export function mapCertifiedV3PreflopDecision(
   handType: string,
@@ -76,12 +75,16 @@ export function mapCertifiedV3PreflopDecision(
   if (semantic === "limp") {
     return { ...common, action: "call", sizeBB: 1, semanticAction: "limp" };
   }
+  if (semantic === "raise") {
+    const sizeBB = result.actionSizeBB?.raise;
+    if (!Number.isFinite(sizeBB) || (sizeBB ?? 0) <= 1) return null;
+    return { ...common, action: "raise", sizeBB: sizeBB as number };
+  }
   if (semantic === "jam" || semantic === "shove") {
     return { ...common, action: "jam", sizeBB: effectiveBB };
   }
 
-  // Raise/call/3bet/check precisam de sizing/preço/árvore certificados no
-  // boundary correspondente. Sem esses dados, não inferimos nada.
+  // Call/3bet/check precisam de preço/árvore/sizing certificados no boundary correspondente.
   return null;
 }
 
