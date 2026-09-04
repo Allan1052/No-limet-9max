@@ -57,6 +57,16 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
     expect(mapped?.v3EvidenceLevel).toBe("CERTIFIED");
   });
 
+  it("mixed certified strategy stays shadow-only in this delivery", () => {
+    const mixed: LivePreflopV3Result = {
+      source: "V3_CERTIFIED_HAND",
+      benchmarkId: "TEST_MIXED",
+      evidence: { level: "CERTIFIED", solver: "GTO_WIZARD" },
+      semanticMix: { limp: 0.6, raise: 0.4 },
+    };
+    expect(mapCertifiedV3PreflopDecision("A5s", mixed, 20)).toBeNull();
+  });
+
   it("fallback result never maps into a V3 live decision", () => {
     const fallback: LivePreflopV3Result = {
       source: "FALLBACK_V2",
