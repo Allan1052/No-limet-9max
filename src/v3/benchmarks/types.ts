@@ -11,6 +11,7 @@ export interface ExternalBenchmarkFixture {
   context: TournamentContextV3;
   priorActions: string[];
   actionFreq: Record<string, number>;
+  actionSizeBB?: Partial<Record<BlindWarAction, number>>;
   tolerance: number;
   handActionFreq?: Record<string, HandActionFreq>;
   notes?: string[];
