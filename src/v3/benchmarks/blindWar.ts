@@ -87,6 +87,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     },
     priorActions: [],
     actionFreq: { shove: 0.000, raise: 0.119, limp: 0.763, fold: 0.117 },
+    actionSizeBB: { raise: 3 },
     handActionFreq: {
       // Pure cells visually certified in the official GTO Wizard 40bb / 25%-field SB grid.
       T3s: { raise: 1 },
@@ -97,6 +98,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     notes: [
       "High-ICM benchmark; visible frequencies sum to 99.9% due to solver rounding.",
       "Hand-level pure cells cross-checked against the official GTO Wizard article 'ICM and Blind Battles: The Small Blind', image 6 (40bb symmetric stacks, 25% field remaining). Mixed/ambiguous cells remain uncertified.",
+      "Raise size is certified at R3 = 3bb for this exact node; no sizing is inferred for other Blind War fixtures.",
     ],
   },
 ];
