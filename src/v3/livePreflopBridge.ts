@@ -24,6 +24,7 @@ export interface LivePreflopV3Result {
   source: "V3_CERTIFIED_HAND" | "FALLBACK_V2";
   benchmarkId?: string;
   semanticMix?: Partial<Record<V3SemanticPreflopAction, number>>;
+  actionSizeBB?: Partial<Record<V3SemanticPreflopAction, number>>;
   evidence: EvidenceSource;
 }
 
@@ -69,6 +70,7 @@ export function livePreflopFromFixtures(
     source: "V3_CERTIFIED_HAND",
     benchmarkId: fixture.id,
     semanticMix: { ...handMix },
+    actionSizeBB: fixture.actionSizeBB ? { ...fixture.actionSizeBB } : undefined,
     evidence: fixture.evidence,
   };
 }
