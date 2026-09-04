@@ -36,7 +36,7 @@ export type ActionSizingDistribution = Partial<
 
 Cada opção representa um sizing explicitamente visível no benchmark.
 
-`freq` é opcional porque a fonte pode certificar a existência do sizing sem mostrar uma frequência confiável.
+`freq` é opcional porque a fonte pode certificar a existência do sizing sem mostrar uma frequência confiável. Se nenhuma ou apenas parte das opções tiver `freq`, o contrato preserva essa ausência de precisão; o validator não completa nem normaliza os valores. A soma 1 só é exigida quando todas as opções da ação tiverem frequência declarada.
 
 ### Fixture
 
@@ -123,8 +123,9 @@ O bridge apenas transporta dados certificados do fixture exato. Não resolve pre
 Validações no bridge:
 - `handActionFreq` continua somando 1;
 - `handSizingFreq` só é aceito quando sua mão/ação existe;
-- todos os `sizeBB` são finitos e maiores que 1 para raises pré-flop não-all-in;
-- frequências declaradas por sizing somam 1;
+- todos os `sizeBB` devem ser finitos e positivos; para `raise` pré-flop não-all-in devem ser maiores que 1bb;
+- quando todas as opções globais de sizing de uma ação declararem `freq`, essas frequências devem somar 1; se a fonte não declarar a distribuição completa, preservar `freq` ausente sem inventar normalização;
+- frequências mão-a-mão por sizing declaradas devem sempre somar 1 dentro da ação;
 - sizings mão-a-mão precisam pertencer ao conjunto de sizings globais certificados da ação.
 
 ## Adapter live
@@ -156,14 +157,16 @@ A migração de `actionSizeBB: { raise: 3 }` para `actionSizing: { raise: [{ siz
 ### Contrato
 - fixture aceita um sizing único;
 - fixture aceita dois sizings para a mesma ação;
-- sizing inválido é rejeitado pelo caminho de validação.
+- sizing inválido é rejeitado pelo caminho de validação;
+- distribuição global completa com frequências que não somam 1 é rejeitada;
+- distribuição global incompleta mantém `freq` ausente sem normalização artificial.
 
 ### Bridge
 - sizing único é transportado sem alteração;
 - multi-sizing é transportado sem colapsar para um único valor;
 - `handSizingFreq` válido é transportado;
 - sizing de mão fora do conjunto global certificado é rejeitado;
-- frequências de sizing que não somam 1 são rejeitadas.
+- frequências de sizing da mão que não somam 1 são rejeitadas.
 
 ### Adapter
 - raise puro + sizing único -> decisão live com sizing correto;
