@@ -15,10 +15,17 @@ describe("Blind War external fixtures", () => {
     }
   });
 
-  it("does not invent hand-level strategy when source only certifies global frequencies", () => {
-    for (const fixture of BLIND_WAR_BENCHMARKS) {
+  it("keeps BW1-BW4 global-only and certifies only visually pure BW5 cells", () => {
+    for (const fixture of BLIND_WAR_BENCHMARKS.slice(0, 4)) {
       expect(fixture.handActionFreq).toBeUndefined();
     }
+
+    const bw5 = BLIND_WAR_BENCHMARKS[4];
+    expect(bw5.handActionFreq).toEqual({
+      T3s: { raise: 1 },
+      A4s: { limp: 1 },
+      "72o": { fold: 1 },
+    });
   });
 
   it("accepts an explicitly certified hand-level strategy in the fixture contract", () => {
