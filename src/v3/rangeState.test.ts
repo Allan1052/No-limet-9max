@@ -14,7 +14,7 @@ describe("PlayerRangeState", () => {
     expect(next.handFreq.AA).toBeCloseTo(0.1);
     expect(next.handFreq.AKo).toBeCloseTo(0.5);
     expect(next.handFreq["72o"]).toBeCloseTo(0.5);
-    expect(next.history.at(-1)?.action).toBe("limp");
+    expect(next.history[next.history.length - 1]?.action).toBe("limp");
   });
 
   it("reports weighted combo percentage over 1326 combos", () => {
