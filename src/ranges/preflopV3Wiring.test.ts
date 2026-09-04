@@ -19,6 +19,20 @@ function sbBase() {
   };
 }
 
+function bw5Context(hand: string) {
+  const bw5 = BLIND_WAR_BENCHMARKS[4];
+  return {
+    heroPosition: "SB" as const,
+    hand: cardsFromString(hand),
+    effectiveBB: 40,
+    profile: BASELINE_PROFILE,
+    variant: "holdem" as const,
+    v3Node: bw5.node,
+    v3TournamentContext: bw5.context,
+    v3PriorActions: bw5.priorActions,
+  };
+}
+
 describe("Motor V3 — wiring pré-flop controlado", () => {
   it("global-only BW1 does not override the existing V2 hand decision", () => {
     const ctx = sbBase();
@@ -34,6 +48,27 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
     expect(withV3.action).toBe(legacy.action);
     expect(withV3.sizeBB).toBe(legacy.sizeBB);
     expect(withV3.v3BenchmarkId).toBeUndefined();
+  });
+
+  it("certified BW5 limp and fold cross live with exact semantics", () => {
+    const limp = preflopDecisionV3Aware(bw5Context("As4s"));
+    expect(limp.action).toBe("call");
+    expect(limp.sizeBB).toBe(1);
+    expect(limp.semanticAction).toBe("limp");
+    expect(limp.v3BenchmarkId).toBe("BW5");
+
+    const fold = preflopDecisionV3Aware(bw5Context("7s2d"));
+    expect(fold.action).toBe("fold");
+    expect(fold.sizeBB).toBe(0);
+    expect(fold.v3BenchmarkId).toBe("BW5");
+  });
+
+  it("certified BW5 T3s raises to the solver-proven 3bb size", () => {
+    const raise = preflopDecisionV3Aware(bw5Context("Ts3s"));
+    expect(raise.action).toBe("raise");
+    expect(raise.sizeBB).toBe(3);
+    expect(raise.v3BenchmarkId).toBe("BW5");
+    expect(raise.v3EvidenceLevel).toBe("CERTIFIED");
   });
 
   it("certified limp maps to legal call-to-1BB plus explicit limp semantics", () => {
