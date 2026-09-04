@@ -59,7 +59,7 @@ Cada jogador ativo carrega uma distribuição handType -> frequência [0..1], co
 - contexto usado;
 - histórico de transformações;
 - peso total em combos;
-- timestamp/versionamento do modelo.
+- versionamento do modelo.
 
 O estado deve permitir 169 classes e, quando necessário, expansão para combos exatos para card removal.
 
@@ -159,6 +159,9 @@ Cada benchmark deverá ser representado por fixture estruturada, contendo:
 - hand-level frequencies quando visualmente certificadas;
 - sizing;
 - EV quando visível;
+- toleranceGlobalPctPoints;
+- toleranceHandPctPoints quando houver frequência de mão certificada;
+- comparatorMode: exact | band | informational;
 - notas de divergência/coaching separadas da saída solver.
 
 Fixtures certificadas não devem embutir inferências não visíveis.
@@ -169,10 +172,13 @@ O V3 não pode assumir que um spot certificado em 20bb representa automaticament
 
 Regras:
 - CERTIFICADO vale para o domínio exato ou uma vizinhança explicitamente definida por evidência;
-- interpolação entre dois pontos certificados só é permitida quando formato, fase, coverage e árvore de ação forem compatíveis;
-- extrapolação não será marcada como certificada;
+- extrapolação nunca será marcada como certificada;
 - quando não houver suporte suficiente, usar CALIBRADO ou FALLBACK_V2;
 - a UI não precisa expor inicialmente esses rótulos, mas o motor/testes devem carregá-los.
+
+### Regra da primeira entrega
+
+Na primeira implementação de Blind War não haverá interpolação automática entre benchmarks. O seletor de benchmark exigirá correspondência exata dos campos estruturais relevantes do fixture — formato, fase/bucket quando declarado, stacks do nó, relação de coverage e sequência de ações. Se não houver correspondência exata, o nó não será marcado CERTIFICADO e deverá usar CALIBRADO ou FALLBACK_V2. Interpolação só poderá ser adicionada em uma etapa posterior com pelo menos dois pontos certificados compatíveis que suportem explicitamente essa transição.
 
 ## Composição das 169 mãos
 
@@ -199,7 +205,7 @@ O baseline nunca deve ser alterado silenciosamente por perfil de bot em testes G
 
 Critério de comparação:
 - não exigir igualdade exata de RNG;
-- comparar distribuição/frequência dentro de tolerância;
+- comparar distribuição/frequência dentro da tolerância declarada no fixture;
 - considerar ações de EV quase equivalente como mix aceitável quando o solver demonstrar isso.
 
 ## Sizing
@@ -212,7 +218,7 @@ V3 deve suportar uma árvore de sizings candidatos por nó, por exemplo:
 - 66/75%;
 - pot;
 - overbet;
-- shove;
+- shove.
 
 A árvore real dependerá da rua e do contexto. Não é necessário gerar todas as opções em todos os spots.
 
@@ -284,11 +290,12 @@ Nenhuma etapa deve exigir substituição total do motor de uma vez.
 ## Critério de promoção de um nó V3
 
 Um nó só pode substituir o V2 se cumprir:
-- ação tree compatível;
-- frequência global dentro da tolerância definida pelo fixture;
-- composição hand-level compatível onde certificada;
+- action tree compatível;
+- frequência global dentro de toleranceGlobalPctPoints do fixture;
+- composição hand-level dentro de toleranceHandPctPoints onde certificada;
 - mixes preservados onde visíveis;
 - contexto de formato/stack/coverage/fase compatível;
+- fixture com comparatorMode=exact ou band; informational nunca promove um nó;
 - testes antigos relevantes continuam passando ou possuem justificativa documentada para alteração;
 - nenhuma regressão grave em ICM, side pots, legalidade de ação ou engine de jogo.
 
@@ -312,13 +319,14 @@ Exemplos:
 
 ## Tolerâncias
 
-Tolerâncias serão definidas por fixture conforme qualidade visual e granularidade do solver.
+Toda fixture deve declarar a tolerância que realmente pode ser defendida pela fonte. Não haverá tolerância global implícita no código.
 
-Diretriz inicial:
-- frequência global claramente visível: tolerância estreita;
-- frequência combo-level arredondada/visualmente estimada: tolerância mais ampla;
-- EV visível com arredondamento: comparar sinal e banda, não casas decimais artificiais;
-- HRC parcial: teste informativo/tolerance-band, não gate de promoção.
+Regras:
+- frequência global claramente visível: fixture usa comparatorMode exact ou band com toleranceGlobalPctPoints explícita;
+- frequência combo-level arredondada/visualmente estimada: toleranceHandPctPoints explícita e normalmente mais ampla que a global;
+- EV visível com arredondamento: comparar sinal e/ou banda declarada, não casas decimais artificiais;
+- HRC parcial: comparatorMode informational ou band sem poder automático de promoção;
+- ausência de um campo visualmente comprovável significa que aquele campo não entra como gate.
 
 Nenhum teste deve fabricar precisão maior que a fonte.
 
