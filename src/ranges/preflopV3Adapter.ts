@@ -25,16 +25,15 @@ export interface V3AwarePreflopDecision extends PreflopDecision {
   v3EvidenceLevel?: EvidenceLevel;
 }
 
-function dominantSemanticAction(
+function pureSemanticAction(
   mix: Partial<Record<V3SemanticPreflopAction, number>>,
 ): V3SemanticPreflopAction | null {
   const entries = Object.entries(mix) as Array<[V3SemanticPreflopAction, number | undefined]>;
   const valid = entries.filter((entry): entry is [V3SemanticPreflopAction, number] =>
-    Number.isFinite(entry[1]),
+    Number.isFinite(entry[1]) && (entry[1] ?? 0) > 0,
   );
-  if (valid.length === 0) return null;
-  valid.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  return valid[0][0];
+  if (valid.length !== 1) return null;
+  return valid[0][1] >= 0.999999 ? valid[0][0] : null;
 }
 
 function semanticMixToPreflopMix(
@@ -46,10 +45,10 @@ function semanticMixToPreflopMix(
 }
 
 /**
- * Converte somente uma estratégia de mão certificada em uma decisão legal do
- * motor atual. Este primeiro boundary cobre apenas o nó RFI Blind War:
- * fold / limp / raise / shove. Ações que precisam de preço/sizing de uma árvore
- * posterior permanecem no V2 até terem um adapter próprio.
+ * Converte somente uma estratégia PURA de mão certificada em uma decisão legal
+ * do motor atual. Estratégias mistas continuam em shadow nesta entrega.
+ * O primeiro boundary cobre RFI Blind War: fold / limp / shove. Raise precisa
+ * de sizing certificado explícito no contrato e, por isso, ainda cai no V2.
  */
 export function mapCertifiedV3PreflopDecision(
   handType: string,
@@ -60,7 +59,7 @@ export function mapCertifiedV3PreflopDecision(
     return null;
   }
 
-  const semantic = dominantSemanticAction(result.semanticMix);
+  const semantic = pureSemanticAction(result.semanticMix);
   if (!semantic) return null;
 
   const common = {
@@ -77,20 +76,19 @@ export function mapCertifiedV3PreflopDecision(
   if (semantic === "limp") {
     return { ...common, action: "call", sizeBB: 1, semanticAction: "limp" };
   }
-  if (semantic === "raise") {
-    return { ...common, action: "raise", sizeBB: 2 };
-  }
   if (semantic === "jam" || semantic === "shove") {
     return { ...common, action: "jam", sizeBB: effectiveBB };
   }
 
+  // Raise/call/3bet/check precisam de sizing/preço/árvore certificados no
+  // boundary correspondente. Sem esses dados, não inferimos nada.
   return null;
 }
 
 /**
  * Boundary de migração: consulta V3 apenas em RFI Hold'em explicitamente
- * contextualizado. Qualquer ausência de evidência mão-a-mão, contexto diferente
- * ou ação ainda não suportada cai integralmente no preflopDecision V2.
+ * contextualizado. Qualquer ausência de evidência mão-a-mão, contexto diferente,
+ * stack efetivo inconsistente ou ação não suportada cai integralmente no V2.
  */
 export function preflopDecisionV3Aware(ctx: V3AwarePreflopContext): V3AwarePreflopDecision {
   if (
@@ -98,6 +96,7 @@ export function preflopDecisionV3Aware(ctx: V3AwarePreflopContext): V3AwarePrefl
     && !ctx.raiserPosition
     && ctx.v3Node
     && ctx.v3TournamentContext
+    && Math.abs(ctx.effectiveBB - ctx.v3TournamentContext.effectiveStackBB) <= 1e-9
   ) {
     const handType = comboToHandType(ctx.hand[0], ctx.hand[1]);
     const result = livePreflopV3({
