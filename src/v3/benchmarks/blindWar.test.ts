@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BLIND_WAR_BENCHMARKS } from "./blindWar";
+import type { ExternalBenchmarkFixture } from "./types";
 
 describe("Blind War external fixtures", () => {
   it("contains BW1-BW5 and marks all as certified", () => {
@@ -12,5 +13,25 @@ describe("Blind War external fixtures", () => {
       const total = Object.values(fixture.actionFreq).reduce((a, b) => a + b, 0);
       expect(total).toBeCloseTo(1, 2);
     }
+  });
+
+  it("does not invent hand-level strategy when source only certifies global frequencies", () => {
+    for (const fixture of BLIND_WAR_BENCHMARKS) {
+      expect(fixture.handActionFreq).toBeUndefined();
+    }
+  });
+
+  it("accepts an explicitly certified hand-level strategy in the fixture contract", () => {
+    const handCertified: ExternalBenchmarkFixture = {
+      ...BLIND_WAR_BENCHMARKS[0],
+      id: "TEST_HAND_CERTIFIED",
+      handActionFreq: {
+        AKo: { raise: 1 },
+        "72o": { fold: 1 },
+      },
+    };
+
+    expect(handCertified.handActionFreq?.AKo.raise).toBe(1);
+    expect(handCertified.handActionFreq?.["72o"].fold).toBe(1);
   });
 });
