@@ -22,9 +22,11 @@ interface ControlsProps {
   isOmaha?: boolean;
   defaultRaiseTo?: number;
   coachBetSize?: number;
+  /** Muda quando o Allan toca na dica do coach: preenche o valor sugerido. */
+  applyCoachNonce?: number;
 }
 
-export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, coachBetSize }: ControlsProps) {
+export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, coachBetSize, applyCoachNonce }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
@@ -34,6 +36,15 @@ export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, co
     const start = defaultRaiseTo ?? legal.minRaiseTo;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
   }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
+
+  // Toque na dica do coach: preenche o valor sugerido (bb → fichas), limitado
+  // ao mínimo/máximo legal. Só dispara quando o nonce muda (cada toque).
+  useEffect(() => {
+    if (!applyCoachNonce || !coachBetSize || coachBetSize <= 0) return;
+    const to = Math.round(coachBetSize * bigBlind);
+    setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, to)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applyCoachNonce]);
 
   const canRaise = active && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo;
 

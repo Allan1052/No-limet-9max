@@ -115,7 +115,7 @@ export function vsReraiseDecision(inp: VsReraiseInput): VsReraiseResult {
     eqFull,
     flatRequired: deepOopFlat ? oopRequired : flatRequired,
     reason: inp.inPosition
-      ? `folda: equity ${p(eqFull)} < preço ${p(flatRequired)} e não domina o range de all-in.`
+      ? `folda: equity ${p(eqFull)} < preço ${p(flatRequired)} e fica dominada contra o range que re-raise.`
       : `folda: fora de posição e sem valor suficiente para continuar (equity ${p(eqFull)} vs range cheio).`,
   };
 }

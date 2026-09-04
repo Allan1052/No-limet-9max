@@ -100,6 +100,10 @@ export function App() {
   // Quando o usuário troca de modo, o level muda junto
   const effectiveLevel: UserSubscriptionLevel = mode === "tecnico" ? "technical" : "free";
   const [splashComplete, setSplashComplete] = useState(false);
+  // Contador que "dispara" o preenchimento do tamanho sugerido pelo coach nos
+  // controles quando o Allan toca na dica (cada toque incrementa → o Controls
+  // reage e preenche o valor do raise/bet).
+  const [coachApplyNonce, setCoachApplyNonce] = useState(0);
   const [guidedDone, setGuidedDone] = useState<boolean>(() => hasSeenGuidedHand());
   const [gameVariant, setGameVariant] = useState<"holdem" | "omaha">("holdem");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
@@ -358,6 +362,21 @@ export function App() {
   // "Porquê" curto só nos spots que enganam (ex.: fold com preço barato). Vem do
   // motivo real do motor — não aparece nas jogadas óbvias.
   const coachTrapNote = hint ? coachHintView?.trapNote : undefined;
+  // Tamanho (bb) que o coach sugere apostar/aumentar — o MESMO que aparece na
+  // dica ("Bet ~8.6bb"). Quando existe, a dica vira clicável e preenche esse
+  // valor no controle de raise/bet (pedido do Allan).
+  const coachSizeBB = (() => {
+    if (!coachDecision) return undefined;
+    const aggro = ["bet", "raise", "3bet", "jam"].includes(coachDecision.action);
+    if (!aggro) return undefined;
+    if (coachDecision.betSizeBB && coachDecision.betSizeBB > 0) return coachDecision.betSizeBB;
+    if (coachDecision.street === "preflop") {
+      const to = controller.suggestedRaiseTo();
+      return to ? Math.round((to / (t.bigBlind || 1)) * 10) / 10 : undefined;
+    }
+    return undefined;
+  })();
+  const hintFillable = heroTurn && !!hint && !!coachSizeBB && coachSizeBB > 0;
 
   // "Nova mão" isolado: é o único controle que fica EMBAIXO da mesa depois da
   // mão (continuar rápido). Todo o resto (dicas + ações) fica só no modal.
@@ -537,9 +556,16 @@ export function App() {
         <div className="play">
           <SessionProgressStrip summary={progress()} tournament={controller.tournamentProgress()} />
           {heroTurn && hint ? (
-            <div className={`play-coach-bar${coachTrapNote ? " has-why" : ""}`}>
+            <div
+              className={`play-coach-bar${coachTrapNote ? " has-why" : ""}${hintFillable ? " fillable" : ""}`}
+              role={hintFillable ? "button" : undefined}
+              tabIndex={hintFillable ? 0 : undefined}
+              title={hintFillable ? "Tocar para preencher o valor sugerido" : undefined}
+              onClick={hintFillable ? () => { trackEvent("coach_size_applied"); setCoachApplyNonce((n) => n + 1); } : undefined}
+            >
               <span className="coach-action">💡 {hint}</span>
               {coachTrapNote ? <span className="coach-why">{coachTrapNote}</span> : null}
+              {hintFillable ? <span className="coach-tap">tocar para usar</span> : null}
             </div>
           ) : null}
           <PokerTable
@@ -578,19 +604,8 @@ export function App() {
               }}
               isOmaha={t.variant === "omaha"}
               defaultRaiseTo={controller.suggestedRaiseTo()}
-              coachBetSize={(() => {
-                // Sizing ao vivo: o coach mostra o tamanho certo ANTES da decisão.
-                // Pós-flop vem do advice (bet/raise); pré-flop, do suggestedRaiseTo.
-                const adv = controller.computeHeroAdvice();
-                const bb = t.bigBlind || 1;
-                const aggro = adv && ["bet", "raise", "3bet", "jam"].includes(adv.action);
-                if (aggro && adv && adv.betSizeBB && adv.betSizeBB > 0) return adv.betSizeBB;
-                if (aggro && adv && adv.kind === "preflop") {
-                  const to = controller.suggestedRaiseTo();
-                  return to ? Math.round((to / bb) * 10) / 10 : undefined;
-                }
-                return undefined;
-              })()}
+              coachBetSize={coachSizeBB}
+              applyCoachNonce={coachApplyNonce}
             />
                     )}
         </div>

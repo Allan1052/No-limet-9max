@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-04 — Claude — Texto da dica bate com a mão + tocar na dica preenche o valor
+- **Texto da dica corrigido.** Ao enfrentar um **3-bet**, a dica dizia "não domina
+  o range de **all-in**" — mas não havia all-in nenhum, era um 3-bet. Agora diz
+  "fica dominada contra o range que **re-raise**", que bate com a mão. Onde: faixa
+  de dica quando você enfrenta um 3-bet/4-bet.
+- **Tocar na dica preenche o valor.** Quando o coach sugere um tamanho (ex.: "Bet
+  ~8.6bb" / "Raise 12bb"), agora dá pra **tocar na dica** que ela **preenche
+  automático** aquele valor no controle de aposta/raise — é só confirmar. A dica
+  mostra "tocar para usar" quando é clicável. Onde: mesa, na hora da sua decisão.
+
 ## 2026-09-03 — Claude — 🐛 CORREÇÃO GRAVE: bot afundava 200bb com A4 (guerra de re-raise)
 **Achado do Allan (Mão 8):** deep, 200bb, um bot entrou numa guerra de
 open→3bet→4bet→5bet→6bet e **pagou o all-in de 200bb com A4s**. Isso é absurdo —
