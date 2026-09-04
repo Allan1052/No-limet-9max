@@ -24,7 +24,11 @@ describe("Blind War external fixtures", () => {
     expect(bw5.handActionFreq).toEqual({
       T3s: { raise: 1 },
       A4s: { limp: 1 },
+      A3s: { limp: 1 },
+      K4s: { limp: 1 },
       "72o": { fold: 1 },
+      "62o": { fold: 1 },
+      "52o": { fold: 1 },
     });
   });
 
