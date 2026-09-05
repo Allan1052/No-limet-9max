@@ -88,6 +88,7 @@ describe("Motor V3 external promotion gate", () => {
       node: "SB_RFI",
       context: {
         format: "PKO",
+        stage: "IN_THE_MONEY",
         fieldRemainingPct: 50,
         positions: ["SB", "BB"],
         stacksBB: { SB: 38, BB: 25 },
