@@ -14,6 +14,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     evidence: source("00:20-00:55"),
     context: {
       format: "PKO",
+      stage: "IN_THE_MONEY",
       fieldRemainingPct: 50,
       positions: ["SB", "BB"],
       stacksBB: { SB: 33, BB: 20 },
@@ -30,6 +31,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     evidence: source("01:14-02:20"),
     context: {
       format: "PKO",
+      stage: "IN_THE_MONEY",
       fieldRemainingPct: 50,
       positions: ["SB", "BB"],
       stacksBB: { SB: 33, BB: 20 },
@@ -46,6 +48,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     evidence: source("05:21-06:12"),
     context: {
       format: "PKO",
+      stage: "IN_THE_MONEY",
       fieldRemainingPct: 50,
       positions: ["SB", "BB"],
       stacksBB: { SB: 27, BB: 53 },
@@ -63,6 +66,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     evidence: source("07:22-08:08"),
     context: {
       format: "VANILLA",
+      stage: "IN_THE_MONEY",
       fieldRemainingPct: 50,
       positions: ["SB", "BB"],
       stacksBB: { SB: 33, BB: 20 },
@@ -79,6 +83,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     evidence: source("32:28-33:15"),
     context: {
       format: "VANILLA",
+      stage: "IN_THE_MONEY",
       fieldRemainingPct: 25,
       positions: ["SB", "BB"],
       stacksBB: { SB: 40, BB: 40 },
