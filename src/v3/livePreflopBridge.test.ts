@@ -9,14 +9,18 @@ const handFixture: ExternalBenchmarkFixture = {
   handActionFreq: { AKo: { raise: 1 } },
 };
 
+function run(fixture: ExternalBenchmarkFixture, handType = "AKo") {
+  return livePreflopFromFixtures([fixture], {
+    node: fixture.node,
+    context: fixture.context,
+    priorActions: fixture.priorActions,
+    handType,
+  });
+}
+
 describe("livePreflopV3 evidence gate", () => {
   it("allows an exact certified hand-level strategy to drive live action", () => {
-    const result = livePreflopFromFixtures([handFixture], {
-      node: handFixture.node,
-      context: handFixture.context,
-      priorActions: handFixture.priorActions,
-      handType: "AKo",
-    });
+    const result = run(handFixture);
     expect(result.source).toBe("V3_CERTIFIED_HAND");
     expect(result.benchmarkId).toBe("TEST_BW_HAND");
     expect(result.semanticMix).toEqual({ raise: 1 });
@@ -29,14 +33,54 @@ describe("livePreflopV3 evidence gate", () => {
       actionSizing: { raise: [{ sizeBB: 3.5 }, { sizeBB: 7 }] },
       handSizingFreq: { AKo: { raise: { 3.5: 0.4, 7: 0.6 } } },
     };
-    const result = livePreflopFromFixtures([fixture], {
-      node: fixture.node,
-      context: fixture.context,
-      priorActions: fixture.priorActions,
-      handType: "AKo",
-    });
+    const result = run(fixture);
     expect(result.actionSizing?.raise).toEqual([{ sizeBB: 3.5 }, { sizeBB: 7 }]);
     expect(result.handSizingMix?.raise).toEqual({ 3.5: 0.4, 7: 0.6 });
+  });
+
+  it("accepts a complete global sizing distribution only when frequencies sum to one", () => {
+    const valid: ExternalBenchmarkFixture = {
+      ...handFixture,
+      id: "TEST_GLOBAL_FREQ_OK",
+      actionSizing: { raise: [{ sizeBB: 3.5, freq: 0.7 }, { sizeBB: 7, freq: 0.3 }] },
+    };
+    expect(run(valid).actionSizing?.raise).toEqual(valid.actionSizing?.raise);
+
+    const invalid: ExternalBenchmarkFixture = {
+      ...valid,
+      id: "TEST_GLOBAL_FREQ_BAD",
+      actionSizing: { raise: [{ sizeBB: 3.5, freq: 0.7 }, { sizeBB: 7, freq: 0.2 }] },
+    };
+    expect(() => run(invalid)).toThrow(/frequencies must sum to 1|frequencies must sum to one|sum to 1/i);
+  });
+
+  it("preserves incomplete global sizing frequencies without inventing normalization", () => {
+    const fixture: ExternalBenchmarkFixture = {
+      ...handFixture,
+      id: "TEST_GLOBAL_FREQ_PARTIAL",
+      actionSizing: { raise: [{ sizeBB: 3.5, freq: 0.7 }, { sizeBB: 7 }] },
+    };
+    expect(run(fixture).actionSizing?.raise).toEqual([{ sizeBB: 3.5, freq: 0.7 }, { sizeBB: 7 }]);
+  });
+
+  it("rejects non-all-in preflop raise sizing at or below one blind", () => {
+    const fixture: ExternalBenchmarkFixture = {
+      ...handFixture,
+      id: "TEST_BAD_RAISE_SIZE",
+      actionSizing: { raise: [{ sizeBB: 1 }] },
+    };
+    expect(() => run(fixture)).toThrow(/sizing/i);
+  });
+
+  it("rejects hand sizing for an action the certified hand does not take", () => {
+    const fixture: ExternalBenchmarkFixture = {
+      ...handFixture,
+      id: "TEST_SIZING_WITHOUT_ACTION",
+      actionSizing: { raise: [{ sizeBB: 3.5 }] },
+      handActionFreq: { AKo: { limp: 1 } },
+      handSizingFreq: { AKo: { raise: { 3.5: 1 } } },
+    };
+    expect(() => run(fixture)).toThrow(/sizing/i);
   });
 
   it("rejects hand sizing outside the globally certified sizing set", () => {
@@ -46,22 +90,12 @@ describe("livePreflopV3 evidence gate", () => {
       actionSizing: { raise: [{ sizeBB: 3.5 }, { sizeBB: 7 }] },
       handSizingFreq: { AKo: { raise: { 8: 1 } } },
     };
-    expect(() => livePreflopFromFixtures([fixture], {
-      node: fixture.node,
-      context: fixture.context,
-      priorActions: fixture.priorActions,
-      handType: "AKo",
-    })).toThrow(/sizing/i);
+    expect(() => run(fixture)).toThrow(/sizing/i);
   });
 
   it("global-only certified benchmark cannot drive a specific hand", () => {
     const fixture = BLIND_WAR_BENCHMARKS[0];
-    const result = livePreflopFromFixtures([fixture], {
-      node: fixture.node,
-      context: fixture.context,
-      priorActions: fixture.priorActions,
-      handType: "AKo",
-    });
+    const result = run(fixture);
     expect(result.source).toBe("FALLBACK_V2");
     expect(result.semanticMix).toBeUndefined();
   });
@@ -82,13 +116,7 @@ describe("livePreflopV3 evidence gate", () => {
       id: "TEST_PARTIAL",
       evidence: { ...handFixture.evidence, level: "PARTIAL" },
     };
-    const result = livePreflopFromFixtures([partial], {
-      node: partial.node,
-      context: partial.context,
-      priorActions: partial.priorActions,
-      handType: "AKo",
-    });
-    expect(result.source).toBe("FALLBACK_V2");
+    expect(run(partial).source).toBe("FALLBACK_V2");
   });
 
   it("rejects invalid certified hand mixes", () => {
@@ -97,11 +125,6 @@ describe("livePreflopV3 evidence gate", () => {
       id: "TEST_INVALID_MIX",
       handActionFreq: { AKo: { raise: 0.8, limp: 0.8 } },
     };
-    expect(() => livePreflopFromFixtures([invalid], {
-      node: invalid.node,
-      context: invalid.context,
-      priorActions: invalid.priorActions,
-      handType: "AKo",
-    })).toThrow(/hand-level mix/i);
+    expect(() => run(invalid)).toThrow(/hand-level mix/i);
   });
 });
