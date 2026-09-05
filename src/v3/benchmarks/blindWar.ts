@@ -87,7 +87,7 @@ export const BLIND_WAR_BENCHMARKS: ExternalBenchmarkFixture[] = [
     },
     priorActions: [],
     actionFreq: { shove: 0.000, raise: 0.119, limp: 0.763, fold: 0.117 },
-    actionSizeBB: { raise: 3 },
+    actionSizing: { raise: [{ sizeBB: 3, freq: 1 }] },
     handActionFreq: {
       // Pure cells visually certified in the official GTO Wizard 40bb / 25%-field SB grid.
       T3s: { raise: 1 },
