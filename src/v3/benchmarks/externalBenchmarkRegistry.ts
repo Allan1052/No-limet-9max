@@ -1,4 +1,5 @@
 import { BLIND_WAR_BENCHMARKS } from "./blindWar";
+import { BUBBLE_POSTFLOP_BENCHMARKS } from "./bubblePostflop";
 import { BUBBLE_STEAL_BENCHMARKS } from "./bubbleSteal";
 import { ICM_PROGRESSION_BENCHMARKS } from "./icmProgression";
 import { ICM_RESTEAL_STRUCTURAL_BENCHMARKS } from "./icmResteal";
@@ -6,6 +7,7 @@ import { ICM_SQUEEZE_ENVIRONMENT_BENCHMARKS } from "./icmSqueeze";
 
 export type ExternalBenchmarkFamily =
   | "BLIND_WAR"
+  | "BUBBLE_POSTFLOP"
   | "BUBBLE_STEAL"
   | "ICM_PROGRESSION"
   | "ICM_RESTEAL"
@@ -34,6 +36,14 @@ export const EXTERNAL_BENCHMARK_REGISTRY: ExternalBenchmarkFamilyRegistryEntry[]
     solver: "GTO_WIZARD",
     evidenceLevel: "CERTIFIED",
     v3PromotionStatus: "HAND_CERTIFIED_PARTIAL",
+    v2ExactComparable: false,
+  },
+  {
+    family: "BUBBLE_POSTFLOP",
+    fixtureCount: BUBBLE_POSTFLOP_BENCHMARKS.length,
+    solver: "GTO_WIZARD",
+    evidenceLevel: "CERTIFIED",
+    v3PromotionStatus: "STRUCTURAL_ONLY",
     v2ExactComparable: false,
   },
   {
