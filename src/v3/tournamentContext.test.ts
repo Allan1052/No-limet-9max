@@ -3,6 +3,7 @@ import { sameCertifiedContext, type TournamentContextV3 } from "./tournamentCont
 
 const base: TournamentContextV3 = {
   format: "PKO",
+  stage: "FINAL_TABLE",
   fieldRemainingPct: 50,
   positions: ["SB", "BB"],
   stacksBB: { SB: 33, BB: 20 },
@@ -13,6 +14,10 @@ const base: TournamentContextV3 = {
 describe("sameCertifiedContext", () => {
   it("accepts identical certified context", () => {
     expect(sameCertifiedContext(base, { ...base })).toBe(true);
+  });
+
+  it("rejects same numeric context from a different tournament stage", () => {
+    expect(sameCertifiedContext(base, { ...base, stage: "BUBBLE" })).toBe(false);
   });
 
   it("rejects same effective stack when coverage is inverted", () => {
