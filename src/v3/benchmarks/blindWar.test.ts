@@ -8,6 +8,10 @@ describe("Blind War external fixtures", () => {
     expect(BLIND_WAR_BENCHMARKS.every((x) => x.evidence.level === "CERTIFIED")).toBe(true);
   });
 
+  it("declares an explicit evidence-supported tournament stage for every certified fixture", () => {
+    expect(BLIND_WAR_BENCHMARKS.every((fixture) => fixture.context.stage === "IN_THE_MONEY")).toBe(true);
+  });
+
   it("each node frequency sums to approximately 100%", () => {
     for (const fixture of BLIND_WAR_BENCHMARKS) {
       const total = Object.values(fixture.actionFreq).reduce((a, b) => a + b, 0);
