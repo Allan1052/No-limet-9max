@@ -3,7 +3,7 @@ import { EXTERNAL_BENCHMARK_COMPARISON } from "./externalBenchmarkComparison";
 
 describe("Motor V3 — V2 × V3 × solver external comparison", () => {
   it("classifies all certified fixtures without inventing V2 exact comparability", () => {
-    expect(EXTERNAL_BENCHMARK_COMPARISON).toHaveLength(12);
+    expect(EXTERNAL_BENCHMARK_COMPARISON).toHaveLength(16);
 
     for (const row of EXTERNAL_BENCHMARK_COMPARISON) {
       expect(row.solverEvidence).toBe("CERTIFIED");
@@ -21,8 +21,12 @@ describe("Motor V3 — V2 × V3 × solver external comparison", () => {
     expect(promoted.map((row) => row.id)).toEqual(["BW5"]);
   });
 
-  it("preserves the exact solver-side benchmark identifiers across all five families", () => {
+  it("preserves the exact solver-side benchmark identifiers across all six families", () => {
     expect(EXTERNAL_BENCHMARK_COMPARISON.map((row) => row.id).sort()).toEqual([
+      "BPF1_BTN18_BB26_A62",
+      "BPF2_BTN18_BB26_AQ2",
+      "BPF3_BTN18_BB26_853",
+      "BPF4_BTN18_BB26_854",
       "BS1_BTN18_BUBBLE_1000",
       "BW1",
       "BW2",
