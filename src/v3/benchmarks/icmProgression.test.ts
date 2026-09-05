@@ -17,6 +17,13 @@ describe("Motor V3 — progressive ICM benchmarks", () => {
     expect(halfway?.foldFreq).toBeCloseTo(0.355, 6);
   });
 
+  it("does not over-label the earlier published endpoint as chipEV without explicit source proof", () => {
+    const early = ICM_PROGRESSION_BENCHMARKS.find((x) => x.id === "IP1_BB20_VS_LJ_EARLY");
+
+    expect(early?.stageModel).toBe("EARLIER_REFERENCE");
+    expect(early?.notes.join(" ").toLowerCase()).not.toContain("chipev");
+  });
+
   it("records the certified direction and exact published delta without inventing a hand matrix", () => {
     const [early, halfway] = ICM_PROGRESSION_BENCHMARKS;
 
