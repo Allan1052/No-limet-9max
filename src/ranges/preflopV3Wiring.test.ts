@@ -44,7 +44,6 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
       v3TournamentContext: bw1.context,
       v3PriorActions: bw1.priorActions,
     });
-
     expect(withV3.action).toBe(legacy.action);
     expect(withV3.sizeBB).toBe(legacy.sizeBB);
     expect(withV3.v3BenchmarkId).toBeUndefined();
@@ -71,19 +70,50 @@ describe("Motor V3 — wiring pré-flop controlado", () => {
     expect(raise.v3EvidenceLevel).toBe("CERTIFIED");
   });
 
+  it("multi-sizing without hand-level sizing stays shadow-only", () => {
+    const result: LivePreflopV3Result = {
+      source: "V3_CERTIFIED_HAND",
+      benchmarkId: "TEST_MULTI",
+      evidence: { level: "CERTIFIED", solver: "GTO_WIZARD" },
+      semanticMix: { raise: 1 },
+      actionSizing: { raise: [{ sizeBB: 3.5 }, { sizeBB: 7 }] },
+    };
+    expect(mapCertifiedV3PreflopDecision("A5s", result, 40)).toBeNull();
+  });
+
+  it("multi-sizing with a pure certified hand sizing maps live", () => {
+    const result: LivePreflopV3Result = {
+      source: "V3_CERTIFIED_HAND",
+      benchmarkId: "TEST_MULTI_PURE",
+      evidence: { level: "CERTIFIED", solver: "GTO_WIZARD" },
+      semanticMix: { raise: 1 },
+      actionSizing: { raise: [{ sizeBB: 3.5 }, { sizeBB: 7 }] },
+      handSizingMix: { raise: { 3.5: 0, 7: 1 } },
+    };
+    const mapped = mapCertifiedV3PreflopDecision("A5s", result, 40);
+    expect(mapped?.action).toBe("raise");
+    expect(mapped?.sizeBB).toBe(7);
+  });
+
+  it("multi-sizing mixed by hand remains shadow-only", () => {
+    const result: LivePreflopV3Result = {
+      source: "V3_CERTIFIED_HAND",
+      benchmarkId: "TEST_MULTI_MIXED",
+      evidence: { level: "CERTIFIED", solver: "GTO_WIZARD" },
+      semanticMix: { raise: 1 },
+      actionSizing: { raise: [{ sizeBB: 3.5 }, { sizeBB: 7 }] },
+      handSizingMix: { raise: { 3.5: 0.4, 7: 0.6 } },
+    };
+    expect(mapCertifiedV3PreflopDecision("A5s", result, 40)).toBeNull();
+  });
+
   it("certified limp maps to legal call-to-1BB plus explicit limp semantics", () => {
     const certified: LivePreflopV3Result = {
       source: "V3_CERTIFIED_HAND",
       benchmarkId: "TEST_LIMP",
-      evidence: {
-        level: "CERTIFIED",
-        solver: "GTO_WIZARD",
-        videoId: "test",
-        timestamp: "00:00",
-      },
+      evidence: { level: "CERTIFIED", solver: "GTO_WIZARD", videoId: "test", timestamp: "00:00" },
       semanticMix: { limp: 1 },
     };
-
     const mapped = mapCertifiedV3PreflopDecision("72o", certified, 20);
     expect(mapped?.action).toBe("call");
     expect(mapped?.sizeBB).toBe(1);
