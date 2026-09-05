@@ -26,6 +26,16 @@ describe("livePreflopV3 evidence gate", () => {
     expect(result.semanticMix).toEqual({ raise: 1 });
   });
 
+  it("rejects a certified hand-level strategy from a neighboring tournament stage", () => {
+    const result = livePreflopFromFixtures([handFixture], {
+      node: handFixture.node,
+      context: { ...handFixture.context, stage: "BUBBLE" },
+      priorActions: handFixture.priorActions,
+      handType: "AKo",
+    });
+    expect(result.source).toBe("FALLBACK_V2");
+  });
+
   it("preserves multiple certified sizings and hand-level sizing mix", () => {
     const fixture: ExternalBenchmarkFixture = {
       ...handFixture,
