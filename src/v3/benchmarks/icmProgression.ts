@@ -5,7 +5,7 @@ export interface IcmProgressionBenchmark {
   heroPosition: "BB";
   villainPosition: "LJ";
   effectiveStackBB: number;
-  stageModel: "CHIP_EV_EARLY" | "ICM_HALFWAY";
+  stageModel: "EARLIER_REFERENCE" | "ICM_HALFWAY";
   fieldRemainingPct?: number;
   foldFreq: number;
   completeHandMatrix: false;
@@ -23,7 +23,7 @@ export const ICM_PROGRESSION_BENCHMARKS: IcmProgressionBenchmark[] = [
     heroPosition: "BB",
     villainPosition: "LJ",
     effectiveStackBB: 20,
-    stageModel: "CHIP_EV_EARLY",
+    stageModel: "EARLIER_REFERENCE",
     foldFreq: 0.196,
     completeHandMatrix: false,
     evidence: {
@@ -32,7 +32,7 @@ export const ICM_PROGRESSION_BENCHMARKS: IcmProgressionBenchmark[] = [
       note: SOURCE_NOTE,
     },
     notes: [
-      "Published 20bb symmetric BB defence versus LJ folds 19.6% in the chipEV/early reference.",
+      "Published 20bb symmetric BB defence versus LJ folds 19.6% in the earlier reference.",
       "This fixture certifies the aggregate fold frequency only; it does not infer a complete hand-action matrix.",
     ],
   },
