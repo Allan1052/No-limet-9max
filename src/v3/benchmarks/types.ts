@@ -3,6 +3,16 @@ import type { TournamentContextV3 } from "../tournamentContext";
 
 export type BlindWarAction = "fold" | "limp" | "raise" | "shove" | "check" | "call";
 export type HandActionFreq = Record<string, number>;
+export type HandSizingFreq = Record<number, number>;
+
+export interface CertifiedSizingOption {
+  sizeBB: number;
+  freq?: number;
+}
+
+export type ActionSizingDistribution = Partial<
+  Record<BlindWarAction, CertifiedSizingOption[]>
+>;
 
 export interface ExternalBenchmarkFixture {
   id: string;
@@ -11,8 +21,9 @@ export interface ExternalBenchmarkFixture {
   context: TournamentContextV3;
   priorActions: string[];
   actionFreq: Record<string, number>;
-  actionSizeBB?: Partial<Record<BlindWarAction, number>>;
+  actionSizing?: ActionSizingDistribution;
   tolerance: number;
   handActionFreq?: Record<string, HandActionFreq>;
+  handSizingFreq?: Record<string, Partial<Record<BlindWarAction, HandSizingFreq>>>;
   notes?: string[];
 }
