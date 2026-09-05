@@ -1,4 +1,5 @@
 import { BLIND_WAR_BENCHMARKS } from "./blindWar";
+import { BUBBLE_POSTFLOP_BENCHMARKS } from "./bubblePostflop";
 import { BUBBLE_STEAL_BENCHMARKS } from "./bubbleSteal";
 import { ICM_PROGRESSION_BENCHMARKS } from "./icmProgression";
 import { ICM_RESTEAL_STRUCTURAL_BENCHMARKS } from "./icmResteal";
@@ -62,6 +63,7 @@ export const EXTERNAL_BENCHMARK_COMPARISON: ExternalBenchmarkComparisonRow[] = [
   ...BLIND_WAR_BENCHMARKS.map((fixture) =>
     row(fixture.id, "BLIND_WAR", fixture.id === "BW5" && Boolean(fixture.handActionFreq)),
   ),
+  ...BUBBLE_POSTFLOP_BENCHMARKS.map((fixture) => row(fixture.id, "BUBBLE_POSTFLOP")),
   ...BUBBLE_STEAL_BENCHMARKS.map((fixture) => row(fixture.id, "BUBBLE_STEAL")),
   ...ICM_PROGRESSION_BENCHMARKS.map((fixture) => row(fixture.id, "ICM_PROGRESSION")),
   ...ICM_RESTEAL_STRUCTURAL_BENCHMARKS.map((fixture) => row(fixture.id, "ICM_RESTEAL")),
