@@ -6,11 +6,12 @@ describe("Motor V3 — consolidated external benchmark registry", () => {
     expect(EXTERNAL_BENCHMARK_REGISTRY.map((x) => x.family).sort()).toEqual([
       "BLIND_WAR",
       "BUBBLE_STEAL",
+      "ICM_PROGRESSION",
       "ICM_RESTEAL",
       "ICM_SQUEEZE",
     ]);
 
-    expect(EXTERNAL_BENCHMARK_REGISTRY.reduce((sum, x) => sum + x.fixtureCount, 0)).toBe(10);
+    expect(EXTERNAL_BENCHMARK_REGISTRY.reduce((sum, x) => sum + x.fixtureCount, 0)).toBe(12);
   });
 
   it("keeps solver evidence and live-promotion status explicit", () => {
