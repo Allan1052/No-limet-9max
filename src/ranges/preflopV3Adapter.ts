@@ -44,10 +44,31 @@ function semanticMixToPreflopMix(
     .map(([action, freq]) => ({ action, freq }));
 }
 
+function pureCertifiedSize(
+  result: LivePreflopV3Result,
+  action: "raise",
+): number | null {
+  const handSizing = result.handSizingMix?.[action];
+  if (handSizing) {
+    const positive = Object.entries(handSizing)
+      .map(([size, freq]) => [Number(size), freq] as const)
+      .filter(([, freq]) => Number.isFinite(freq) && freq > 0);
+    if (positive.length !== 1 || positive[0][1] < 0.999999) return null;
+    const sizeBB = positive[0][0];
+    return Number.isFinite(sizeBB) && sizeBB > 1 ? sizeBB : null;
+  }
+
+  const options = result.actionSizing?.[action];
+  if (!options || options.length !== 1) return null;
+  const sizeBB = options[0].sizeBB;
+  return Number.isFinite(sizeBB) && sizeBB > 1 ? sizeBB : null;
+}
+
 /**
  * Converte somente uma estratégia PURA de mão certificada em uma decisão legal
  * do motor atual. Estratégias mistas continuam em shadow nesta entrega.
- * Raise só atravessa quando o próprio fixture traz sizing certificado explícito.
+ * Raise só atravessa quando o sizing também é inequivocamente certificado para
+ * a mão (ou quando o node certificado possui um único sizing possível).
  */
 export function mapCertifiedV3PreflopDecision(
   handType: string,
@@ -76,9 +97,9 @@ export function mapCertifiedV3PreflopDecision(
     return { ...common, action: "call", sizeBB: 1, semanticAction: "limp" };
   }
   if (semantic === "raise") {
-    const sizeBB = result.actionSizeBB?.raise;
-    if (!Number.isFinite(sizeBB) || (sizeBB ?? 0) <= 1) return null;
-    return { ...common, action: "raise", sizeBB: sizeBB as number };
+    const sizeBB = pureCertifiedSize(result, "raise");
+    if (sizeBB === null) return null;
+    return { ...common, action: "raise", sizeBB };
   }
   if (semantic === "jam" || semantic === "shove") {
     return { ...common, action: "jam", sizeBB: effectiveBB };
