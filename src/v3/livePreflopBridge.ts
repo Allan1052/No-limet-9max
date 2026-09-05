@@ -60,7 +60,9 @@ function validateActionSizing(actionSizing?: ActionSizingDistribution): void {
       throw new Error(`Invalid certified sizing for ${action}: at least one sizing option is required.`);
     }
     if (!options.every(({ sizeBB, freq }) =>
-      Number.isFinite(sizeBB) && sizeBB > 0
+      Number.isFinite(sizeBB)
+      && sizeBB > 0
+      && (action !== "raise" || sizeBB > 1)
       && (freq === undefined || (Number.isFinite(freq) && freq >= 0 && freq <= 1))
     )) {
       throw new Error(`Invalid certified sizing for ${action}: sizes/frequencies must be finite and valid.`);
@@ -79,6 +81,7 @@ function validateActionSizing(actionSizing?: ActionSizingDistribution): void {
 function validateHandSizing(
   fixture: ExternalBenchmarkFixture,
   handType: string,
+  handMix: HandActionFreq,
 ): Partial<Record<V3SemanticPreflopAction, HandSizingFreq>> | undefined {
   const handSizing = fixture.handSizingFreq?.[handType] as
     | Partial<Record<V3SemanticPreflopAction, HandSizingFreq>>
@@ -87,6 +90,11 @@ function validateHandSizing(
 
   for (const [action, mix] of Object.entries(handSizing)) {
     if (!mix) continue;
+    const actionFreq = handMix[action] ?? 0;
+    if (!Number.isFinite(actionFreq) || actionFreq <= 0) {
+      throw new Error(`Invalid certified sizing for ${handType}/${action}: hand sizing exists for an action this hand does not take.`);
+    }
+
     validateUnitMix(Object.entries(mix), `hand-level sizing mix for ${action}`);
 
     const certifiedSizes = new Set(
@@ -126,7 +134,7 @@ export function livePreflopFromFixtures(
 
   validateHandMix(handMix);
   validateActionSizing(fixture.actionSizing);
-  const handSizingMix = validateHandSizing(fixture, query.handType);
+  const handSizingMix = validateHandSizing(fixture, query.handType, handMix);
 
   return {
     source: "V3_CERTIFIED_HAND",
