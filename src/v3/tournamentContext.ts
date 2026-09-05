@@ -1,4 +1,5 @@
 export type TournamentFormatV3 = "VANILLA" | "PKO" | "MYSTERY_BOUNTY";
+export type TournamentStageV3 = "EARLY" | "MIDDLE" | "BUBBLE" | "IN_THE_MONEY" | "FINAL_TABLE";
 
 export interface CoverageRelation {
   covers: string;
@@ -7,6 +8,7 @@ export interface CoverageRelation {
 
 export interface TournamentContextV3 {
   format: TournamentFormatV3;
+  stage: TournamentStageV3;
   fieldRemainingPct?: number;
   positions: string[];
   stacksBB: Record<string, number>;
@@ -29,6 +31,7 @@ function stableStacks(x: Record<string, number>): string {
 
 export function sameCertifiedContext(a: TournamentContextV3, b: TournamentContextV3): boolean {
   return a.format === b.format
+    && a.stage === b.stage
     && a.fieldRemainingPct === b.fieldRemainingPct
     && a.effectiveStackBB === b.effectiveStackBB
     && JSON.stringify(a.positions) === JSON.stringify(b.positions)
