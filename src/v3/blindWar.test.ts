@@ -3,6 +3,7 @@ import { blindWarStrategyV3 } from "./blindWar";
 
 const pko20 = {
   format: "PKO" as const,
+  stage: "IN_THE_MONEY" as const,
   fieldRemainingPct: 50,
   positions: ["SB", "BB"],
   stacksBB: { SB: 33, BB: 20 },
@@ -30,6 +31,7 @@ describe("blindWarStrategyV3", () => {
       node: "SB_RFI",
       context: {
         format: "PKO",
+        stage: "IN_THE_MONEY",
         fieldRemainingPct: 50,
         positions: ["SB", "BB"],
         stacksBB: { SB: 38, BB: 25 },
@@ -63,6 +65,7 @@ describe("blindWarStrategyV3", () => {
       node: "BB_VS_SB_LIMP",
       context: {
         format: "PKO",
+        stage: "IN_THE_MONEY",
         fieldRemainingPct: 50,
         positions: ["SB", "BB"],
         stacksBB: { SB: 27, BB: 53 },
@@ -82,6 +85,7 @@ describe("blindWarStrategyV3", () => {
       node: "SB_RFI",
       context: {
         format: "VANILLA",
+        stage: "IN_THE_MONEY",
         fieldRemainingPct: 25,
         positions: ["SB", "BB"],
         stacksBB: { SB: 40, BB: 40 },
