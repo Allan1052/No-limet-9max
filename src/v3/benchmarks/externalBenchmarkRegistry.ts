@@ -1,6 +1,7 @@
 import { BLIND_WAR_BENCHMARKS } from "./blindWar";
 import { BUBBLE_POSTFLOP_BENCHMARKS } from "./bubblePostflop";
 import { BUBBLE_STEAL_BENCHMARKS } from "./bubbleSteal";
+import { FINAL_TABLE_BLIND_BATTLE_BENCHMARKS } from "./finalTableBlindBattle";
 import { ICM_PROGRESSION_BENCHMARKS } from "./icmProgression";
 import { ICM_RESTEAL_STRUCTURAL_BENCHMARKS } from "./icmResteal";
 import { ICM_SQUEEZE_ENVIRONMENT_BENCHMARKS } from "./icmSqueeze";
@@ -9,6 +10,7 @@ export type ExternalBenchmarkFamily =
   | "BLIND_WAR"
   | "BUBBLE_POSTFLOP"
   | "BUBBLE_STEAL"
+  | "FINAL_TABLE_BLIND_BATTLE"
   | "ICM_PROGRESSION"
   | "ICM_RESTEAL"
   | "ICM_SQUEEZE";
@@ -49,6 +51,14 @@ export const EXTERNAL_BENCHMARK_REGISTRY: ExternalBenchmarkFamilyRegistryEntry[]
   {
     family: "BUBBLE_STEAL",
     fixtureCount: BUBBLE_STEAL_BENCHMARKS.length,
+    solver: "GTO_WIZARD",
+    evidenceLevel: "CERTIFIED",
+    v3PromotionStatus: "STRUCTURAL_ONLY",
+    v2ExactComparable: false,
+  },
+  {
+    family: "FINAL_TABLE_BLIND_BATTLE",
+    fixtureCount: FINAL_TABLE_BLIND_BATTLE_BENCHMARKS.length,
     solver: "GTO_WIZARD",
     evidenceLevel: "CERTIFIED",
     v3PromotionStatus: "STRUCTURAL_ONLY",
