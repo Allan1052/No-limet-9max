@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Motor V3: fundação trazida pro projeto (Fase 0 — nada visível)
+- Trouxe a **fundação do Motor V3** (dados reais de solver certificados, com fonte:
+  vídeo + minuto) pro projeto — pasta `src/v3`, 7 famílias de spots, ~19 casos
+  certificados, e 79 testes. **Ajuste interno: NADA muda no app.** O V3 está
+  **isolado e desligado** (não entra no bundle, não dirige nenhuma mão).
+- É o primeiro passo do plano de integração aprovado pelo Allan. Próximo passo é
+  a **Fase 1 (modo sombra)**: comparar V3×V2 nos spots certificados e trazer os
+  números pro Allan — também sem mudar nada no jogo.
+- SELO GTO segue 61/61; suíte com 3960 testes verdes.
+
 ## 2026-09-04 — Claude — Texto da dica bate com a mão + tocar na dica preenche o valor
 - **Texto da dica corrigido.** Ao enfrentar um **3-bet**, a dica dizia "não domina
   o range de **all-in**" — mas não havia all-in nenhum, era um 3-bet. Agora diz
