@@ -1,3 +1,21 @@
+> ✅ **PROCESSADO pelo Claude (2026-09-06).** Os 3 fixtures foram validados,
+> classificados como **LIVE_READY** (contexto completo + células puras) e guardados
+> em `src/v3/benchmarks/icmShortStack.ts`. O auditor "V2 × gabarito" foi estendido
+> pra cobrir os nós de anel completo (`HJ_RFI`, `CO_RFI`, `BB_VS_UTG_RAISE`).
+>
+> **Resultado da auditoria:**
+> - `BUB1_HJ8_RFI_PURE` (HJ 8bb): **12/12 concorda** — o V2 já empurra os premium e
+>   folda o lixo igual ao solver (chipEV coincide nas células puras).
+> - `BUB2_CO4_RFI_PURE` (CO 4bb): **12/12 concorda** — idem.
+> - `FT_BB4_VS_UTG2_PURE` (BB 4bb vs UTG open, mesa final): **16 concorda / 9 diverge.**
+>   As 9 divergências são **dirigidas por ICM**, não bug cru: nos suited (KJs/KTs/QJs/
+>   QTs/JTs/T9s/98s) o solver **paga** e o V2 **empurra**; nos offsuit K9o/Q8o o solver
+>   **folda** e o V2 **empurra**. É o caso clássico onde o V3 (com a premiação) vai ligar
+>   a resposta certa no live — não "apertamos" o V2 no escuro.
+>
+> Nenhuma mudança no app/`dist` neste lote (só ferramenta/fixtures/docs do V3).
+> Pendências (BUB4, FT UTG/LJ/BB sem setup) seguem no `REQUESTS.md`, Prioridade 1.
+
 # Motor V3 — Prioridade 1 — células puras / contexto fechado
 
 Fonte principal: GTO Wizard, Barry Carter, **“Playing Under 10bb – Part 2: ICM”** (13 Jul 2026).

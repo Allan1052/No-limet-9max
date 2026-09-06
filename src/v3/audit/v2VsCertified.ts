@@ -21,11 +21,13 @@ import { BASELINE_PROFILE } from "../../bots/profiles";
 import type { ExternalBenchmarkFixture, HandActionFreq } from "../benchmarks/types";
 import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
 import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
+import { ICM_SHORT_STACK_FIXTURES } from "../benchmarks/icmShortStack";
 
 /** Todos os fixtures pré-flop com potencial dado mão-a-mão (o que o auditor varre). */
 export const CERTIFIED_PREFLOP_FIXTURES: ExternalBenchmarkFixture[] = [
   ...BLIND_WAR_BENCHMARKS,
   ...BLIND_BATTLE_HAND_FIXTURES,
+  ...ICM_SHORT_STACK_FIXTURES,
 ];
 
 export type AuditStatus = "AGREE" | "DIVERGE" | "NOT_COMPARABLE";
@@ -100,13 +102,13 @@ function blindBattleTable(eff: number, heroSeat: 7 | 8) {
   return t;
 }
 
-/** Lê o tamanho do raise do SB nos priorActions ("SB_RAISE_3" -> 3), padrão 2.5. */
-function sbRaiseSize(priorActions: string[]): number {
+/** Lê o tamanho do raise dos priorActions ("SB_RAISE_3"/"UTG_RAISE_2" -> 3/2). */
+function raiseSizeFromPriors(priorActions: string[], fallback = 2.5): number {
   for (const a of priorActions) {
-    const m = /^SB_RAISE_(\d+(?:\.\d+)?)/.exec(a);
+    const m = /_RAISE_(\d+(?:\.\d+)?)/.exec(a);
     if (m) return Number(m[1]);
   }
-  return 2.5;
+  return fallback;
 }
 
 /**
@@ -132,7 +134,7 @@ function v2ActionForNode(fixture: ExternalBenchmarkFixture, hand: string): strin
   }
 
   if (fixture.node === "BB_VS_SB_RAISE") {
-    const raiseTo = sbRaiseSize(fixture.priorActions);
+    const raiseTo = raiseSizeFromPriors(fixture.priorActions);
     const t = blindBattleTable(eff, 8);
     // SB abriu (raise): committed = raiseTo
     t.players[7].committed = Math.round(raiseTo * BB_CHIPS);
@@ -149,7 +151,97 @@ function v2ActionForNode(fixture: ExternalBenchmarkFixture, hand: string): strin
     return normalizeV2Action(preflopDecision(ctx).action);
   }
 
+  // ----- Nós de anel completo (usam as posições/stacks do próprio fixture) -----
+  // RFI de qualquer posição (ex.: HJ_RFI, CO_RFI): folded-to-hero.
+  const rfiMatch = /^([A-Z0-9]+)_RFI$/.exec(fixture.node);
+  if (rfiMatch) return fullRingRfi(fixture, rfiMatch[1], combo);
+  // BB defendendo o open de qualquer posição (ex.: BB_VS_UTG_RAISE).
+  const bbVsMatch = /^BB_VS_([A-Z0-9]+)_RAISE$/.exec(fixture.node);
+  if (bbVsMatch) return fullRingBbVsOpen(fixture, bbVsMatch[1], combo);
+
   return null;
+}
+
+/** Monta uma mesa de anel completo a partir das posições/stacks do fixture. */
+function fullRingFromFixture(fixture: ExternalBenchmarkFixture) {
+  const pos = fixture.context.positions;
+  const seatOf: Record<string, number> = {};
+  pos.forEach((p, i) => (seatOf[p] = i));
+  const btn = seatOf["BTN"] ?? pos.length - 3;
+  const t = createTable(
+    { smallBlind: BB_CHIPS / 2, bigBlind: BB_CHIPS, ante: 0 },
+    pos.map((p) => ({ name: p, stack: Math.round((fixture.context.stacksBB[p] ?? 10) * BB_CHIPS) })),
+    btn,
+  );
+  for (const p of t.players) {
+    p.holeCards = [];
+    p.committed = 0;
+    p.totalCommitted = 0;
+    p.status = "active";
+    p.acted = false;
+  }
+  const sb = seatOf["SB"];
+  const bb = seatOf["BB"];
+  if (sb !== undefined) {
+    t.players[sb].committed = BB_CHIPS / 2;
+    t.players[sb].totalCommitted = BB_CHIPS / 2;
+    t.players[sb].stack -= BB_CHIPS / 2;
+  }
+  if (bb !== undefined) {
+    t.players[bb].committed = BB_CHIPS;
+    t.players[bb].totalCommitted = BB_CHIPS;
+    t.players[bb].stack -= BB_CHIPS;
+  }
+  t.street = "preflop";
+  t.currentBet = BB_CHIPS;
+  t.preflopRaises = 0;
+  t.lastAggressor = -1;
+  t.preflopAggressor = -1;
+  t.buttonSeat = btn;
+  t.handOver = false;
+  return { t, seatOf };
+}
+
+function fullRingRfi(fixture: ExternalBenchmarkFixture, position: string, combo: Card[]): string | null {
+  const { t, seatOf } = fullRingFromFixture(fixture);
+  const hs = seatOf[position];
+  if (hs === undefined) return null;
+  // Folded-to-hero: todos ANTES do herói na ordem de ação (índice < hs) foldaram.
+  for (let s = 0; s < hs; s++) {
+    t.players[s].status = "folded";
+    t.players[s].acted = true;
+  }
+  t.players[hs].holeCards = combo;
+  t.toAct = hs;
+  const ctx = preflopContextFor(t, hs, BASELINE_PROFILE, {});
+  ctx.rng = seededRng(20260906);
+  return normalizeV2Action(preflopDecision(ctx).action);
+}
+
+function fullRingBbVsOpen(fixture: ExternalBenchmarkFixture, raiser: string, combo: Card[]): string | null {
+  const { t, seatOf } = fullRingFromFixture(fixture);
+  const rs = seatOf[raiser];
+  const hero = seatOf["BB"];
+  if (rs === undefined || hero === undefined) return null;
+  const raiseTo = raiseSizeFromPriors(fixture.priorActions, 2);
+  t.players[rs].committed = Math.round(raiseTo * BB_CHIPS);
+  t.players[rs].totalCommitted = Math.round(raiseTo * BB_CHIPS);
+  t.players[rs].stack = Math.round(((fixture.context.stacksBB[raiser] ?? 10) - raiseTo) * BB_CHIPS);
+  for (const p of t.players) {
+    if (p.seat !== rs && p.seat !== hero) {
+      p.status = "folded";
+      p.acted = true;
+    }
+  }
+  t.players[hero].holeCards = combo;
+  t.currentBet = Math.round(raiseTo * BB_CHIPS);
+  t.preflopRaises = 1;
+  t.lastAggressor = rs;
+  t.preflopAggressor = rs;
+  t.toAct = hero;
+  const ctx = preflopContextFor(t, hero, BASELINE_PROFILE, {});
+  ctx.rng = seededRng(20260906);
+  return normalizeV2Action(preflopDecision(ctx).action);
 }
 
 /** Audita um único fixture (com dado mão-a-mão) contra o V2. */

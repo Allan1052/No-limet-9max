@@ -3,6 +3,7 @@ import { validateCertifiedFixture, isCertifiedFixtureValid, assessLiveReadiness 
 import type { ExternalBenchmarkFixture } from "../benchmarks/types";
 import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
 import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
+import { ICM_SHORT_STACK_FIXTURES } from "../benchmarks/icmShortStack";
 import { EVIDENCE_BANK } from "../benchmarks/evidenceBank";
 
 // O molde/validador cobre o schema PRÉ-FLOP (ExternalBenchmarkFixture) — que é o
@@ -12,6 +13,7 @@ import { EVIDENCE_BANK } from "../benchmarks/evidenceBank";
 const PREFLOP_FIXTURES: ExternalBenchmarkFixture[] = [
   ...BLIND_WAR_BENCHMARKS,
   ...BLIND_BATTLE_HAND_FIXTURES,
+  ...ICM_SHORT_STACK_FIXTURES,
 ];
 
 const bw5 = BLIND_WAR_BENCHMARKS.find((f) => f.id === "BW5")!;

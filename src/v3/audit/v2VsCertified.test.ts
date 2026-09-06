@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { auditV2AgainstCertified, auditFixtureAgainstV2, formatAuditReport } from "./v2VsCertified";
 import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
 import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
+import { ICM_SHORT_STACK_FIXTURES } from "../benchmarks/icmShortStack";
 
 const bw5 = BLIND_WAR_BENCHMARKS.find((f) => f.id === "BW5")!;
 const ftbb4 = BLIND_BATTLE_HAND_FIXTURES.find((f) => f.id === "FTBB4")!;
+const byId = (id: string) => ICM_SHORT_STACK_FIXTURES.find((f) => f.id === id)!;
 
 describe("Auditor automático V2 × gabarito V3", () => {
   it("roda em todos os gabaritos mão-a-mão e produz o relatório", () => {
@@ -47,5 +49,38 @@ describe("Auditor automático V2 × gabarito V3", () => {
     // TT continua divergindo (misto/ICM — deixado pra quando tiver mais dado).
     expect(byHand("TT").status).toBe("DIVERGE");
     expect(byHand("TT").certified).toBe("call");
+  });
+
+  it("ICM RFI stack curto (BUB1 HJ 8bb / BUB2 CO 4bb): células puras — V2 concorda 100%", () => {
+    for (const id of ["BUB1_HJ8_RFI_PURE", "BUB2_CO4_RFI_PURE"]) {
+      const rows = auditFixtureAgainstV2(byId(id));
+      const agree = rows.filter((r) => r.status === "AGREE").length;
+      expect(rows.every((r) => r.status === "AGREE"), `${id}: tudo AGREE`).toBe(true);
+      expect(agree).toBe(12);
+      // Empurra os premium, folda o lixo — bate com o solver (chipEV coincide).
+      expect(rows.find((r) => r.hand === "AKs")?.v2).toBe("shove");
+      expect(rows.find((r) => r.hand === "32o")?.v2).toBe("fold");
+    }
+  });
+
+  it("ICM BB 4bb vs UTG open (mesa final): V2 (chipEV) empurra mais largo que o solver — divergência dirigida por ICM", () => {
+    const rows = auditFixtureAgainstV2(byId("FT_BB4_VS_UTG2_PURE"));
+    const byHand = (h: string) => rows.find((r) => r.hand === h)!;
+    // Premium: concorda no all-in.
+    for (const h of ["AKs", "KK", "QQ", "TT"]) expect(byHand(h).status, h).toBe("AGREE");
+    // Suited conectores/broadway: solver PAGA (call), V2 empurra (shove) — ICM.
+    for (const h of ["KJs", "KTs", "QJs", "QTs", "JTs", "T9s", "98s"]) {
+      expect(byHand(h).status, h).toBe("DIVERGE");
+      expect(byHand(h).certified, h).toBe("call");
+      expect(byHand(h).v2, h).toBe("shove");
+    }
+    // Offsuit marginal: solver FOLDA, V2 empurra — o V2 arrisca demais sob ICM.
+    for (const h of ["K9o", "Q8o"]) {
+      expect(byHand(h).status, h).toBe("DIVERGE");
+      expect(byHand(h).certified, h).toBe("fold");
+      expect(byHand(h).v2, h).toBe("shove");
+    }
+    const diverge = rows.filter((r) => r.status === "DIVERGE").length;
+    expect(diverge).toBe(9);
   });
 });
