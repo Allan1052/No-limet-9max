@@ -3,9 +3,35 @@
 > Formato: siga o **molde** em
 > `docs/superpowers/specs/2026-09-06-motor-v3-molde-transcricao.md`.
 > Entregue em `docs/handoff/inbox/<data>-<tema>.md` (bloco ```ts com um array de
-> fixtures). Prioridade de cima pra baixo. Trabalhe em **lotes grandes**.
+> fixtures). Trabalhe em **lotes grandes** e **não pare no meio** — mande tudo o que
+> conseguir ler com segurança de uma vez.
 
-## 🎯 Prioridade 1 — Completar o artigo "Playing Under 10bb – Part 2: ICM"
+---
+## ▶️ COMEÇAR POR AQUI (foco de AGORA): Prioridade 2 — Blind Battle (SB×BB)
+
+Este é o material que o Claude **liga na jogabilidade rápido** (como fez com o
+AKo/AQo) e que **NÃO depende de recuperar imagem do blog de ICM** (onde você travou).
+É o que o Allan vai sentir no app mais cedo. Foque aqui primeiro.
+
+Queremos **células puras** (a ação 100% da mão) nestes nós, em vários stacks:
+- **`SB_RFI`** — SB de primeiro a agir abre/limpa/folda. Stacks: **15, 20, 25, 30bb**
+  (VANILLA; se o artigo tiver PKO também, mande com `format: "PKO"`).
+- **`BB_VS_SB_RAISE`** — BB defende o open do SB. Stacks: **15, 25, 30, 40bb**
+  (o FTBB4 já cobre 20bb). Use `priorActions: ["SB_RAISE_<tamanho>"]` com o tamanho real.
+- **`BB_VS_SB_LIMP`** — resposta do BB ao **limp** do SB (check/raise/shove por mão).
+
+Regras deste lote:
+- **Só célula pura** vira `handActionFreq` (ex.: `{ shove: 1 }`). Se a mão for **mista**,
+  anote a mistura com as **frequências reais** (ex.: `{ raise: 0.6, fold: 0.4 }`) —
+  **nunca promova por cor** (não chute "parece verde = raise").
+- **Contexto completo:** `stacksBB` das duas posições, `effectiveStackBB`, `format`, `stage`.
+- Na dúvida entre duas ações numa mão, **omita a mão** — melhor faltar do que errar.
+
+---
+## 🎯 Prioridade 1 (retomar quando as imagens do blog abrirem) — artigo ICM <10bb
+Os 3 spots que dava pra ler com segurança já entraram e estão no jogo do V3 (ver Status).
+**O que falta aqui está BLOQUEADO** porque as imagens do blog não abriram na sua última
+passagem. Quando abrirem, complete:
 Você já mandou 6 spots dele; 4 ficaram como **evidência** por falta de contexto.
 Complete-os pra virarem PRONTO-PRO-LIVE (contexto completo + células puras):
 
@@ -26,17 +52,6 @@ Complete-os pra virarem PRONTO-PRO-LIVE (contexto completo + células puras):
 > premium/stacks — é o que permite comparar com o V2 depois. Sem isso, fica só
 > evidência.
 
-## 🎯 Prioridade 2 — Ampliar o artigo de Blind Battle (SB×BB)
-Esses o Claude **liga no jogo rápido** (como fez com o AKo/AQo). Queremos mais
-células puras nos nós:
-- **SB_RFI** — em vários stacks (ex.: 15, 20, 25, 30bb), PKO e VANILLA se houver.
-- **BB_VS_SB_LIMP** — resposta do BB ao limp do SB (check/raise/shove por mão).
-- **BB_VS_SB_RAISE** — defesa do BB ao open do SB, em vários stacks (o FTBB4 foi
-  20bb; queremos 15, 25, 30, 40bb).
-
-Pra cada node: **células puras** (a ação 100% da mão) e, quando a mão for mista,
-anote a mistura com as frequências reais (não promova por cor).
-
 ## 🎯 Prioridade 3 — Bounty (PKO / Mystery)
 Quando as duas primeiras andarem: spots de **PKO / Mystery Bounty** (o formato
 muda a estratégia e o V2 ignora). Mesmo molde, `format: "PKO"` ou
@@ -53,4 +68,4 @@ muda a estratégia e o V2 ignora). Mesmo molde, `format: "PKO"` ou
   **dirigidas por ICM** (V3 resolve com a premiação). **Ainda falta** (fora do live até
   ter contexto exato): OPENER do BUB4, e os nós FT UTG 8bb/2bb RFI, LJ 8bb vs 10bb shove,
   LJ 8bb/4bb vs 2bb open, BB 8bb vs UTG 2bb (imagens do blog não recuperadas nesta passagem).
-- [ ] Prioridade 2 (ampliar blind battle) — pendente.
+- [ ] **Prioridade 2 (blind battle SB×BB) — FOCO DE AGORA, aguardando lote.**
