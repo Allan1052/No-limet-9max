@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Área de handoff Claude⇄ChatGPT no Git — nada visível
+**Ajuste interno: NADA muda no app.** Criei uma pasta `docs/handoff/` pros dois
+agentes trocarem direto pelo Git, sem o Allan no meio: o Claude escreve os pedidos
+em `REQUESTS.md`, o ChatGPT deposita os fixtures em `inbox/`, e o Claude processa
+e move pra `processed/`. Já deixei a lista de prioridades pro ChatGPT (completar o
+artigo de ICM <10bb e ampliar o blind battle).
+
 ## 2026-09-06 — Claude — Motor V3: 2º lote do ChatGPT + banco de evidências — nada visível
 **Ajuste interno: NADA muda no app.** Entrou o 2º lote do ChatGPT (6 spots de
 bolha/mesa final, artigo de <10bb ICM). Implementei a regra que o ChatGPT sugeriu
