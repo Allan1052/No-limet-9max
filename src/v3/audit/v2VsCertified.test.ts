@@ -1,37 +1,46 @@
 import { describe, expect, it } from "vitest";
-import { auditV2AgainstCertified, formatAuditReport } from "./v2VsCertified";
+import { auditV2AgainstCertified, auditFixtureAgainstV2, formatAuditReport } from "./v2VsCertified";
+import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
+import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
+
+const bw5 = BLIND_WAR_BENCHMARKS.find((f) => f.id === "BW5")!;
+const ftbb4 = BLIND_BATTLE_HAND_FIXTURES.find((f) => f.id === "FTBB4")!;
 
 describe("Auditor automático V2 × gabarito V3", () => {
-  it("roda nos gabaritos com dado mão-a-mão e produz o relatório", () => {
+  it("roda em todos os gabaritos mão-a-mão e produz o relatório", () => {
     const summary = auditV2AgainstCertified();
-    // Imprime pro registro (aparece no output do teste).
     console.log("\n" + formatAuditReport(summary));
-
-    // Hoje só o BW5 tem gabarito mão-a-mão (11 células puras, nó SB_RFI).
-    expect(summary.comparableHands).toBe(11);
+    // Todas as células dos gabaritos atuais são comparáveis (SB_RFI + BB_VS_SB_RAISE).
+    expect(summary.comparableHands).toBeGreaterThanOrEqual(27);
     expect(summary.notComparable).toBe(0);
   });
 
-  it("BW5: V2 concorda nos folds óbvios e diverge nos limps (o ganho do V3)", () => {
-    const summary = auditV2AgainstCertified();
-    // Resultado conhecido do BW5 (SB abre 40bb, ITM): 4 concordam / 7 divergem.
-    expect(summary.agree).toBe(4);
-    expect(summary.diverge).toBe(7);
-
-    // As divergências de limp têm que estar marcadas com a razão certa.
-    const limpDiverge = summary.rows.filter(
-      (r) => r.status === "DIVERGE" && r.certified === "limp",
-    );
-    expect(limpDiverge.length).toBeGreaterThanOrEqual(5);
-    for (const r of limpDiverge) expect(r.reason).toContain("limp");
+  it("BW5 (SB abre 40bb): V2 concorda nos folds e diverge nos limps", () => {
+    const rows = auditFixtureAgainstV2(bw5);
+    const agree = rows.filter((r) => r.status === "AGREE").length;
+    const diverge = rows.filter((r) => r.status === "DIVERGE").length;
+    expect(agree).toBe(4);
+    expect(diverge).toBe(7);
+    for (const h of ["72o", "62o", "52o", "42o"]) {
+      expect(rows.find((r) => r.hand === h)?.status, h).toBe("AGREE");
+    }
+    const limps = rows.filter((r) => r.status === "DIVERGE" && r.certified === "limp");
+    expect(limps.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("as mãos de lixo (72o/62o/52o/42o) o V2 já folda igual ao solver", () => {
-    const summary = auditV2AgainstCertified();
-    for (const h of ["72o", "62o", "52o", "42o"]) {
-      const row = summary.rows.find((r) => r.hand === h);
-      expect(row?.status, h).toBe("AGREE");
-      expect(row?.v2, h).toBe("fold");
-    }
+  it("FTBB4 (BB defende SB open, mesa final 20bb): V2 acerta a maioria, diverge em AKo/AQo (shove) e TT (call)", () => {
+    const rows = auditFixtureAgainstV2(ftbb4);
+    const byHand = (h: string) => rows.find((r) => r.hand === h)!;
+    // Concorda no valor e no lixo
+    expect(byHand("AA").status).toBe("AGREE");
+    expect(byHand("AA").v2).toBe("raise");
+    for (const h of ["94s", "72s", "62s"]) expect(byHand(h).status, h).toBe("AGREE");
+    // Diverge: solver dá shove com AKo/AQo (a 20bb), V2 dá raise não-all-in
+    expect(byHand("AKo").status).toBe("DIVERGE");
+    expect(byHand("AKo").certified).toBe("shove");
+    expect(byHand("AQo").status).toBe("DIVERGE");
+    // Diverge: solver paga TT, V2 3-beta
+    expect(byHand("TT").status).toBe("DIVERGE");
+    expect(byHand("TT").certified).toBe("call");
   });
 });

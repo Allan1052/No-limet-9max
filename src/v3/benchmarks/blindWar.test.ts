@@ -14,7 +14,7 @@ describe("Blind War external fixtures", () => {
 
   it("each node frequency sums to approximately 100%", () => {
     for (const fixture of BLIND_WAR_BENCHMARKS) {
-      const total = Object.values(fixture.actionFreq).reduce((a, b) => a + b, 0);
+      const total = Object.values(fixture.actionFreq ?? {}).reduce((a, b) => a + b, 0);
       expect(total).toBeCloseTo(1, 2);
     }
   });

@@ -20,6 +20,13 @@ import { preflopDecision } from "../../ranges/preflop";
 import { BASELINE_PROFILE } from "../../bots/profiles";
 import type { ExternalBenchmarkFixture, HandActionFreq } from "../benchmarks/types";
 import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
+import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
+
+/** Todos os fixtures pré-flop com potencial dado mão-a-mão (o que o auditor varre). */
+export const CERTIFIED_PREFLOP_FIXTURES: ExternalBenchmarkFixture[] = [
+  ...BLIND_WAR_BENCHMARKS,
+  ...BLIND_BATTLE_HAND_FIXTURES,
+];
 
 export type AuditStatus = "AGREE" | "DIVERGE" | "NOT_COMPARABLE";
 
@@ -60,58 +67,89 @@ function normalizeV2Action(action: string): string {
   return action; // fold | raise | call | check
 }
 
-/**
- * Constrói o spot SB_RFI (folded to SB, SB×BB) no V2 e devolve a ação do V2 pra
- * uma mão, no stack efetivo do fixture. Retorna null se não for um nó SB_RFI.
- */
-function v2ActionForSbRfi(
-  fixture: ExternalBenchmarkFixture,
-  hand: string,
-): string | null {
-  if (fixture.node !== "SB_RFI") return null;
-  const bb = 100;
-  const eff = fixture.context.effectiveStackBB;
-  const combo: Card[] = handTypeCombos(hand)[0];
+// Base: mesa SB×BB (blind battle), todos os outros fora. bb=100 fichas.
+const BB_CHIPS = 100;
+function blindBattleTable(eff: number, heroSeat: 7 | 8) {
   const t = createTable(
-    { smallBlind: bb / 2, bigBlind: bb, ante: 0 },
-    Array.from({ length: 9 }, (_, i) => ({ name: `P${i}`, stack: eff * bb, isHero: i === 7 })),
+    { smallBlind: BB_CHIPS / 2, bigBlind: BB_CHIPS, ante: 0 },
+    Array.from({ length: 9 }, (_, i) => ({ name: `P${i}`, stack: eff * BB_CHIPS, isHero: i === heroSeat })),
     6,
   );
   for (const p of t.players) {
     p.holeCards = [];
     p.committed = 0;
     p.totalCommitted = 0;
-    if (p.seat === 7) {
-      // SB (herói) abre
+    if (p.seat === 7 || p.seat === 8) {
       p.status = "active";
       p.acted = false;
-      p.stack = Math.round((eff - 0.5) * bb);
-      p.committed = bb / 2;
-      p.totalCommitted = bb / 2;
-      p.holeCards = combo;
-    } else if (p.seat === 8) {
-      // BB
-      p.status = "active";
-      p.acted = false;
-      p.stack = (eff - 1) * bb;
-      p.committed = bb;
-      p.totalCommitted = bb;
     } else {
-      p.status = "out"; // ninguém mais na mão (folded to SB)
+      p.status = "out";
       p.acted = true;
     }
   }
+  // blinds
+  t.players[7].committed = BB_CHIPS / 2;
+  t.players[7].totalCommitted = BB_CHIPS / 2;
+  t.players[7].stack = Math.round((eff - 0.5) * BB_CHIPS);
+  t.players[8].committed = BB_CHIPS;
+  t.players[8].totalCommitted = BB_CHIPS;
+  t.players[8].stack = (eff - 1) * BB_CHIPS;
   t.street = "preflop";
-  t.currentBet = bb;
-  t.preflopRaises = 0;
-  t.lastAggressor = -1;
-  t.preflopAggressor = -1;
-  t.toAct = 7;
   t.buttonSeat = 6;
   t.handOver = false;
-  const ctx = preflopContextFor(t, 7, BASELINE_PROFILE, {});
-  ctx.rng = seededRng(20260906);
-  return normalizeV2Action(preflopDecision(ctx).action);
+  return t;
+}
+
+/** Lê o tamanho do raise do SB nos priorActions ("SB_RAISE_3" -> 3), padrão 2.5. */
+function sbRaiseSize(priorActions: string[]): number {
+  for (const a of priorActions) {
+    const m = /^SB_RAISE_(\d+(?:\.\d+)?)/.exec(a);
+    if (m) return Number(m[1]);
+  }
+  return 2.5;
+}
+
+/**
+ * Constrói o spot no V2 e devolve a ação do V2 pra uma mão. Suporta os nós que o
+ * V2 CONSEGUE reproduzir hoje: SB_RFI (SB abre) e BB_VS_SB_RAISE (BB defende o
+ * open do SB). Outros nós -> null (NOT_COMPARABLE).
+ */
+function v2ActionForNode(fixture: ExternalBenchmarkFixture, hand: string): string | null {
+  const eff = fixture.context.effectiveStackBB;
+  const combo: Card[] = handTypeCombos(hand)[0];
+
+  if (fixture.node === "SB_RFI") {
+    const t = blindBattleTable(eff, 7);
+    t.players[7].holeCards = combo; // SB herói
+    t.currentBet = BB_CHIPS;
+    t.preflopRaises = 0;
+    t.lastAggressor = -1;
+    t.preflopAggressor = -1;
+    t.toAct = 7;
+    const ctx = preflopContextFor(t, 7, BASELINE_PROFILE, {});
+    ctx.rng = seededRng(20260906);
+    return normalizeV2Action(preflopDecision(ctx).action);
+  }
+
+  if (fixture.node === "BB_VS_SB_RAISE") {
+    const raiseTo = sbRaiseSize(fixture.priorActions);
+    const t = blindBattleTable(eff, 8);
+    // SB abriu (raise): committed = raiseTo
+    t.players[7].committed = Math.round(raiseTo * BB_CHIPS);
+    t.players[7].totalCommitted = Math.round(raiseTo * BB_CHIPS);
+    t.players[7].stack = Math.round((eff - raiseTo) * BB_CHIPS);
+    t.players[8].holeCards = combo; // BB herói
+    t.currentBet = Math.round(raiseTo * BB_CHIPS);
+    t.preflopRaises = 1;
+    t.lastAggressor = 7;
+    t.preflopAggressor = 7;
+    t.toAct = 8;
+    const ctx = preflopContextFor(t, 8, BASELINE_PROFILE, {});
+    ctx.rng = seededRng(20260906);
+    return normalizeV2Action(preflopDecision(ctx).action);
+  }
+
+  return null;
 }
 
 /** Audita um único fixture (com dado mão-a-mão) contra o V2. */
@@ -122,7 +160,7 @@ export function auditFixtureAgainstV2(fixture: ExternalBenchmarkFixture): AuditR
   for (const [hand, mix] of Object.entries(fixture.handActionFreq) as Array<[string, HandActionFreq]>) {
     const pure = pureCertifiedAction(mix);
     const certifiedLabel = pure ?? `misto:${dominantAction(mix)}`;
-    const v2 = v2ActionForSbRfi(fixture, hand);
+    const v2 = v2ActionForNode(fixture, hand);
 
     if (v2 === null) {
       rows.push({
@@ -172,7 +210,7 @@ export function auditFixtureAgainstV2(fixture: ExternalBenchmarkFixture): AuditR
 
 /** Roda o auditor em todos os fixtures pré-flop com gabarito mão-a-mão. */
 export function auditV2AgainstCertified(
-  fixtures: ExternalBenchmarkFixture[] = BLIND_WAR_BENCHMARKS,
+  fixtures: ExternalBenchmarkFixture[] = CERTIFIED_PREFLOP_FIXTURES,
 ): AuditSummary {
   const rows: AuditRow[] = [];
   for (const f of fixtures) rows.push(...auditFixtureAgainstV2(f));

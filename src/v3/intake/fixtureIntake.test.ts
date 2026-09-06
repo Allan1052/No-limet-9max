@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 import { validateCertifiedFixture, isCertifiedFixtureValid } from "./fixtureIntake";
 import type { ExternalBenchmarkFixture } from "../benchmarks/types";
 import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
+import { BLIND_BATTLE_HAND_FIXTURES } from "../benchmarks/blindBattleHands";
 
 // O molde/validador cobre o schema PRÉ-FLOP (ExternalBenchmarkFixture) — que é o
-// que dirige o live. Hoje a família Blind War é a que usa esse schema; novas
-// famílias pré-flop transcritas pelo ChatGPT entram no mesmo formato e passam por
-// aqui. As famílias pós-flop têm schema próprio (trilha #4, mais pra frente).
-const PREFLOP_FIXTURES: ExternalBenchmarkFixture[] = [...BLIND_WAR_BENCHMARKS];
+// que dirige o live. Blind War + a biblioteca de fixtures mão-a-mão (alimentada
+// pelo ChatGPT via o molde) usam esse schema. As famílias pós-flop têm schema
+// próprio (trilha #4, mais pra frente).
+const PREFLOP_FIXTURES: ExternalBenchmarkFixture[] = [
+  ...BLIND_WAR_BENCHMARKS,
+  ...BLIND_BATTLE_HAND_FIXTURES,
+];
 
 const bw5 = BLIND_WAR_BENCHMARKS.find((f) => f.id === "BW5")!;
 

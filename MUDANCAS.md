@@ -23,6 +23,18 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Motor V3: 1º spot do ChatGPT entrou (FTBB4) — nada visível
+**Ajuste interno: NADA muda no app.** Entrou o primeiro spot transcrito pelo
+ChatGPT (FTBB4 — BB defendendo o open do SB, mesa final, 20bb). O acelerador
+funcionou de ponta a ponta:
+- Passou no **validador** (o `actionFreq` global foi omitido de propósito porque a
+  barra não estava legível — agora é opcional; o que importa é a célula por mão).
+- O **auditor** comparou com o V2: **13 de 16 concordam**; divergências reais:
+  **AKo e AQo** (o solver dá **all-in** a 20bb, o V2 dá raise não-all-in) e **TT**
+  (solver paga, V2 3-beta). Isso vira a lista do que ajustar no V2.
+- O spot ficou guardado na biblioteca certificada (o auditor cobre sozinho daqui
+  pra frente). Suíte 3971 verdes, SELO 61/61.
+
 ## 2026-09-06 — Claude — Motor V3: acelerador de conteúdo (molde + auditor) — nada visível
 **Ajuste interno: NADA muda no app.** Construí as duas ferramentas que destravam a
 evolução do V3 (foco em matar erros bobos e estratégia mista):

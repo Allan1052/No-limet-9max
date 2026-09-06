@@ -109,11 +109,17 @@ export function validateCertifiedFixture(fixture: ExternalBenchmarkFixture): str
     errors.push("tolerance: precisa ser um número em (0, 0.1] (ex.: 0.005).");
   }
 
-  // Frequências GLOBAIS do node (o que aparece na barra do solver)
-  if (!fixture.actionFreq || typeof fixture.actionFreq !== "object") {
-    errors.push("actionFreq: obrigatório (frequências globais do node).");
-  } else {
-    const entries = Object.entries(fixture.actionFreq);
+  // Um fixture precisa certificar ALGO: a barra global (actionFreq) OU as células
+  // mão-a-mão (handActionFreq). A barra global é OPCIONAL — quando não é legível
+  // na fonte, não se inventa; o que dirige o live são as células por mão mesmo.
+  const hasGlobal = !!fixture.actionFreq && typeof fixture.actionFreq === "object";
+  const hasHands = !!fixture.handActionFreq && Object.keys(fixture.handActionFreq).length > 0;
+  if (!hasGlobal && !hasHands) {
+    errors.push("Fixture vazio: precisa de actionFreq (barra global) OU handActionFreq (células por mão).");
+  }
+  // Frequências GLOBAIS do node (o que aparece na barra do solver) — só valida se presente.
+  if (hasGlobal) {
+    const entries = Object.entries(fixture.actionFreq!);
     for (const [action] of entries) {
       if (!VALID_ACTIONS.has(action)) errors.push(`actionFreq: ação desconhecida "${action}".`);
     }

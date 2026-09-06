@@ -16,7 +16,7 @@ describe("Motor V3 external promotion gate", () => {
       expect(actual.evidence.level).toBe("CERTIFIED");
       expect(actual.benchmarkId).toBe(benchmark.id);
 
-      for (const [action, expectedFreq] of Object.entries(benchmark.actionFreq)) {
+      for (const [action, expectedFreq] of Object.entries(benchmark.actionFreq ?? {})) {
         expect(actual.actionFreq[action]).toBeCloseTo(expectedFreq, 3);
       }
     });

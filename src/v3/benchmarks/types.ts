@@ -20,7 +20,11 @@ export interface ExternalBenchmarkFixture {
   evidence: EvidenceSource;
   context: TournamentContextV3;
   priorActions: string[];
-  actionFreq: Record<string, number>;
+  // Frequências GLOBAIS do node (a barra do solver). OPCIONAL: às vezes a barra
+  // global não é numericamente legível na fonte, mas as células MÃO-A-MÃO são —
+  // e são elas que dirigem o live. Um fixture precisa ter actionFreq OU
+  // handActionFreq (o validador cobra isso). Nunca inventar a barra global.
+  actionFreq?: Record<string, number>;
   actionSizing?: ActionSizingDistribution;
   tolerance: number;
   handActionFreq?: Record<string, HandActionFreq>;
