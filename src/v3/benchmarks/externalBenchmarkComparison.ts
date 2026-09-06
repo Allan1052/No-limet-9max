@@ -1,6 +1,7 @@
 import { BLIND_WAR_BENCHMARKS } from "./blindWar";
 import { BUBBLE_POSTFLOP_BENCHMARKS } from "./bubblePostflop";
 import { BUBBLE_STEAL_BENCHMARKS } from "./bubbleSteal";
+import { FINAL_TABLE_BLIND_BATTLE_BENCHMARKS } from "./finalTableBlindBattle";
 import { ICM_PROGRESSION_BENCHMARKS } from "./icmProgression";
 import { ICM_RESTEAL_STRUCTURAL_BENCHMARKS } from "./icmResteal";
 import { ICM_SQUEEZE_ENVIRONMENT_BENCHMARKS } from "./icmSqueeze";
@@ -65,6 +66,9 @@ export const EXTERNAL_BENCHMARK_COMPARISON: ExternalBenchmarkComparisonRow[] = [
   ),
   ...BUBBLE_POSTFLOP_BENCHMARKS.map((fixture) => row(fixture.id, "BUBBLE_POSTFLOP")),
   ...BUBBLE_STEAL_BENCHMARKS.map((fixture) => row(fixture.id, "BUBBLE_STEAL")),
+  ...FINAL_TABLE_BLIND_BATTLE_BENCHMARKS.map((fixture) =>
+    row(fixture.id, "FINAL_TABLE_BLIND_BATTLE"),
+  ),
   ...ICM_PROGRESSION_BENCHMARKS.map((fixture) => row(fixture.id, "ICM_PROGRESSION")),
   ...ICM_RESTEAL_STRUCTURAL_BENCHMARKS.map((fixture) => row(fixture.id, "ICM_RESTEAL")),
   ...ICM_SQUEEZE_ENVIRONMENT_BENCHMARKS.map((fixture) => row(fixture.id, "ICM_SQUEEZE")),
