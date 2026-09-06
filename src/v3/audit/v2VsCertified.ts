@@ -1,0 +1,198 @@
+// ---------------------------------------------------------------------------
+// ACELERADOR V3 — Auditor automático "V2 × gabarito" (parte 2 do acelerador).
+//
+// Ideia: cada fixture certificado com dado MÃO-A-MÃO é um gabarito. Este módulo
+// pega esses gabaritos, constrói o MESMO spot no motor V2 e compara a decisão —
+// apontando sozinho onde o V2 diverge do solver. Conforme o ChatGPT alimenta
+// mais spots (via o molde de transcrição), este auditor cresce junto e vira a
+// lista de "onde consertar o V2" (a trilha #1) e "onde o V3 vai agregar" (#2).
+//
+// É uma ferramenta de análise (não dirige nenhuma decisão no jogo). Só compara
+// nós que o V2 CONSEGUE reproduzir hoje (ex.: SB_RFI). Nós que dependem de
+// semântica que o V2 não tem (ex.: enfrentar um limp) saem como NOT_COMPARABLE —
+// honesto, sem forçar comparação.
+// ---------------------------------------------------------------------------
+import { createTable } from "../../game/engine";
+import { seededRng, type Card } from "../../engine/cards";
+import { handTypeCombos } from "../../ranges/types";
+import { preflopContextFor } from "../../bots/preflopBot";
+import { preflopDecision } from "../../ranges/preflop";
+import { BASELINE_PROFILE } from "../../bots/profiles";
+import type { ExternalBenchmarkFixture, HandActionFreq } from "../benchmarks/types";
+import { BLIND_WAR_BENCHMARKS } from "../benchmarks/blindWar";
+
+export type AuditStatus = "AGREE" | "DIVERGE" | "NOT_COMPARABLE";
+
+export interface AuditRow {
+  fixtureId: string;
+  node: string;
+  hand: string;
+  certified: string; // ação certificada (pura) OU "misto:<ação principal>"
+  v2: string; // ação do V2 (ou "-")
+  status: AuditStatus;
+  reason?: string;
+}
+
+export interface AuditSummary {
+  comparableHands: number;
+  agree: number;
+  diverge: number;
+  notComparable: number;
+  rows: AuditRow[];
+}
+
+/** Ação pura certificada de uma mão (freq ~1), ou null se for mista. */
+function pureCertifiedAction(mix: HandActionFreq): string | null {
+  const entries = Object.entries(mix).filter(([, f]) => f > 0);
+  if (entries.length === 1 && entries[0][1] >= 0.999) return entries[0][0];
+  return null;
+}
+
+/** Ação de maior frequência (pra rotular mãos mistas). */
+function dominantAction(mix: HandActionFreq): string {
+  return Object.entries(mix).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+/** Normaliza a ação do V2 para o vocabulário do solver (V2 não tem "limp"). */
+function normalizeV2Action(action: string): string {
+  if (action === "3bet") return "raise";
+  if (action === "jam") return "shove";
+  return action; // fold | raise | call | check
+}
+
+/**
+ * Constrói o spot SB_RFI (folded to SB, SB×BB) no V2 e devolve a ação do V2 pra
+ * uma mão, no stack efetivo do fixture. Retorna null se não for um nó SB_RFI.
+ */
+function v2ActionForSbRfi(
+  fixture: ExternalBenchmarkFixture,
+  hand: string,
+): string | null {
+  if (fixture.node !== "SB_RFI") return null;
+  const bb = 100;
+  const eff = fixture.context.effectiveStackBB;
+  const combo: Card[] = handTypeCombos(hand)[0];
+  const t = createTable(
+    { smallBlind: bb / 2, bigBlind: bb, ante: 0 },
+    Array.from({ length: 9 }, (_, i) => ({ name: `P${i}`, stack: eff * bb, isHero: i === 7 })),
+    6,
+  );
+  for (const p of t.players) {
+    p.holeCards = [];
+    p.committed = 0;
+    p.totalCommitted = 0;
+    if (p.seat === 7) {
+      // SB (herói) abre
+      p.status = "active";
+      p.acted = false;
+      p.stack = Math.round((eff - 0.5) * bb);
+      p.committed = bb / 2;
+      p.totalCommitted = bb / 2;
+      p.holeCards = combo;
+    } else if (p.seat === 8) {
+      // BB
+      p.status = "active";
+      p.acted = false;
+      p.stack = (eff - 1) * bb;
+      p.committed = bb;
+      p.totalCommitted = bb;
+    } else {
+      p.status = "out"; // ninguém mais na mão (folded to SB)
+      p.acted = true;
+    }
+  }
+  t.street = "preflop";
+  t.currentBet = bb;
+  t.preflopRaises = 0;
+  t.lastAggressor = -1;
+  t.preflopAggressor = -1;
+  t.toAct = 7;
+  t.buttonSeat = 6;
+  t.handOver = false;
+  const ctx = preflopContextFor(t, 7, BASELINE_PROFILE, {});
+  ctx.rng = seededRng(20260906);
+  return normalizeV2Action(preflopDecision(ctx).action);
+}
+
+/** Audita um único fixture (com dado mão-a-mão) contra o V2. */
+export function auditFixtureAgainstV2(fixture: ExternalBenchmarkFixture): AuditRow[] {
+  const rows: AuditRow[] = [];
+  if (!fixture.handActionFreq) return rows;
+
+  for (const [hand, mix] of Object.entries(fixture.handActionFreq) as Array<[string, HandActionFreq]>) {
+    const pure = pureCertifiedAction(mix);
+    const certifiedLabel = pure ?? `misto:${dominantAction(mix)}`;
+    const v2 = v2ActionForSbRfi(fixture, hand);
+
+    if (v2 === null) {
+      rows.push({
+        fixtureId: fixture.id,
+        node: fixture.node,
+        hand,
+        certified: certifiedLabel,
+        v2: "-",
+        status: "NOT_COMPARABLE",
+        reason: `O V2 ainda não reproduz o nó "${fixture.node}" (ex.: enfrentar um limp não existe no V2).`,
+      });
+      continue;
+    }
+
+    if (pure === null) {
+      // Célula mista certificada: o V2 dá uma resposta única — registramos como
+      // não-comparável direto (é material pra trilha #2, estratégia mista).
+      rows.push({
+        fixtureId: fixture.id,
+        node: fixture.node,
+        hand,
+        certified: certifiedLabel,
+        v2,
+        status: "NOT_COMPARABLE",
+        reason: "Célula MISTA no solver (frequências) — o V2 só sabe dar uma resposta. Material pra estratégia mista (#2).",
+      });
+      continue;
+    }
+
+    const agree = v2 === pure;
+    rows.push({
+      fixtureId: fixture.id,
+      node: fixture.node,
+      hand,
+      certified: pure,
+      v2,
+      status: agree ? "AGREE" : "DIVERGE",
+      reason: agree
+        ? undefined
+        : pure === "limp"
+          ? "O solver dá LIMP; o V2 não sabe limpar (aumenta ou folda)."
+          : `O solver joga ${pure}; o V2 joga ${v2}.`,
+    });
+  }
+  return rows;
+}
+
+/** Roda o auditor em todos os fixtures pré-flop com gabarito mão-a-mão. */
+export function auditV2AgainstCertified(
+  fixtures: ExternalBenchmarkFixture[] = BLIND_WAR_BENCHMARKS,
+): AuditSummary {
+  const rows: AuditRow[] = [];
+  for (const f of fixtures) rows.push(...auditFixtureAgainstV2(f));
+  const agree = rows.filter((r) => r.status === "AGREE").length;
+  const diverge = rows.filter((r) => r.status === "DIVERGE").length;
+  const notComparable = rows.filter((r) => r.status === "NOT_COMPARABLE").length;
+  return { comparableHands: agree + diverge, agree, diverge, notComparable, rows };
+}
+
+/** Relatório em texto (pro Allan/log), agrupado por status. */
+export function formatAuditReport(summary: AuditSummary): string {
+  const lines: string[] = [];
+  lines.push(`=== Auditor V2 × gabarito V3 ===`);
+  lines.push(
+    `Comparáveis: ${summary.comparableHands} mãos | concorda: ${summary.agree} | diverge: ${summary.diverge} | não-comparável: ${summary.notComparable}`,
+  );
+  const div = summary.rows.filter((r) => r.status === "DIVERGE");
+  if (div.length) {
+    lines.push(`\nDivergências (onde o V3 vai agregar / onde revisar o V2):`);
+    for (const r of div) lines.push(`  [${r.fixtureId}] ${r.hand}: solver=${r.certified} · V2=${r.v2} — ${r.reason}`);
+  }
+  return lines.join("\n");
+}

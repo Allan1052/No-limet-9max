@@ -23,6 +23,19 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Motor V3: acelerador de conteúdo (molde + auditor) — nada visível
+**Ajuste interno: NADA muda no app.** Construí as duas ferramentas que destravam a
+evolução do V3 (foco em matar erros bobos e estratégia mista):
+- **Molde de transcrição** — um guia + validador automático pra transformar as
+  grades do GTO Wizard em "spots certificados" sem erro (frequências que somam 1,
+  contexto completo, fonte obrigatória, mão válida). Assim o ChatGPT produz spots
+  em massa com rede de segurança. (`src/v3/intake` + doc do molde)
+- **Auditor "V2 × gabarito"** — pega cada spot certificado e aponta **sozinho**
+  onde o motor atual (V2) diverge do solver. Já rodou no primeiro spot com dado
+  mão-a-mão (BW5): o V2 acerta os folds óbvios e diverge nos **limps** (que ele
+  não faz) — exatamente onde o V3 vai agregar. (`src/v3/audit`)
+- Tudo isolado e desligado do jogo. Suíte com 3971 testes verdes, SELO GTO 61/61.
+
 ## 2026-09-06 — Claude — Motor V3: fundação trazida pro projeto (Fase 0 — nada visível)
 - Trouxe a **fundação do Motor V3** (dados reais de solver certificados, com fonte:
   vídeo + minuto) pro projeto — pasta `src/v3`, 7 famílias de spots, ~19 casos
