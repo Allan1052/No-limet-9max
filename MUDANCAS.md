@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Cartas mais legíveis: baralho de 4 cores + cartas maiores
+- Agora cada naipe tem **cor própria** (padrão dos apps modernos tipo GGPoker):
+  **espadas preto, copas vermelho, ouros azul, paus verde**. Antes eram só duas
+  cores (vermelho/preto), o que fazia copas×ouros e paus×espadas se confundirem.
+- As **cartas da mesa** (comunitárias) e as **suas cartas** (mão do herói) ficaram
+  **maiores**, com número e naipe graúdos, pra ler de um olhar. As cartas dos
+  oponentes (versos) seguem pequenas — não precisa ler.
+- Onde: **mesa do jogo** (Torneio / Treino). É o primeiro passo da melhoria de
+  layout; o redesign visual completo da mesa fica com o Manus.
+
 ## 2026-09-06 — Claude — Área de handoff Claude⇄ChatGPT no Git — nada visível
 **Ajuste interno: NADA muda no app.** Criei uma pasta `docs/handoff/` pros dois
 agentes trocarem direto pelo Git, sem o Allan no meio: o Claude escreve os pedidos

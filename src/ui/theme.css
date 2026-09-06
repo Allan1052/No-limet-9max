@@ -34,6 +34,13 @@
   --card-bg: #faf7f0; /* Fundo carta mais premium */
   --card-red: #c0392b;
   --card-black: #1c1c1c;
+  /* Baralho de 4 cores (GGPoker/moderno) — cada naipe com cor própria, todas
+     legíveis sobre a face branca da carta: espadas preto, copas vermelho,
+     ouros azul, paus verde. */
+  --suit-spades: #14161a;
+  --suit-hearts: #c0392b;
+  --suit-diamonds: #1565c0;
+  --suit-clubs: #1b7f3b;
   /* Padrão de cores de ação (solver): cinza=fold, azul=call, âmbar=raise, vermelho=3-bet, dourado=all-in. */
   --c-fold: #9ca3af;
   --c-call: #3b82f6;
@@ -1075,6 +1082,29 @@ body {
 .card.sm .suit { font-size: 11px; }
 .card.red { color: var(--card-red); }
 .card.black { color: var(--card-black); }
+/* Baralho de 4 cores. */
+.card.s-spades { color: var(--suit-spades); }
+.card.s-hearts { color: var(--suit-hearts); }
+.card.s-diamonds { color: var(--suit-diamonds); }
+.card.s-clubs { color: var(--suit-clubs); }
+
+/* ---- Legibilidade: cartas grandes onde o Allan REALMENTE lê ----
+   As cartas comunitárias (mesa) e a mão do herói ficam maiores, com rank e
+   naipe graúdos. Especificidade > .card das media queries, então valem em
+   qualquer largura sem precisar duplicar por breakpoint. As cartas dos
+   oponentes (versos .sm) seguem pequenas — não precisam ser lidas. */
+.board .card {
+  width: 46px; height: 65px; border-radius: 7px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.08);
+}
+.board .card .rank { font-size: 26px; letter-spacing: -0.5px; }
+.board .card .suit { font-size: 21px; }
+.seat.hero .hole .card.sm {
+  width: 40px; height: 57px; border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.08);
+}
+.seat.hero .hole .card.sm .rank { font-size: 23px; letter-spacing: -0.5px; }
+.seat.hero .hole .card.sm .suit { font-size: 18px; }
 .card.back {
   background: linear-gradient(135deg, #1a1d16 0%, #0d0f0d 100%);
   border: 2px solid var(--gold-dim);
