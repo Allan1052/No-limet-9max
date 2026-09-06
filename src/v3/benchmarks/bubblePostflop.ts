@@ -21,13 +21,17 @@ export interface BubblePostflopBenchmark {
 
   btnForcedCheckCbetApprox?: number;
   btnEarlierForcedCheckCbet?: number;
+  btnForcedCheckCbetModel?: "FORCED_BB_CHECK_SIMPLIFICATION";
   bbDonkFreqApprox?: number;
   bbDonkSizePot?: number;
+  bbDonkModel?: "EQUILIBRIUM";
 
   btnHasSlightEquityAdvantage?: true;
   bbEvShareApprox?: number;
   bbEquilibriumLeadFreq?: number;
+  bbLeadModel?: "EQUILIBRIUM";
   btnExploitCheckbackFreqVsNeverDonk?: number;
+  btnCheckbackModel?: "BEST_RESPONSE_VS_NEVER_DONK";
 
   completeHandMatrix: false;
   handActionFreq?: undefined;
@@ -95,8 +99,10 @@ export const BUBBLE_POSTFLOP_BENCHMARKS: BubblePostflopBenchmark[] = [
     btnEquityGreaterThan: 0.55,
     btnForcedCheckCbetApprox: 0.12,
     btnEarlierForcedCheckCbet: 0.63,
+    btnForcedCheckCbetModel: "FORCED_BB_CHECK_SIMPLIFICATION",
     bbDonkFreqApprox: 0.5,
     bbDonkSizePot: 0.2,
+    bbDonkModel: "EQUILIBRIUM",
     completeHandMatrix: false,
     evidence: evidence(),
     notes: [
@@ -117,7 +123,9 @@ export const BUBBLE_POSTFLOP_BENCHMARKS: BubblePostflopBenchmark[] = [
     btnHasSlightEquityAdvantage: true,
     bbEvShareApprox: 0.58,
     bbEquilibriumLeadFreq: 1,
+    bbLeadModel: "EQUILIBRIUM",
     btnExploitCheckbackFreqVsNeverDonk: 1,
+    btnCheckbackModel: "BEST_RESPONSE_VS_NEVER_DONK",
     completeHandMatrix: false,
     evidence: evidence(),
     notes: [
