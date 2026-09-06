@@ -46,5 +46,9 @@ muda a estratégia e o V2 ignora). Mesmo molde, `format: "PKO"` ou
 ### Status (o Claude atualiza)
 - [x] 1º lote (blind battle): BW1–BW5, FTBB4 → FTBB4 ligado (AKo/AQo all-in 20bb).
 - [x] 2º lote (ICM <10bb): BUB1/2/3/4, FT8 → BUB3 na biblioteca; resto evidência.
-- [ ] Prioridade 1 (completar o artigo ICM) — **pendente com o ChatGPT**.
+- [~] Prioridade 1 (completar o artigo ICM): ChatGPT reenviou os mesmos 5 spots
+  (notas mais ricas) mas SEM células puras novas nem contextos completos → nada
+  novo entrou. **Falta:** extrair as **células puras** por mão + os **stacks que
+  faltam** (OPENER do BUB4, UTG do FT8) + os nós pendentes (FT UTG 8bb/2bb RFI,
+  LJ 8bb vs 10bb shove, LJ 8bb/4bb vs 2bb open, BB 4bb vs UTG 2bb).
 - [ ] Prioridade 2 (ampliar blind battle) — pendente.

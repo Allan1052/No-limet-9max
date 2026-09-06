@@ -107,3 +107,15 @@ Regras aplicadas: nenhuma frequência mista estimada por cor; barra parcial fica
 ## Pendências explícitas deste artigo
 
 Continuar Prioridade 1 buscando os setups/imagens dos nodes restantes: FT UTG 8bb RFI; FT UTG 2bb RFI; LJ 8bb vs UTG1 10bb shove; LJ 8bb vs 2bb open; LJ 4bb vs 2bb open; BB 4bb vs UTG 2bb. Não promover célula por cor quando a ação/tom não estiver inequívoco.
+
+---
+## ✅ Processado por Claude (2026-09-06)
+- **Reenvio dos mesmos 5 spots** (BUB1, BUB2, BUB3, BUB4, FT8) com notas mais
+  ricas (risk premiums, ante), mas **sem células puras novas nem contextos
+  completados**.
+- **BUB3** já estava na biblioteca live (`blindBattleHands.ts`).
+- **BUB1/BUB2/BUB4/FT8** já estão no banco de evidências — continuam EVIDÊNCIA
+  (sem células / contexto incompleto). Nada novo entrou no jogo.
+- **Falta (o que realmente vira melhoria):** as **células puras** por mão desses
+  nós + os **stacks que faltam** (OPENER do BUB4, UTG do FT8), e os nós pendentes
+  do artigo. Sem isso, ficam como evidência.
