@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — Motor V3: 2º lote do ChatGPT + banco de evidências — nada visível
+**Ajuste interno: NADA muda no app.** Entrou o 2º lote do ChatGPT (6 spots de
+bolha/mesa final, artigo de <10bb ICM). Implementei a regra que o ChatGPT sugeriu
+(e que é a certa): **dois níveis** —
+- **PRONTO-PRO-LIVE:** contexto completo + célula pura por mão → pode dirigir o
+  jogo. Desse lote, só o **BUB3** (LJ 8bb defendendo shove na bolha) se qualifica.
+- **EVIDÊNCIA:** certificado pela fonte mas com contexto incompleto/sem células →
+  guardado no banco de evidências pra completar depois, **nunca** dirige o jogo
+  (BUB1, BUB2, BUB4, FT8).
+- Um classificador automático (`assessLiveReadiness`) separa os dois; o validador
+  foi relaxado pra aceitar evidência, mantendo o rigor (barra parcial vai em
+  notes, não inventa nada).
+- Nota honesta: o BUB3 é bolha/ICM — em chipEV o V2 pagaria TT/AQs (certo pelas
+  odds); o fold certificado é 100% ICM, então comparar exige a estrutura de
+  premiação (próximo passo). Não é bug do V2. SELO 61/61, 3978 testes verdes.
+
 ## 2026-09-06 — Claude — 1ª melhoria do V3 no motor: AKo/AQo all-in a ~20bb (BB vs SB)
 **Primeira correção de jogo vinda do gabarito do V3!** O auditor (comparando o V2
 com o dado real do solver, spot FTBB4) achou um vazamento: no **BB defendendo o

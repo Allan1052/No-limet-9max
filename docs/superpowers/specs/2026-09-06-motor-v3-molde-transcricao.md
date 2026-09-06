@@ -87,6 +87,26 @@ incompleto, falta de evidência, `raise` com tamanho ≤ 1bb, etc.
 4. Claude liga cada spot puro certificado atrás da trava (Fase 2, privado
    primeiro), e as células mistas viram a base da tela de frequências (Manus).
 
+## Dois níveis: EVIDÊNCIA × PRONTO-PRO-LIVE (regra nova)
+Nem todo fixture certificado pode dirigir uma decisão ao vivo. Há dois níveis:
+- **PRONTO-PRO-LIVE:** contexto EXATO completo (todas as posições do node com
+  stack) **+** pelo menos uma **célula PURA** por mão. Só esses dirigem o jogo.
+- **EVIDÊNCIA:** certificado pela fonte, mas com contexto incompleto (ex.: falta
+  o stack do abridor) ou sem célula por mão. Entra no **banco de evidências**
+  (`src/v3/benchmarks/evidenceBank.ts`) pra completar depois — **nunca** dirige o
+  live. (Regra do Allan: quantidade de material não pode baixar a qualidade.)
+
+O classificador `assessLiveReadiness(fixture)` decide isso automaticamente.
+
+**Cuidados de transcrição (aprendidos no 1º lote):**
+- **Barra global parcial vai em `notes`, não em `actionFreq`.** Se você só
+  consegue ler "shove 12%" (e o resto não), isso é uma NOTA. `actionFreq` só
+  aceita a barra COMPLETA (que soma 1). Barra parcial reprova no validador.
+- **Spot de defesa contra all-in na bolha/ICM** (ex.: `LJ_VS_UTG1_SHOVE`):
+  transcreva as células puras, mas saiba que pra comparar com o V2 vai precisar
+  da **estrutura de premiação (payouts)** — sem ela a conta vira chipEV e não bate
+  com a decisão sob ICM. Inclua o que a fonte der sobre premiação/ICM nas notes.
+
 ## Prioridade de conteúdo (foco atual: #1 e #2)
 Encher **pré-flop com células mão-a-mão**, começando pelos spots de maior dor do
 recreativo: **blind battles (SB×BB)**, **bolha** e **ICM** — de preferência com

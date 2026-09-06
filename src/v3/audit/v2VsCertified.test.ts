@@ -10,9 +10,10 @@ describe("Auditor automático V2 × gabarito V3", () => {
   it("roda em todos os gabaritos mão-a-mão e produz o relatório", () => {
     const summary = auditV2AgainstCertified();
     console.log("\n" + formatAuditReport(summary));
-    // Todas as células dos gabaritos atuais são comparáveis (SB_RFI + BB_VS_SB_RAISE).
+    // SB_RFI + BB_VS_SB_RAISE são comparáveis; o nó de defesa vs shove (BUB3)
+    // sai como NOT_COMPARABLE (precisa de ICM/payouts), honestamente.
     expect(summary.comparableHands).toBeGreaterThanOrEqual(27);
-    expect(summary.notComparable).toBe(0);
+    expect(summary.notComparable).toBeGreaterThanOrEqual(2);
   });
 
   it("BW5 (SB abre 40bb): V2 concorda nos folds e diverge nos limps", () => {

@@ -53,4 +53,33 @@ export const BLIND_BATTLE_HAND_FIXTURES: ExternalBenchmarkFixture[] = [
       "Barra global do node não exposta numericamente nesta imagem: actionFreq omitido.",
     ],
   },
+  {
+    id: "BUB3_LJ8_VS_UTG1_SHOVE",
+    node: "LJ_VS_UTG1_SHOVE",
+    evidence: {
+      level: "CERTIFIED",
+      solver: "GTO_WIZARD",
+      note: "Artigo 'Playing Under 10bb – Part 2: ICM', imagens 26-28",
+    },
+    context: {
+      format: "VANILLA",
+      stage: "BUBBLE",
+      positions: ["UTG1", "LJ"],
+      stacksBB: { UTG1: 11, LJ: 8 },
+      effectiveStackBB: 8,
+      coverage: [{ covers: "UTG1", covered: "LJ" }],
+    },
+    priorActions: ["UTG1_SHOVE"],
+    tolerance: 0.005,
+    handActionFreq: {
+      TT: { fold: 1 },
+      AQs: { fold: 1 },
+    },
+    notes: [
+      "TT e AQs são folds explicitamente declarados pelo texto (não inferidos pela cor).",
+      "LJ ~15% de Risk Premium contra cada jogador → ~65% de equity exigida antes do dead money.",
+      "Só as duas células explicitamente certificadas pelo texto entraram.",
+      "É spot de BOLHA/ICM: auditar contra o V2 exige a estrutura de premiação (payouts); sem ela, a comparação seria chipEV e não bate com a decisão sob ICM.",
+    ],
+  },
 ];

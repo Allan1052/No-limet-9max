@@ -163,6 +163,7 @@ export function auditFixtureAgainstV2(fixture: ExternalBenchmarkFixture): AuditR
     const v2 = v2ActionForNode(fixture, hand);
 
     if (v2 === null) {
+      const isShoveNode = /SHOVE/i.test(fixture.node);
       rows.push({
         fixtureId: fixture.id,
         node: fixture.node,
@@ -170,7 +171,9 @@ export function auditFixtureAgainstV2(fixture: ExternalBenchmarkFixture): AuditR
         certified: certifiedLabel,
         v2: "-",
         status: "NOT_COMPARABLE",
-        reason: `O V2 ainda não reproduz o nó "${fixture.node}" (ex.: enfrentar um limp não existe no V2).`,
+        reason: isShoveNode
+          ? `Nó "${fixture.node}" é defesa contra all-in sob ICM: comparar com o V2 exige a estrutura de premiação (payouts), que o fixture não traz.`
+          : `O V2 ainda não reproduz o nó "${fixture.node}" nesta versão do auditor.`,
       });
       continue;
     }

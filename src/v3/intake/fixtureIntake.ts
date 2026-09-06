@@ -95,10 +95,13 @@ export function validateCertifiedFixture(fixture: ExternalBenchmarkFixture): str
     }
     if (!c.stacksBB || typeof c.stacksBB !== "object") {
       errors.push("context.stacksBB: obrigatório (stack de cada posição, em bb).");
-    } else if (Array.isArray(c.positions)) {
-      for (const pos of c.positions) {
-        if (!(typeof c.stacksBB[pos] === "number" && c.stacksBB[pos] > 0)) {
-          errors.push(`context.stacksBB["${pos}"]: faltando ou inválido (todas as posições precisam de stack em bb).`);
+    } else {
+      // Bem-formado = os stacks PRESENTES são válidos. Cobrir TODAS as posições
+      // é requisito de "pronto-pro-live" (assessLiveReadiness), não de bem-formado
+      // — um fixture de evidência pode ter só o stack do herói.
+      for (const [pos, stk] of Object.entries(c.stacksBB)) {
+        if (!(typeof stk === "number" && stk > 0)) {
+          errors.push(`context.stacksBB["${pos}"]: inválido (stack em bb precisa ser > 0).`);
         }
       }
     }
@@ -109,14 +112,13 @@ export function validateCertifiedFixture(fixture: ExternalBenchmarkFixture): str
     errors.push("tolerance: precisa ser um número em (0, 0.1] (ex.: 0.005).");
   }
 
-  // Um fixture precisa certificar ALGO: a barra global (actionFreq) OU as células
-  // mão-a-mão (handActionFreq). A barra global é OPCIONAL — quando não é legível
-  // na fonte, não se inventa; o que dirige o live são as células por mão mesmo.
+  // A barra global (actionFreq) é OPCIONAL, e um fixture pode ser só EVIDÊNCIA
+  // (contexto + notas), sem células nem barra — vai pro banco de evidências, não
+  // pro matching live. Portanto NÃO é erro estar "vazio" de frequências aqui;
+  // a prontidão pro live é avaliada em assessLiveReadiness. Quando presente,
+  // porém, a barra global precisa ser a barra COMPLETA (somar 1) — informação
+  // parcial ("shove 12%, resto incerto") vai em notes, não em actionFreq.
   const hasGlobal = !!fixture.actionFreq && typeof fixture.actionFreq === "object";
-  const hasHands = !!fixture.handActionFreq && Object.keys(fixture.handActionFreq).length > 0;
-  if (!hasGlobal && !hasHands) {
-    errors.push("Fixture vazio: precisa de actionFreq (barra global) OU handActionFreq (células por mão).");
-  }
   // Frequências GLOBAIS do node (o que aparece na barra do solver) — só valida se presente.
   if (hasGlobal) {
     const entries = Object.entries(fixture.actionFreq!);
@@ -177,4 +179,48 @@ export function validateCertifiedFixture(fixture: ExternalBenchmarkFixture): str
 /** Açúcar: true quando o fixture passou sem nenhum erro. */
 export function isCertifiedFixtureValid(fixture: ExternalBenchmarkFixture): boolean {
   return validateCertifiedFixture(fixture).length === 0;
+}
+
+export type LiveReadiness = "LIVE_READY" | "EVIDENCE_ONLY";
+
+export interface LiveReadinessResult {
+  readiness: LiveReadiness;
+  /** Motivos que impedem o uso no matching live (vazio quando LIVE_READY). */
+  blockers: string[];
+}
+
+/** Uma célula é PURA quando tem uma única ação em ~100%. */
+function hasPureHandCell(fixture: ExternalBenchmarkFixture): boolean {
+  if (!fixture.handActionFreq) return false;
+  for (const mix of Object.values(fixture.handActionFreq)) {
+    const positive = Object.entries(mix).filter(([, f]) => f > 0);
+    if (positive.length === 1 && positive[0][1] >= 0.999) return true;
+  }
+  return false;
+}
+
+/**
+ * Classifica se um fixture (JÁ bem-formado) pode DIRIGIR uma decisão ao vivo, ou
+ * se é só evidência pro banco. Regra do Allan/ChatGPT: contexto incompleto entra
+ * como evidência, mas NUNCA dirige o live. Live exige:
+ *   1) todas as posições do node com stack conhecido (contexto exato completo);
+ *   2) pelo menos uma célula PURA por mão (o que realmente dirige a decisão).
+ */
+export function assessLiveReadiness(fixture: ExternalBenchmarkFixture): LiveReadinessResult {
+  const blockers: string[] = [];
+  const c = fixture.context;
+  if (c?.positions && c?.stacksBB) {
+    const missing = c.positions.filter(
+      (pos) => !(typeof c.stacksBB[pos] === "number" && c.stacksBB[pos] > 0),
+    );
+    if (missing.length > 0) {
+      blockers.push(`contexto incompleto: faltam stacks de ${missing.join(", ")}.`);
+    }
+  } else {
+    blockers.push("contexto incompleto: positions/stacksBB ausentes.");
+  }
+  if (!hasPureHandCell(fixture)) {
+    blockers.push("sem célula PURA por mão (handActionFreq) — não há o que dirigir no live.");
+  }
+  return { readiness: blockers.length === 0 ? "LIVE_READY" : "EVIDENCE_ONLY", blockers };
 }
