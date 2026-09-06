@@ -51,6 +51,8 @@ describe("Motor V3 — certified bubble postflop structural benchmarks", () => {
     expect(low?.btnEarlierForcedCheckCbet).toBeCloseTo(0.63, 6);
     expect(low?.bbDonkFreqApprox).toBeCloseTo(0.5, 6);
     expect(low?.bbDonkSizePot).toBeCloseTo(0.2, 6);
+    expect(low?.btnForcedCheckCbetModel).toBe("FORCED_BB_CHECK_SIMPLIFICATION");
+    expect(low?.bbDonkModel).toBe("EQUILIBRIUM");
   });
 
   it("certifies the 854 equity-EV inversion and equilibrium/exploit lead dependency", () => {
@@ -61,5 +63,7 @@ describe("Motor V3 — certified bubble postflop structural benchmarks", () => {
     expect(connected?.bbEvShareApprox).toBeCloseTo(0.58, 6);
     expect(connected?.bbEquilibriumLeadFreq).toBe(1);
     expect(connected?.btnExploitCheckbackFreqVsNeverDonk).toBe(1);
+    expect(connected?.bbLeadModel).toBe("EQUILIBRIUM");
+    expect(connected?.btnCheckbackModel).toBe("BEST_RESPONSE_VS_NEVER_DONK");
   });
 });
