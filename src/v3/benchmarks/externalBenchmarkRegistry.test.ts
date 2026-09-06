@@ -7,12 +7,13 @@ describe("Motor V3 — consolidated external benchmark registry", () => {
       "BLIND_WAR",
       "BUBBLE_POSTFLOP",
       "BUBBLE_STEAL",
+      "FINAL_TABLE_BLIND_BATTLE",
       "ICM_PROGRESSION",
       "ICM_RESTEAL",
       "ICM_SQUEEZE",
     ]);
 
-    expect(EXTERNAL_BENCHMARK_REGISTRY.reduce((sum, x) => sum + x.fixtureCount, 0)).toBe(16);
+    expect(EXTERNAL_BENCHMARK_REGISTRY.reduce((sum, x) => sum + x.fixtureCount, 0)).toBe(19);
   });
 
   it("keeps solver evidence and live-promotion status explicit", () => {
@@ -24,6 +25,8 @@ describe("Motor V3 — consolidated external benchmark registry", () => {
 
     expect(EXTERNAL_BENCHMARK_REGISTRY.find((x) => x.family === "BLIND_WAR")?.v3PromotionStatus)
       .toBe("HAND_CERTIFIED_PARTIAL");
+    expect(EXTERNAL_BENCHMARK_REGISTRY.find((x) => x.family === "FINAL_TABLE_BLIND_BATTLE")?.v3PromotionStatus)
+      .toBe("STRUCTURAL_ONLY");
   });
 
   it("does not pretend V2 has exact external comparability where the harness does not exist", () => {
