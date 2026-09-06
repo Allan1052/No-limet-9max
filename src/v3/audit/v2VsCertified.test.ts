@@ -28,18 +28,22 @@ describe("Auditor automático V2 × gabarito V3", () => {
     expect(limps.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("FTBB4 (BB defende SB open, mesa final 20bb): V2 acerta a maioria, diverge em AKo/AQo (shove) e TT (call)", () => {
+  it("FTBB4 (BB defende SB open, mesa final 20bb): V2 já bate no valor, lixo e nos shoves offsuit; só TT diverge", () => {
     const rows = auditFixtureAgainstV2(ftbb4);
     const byHand = (h: string) => rows.find((r) => r.hand === h)!;
-    // Concorda no valor e no lixo
+    // Valor e lixo: concorda
     expect(byHand("AA").status).toBe("AGREE");
     expect(byHand("AA").v2).toBe("raise");
     for (const h of ["94s", "72s", "62s"]) expect(byHand(h).status, h).toBe("AGREE");
-    // Diverge: solver dá shove com AKo/AQo (a 20bb), V2 dá raise não-all-in
-    expect(byHand("AKo").status).toBe("DIVERGE");
-    expect(byHand("AKo").certified).toBe("shove");
-    expect(byHand("AQo").status).toBe("DIVERGE");
-    // Diverge: solver paga TT, V2 3-beta
+    // Correção do auditor: AKo/AQo agora dão ALL-IN a 20bb (batem com o solver).
+    expect(byHand("AKo").status).toBe("AGREE");
+    expect(byHand("AKo").v2).toBe("shove");
+    expect(byHand("AQo").status).toBe("AGREE");
+    expect(byHand("AQo").v2).toBe("shove");
+    // Suited/AA seguem no raise (o solver também): AKs/AQs não viram shove.
+    expect(byHand("AKs").v2).toBe("raise");
+    expect(byHand("AQs").v2).toBe("raise");
+    // TT continua divergindo (misto/ICM — deixado pra quando tiver mais dado).
     expect(byHand("TT").status).toBe("DIVERGE");
     expect(byHand("TT").certified).toBe("call");
   });

@@ -693,12 +693,24 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     // BB VALOR: mãos que 3-betam SEMPRE por valor (premium de verdade).
     const BB_VALUE_3BET = [...EXTENDED_3BET, "99", "88"];
     if (ctx.heroPosition === "BB" && BB_VALUE_3BET.includes(handType)) {
+      // Broadway OFFSUIT (AKo/AQo) com stack CURTO (13–22bb, acima do push/fold):
+      // 3-betar não-all-in aqui te compromete (SPR minúsculo) e ainda joga
+      // dominado OOP se levar um shove. O solver (GTO Wizard, blind battle de
+      // mesa final 20bb) dá ALL-IN nessas — soma fold equity e evita o spot ruim.
+      // As suited/pares/AA seguem no 3-bet normal (jogam melhor o pós-flop e
+      // querem ação — o solver também mostra AA/AKs/AQs = raise). Achado do
+      // auditor V2×gabarito (fixture FTBB4). Não afeta 100bb nem ≤10bb (SELO).
+      const offsuitBroadway = handType === "AKo" || handType === "AQo";
+      const broadwayReshove = offsuitBroadway && !sd.pushFold && ctx.effectiveBB < 22;
+      const jamNow = sd.pushFold || broadwayReshove;
       return {
-        action: sd.pushFold ? "jam" : "3bet",
-        sizeBB: sd.pushFold ? ctx.effectiveBB : threeBetSize,
-        reason: `${handType}: 3-bet obrigatório do BB — mão premium, nunca foldar aqui.`,
+        action: jamNow ? "jam" : "3bet",
+        sizeBB: jamNow ? ctx.effectiveBB : threeBetSize,
+        reason: broadwayReshove
+          ? `${handType}: ${Math.round(ctx.effectiveBB)}bb — broadway offsuit dá all-in (re-shove) sobre a abertura de ${ctx.raiserPosition}: 3-bet não-all-in compromete e joga dominado OOP; o all-in soma fold equity.`
+          : `${handType}: 3-bet obrigatório do BB — mão premium, nunca foldar aqui.`,
         handType,
-        mix: bandMix(sd.pushFold ? "jam" : "3bet", Math.max(value3betPct, 0.08), handType, "call"),
+        mix: bandMix(jamNow ? "jam" : "3bet", Math.max(value3betPct, 0.08), handType, "call"),
       };
     }
 

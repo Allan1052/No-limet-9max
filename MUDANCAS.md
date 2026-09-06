@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-06 — Claude — 1ª melhoria do V3 no motor: AKo/AQo all-in a ~20bb (BB vs SB)
+**Primeira correção de jogo vinda do gabarito do V3!** O auditor (comparando o V2
+com o dado real do solver, spot FTBB4) achou um vazamento: no **BB defendendo o
+open do SB** com stack curto (13–22bb), o V2 dava um **3-bet não-all-in** com
+**AKo/AQo** — e a 20bb isso te compromete e ainda joga dominado se levar um shove.
+O solver dá **all-in** nessas. Corrigido: **AKo/AQo agora vão de all-in** nesse
+spot (broadway offsuit, stack curto). As suited/AA/pares seguem no 3-bet normal
+(como o solver também mostra). A 100bb e ≤10bb nada muda. Onde: sua dica quando
+você está no BB, curto, contra um open do SB. SELO 61/61, 3974 testes verdes.
+
 ## 2026-09-06 — Claude — Motor V3: 1º spot do ChatGPT entrou (FTBB4) — nada visível
 **Ajuste interno: NADA muda no app.** Entrou o primeiro spot transcrito pelo
 ChatGPT (FTBB4 — BB defendendo o open do SB, mesa final, 20bb). O acelerador

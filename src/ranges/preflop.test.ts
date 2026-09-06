@@ -343,6 +343,26 @@ describe("pré-flop — guerra de re-raises (5-bet+ all-in) só o topo premium p
   });
 });
 
+// Achado do auditor V2×gabarito (FTBB4, GTO Wizard): BB defendendo o open do SB
+// a ~20bb (mesa final). Broadway OFFSUIT deve ir ALL-IN (não 3-bet não-all-in);
+// suited/AA seguem no 3-bet. Trava a correção do vazamento.
+describe("pré-flop — BB vs open do SB a ~20bb: broadway offsuit dá all-in", () => {
+  const vsSbOpen = { raiserPosition: "SB" as const, openSizeBB: 3, betLevelFaced: 1 };
+  it("AKo e AQo dão ALL-IN a 20bb (não 3-bet não-all-in)", () => {
+    for (const h of ["AsKd", "AsQd"]) {
+      expect(decide(h, "BB", { ...vsSbOpen, effectiveBB: 20 }).action).toBe("jam");
+    }
+  });
+  it("AA/AKs/AQs seguem no 3-bet a 20bb (não viram all-in)", () => {
+    for (const h of ["AsAd", "AsKs", "AsQs"]) {
+      expect(decide(h, "BB", { ...vsSbOpen, effectiveBB: 20 }).action).toBe("3bet");
+    }
+  });
+  it("a 100bb nada muda — AKo segue 3-bet normal (não all-in)", () => {
+    expect(decide("AsKd", "BB", { ...vsSbOpen, effectiveBB: 100 }).action).toBe("3bet");
+  });
+});
+
 // PILAR 1 (ligado) — quando os dados da mesa chegam (pote disputável, call, nº de
 // oponentes), o all-in é decidido por EQUITY REAL vs range + side pot, e a razão
 // traz a CONTA. É o que alimenta o card técnico.
