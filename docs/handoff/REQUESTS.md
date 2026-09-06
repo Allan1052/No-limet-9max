@@ -15,10 +15,18 @@ AKo/AQo) e que **NÃO depende de recuperar imagem do blog de ICM** (onde você t
 
 Queremos **células puras** (a ação 100% da mão) nestes nós, em vários stacks:
 - **`SB_RFI`** — SB de primeiro a agir abre/limpa/folda. Stacks: **15, 20, 25, 30bb**
-  (VANILLA; se o artigo tiver PKO também, mande com `format: "PKO"`).
-- **`BB_VS_SB_RAISE`** — BB defende o open do SB. Stacks: **15, 25, 30, 40bb**
-  (o FTBB4 já cobre 20bb). Use `priorActions: ["SB_RAISE_<tamanho>"]` com o tamanho real.
-- **`BB_VS_SB_LIMP`** — resposta do BB ao **limp** do SB (check/raise/shove por mão).
+  (VANILLA; se o artigo tiver PKO também, mande com `format: "PKO"`). **← ainda pendente.**
+- **`BB_VS_SB_RAISE`** — BB defende o open do SB. Stacks: **15, 25, 30bb** ainda faltam
+  (o FTBB4 cobre 20bb; **40bb ITM já entrou** no lote 1). Use `priorActions: ["SB_RAISE_<tamanho>"]`.
+- **`BB_VS_SB_LIMP`** — resposta do BB ao **limp** do SB (check/raise/shove por mão). **← pendente.**
+
+> ⚠️ **Lição do lote 1:** os dois artigos de ICM não trazem grade hand-level numérica
+> pra todo stack 15/25/30. Onde a grade hand-level não for legível, prefira **uma fonte
+> que mostre as frequências por mão** (vídeo com o painel HANDS, como você fez no J3o) —
+> é isso que vira célula pura. O artigo "SB C-Betting in SRP" tem grade 30bb/20bb ótima,
+> mas é **ChipEV sem estágio**: só serve pro live se a fonte fixar o `stage`. Se quiser,
+> mande esses como `stage:"EARLY"` **só quando a fonte disser que é early/chipEV** — não
+> infira. Na dúvida, deixa em evidência.
 
 Regras deste lote:
 - **Só célula pura** vira `handActionFreq` (ex.: `{ shove: 1 }`). Se a mão for **mista**,
@@ -68,4 +76,9 @@ muda a estratégia e o V2 ignora). Mesmo molde, `format: "PKO"` ou
   **dirigidas por ICM** (V3 resolve com a premiação). **Ainda falta** (fora do live até
   ter contexto exato): OPENER do BUB4, e os nós FT UTG 8bb/2bb RFI, LJ 8bb vs 10bb shove,
   LJ 8bb/4bb vs 2bb open, BB 8bb vs UTG 2bb (imagens do blog não recuperadas nesta passagem).
-- [ ] **Prioridade 2 (blind battle SB×BB) — FOCO DE AGORA, aguardando lote.**
+- [~] **Prioridade 2 (blind battle SB×BB) — lote 1 processado.** Entrou
+  `BB40_ITM25_VS_SB3_PURE` (BB vs SB open, 40bb ITM) → auditoria **24/25 concorda**
+  (única divergência J3o, fronteira de indiferença — não corrigida de propósito). O
+  âncora 20bb FT não entrou (vazio; FTBB4 já cobre). **Ainda faltam:** SB_RFI 15/20/25/30bb,
+  BB_VS_SB_RAISE 15/25/30bb, BB_VS_SB_LIMP — precisam de fonte com grade hand-level
+  numérica (ver a lição no topo).

@@ -1,3 +1,18 @@
+> ✅ **PROCESSADO pelo Claude (2026-09-06).**
+> - `BB40_ITM25_VS_SB3_PURE`: validado, **LIVE_READY**, guardado em
+>   `src/v3/benchmarks/blindBattleHands.ts`. Auditoria V2×gabarito: **24/25 concordam**
+>   (todos os raises de valor + todos os folds de lixo). Única divergência: **J3o**
+>   (solver=call, V2=fold). **Não corrigido de propósito**: é fronteira de indiferença e
+>   o solver é não-monotônico ali (chama J3o mas folda Q3o/T3o, mais fortes) — forçar o
+>   V2 a chamar J3o quebraria Q3o/T3o. Fica como gabarito. Confirma que a defesa do BB a
+>   40bb já está sólida.
+> - `BB20_FT_VS_SB3_PANEL_ANCHOR`: **não guardado** — vazio de células (só âncora visual)
+>   e o próprio lote diz que não é candidato live (FTBB4 já cobre o node). Sem ação.
+>
+> Sem mudança no app/`dist` (só gabarito/ferramenta do V3). Suíte 3980 ok, SELO 61/61.
+> Lacunas reais que o lote deixou explícitas seguem no `REQUESTS.md` (15/25/30bb sem
+> grade hand-level legível; BB_VS_SB_LIMP com imagens do blog fora do ar).
+
 # Motor V3 — Prioridade 2 — Blind Battle SB×BB — lote 1
 
 Fontes oficiais GTO Wizard auditadas neste lote:

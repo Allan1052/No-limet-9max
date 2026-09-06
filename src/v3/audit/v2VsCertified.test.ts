@@ -51,6 +51,24 @@ describe("Auditor automático V2 × gabarito V3", () => {
     expect(byHand("TT").certified).toBe("call");
   });
 
+  it("BB 40bb vs SB open (ITM 25%): V2 bate no valor e no lixo (24/25); só J3o diverge (fronteira de indiferença)", () => {
+    const bb40 = BLIND_BATTLE_HAND_FIXTURES.find((f) => f.id === "BB40_ITM25_VS_SB3_PURE")!;
+    const rows = auditFixtureAgainstV2(bb40);
+    const byHand = (h: string) => rows.find((r) => r.hand === h)!;
+    const agree = rows.filter((r) => r.status === "AGREE").length;
+    const diverge = rows.filter((r) => r.status === "DIVERGE").length;
+    expect(agree).toBe(24);
+    expect(diverge).toBe(1);
+    // Valor: o V2 aumenta igual ao solver.
+    for (const h of ["AA", "AKs", "KK", "QQ", "JJ"]) expect(byHand(h).v2, h).toBe("raise");
+    // Lixo offsuit: folda igual.
+    for (const h of ["72o", "32o", "Q3o", "T3o"]) expect(byHand(h).status, h).toBe("AGREE");
+    // A única divergência é J3o (solver call, V2 fold) — coin-flip, não leak.
+    expect(byHand("J3o").status).toBe("DIVERGE");
+    expect(byHand("J3o").certified).toBe("call");
+    expect(byHand("J3o").v2).toBe("fold");
+  });
+
   it("ICM RFI stack curto (BUB1 HJ 8bb / BUB2 CO 4bb): células puras — V2 concorda 100%", () => {
     for (const id of ["BUB1_HJ8_RFI_PURE", "BUB2_CO4_RFI_PURE"]) {
       const rows = auditFixtureAgainstV2(byId(id));
