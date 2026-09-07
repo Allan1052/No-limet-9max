@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Popup de range modernizado + cartas da mão limpas
+- Quando você **clica no "RANGE"** de um jogador, o popup ganhou um visual novo,
+  no capricho da mesa: fundo verde-dourado, título e "profundidade" (bb) em pílula
+  dourada, mão do jogador num painel, legenda em etiquetas e botão **fechar** dourado.
+- As **duas cartas da mão** no topo do popup estavam poluídas (índice no canto) —
+  agora ficam **limpas, centralizadas e grandes**, fáceis de ler.
+- Onde: **popup de range** (Jogar/Treino, ao tocar no selo RANGE de um jogador).
+
 ## 2026-09-07 — Claude — Ajuste: cartas do vilão mais limpas e legíveis
 - As **cartas dos oponentes** (pequenas) estavam poluídas com o índice no canto +
   naipe grande. Agora as cartas **pequenas** ficam **limpas e centralizadas**

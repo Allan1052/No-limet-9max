@@ -2040,17 +2040,36 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 /* -------------------------------------------------------------------------
    Range por jogador ao final da mão (modo avançado).
    ------------------------------------------------------------------------- */
-.spot-modal { max-width: 520px; }
-.spot-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.spot-head h3 { margin: 0; color: var(--gold); font-size: 16px; line-height: 1.3; }
+/* ---- Popup de range: visual moderno pra combinar com a mesa nova ---- */
+.spot-modal {
+  max-width: 520px;
+  background: radial-gradient(130% 80% at 50% -6%, #223019 0%, #161c10 42%, #10130c 100%);
+  border: 1px solid rgba(230, 196, 84, 0.34);
+  border-radius: 18px;
+  padding: 18px 18px 20px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.66), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.spot-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.spot-head h3 { margin: 0; color: var(--gold-bright); font-size: 17px; font-weight: 800; line-height: 1.3; letter-spacing: 0.1px; }
 .spot-depth {
   flex-shrink: 0; font-weight: 800; font-variant-numeric: tabular-nums;
-  color: var(--gold-soft); background: #14180f; border: 1px solid var(--gold-dim);
-  border-radius: 8px; padding: 4px 10px; font-size: 14px;
+  color: #10130c; background: linear-gradient(180deg, #e6c454, #b8912f); border: 0;
+  border-radius: 999px; padding: 5px 12px; font-size: 13.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
-.spot-realhand { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+.spot-realhand {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px; padding: 10px 14px;
+}
 .spot-cards { display: flex; gap: 6px; }
-.spot-verdict { font-size: 15px; color: var(--text); }
+/* Cartas da mão no popup: LIMPAS e centralizadas (sem o índice de canto que polui). */
+.spot-cards .card { width: 50px; height: 70px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.spot-cards .card .idx { position: static; top: auto; left: auto; }
+.spot-cards .card .pip { display: none; }
+.spot-cards .card .rank { font-size: 30px; letter-spacing: -0.5px; }
+.spot-cards .card .suit { font-size: 20px; margin-top: -2px; }
+.spot-verdict { font-size: 16px; color: var(--text); }
 .spot-verdict b { font-weight: 800; }
 .spot-verdict.cat-open b { color: var(--gold); }
 .spot-verdict.cat-3bet b { color: #e0776c; }
@@ -2067,9 +2086,14 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 }
 @keyframes hlpulse { 50% { box-shadow: 0 0 4px 1px rgba(255,255,255,0.3); } }
 
-.spot-legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 12px 0 8px; font-size: 13px; color: var(--text-dim); }
-.spot-sw-item { display: inline-flex; align-items: center; gap: 6px; }
-.spot-sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.spot-legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 8px; font-size: 12.5px; color: var(--text); }
+.spot-sw-item { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 999px; padding: 4px 11px 4px 8px; }
+.spot-sw { width: 13px; height: 13px; border-radius: 4px; display: inline-block; }
+/* Grade dentro do popup: células um tico maiores/legíveis e cantos arredondados. */
+.rg-grid.spot-grid { border-radius: 8px; overflow: hidden; }
+.spot-grid .rg-cell { font-size: 12px; }
+/* Botão fechar do popup: destaque dourado pra combinar. */
+.spot-modal > .btn { background: linear-gradient(180deg, #e6c454, #b8912f); color: #241c04; border: 0; font-weight: 800; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
 .spot-sw.cat-open { background: rgba(212,175,55,0.85); }
 .spot-sw.cat-3bet { background: rgba(201,84,74,0.85); }
 .spot-sw.cat-4bet { background: rgba(173,58,106,0.9); }
