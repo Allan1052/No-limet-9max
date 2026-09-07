@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Cartas atrás do avatar (upgrade #2 de 4)
+- As cartas de cada jogador agora ficam **no topo do pod, com o avatar por cima**
+  (estilo GG): os versos dos vilões "espiam" atrás do avatar e a sua mão fica em
+  destaque acima. Pods ainda mais limpos e enxutos.
+- Onde: **mesa do jogo** e **Review**. 2º dos 4 upgrades (faltam: modo imersivo/tela
+  cheia total e botões flutuando).
+
 ## 2026-09-07 — Claude — Feltro premium (upgrade #1 de 4)
 - O feltro ganhou acabamento "caro": **verde com mais profundidade**, **brilho
   central**, **vinheta** escura nas bordas e um **aro tipo almofada com fio dourado**

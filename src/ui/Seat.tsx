@@ -76,9 +76,7 @@ export function Seat({
         {player.isHero ? <div className="hero-kicker">VOCÊ</div> : null}
         {position ? <div className="pos-tag">{position}</div> : null}
         {rangeMarked ? <div className="range-flag">👁 range</div> : null}
-        <div className="ava" style={avaStyle} aria-hidden="true">{initial}</div>
-        <div className="name">{player.name}</div>
-        <div className="stack">{stackLabel}</div>
+        {/* Cartas no TOPO, "atrás" do avatar (estilo GG): o avatar sobe por cima. */}
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (
             // Herói: carta grande (índice no canto). Vilão revelado: carta pequena limpa.
@@ -90,6 +88,9 @@ export function Seat({
             </>
           )}
         </div>
+        <div className="ava" style={avaStyle} aria-hidden="true">{initial}</div>
+        <div className="name">{player.name}</div>
+        <div className="stack">{stackLabel}</div>
         <div className={badgeClass}>{lastAction ?? " "}</div>
       </button>
     </div>
