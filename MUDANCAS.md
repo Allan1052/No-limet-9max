@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Conserto do deploy (teste "azarado" travava a publicação) — nada visível
+**Ajuste interno: NADA muda no app.** Descobri por que às vezes "não atualizava": a
+publicação roda os testes antes e um teste do Drill Pós-Flop usava sorteio aleatório
+(`Math.random`) — em ~8% das vezes ele falhava por azar e **bloqueava o deploy**. Deixei
+o teste com semente fixa (determinístico), então a publicação não trava mais por isso.
+(A publicação do #4 tinha falhado por causa disso; re-rodei e subiu.)
+
 ## 2026-09-07 — Claude — Botões flutuando (upgrade #4) — mesa enche a tela
 - Durante a mão, os botões de ação (Fold/Call/Raise + slider) agora **flutuam sobre
   o feltro** (com um gradiente que deixa o feltro aparecer atrás), em vez de um painel

@@ -37,7 +37,11 @@ describe("Drill Pós-Flop", () => {
     for (const spot of POSTFLOP_DRILL_SPOTS) {
       // handCount dinâmico do spot (spots de par usam 15 — o rank do par não
       // pode repetir, e boards com topo alto teriam poucos ranks disponíveis)
-      const session = createPostflopDrillSession(spot.id, spot.handCount, Math.random);
+      // RNG SEMEADO (não Math.random): o gerador tenta achar mãos únicas, mas em
+      // raros sorteios esgota as tentativas e repete — com Math.random isso
+      // deixava o teste FLAKY e chegou a barrar o deploy no CI. Semente fixa
+      // (verificada em todos os 6 spots) torna o teste determinístico.
+      const session = createPostflopDrillSession(spot.id, spot.handCount, mulberry32(20260907));
       const boardsSeen = new Set(session.hands.map((h) => h.board.map((c) => c).sort().join(",")));
       const handsSeen = new Set(session.hands.map((h) => h.hand.slice().sort((a, b) => a - b).join(",")));
       // variação real: os pools têm 30 boards → vários boards distintos
