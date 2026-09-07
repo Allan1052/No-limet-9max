@@ -12,7 +12,7 @@ describe("Etapa 5 - acabamento mobile", () => {
   });
 
   it("recalcula a altura da mesa após a faixa de progresso", () => {
-    expect(tableCss).toContain("height: clamp(330px, calc(100dvh - 292px), 515px)");
+    expect(tableCss).toContain("height: clamp(360px, calc(100dvh - 268px), 700px)");
     expect(tableCss).toContain("height: clamp(245px, calc(100dvh - 190px), 320px)");
   });
 

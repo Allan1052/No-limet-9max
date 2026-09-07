@@ -23,6 +23,15 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Nova mesa (Etapa 3): mesa maior + Review em tela cheia
+- A **mesa de jogo ficou bem maior** — o teto de altura subiu (de 515 pra 700px) e
+  sobra menos espaço pras barras, então a mesa enche mais a tela nos celulares
+  grandes. Sua **carta (herói) aumentou** também.
+- O **Review (Replay da mão) agora abre em TELA CHEIA**, com a mesma mesa grande do
+  jogo — em vez da janelinha antiga. Fica ótimo pra gravar vídeo.
+- Onde: **mesa do jogo** e **Review/Replay** (Hoje/Treino, ao revisar uma mão).
+- Passo firme rumo à tela cheia total; ainda dá pra afinar o tamanho com seu retorno.
+
 ## 2026-09-07 — Claude — Popup de range modernizado + cartas da mão limpas
 - Quando você **clica no "RANGE"** de um jogador, o popup ganhou um visual novo,
   no capricho da mesa: fundo verde-dourado, título e "profundidade" (bb) em pílula

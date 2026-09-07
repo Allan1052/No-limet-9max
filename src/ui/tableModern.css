@@ -160,7 +160,9 @@
   }
 
   .table-wrap.table-modern {
-    height: clamp(330px, calc(100dvh - 292px), 515px);
+    /* Mesa bem maior: teto subiu de 515 -> 700 e a reserva de chrome caiu um
+       pouco, pra a mesa encher a tela nos celulares grandes (rumo à tela cheia). */
+    height: clamp(360px, calc(100dvh - 268px), 700px);
     min-height: 0;
     border-radius: 20px;
     margin-top: 0;
@@ -188,7 +190,7 @@
   }
 
   .table-modern .seat.hero {
-    width: 112px;
+    width: 124px;
   }
 
   .table-modern .seat .pod {
@@ -197,11 +199,11 @@
   }
 
   .table-modern .seat.hero .pod {
-    transform: scale(.89);
+    transform: scale(.98);
   }
 
   .table-modern .tbl-center-col {
-    transform: translate(-50%, -50%) scale(.9);
+    transform: translate(-50%, -50%) scale(.98);
     transform-origin: center;
   }
 
@@ -216,23 +218,23 @@
 
 @media (max-width: 400px) {
   .table-wrap.table-modern {
-    height: clamp(320px, calc(100dvh - 280px), 480px);
+    height: clamp(340px, calc(100dvh - 258px), 620px);
   }
 
   .table-modern .seat:not(.hero) {
-    width: 92px;
+    width: 96px;
   }
 
   .table-modern .seat.hero {
-    width: 106px;
+    width: 116px;
   }
 
   .table-modern .seat .pod {
-    transform: scale(.82);
+    transform: scale(.84);
   }
 
   .table-modern .seat.hero .pod {
-    transform: scale(.86);
+    transform: scale(.92);
   }
 }
 

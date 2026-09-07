@@ -1610,6 +1610,28 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
 .replay-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 .rs-counter { color: var(--text-dim); font-size: 12px; }
 
+/* ---- Review em TELA CHEIA: a revisão da mão fica igual à mesa de jogo ---- */
+.overlay.overlay-full { padding: 0; align-items: stretch; justify-content: stretch; }
+.replay.replay-full {
+  width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
+  margin: 0; border: 0; border-radius: 0;
+  padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 6px;
+  background: radial-gradient(130% 60% at 50% -4%, #1b2413 0%, #12160d 50%, #0c0f08 100%);
+  overflow-y: auto;
+}
+.replay-full .replay-head { flex: none; padding: 2px 4px 0; }
+.replay-full .replay-head h3 { font-size: 15px; }
+/* A mesa ocupa quase toda a tela; sobra só o rodapé compacto da revisão. */
+.replay-full .table-wrap.table-modern {
+  flex: none;
+  height: clamp(300px, calc(100dvh - 258px), 660px);
+  margin: 0;
+}
+.replay-full .replay-step { flex: none; text-align: center; }
+.replay-full .replay-nav { flex: none; margin-top: 6px; }
+.replay-full .replay-actions { flex: none; margin-top: 8px !important; }
+
 /* ---- Análise de fim de torneio ---- */
 .summary-modal { max-height: 90vh; overflow-y: auto; }
 .summary-modal h3 { color: var(--gold); margin: 14px 0 8px; }

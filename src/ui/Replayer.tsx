@@ -45,8 +45,8 @@ export function Replayer({
   const atResult = frame?.label === "Resultado";
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="replay" onClick={(e) => e.stopPropagation()}>
+    <div className="overlay overlay-full" onClick={onClose}>
+      <div className="replay replay-full" onClick={(e) => e.stopPropagation()}>
         <div className="replay-head">
           <h3>Replay da mão</h3>
           <button className="btn tiny" onClick={onClose}>
