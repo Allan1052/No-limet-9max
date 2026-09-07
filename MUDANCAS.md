@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Botões flutuando (upgrade #4) — mesa enche a tela
+- Durante a mão, os botões de ação (Fold/Call/Raise + slider) agora **flutuam sobre
+  o feltro** (com um gradiente que deixa o feltro aparecer atrás), em vez de um painel
+  sólido comendo uma faixa fixa. A **mesa estica por cima** e enche a tela.
+- Motivo: a mesa "continuava do mesmo tamanho" porque a barra de botões ocupava um
+  espaço fixo; agora ela flutua e libera a mesa.
+- Onde: **mesa do jogo** (durante a mão). Entre as mãos volta o layout normal.
+
 ## 2026-09-07 — Claude — Correções: mesa preenche a tela + botão "fechar" do range
 - **Mesa imersiva:** antes ela só subia e sobrava um **vão embaixo** (a mesa tinha
   altura fixa e travava num mínimo). Agora ela **estica de verdade** pra preencher a

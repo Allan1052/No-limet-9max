@@ -194,6 +194,30 @@
     min-height: 0;
   }
 
+  /* Controles FLUTUAM sobre o feltro (gradiente deixa o feltro aparecer atrás);
+     a mesa reserva essa faixa e estica por cima dela. */
+  .app.nav-hidden .play {
+    padding-bottom: 118px;
+  }
+  .app.nav-hidden .play > .controls {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, transparent 0%, rgba(5,8,5,.55) 42%, rgba(5,8,5,.9) 100%);
+    pointer-events: none;
+  }
+  .app.nav-hidden .play > .controls > * {
+    pointer-events: auto;
+  }
+  .app.nav-hidden .action-panel,
+  .app.nav-hidden .raise-control-panel {
+    background: rgba(8,12,10,.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
   .table-wrap.table-modern {
     /* Mesa bem maior: teto subiu de 515 -> 700 e a reserva de chrome caiu um
        pouco, pra a mesa encher a tela nos celulares grandes (rumo à tela cheia). */
