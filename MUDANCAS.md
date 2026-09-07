@@ -23,6 +23,15 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Modo imersivo / tela cheia (upgrade #3 de 4)
+- **Enquanto a mão rola**, a barra de cima (marca + abas) e a faixa
+  "SESSÃO/DECISÕES/PRECISÃO" **somem**, junto com o menu de baixo — a **mesa toma
+  quase a tela toda**. Fica ótimo pra gravar vídeo. **Entre as mãos tudo volta**
+  (some só durante a mão).
+- A marca "Call ou Fold" continua no feltro (marca d'água), então o vídeo segue com
+  identidade.
+- Onde: **mesa do jogo**. 3º dos 4 upgrades (falta só: botões flutuando).
+
 ## 2026-09-07 — Claude — Cartas atrás do avatar (upgrade #2 de 4)
 - As cartas de cada jogador agora ficam **no topo do pod, com o avatar por cima**
   (estilo GG): os versos dos vilões "espiam" atrás do avatar e a sua mão fica em

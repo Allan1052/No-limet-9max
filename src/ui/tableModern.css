@@ -164,6 +164,17 @@
     flex: 0 1 auto;
   }
 
+  /* MODO IMERSIVO (durante a mão): some a barra de cima (marca + abas) e a faixa
+     de sessão, e a mesa toma a tela quase toda. Entre as mãos tudo volta. */
+  .app.nav-hidden .topbar,
+  .app.nav-hidden .hub-subnav,
+  .app.nav-hidden .session-progress-wrap {
+    display: none;
+  }
+  .app.nav-hidden .table-wrap.table-modern {
+    height: clamp(380px, calc(100dvh - 244px), 920px);
+  }
+
   .table-wrap.table-modern {
     /* Mesa bem maior: teto subiu de 515 -> 700 e a reserva de chrome caiu um
        pouco, pra a mesa encher a tela nos celulares grandes (rumo à tela cheia). */
