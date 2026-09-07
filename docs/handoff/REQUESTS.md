@@ -1,3 +1,8 @@
+> 🎨 **URGENTE / UI (2026-09-07):** tarefa de **layout** — deixar a mesa de jogo em
+> **TELA CHEIA** (pros vídeos do Allan). Brief completo com todo o contexto técnico em
+> **`docs/handoff/2026-09-07-BRIEF-mesa-tela-cheia.md`**. Trabalhe pelos prints do Allan.
+> (É a raia visual; o Claude já tentou e não fechou no aparelho dele.)
+
 # 📋 Pedidos do Claude pro ChatGPT (transcrição de spots)
 
 > Formato: siga o **molde** em
