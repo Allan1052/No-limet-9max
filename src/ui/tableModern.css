@@ -17,23 +17,28 @@
   position: absolute;
   inset: 8% 6% 12%;
   border-radius: 48% / 42%;
-  border: 2px solid rgba(230,196,84,.46);
+  border: 1px solid rgba(230,196,84,.30);
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(48,126,88,.98) 0%, rgba(22,82,55,.99) 55%, rgba(8,35,24,1) 100%);
+    /* brilho/spotlight central */
+    radial-gradient(ellipse 72% 52% at 50% 34%, rgba(96,192,140,.42), transparent 62%),
+    /* pano verde com profundidade */
+    radial-gradient(ellipse at 50% 42%, rgba(46,132,90,1) 0%, rgba(24,92,61,1) 50%, rgba(9,42,28,1) 100%);
   box-shadow:
-    0 0 0 7px rgba(7,10,8,.92),
-    0 0 0 9px rgba(230,196,84,.16),
-    0 20px 55px rgba(0,0,0,.48),
-    inset 0 0 66px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.08);
+    0 0 0 7px #0c0f0a,                    /* aro interno escuro (couro) */
+    0 0 0 16px #191710,                   /* almofada do aro */
+    0 0 0 17px rgba(230,196,84,.38),      /* fio dourado */
+    0 0 0 19px rgba(0,0,0,.55),           /* borda externa */
+    0 26px 60px rgba(0,0,0,.6),           /* sombra projetada */
+    inset 0 0 70px 14px rgba(0,0,0,.42),  /* vinheta nas bordas */
+    inset 0 2px 0 rgba(255,255,255,.06);
   overflow: hidden;
 }
 
 .table-modern .table-surface-glow {
   position: absolute;
-  inset: 13% 13% 18%;
+  inset: 10% 12% 16%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 46%, rgba(116,211,157,.16), transparent 66%);
+  background: radial-gradient(circle at 50% 44%, rgba(150,230,185,.20), transparent 64%);
   pointer-events: none;
   z-index: 1;
 }
@@ -173,11 +178,13 @@
     inset: 5% 3% 8%;
     border-width: 1px;
     box-shadow:
-      0 0 0 5px rgba(7,10,8,.94),
-      0 0 0 6px rgba(230,196,84,.16),
-      0 12px 26px rgba(0,0,0,.42),
-      inset 0 0 42px rgba(0,0,0,.27),
-      inset 0 1px 0 rgba(255,255,255,.08);
+      0 0 0 5px #0c0f0a,
+      0 0 0 11px #191710,
+      0 0 0 12px rgba(230,196,84,.34),
+      0 0 0 13px rgba(0,0,0,.55),
+      0 16px 34px rgba(0,0,0,.5),
+      inset 0 0 52px 10px rgba(0,0,0,.4),
+      inset 0 1px 0 rgba(255,255,255,.06);
   }
 
   .table-modern .table-brand-mark img {

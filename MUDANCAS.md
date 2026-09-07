@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Feltro premium (upgrade #1 de 4)
+- O feltro ganhou acabamento "caro": **verde com mais profundidade**, **brilho
+  central**, **vinheta** escura nas bordas e um **aro tipo almofada com fio dourado**
+  em volta (parece a borda de couro da mesa de verdade).
+- Onde: **mesa do jogo** e **Review**. É o 1º dos 4 upgrades combinados (faltam:
+  cartas atrás do avatar, modo imersivo/tela cheia total e botões flutuando).
+
 ## 2026-09-07 — Claude — Mesa mais limpa: versos pequenos + pods compactos
 - As **cartas escondidas dos vilões** (os versos "CF") estavam grandes e enchiam a
   mesa, escondendo o feltro. Agora ficam **pequenas e discretas** — a mesa "respira"
