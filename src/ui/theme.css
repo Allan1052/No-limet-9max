@@ -41,6 +41,8 @@
   --suit-hearts: #c0392b;
   --suit-diamonds: #1565c0;
   --suit-clubs: #1b7f3b;
+  /* Fichas em BB no assento (estilo GG) — azul claro legível. */
+  --seat-bb: #63c7f0;
   /* Padrão de cores de ação (solver): cinza=fold, azul=call, âmbar=raise, vermelho=3-bet, dourado=all-in. */
   --c-fold: #9ca3af;
   --c-call: #3b82f6;
@@ -1163,6 +1165,17 @@ body {
   text-overflow: ellipsis;
 }
 .seat .arch { font-size: 10px; color: var(--gold-soft); }
+/* Avatar-monograma (Etapa 2): dá cara ao assento no estilo GG. */
+.seat .ava {
+  width: 34px; height: 34px; border-radius: 50%;
+  margin: 0 auto 2px; display: grid; place-items: center;
+  font-size: 16px; font-weight: 800; color: #eef1ea;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1), 0 2px 5px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.seat.hero .ava { border-color: var(--gold-soft); }
+.seat.acting .ava { border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.55); }
 .seat .hud {
   font-size: 9px;
   font-weight: 700;
@@ -1170,7 +1183,7 @@ body {
   letter-spacing: 0.3px;
   margin-top: 1px;
 }
-.seat .stack { font-size: 12px; color: var(--text); margin-top: 2px; }
+.seat .stack { font-size: 12.5px; color: var(--seat-bb); font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .seat .hole { display: flex; gap: 3px; justify-content: center; margin-top: 5px; }
 .seat .badge {
   display: inline-block;
@@ -1836,7 +1849,8 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   .seat .name { font-size: 10px; }
   .seat .arch { font-size: 8px; }
   /* Stack do jogador é número que precisa ler: nunca abaixo de 12px. */
-  .seat .stack { font-size: 12px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .seat .stack { font-size: 12px; color: var(--seat-bb); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .seat .ava { width: 30px; height: 30px; font-size: 14px; }
   .seat .badge { font-size: 9px; padding: 1px 5px; }
 
   /* Cartas: as normais ficam um pouco menores, mas as pequenas

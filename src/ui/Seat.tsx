@@ -46,6 +46,13 @@ export function Seat({
   const folded = player.status === "folded";
   const showCards = player.isHero || reveal;
   const stackLabel = fmtAmount(player.stack, bigBlind, unit);
+  // Avatar-monograma: inicial do nome + cor derivada do nome (determinística).
+  // Não é foto/identidade real — é um selo gerado, só pra dar cara ao assento.
+  const initial = (player.name.match(/[A-Za-z0-9]/)?.[0] ?? "?").toUpperCase();
+  const avaHue = Array.from(player.name).reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+  const avaStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, hsl(${avaHue} 32% 34%), hsl(${avaHue} 30% 20%))`,
+  };
   const badgeClass = lastAction
     ? /Raise|Aposta|All-in/.test(lastAction)
       ? "badge aggro"
@@ -69,6 +76,7 @@ export function Seat({
         {player.isHero ? <div className="hero-kicker">VOCÊ</div> : null}
         {position ? <div className="pos-tag">{position}</div> : null}
         {rangeMarked ? <div className="range-flag">👁 range</div> : null}
+        <div className="ava" style={avaStyle} aria-hidden="true">{initial}</div>
         <div className="name">{player.name}</div>
         <div className="stack">{stackLabel}</div>
         <div className="hole">

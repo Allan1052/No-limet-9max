@@ -23,6 +23,15 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Nova mesa (Etapa 2): avatar + fichas em BB azul nos jogadores
+- Cada jogador agora tem um **avatar** (círculo com a inicial do nome, cor própria) —
+  dá cara à mesa no estilo GG. É um selo gerado, não foto real (o app não guarda
+  avatar/bandeira por jogador).
+- As **fichas (stack)** dos oponentes ficaram em **azul BB**, mais fáceis de bater o olho.
+  O seu assento (herói) mantém o destaque dourado de sempre.
+- Onde: **mesa do jogo**. É a **2ª etapa** da reforma da mesa. Faltam: mesa em tela
+  cheia (Etapa 3) e botões flutuantes (Etapa 4).
+
 ## 2026-09-07 — Claude — Nova mesa (Etapa 1): cartas com número/naipe no canto
 - As cartas agora têm o **número e o naipe no canto** e um **naipe grande** embaixo,
   igual a um baralho de verdade (e igual à maquete que você aprovou). Fica fácil de
