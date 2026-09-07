@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Correções: mesa preenche a tela + botão "fechar" do range
+- **Mesa imersiva:** antes ela só subia e sobrava um **vão embaixo** (a mesa tinha
+  altura fixa e travava num mínimo). Agora ela **estica de verdade** pra preencher a
+  tela toda durante a mão (flexbox), sem espaço vago.
+- **Popup de range:** o botão **"fechar" estava sumindo** atrás do menu de baixo.
+  Corrigido (o popup agora fica por cima do menu).
+- Onde: **mesa do jogo** e **popup de range**.
+
 ## 2026-09-07 — Claude — Modo imersivo / tela cheia (upgrade #3 de 4)
 - **Enquanto a mão rola**, a barra de cima (marca + abas) e a faixa
   "SESSÃO/DECISÕES/PRECISÃO" **somem**, junto com o menu de baixo — a **mesa toma

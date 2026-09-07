@@ -165,14 +165,33 @@
   }
 
   /* MODO IMERSIVO (durante a mão): some a barra de cima (marca + abas) e a faixa
-     de sessão, e a mesa toma a tela quase toda. Entre as mãos tudo volta. */
+     de sessão, e a mesa ESTICA (flex) pra preencher a tela toda — sem vão embaixo.
+     Entre as mãos tudo volta. */
   .app.nav-hidden .topbar,
   .app.nav-hidden .hub-subnav,
   .app.nav-hidden .session-progress-wrap {
     display: none;
   }
-  .app.nav-hidden .table-wrap.table-modern {
-    height: clamp(380px, calc(100dvh - 244px), 920px);
+  .app.nav-hidden {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  }
+  .app.nav-hidden .view-enter {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .app.nav-hidden .play {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .app.nav-hidden .play > .table-modern {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
   }
 
   .table-wrap.table-modern {

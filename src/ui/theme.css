@@ -1568,7 +1568,8 @@ table.stats tr.hero-row td.pname { color: var(--gold); }
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  /* Acima do menu de baixo (z-index 60), senão ele cobre o botão "fechar". */
+  z-index: 80;
   padding: 20px;
   overflow-y: auto;
 }
