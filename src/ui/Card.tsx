@@ -12,8 +12,11 @@ export function CardView({ card, small }: { card: CardT; small?: boolean }) {
   const suit = card & 3;
   return (
     <div className={`card ${small ? "sm" : ""} ${SUIT_CLASS[suit]}`}>
-      <span className="rank">{rank}</span>
-      <span className="suit">{SUIT_SYMBOL[suit]}</span>
+      <span className="idx">
+        <span className="rank">{rank}</span>
+        <span className="suit">{SUIT_SYMBOL[suit]}</span>
+      </span>
+      <span className="pip">{SUIT_SYMBOL[suit]}</span>
     </div>
   );
 }

@@ -23,6 +23,15 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Nova mesa (Etapa 1): cartas com número/naipe no canto
+- As cartas agora têm o **número e o naipe no canto** e um **naipe grande** embaixo,
+  igual a um baralho de verdade (e igual à maquete que você aprovou). Fica fácil de
+  ler mesmo quando as cartas se encostam.
+- Onde: **mesa do jogo** (Torneio / Treino).
+- É a **1ª etapa** da reforma da mesa (rumo ao visual estilo GG). As próximas etapas
+  (pods dos jogadores, mesa em tela cheia e botões flutuantes) vêm em seguida, cada
+  uma testada e no ar aos poucos pra não quebrar o app.
+
 ## 2026-09-06 — Claude — Cartas mais legíveis: baralho de 4 cores + cartas maiores
 - Agora cada naipe tem **cor própria** (padrão dos apps modernos tipo GGPoker):
   **espadas preto, copas vermelho, ouros azul, paus verde**. Antes eram só duas

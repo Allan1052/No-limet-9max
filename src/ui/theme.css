@@ -1061,25 +1061,29 @@ body {
 
 /* ---- Carta ---- */
 .card {
+  position: relative;
   width: 42px;
   height: 60px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.1);
+  background: linear-gradient(160deg, #ffffff 0%, #eef0ee 100%);
+  font-family: 'Barlow Condensed', 'Oswald', system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 0.9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0,0,0,0.06);
   user-select: none;
-  border: 1px solid #ddd;
 }
 .card.sm { width: 30px; height: 43px; border-radius: 4px; }
-.card .rank { font-size: 20px; }
+/* Índice no canto (número + naipe) + naipe grande — leitura de baralho de verdade. */
+.card .idx { position: absolute; top: 3px; left: 4px; display: flex; flex-direction: column; align-items: center; }
+.card .pip { position: absolute; bottom: 2px; right: 4px; opacity: 0.92; }
+.card .rank { font-size: 21px; letter-spacing: -0.5px; }
+.card .suit { font-size: 14px; margin-top: -1px; }
+.card .pip { font-size: 21px; }
+.card.sm .idx { top: 2px; left: 3px; }
+.card.sm .pip { bottom: 1px; right: 3px; }
 .card.sm .rank { font-size: 15px; }
-.card .suit { font-size: 15px; }
-.card.sm .suit { font-size: 11px; }
+.card.sm .suit { font-size: 10px; }
+.card.sm .pip { font-size: 15px; }
 .card.red { color: var(--card-red); }
 .card.black { color: var(--card-black); }
 /* Baralho de 4 cores. */
@@ -1089,22 +1093,26 @@ body {
 .card.s-clubs { color: var(--suit-clubs); }
 
 /* ---- Legibilidade: cartas grandes onde o Allan REALMENTE lê ----
-   As cartas comunitárias (mesa) e a mão do herói ficam maiores, com rank e
+   As cartas comunitárias (mesa) e a mão do herói ficam maiores, com número e
    naipe graúdos. Especificidade > .card das media queries, então valem em
    qualquer largura sem precisar duplicar por breakpoint. As cartas dos
    oponentes (versos .sm) seguem pequenas — não precisam ser lidas. */
 .board .card {
-  width: 46px; height: 65px; border-radius: 7px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.08);
+  width: 47px; height: 66px; border-radius: 7px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0,0,0,0.06);
 }
-.board .card .rank { font-size: 26px; letter-spacing: -0.5px; }
-.board .card .suit { font-size: 21px; }
+.board .card .rank { font-size: 25px; }
+.board .card .suit { font-size: 16px; }
+.board .card .pip { font-size: 26px; }
 .seat.hero .hole .card.sm {
-  width: 40px; height: 57px; border-radius: 6px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(0,0,0,0.08);
+  width: 42px; height: 59px; border-radius: 6px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0,0,0,0.06);
 }
-.seat.hero .hole .card.sm .rank { font-size: 23px; letter-spacing: -0.5px; }
-.seat.hero .hole .card.sm .suit { font-size: 18px; }
+.seat.hero .hole .card.sm .idx { top: 3px; left: 4px; }
+.seat.hero .hole .card.sm .pip { bottom: 2px; right: 4px; }
+.seat.hero .hole .card.sm .rank { font-size: 23px; }
+.seat.hero .hole .card.sm .suit { font-size: 15px; }
+.seat.hero .hole .card.sm .pip { font-size: 23px; }
 .card.back {
   background: linear-gradient(135deg, #1a1d16 0%, #0d0f0d 100%);
   border: 2px solid var(--gold-dim);
