@@ -23,6 +23,12 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Tela cheia de verdade (mesa preenche, sem vão)
+- A tentativa anterior deixava a mesa igual e um **vão vazio embaixo**. Refiz com um
+  método firme: durante a mão, a tela de jogo vira uma **camada fixa de tela cheia** e
+  a **mesa estica pra preencher tudo**, com os botões colados embaixo — **sem vão**.
+- Onde: **mesa do jogo** (durante a mão). Entre as mãos, layout normal volta.
+
 ## 2026-09-07 — Claude — Conserto do deploy (teste "azarado" travava a publicação) — nada visível
 **Ajuste interno: NADA muda no app.** Descobri por que às vezes "não atualizava": a
 publicação roda os testes antes e um teste do Drill Pós-Flop usava sorteio aleatório

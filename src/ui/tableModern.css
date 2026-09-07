@@ -165,57 +165,45 @@
   }
 
   /* MODO IMERSIVO (durante a mão): some a barra de cima (marca + abas) e a faixa
-     de sessão, e a mesa ESTICA (flex) pra preencher a tela toda — sem vão embaixo.
-     Entre as mãos tudo volta. */
+     de sessão; a TELA DE JOGO vira uma CAMADA FIXA de tela cheia e a MESA ESTICA
+     (flex:1) pra preencher tudo, com os botões colados embaixo — sem vão possível.
+     Método firme (position:fixed), não depende de cadeia de flex. Entre as mãos
+     (fim da mão) tudo volta ao normal. */
   .app.nav-hidden .topbar,
   .app.nav-hidden .hub-subnav,
   .app.nav-hidden .session-progress-wrap {
     display: none;
   }
-  .app.nav-hidden {
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
-  }
-  .app.nav-hidden .view-enter {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
   .app.nav-hidden .play {
-    flex: 1 1 auto;
-    min-height: 0;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 7px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: #0b0e08;
+    overflow: hidden;
   }
+  /* A mesa absorve todo o espaço livre entre a dica (topo) e os botões (base). */
   .app.nav-hidden .play > .table-modern {
     flex: 1 1 auto;
     height: auto;
     min-height: 0;
   }
-
-  /* Controles FLUTUAM sobre o feltro (gradiente deixa o feltro aparecer atrás);
-     a mesa reserva essa faixa e estica por cima dela. */
-  .app.nav-hidden .play {
-    padding-bottom: 118px;
-  }
-  .app.nav-hidden .play > .controls {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 30;
+  .app.nav-hidden .play-coach-bar,
+  .app.nav-hidden .play-tstatus,
+  .app.nav-hidden .play > .controls,
+  .app.nav-hidden .play > .action-row {
+    flex: 0 0 auto;
     margin: 0;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(180deg, transparent 0%, rgba(5,8,5,.55) 42%, rgba(5,8,5,.9) 100%);
-    pointer-events: none;
-  }
-  .app.nav-hidden .play > .controls > * {
-    pointer-events: auto;
   }
   .app.nav-hidden .action-panel,
   .app.nav-hidden .raise-control-panel {
-    background: rgba(8,12,10,.82);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(8,12,10,.9);
   }
 
   .table-wrap.table-modern {
