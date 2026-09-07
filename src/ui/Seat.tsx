@@ -81,7 +81,8 @@ export function Seat({
         <div className="stack">{stackLabel}</div>
         <div className="hole">
           {player.holeCards.length === 0 || folded ? null : showCards ? (
-            player.holeCards.map((c, i) => <CardView key={i} card={c} small />)
+            // Herói: carta grande (índice no canto). Vilão revelado: carta pequena limpa.
+            player.holeCards.map((c, i) => <CardView key={i} card={c} small={!player.isHero} />)
           ) : (
             <>
               <CardBack small />

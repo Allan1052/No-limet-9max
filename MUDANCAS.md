@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Ajuste: cartas do vilão mais limpas e legíveis
+- As **cartas dos oponentes** (pequenas) estavam poluídas com o índice no canto +
+  naipe grande. Agora as cartas **pequenas** ficam **limpas e centralizadas**
+  (número sobre naipe) e um pouco **maiores** pra ler. O índice no canto + naipe
+  grande fica só nas **cartas grandes** (mesa e a sua mão).
+- Também recentralizei o **verso das cartas** (tinha desalinhado na Etapa 1).
+- Onde: **mesa do jogo**. Ajuste dentro da reforma da mesa (Etapas 3 e 4 ainda vêm).
+
 ## 2026-09-07 — Claude — Nova mesa (Etapa 2): avatar + fichas em BB azul nos jogadores
 - Cada jogador agora tem um **avatar** (círculo com a inicial do nome, cor própria) —
   dá cara à mesa no estilo GG. É um selo gerado, não foto real (o app não guarda
