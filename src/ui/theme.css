@@ -1093,6 +1093,13 @@ body {
 .seat .hole .card.sm { width: 34px; height: 48px; border-radius: 5px; }
 .seat .hole .card.sm .rank { font-size: 19px; }
 .seat .hole .card.sm .suit { font-size: 13px; }
+/* Versos ESCONDIDOS do vilão: PEQUENOS e sobrepostos (discretos, estilo GG) —
+   antes ocupavam a mesa toda e escondiam o feltro. Só as cartas REVELADAS no
+   showdown ficam legíveis (regra 34x48 acima). */
+.seat .hole .card.back.sm { width: 22px; height: 30px; border-radius: 4px; border-width: 1px; }
+.seat .hole .card.back.sm + .card.back.sm { margin-left: -9px; }
+.seat .hole .card.back.sm .mono { display: none; }
+.seat .hole .card.back.sm::after { font-size: 9px; }
 .card.red { color: var(--card-red); }
 .card.black { color: var(--card-black); }
 /* Baralho de 4 cores. */

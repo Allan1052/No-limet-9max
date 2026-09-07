@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — Claude — Mesa mais limpa: versos pequenos + pods compactos
+- As **cartas escondidas dos vilões** (os versos "CF") estavam grandes e enchiam a
+  mesa, escondendo o feltro. Agora ficam **pequenas e discretas** — a mesa "respira"
+  e o feltro verde aparece de novo.
+- Os **pods** ficaram mais **compactos**, com menos sobreposição entre jogadores.
+- As cartas reveladas no showdown seguem legíveis, e a sua mão (herói) segue grande.
+- Onde: **mesa do jogo** e **Review**.
+
 ## 2026-09-07 — Claude — Nova mesa (Etapa 3): mesa maior + Review em tela cheia
 - A **mesa de jogo ficou bem maior** — o teto de altura subiu (de 515 pra 700px) e
   sobra menos espaço pras barras, então a mesa enche mais a tela nos celulares

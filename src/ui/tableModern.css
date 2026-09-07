@@ -186,7 +186,7 @@
   }
 
   .table-modern .seat:not(.hero) {
-    width: 98px;
+    width: 88px;
   }
 
   .table-modern .seat.hero {
@@ -194,7 +194,7 @@
   }
 
   .table-modern .seat .pod {
-    transform: scale(.86);
+    transform: scale(.8);
     transform-origin: center;
   }
 
@@ -222,7 +222,7 @@
   }
 
   .table-modern .seat:not(.hero) {
-    width: 96px;
+    width: 84px;
   }
 
   .table-modern .seat.hero {
@@ -230,7 +230,7 @@
   }
 
   .table-modern .seat .pod {
-    transform: scale(.84);
+    transform: scale(.78);
   }
 
   .table-modern .seat.hero .pod {
