@@ -11,9 +11,16 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(tableCss).toContain("padding-bottom: max(8px, env(safe-area-inset-bottom))");
   });
 
-  it("recalcula a altura da mesa após a faixa de progresso", () => {
-    expect(tableCss).toContain("height: clamp(360px, calc(100dvh - 268px), 700px)");
-    expect(tableCss).toContain("height: clamp(245px, calc(100dvh - 190px), 320px)");
+  it("usa a viewport inteira no modo imersivo", () => {
+    expect(tableCss).toContain("min-height: 100dvh");
+    expect(tableCss).toContain(".app.nav-hidden .play > .table-modern {\n    position: absolute;");
+    expect(tableCss).toContain("inset: 0;");
+  });
+
+  it("mantém os controles flutuando sobre o feltro no modo imersivo", () => {
+    expect(controlsCss).toContain(".app.nav-hidden .controls-v2");
+    expect(controlsCss).toContain("position: absolute;");
+    expect(controlsCss).toContain("bottom: max(6px, env(safe-area-inset-bottom, 0px));");
   });
 
   it("mantém os três botões principais confortáveis para toque", () => {

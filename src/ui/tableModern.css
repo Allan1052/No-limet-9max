@@ -19,17 +19,15 @@
   border-radius: 48% / 42%;
   border: 1px solid rgba(230,196,84,.30);
   background:
-    /* brilho/spotlight central */
     radial-gradient(ellipse 72% 52% at 50% 34%, rgba(96,192,140,.42), transparent 62%),
-    /* pano verde com profundidade */
     radial-gradient(ellipse at 50% 42%, rgba(46,132,90,1) 0%, rgba(24,92,61,1) 50%, rgba(9,42,28,1) 100%);
   box-shadow:
-    0 0 0 7px #0c0f0a,                    /* aro interno escuro (couro) */
-    0 0 0 16px #191710,                   /* almofada do aro */
-    0 0 0 17px rgba(230,196,84,.38),      /* fio dourado */
-    0 0 0 19px rgba(0,0,0,.55),           /* borda externa */
-    0 26px 60px rgba(0,0,0,.6),           /* sombra projetada */
-    inset 0 0 70px 14px rgba(0,0,0,.42),  /* vinheta nas bordas */
+    0 0 0 7px #0c0f0a,
+    0 0 0 16px #191710,
+    0 0 0 17px rgba(230,196,84,.38),
+    0 0 0 19px rgba(0,0,0,.55),
+    0 26px 60px rgba(0,0,0,.6),
+    inset 0 0 70px 14px rgba(0,0,0,.42),
     inset 0 2px 0 rgba(255,255,255,.06);
   overflow: hidden;
 }
@@ -164,51 +162,57 @@
     flex: 0 1 auto;
   }
 
-  /* MODO IMERSIVO (durante a mão): some a barra de cima (marca + abas) e a faixa
-     de sessão; a TELA DE JOGO vira uma CAMADA FIXA de tela cheia e a MESA ESTICA
-     (flex:1) pra preencher tudo, com os botões colados embaixo — sem vão possível.
-     Método firme (position:fixed), não depende de cadeia de flex. Entre as mãos
-     (fim da mão) tudo volta ao normal. */
+  /* Modo imersivo: a mesa vira o palco da viewport inteira. Os elementos de
+     informação e os controles ficam por cima dela, em vez de roubar altura. */
   .app.nav-hidden .topbar,
   .app.nav-hidden .hub-subnav,
   .app.nav-hidden .session-progress-wrap {
     display: none;
   }
+
   .app.nav-hidden .play {
     position: fixed;
     inset: 0;
     z-index: 20;
     width: 100%;
     max-width: 100%;
+    min-height: 100dvh;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px 7px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding: 0;
     background: #0b0e08;
     overflow: hidden;
   }
-  /* A mesa absorve todo o espaço livre entre a dica (topo) e os botões (base). */
+
   .app.nav-hidden .play > .table-modern {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    z-index: 1;
   }
+
   .app.nav-hidden .play-coach-bar,
-  .app.nav-hidden .play-tstatus,
+  .app.nav-hidden .play-tstatus {
+    position: relative;
+    z-index: 12;
+    flex: 0 0 auto;
+    margin: 4px 8px 0;
+  }
+
   .app.nav-hidden .play > .controls,
   .app.nav-hidden .play > .action-row {
-    flex: 0 0 auto;
     margin: 0;
   }
+
   .app.nav-hidden .action-panel,
   .app.nav-hidden .raise-control-panel {
-    background: rgba(8,12,10,.9);
+    background: rgba(8,12,10,.90);
   }
 
   .table-wrap.table-modern {
-    /* Mesa bem maior: teto subiu de 515 -> 700 e a reserva de chrome caiu um
-       pouco, pra a mesa encher a tela nos celulares grandes (rumo à tela cheia). */
     height: clamp(360px, calc(100dvh - 268px), 700px);
     min-height: 0;
     border-radius: 20px;
@@ -229,6 +233,12 @@
       inset 0 1px 0 rgba(255,255,255,.06);
   }
 
+  /* No imersivo, o feltro chega quase às bordas e continua por trás dos botões. */
+  .app.nav-hidden .table-modern .felt {
+    inset: 2.5% 2% 2.5%;
+    border-radius: 48% / 44%;
+  }
+
   .table-modern .table-brand-mark img {
     width: 36px;
     height: 36px;
@@ -240,6 +250,11 @@
 
   .table-modern .seat.hero {
     width: 124px;
+  }
+
+  /* O herói sobe para ficar inteiro acima da faixa flutuante de ações. */
+  .app.nav-hidden .table-modern .seat.hero {
+    top: 72% !important;
   }
 
   .table-modern .seat .pod {
@@ -258,10 +273,7 @@
 
   .app.nav-hidden .play .controls {
     margin-top: 0;
-    /* Durante o jogo a nav some — o padding de baixo dos controles fica só na
-       área segura do aparelho (some o vão de ~40px que sobrava). Seletor
-       específico pra vencer a regra base e liberar altura pra mesa. */
-    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
 }
 
@@ -287,7 +299,7 @@
   }
 }
 
-/* Celular deitado: mesa mais larga e baixa, calculada pela altura disponível. */
+/* Celular deitado: mesa e controles continuam sobrepostos, mas mais compactos. */
 @media (orientation: landscape) and (max-height: 520px) {
   .app.nav-hidden .play {
     gap: 2px;
@@ -306,6 +318,10 @@
     border-radius: 49% / 43%;
   }
 
+  .app.nav-hidden .table-modern .felt {
+    inset: 3% 2.5% 3%;
+  }
+
   .table-modern .table-brand-mark {
     opacity: .09;
   }
@@ -321,6 +337,10 @@
 
   .table-modern .seat.hero {
     width: 102px;
+  }
+
+  .app.nav-hidden .table-modern .seat.hero {
+    top: 68% !important;
   }
 
   .table-modern .seat .pod {
