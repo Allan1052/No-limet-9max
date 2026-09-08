@@ -27,14 +27,14 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(tableCss).toContain("inset: 0;");
   });
 
-  it("mantém os controles flutuando sobre o feltro no modo imersivo", () => {
+  it("mantém os controles sobre a viewport sem comprimir a mesa", () => {
     expect(controlsCss).toContain(".app.nav-hidden .controls-v2");
-    expect(controlsCss).toContain("position: absolute;");
-    expect(controlsCss).toContain("bottom: max(8px, env(safe-area-inset-bottom, 0px));");
+    expect(controlsCss).toContain("position:fixed");
+    expect(controlsCss).toContain("bottom:10px");
   });
 
   it("mantém os três botões principais confortáveis para toque", () => {
-    expect(controlsCss).toContain(".action-choice { min-height: 48px; padding: 4px; }");
+    expect(controlsCss).toContain(".action-choice { min-height:48px; padding:4px; }");
     expect(controlsCss).toContain("touch-action: manipulation");
   });
 
@@ -54,7 +54,7 @@ describe("Etapa 5 - acabamento mobile", () => {
   });
 
   it("integra os controles ao feltro sem painel pesado", () => {
-    expect(controlsCss).toContain("background: linear-gradient(");
+    expect(controlsCss).toContain("background:linear-gradient(");
   });
 
   it("mantém a dica dentro do feltro e destaca a marca Call ou Fold em dourado", () => {
@@ -94,10 +94,11 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
     expect(controlsCss).toContain(".raise-slider-popover");
   });
 
-  it("clareia o entorno e centraliza a mesa com geometria simétrica", () => {
+  it("clareia o entorno e centraliza a mesa com geometria horizontal simétrica", () => {
     expect(tableCss).toContain("--table-stage-light");
-    expect(tableCss).toContain("inset: 4% 3% 4%");
-    expect(tableCss).toContain("background: radial-gradient");
+    expect(tableCss).toContain("aspect-ratio:4 / 3");
+    expect(tableCss).toContain("inset:12px !important");
+    expect(tableCss).toContain("background:radial-gradient");
   });
 
   it("oferece um X fixo para sair da mesa e voltar ao hub Treinar", () => {
@@ -135,13 +136,14 @@ describe("Rodada 5 - presets editáveis e centralização óptica", () => {
   });
 
   it("dá largura total aos três botões principais e sobrepõe a coluna sem empurrá-los", () => {
-    expect(controlsCss).toContain("padding: 0;");
-    expect(controlsCss).toContain("width: min(90px, 24vw);");
-    expect(controlsCss).toContain("right: 0;");
+    expect(controlsCss).toContain("padding:0;");
+    expect(controlsCss).toContain("width:min(92px,24vw)");
+    expect(controlsCss).toContain("right:10px");
   });
 
   it("reduz a marca central para não disputar com board e pote", () => {
     expect(tableCss).toContain(".table-brand-mark span");
-    expect(tableCss).toContain("font-size: 13px");
+    expect(tableCss).toContain("font-size:12px");
+    expect(tableCss).toContain("opacity:.15");
   });
 });
