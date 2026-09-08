@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — Barra de aumentos como você pediu + cartas maiores
+- **Só a setinha fica em cima do Call.** Ao tocar nela, os tamanhos
+  **Pote / 4BB / 3BB** abrem no sentido vertical **em cima do RAISE** (e o
+  ajuste fino aparece acima, numa faixa rasa). Fechou, some tudo.
+- **Botões bem mais compactos** — pararam de comer meia tela: a barra fechada
+  ocupa só a tirinha de baixo e a mesa fica com o resto.
+- **Cartas maiores de novo:** as suas cartas voltaram a ficar grandes (50×71) e
+  as cartas viradas dos vilões cresceram e ficaram legíveis no feltro.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — MESA CONSERTADA DE VERDADE (olhei a tela antes de subir)
 - **O bug da mesa cortada acabou.** A mesa estava aparecendo espremida num
   cantinho, com os botões cortados na beirada. Motivo: sobrou uma regra antiga

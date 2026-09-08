@@ -109,12 +109,14 @@
   }
 
   /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
-     Estrutura pedida pelo Allan:
-        [ ajuste fino (slider) ]  ← só com a setinha aberta
-        [  Pote / 4BB / 3BB     ]  ← só com a setinha aberta
-        [       setinha         ]  ← fica logo ACIMA do botão Call
-        [  Fold | Call | RAISE  ]
-     Tudo abre no sentido VERTICAL, centralizado na coluna do Call. */
+     Grade de 3 colunas, igual à do GG — compacta, ocupa o mínimo de tela:
+
+        [ ................ ajuste fino (slider) ............... ]  ← só aberto
+        [          ]  [ setinha ]  [ Pote / 4BB / 3BB ]            ← só aberto
+        [   Fold   ]  [   Call  ]  [      RAISE       ]            ← sempre
+
+     A setinha fica exatamente em cima do Call; a pilha de tamanhos em cima do
+     RAISE, abrindo no sentido vertical. Fechada, sobra só a setinha. */
   .app:has(.play) .play > .controls,
   .app.nav-hidden .play > .controls {
     position: static !important;
@@ -131,18 +133,24 @@
     margin: 0 !important;
     padding: 0 !important;
     background: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 6px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    gap: 5px !important;
     border: 0 !important;
     box-shadow: none !important;
     pointer-events: auto !important;
   }
 
-  /* Três ações principais: sempre visíveis, na base. */
+  /* O painel da direita não desenha nada: seus filhos entram direto na grade. */
+  .app:has(.play) .play > .controls > .right-bet-panel {
+    display: contents !important;
+  }
+
+  /* Três ações principais: sempre visíveis, na última linha. */
   .app:has(.play) .play > .controls > .bottom-action-bar {
-    order: 3;
+    grid-column: 1 / -1;
+    grid-row: 3;
     position: static !important;
     inset: auto !important;
     left: auto !important; right: auto !important; bottom: auto !important;
@@ -150,30 +158,27 @@
     margin: 0 !important;
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 6px !important;
+    gap: 5px !important;
   }
 
-  /* Coluna de aumentos: largura da coluna do meio, centralizada sobre o Call. */
-  .app:has(.play) .play > .controls > .right-bet-panel {
-    order: 2;
-    position: static !important;
-    inset: auto !important;
-    left: auto !important; right: auto !important; bottom: auto !important; top: auto !important;
-    align-self: center !important;
-    width: calc((100% - 12px) / 3) !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+  /* Setinha: coluna do MEIO (em cima do Call). */
+  .app:has(.play) .play > .controls .fine-tune-toggle {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end !important;
+    width: 100% !important;
+    min-height: 24px !important;
+    padding: 2px !important;
   }
 
-  /* Pedido do Allan: a pilha de tamanhos (Pote/4BB/3BB) fica ESCONDIDA por
-     padrão — na tela só aparece a setinha, logo acima do RAISE. Tocando na
-     setinha ela abre no sentido vertical (estilo GG) e some de novo ao fechar. */
+  /* Pilha de tamanhos: coluna da DIREITA (em cima do RAISE), escondida por
+     padrão — só abre quando a setinha é tocada. */
   .app:has(.play) .play > .controls .raise-size-stack {
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open .raise-size-stack {
+    grid-column: 3;
+    grid-row: 2;
     display: flex !important;
     flex-direction: column !important;
     gap: 4px !important;
@@ -181,33 +186,80 @@
   }
   .app:has(.play) .play > .controls .raise-size-option {
     width: 100% !important;
-    min-height: 30px !important;
-    padding: 3px 6px !important;
-    font-size: 11px !important;
-  }
-  .app:has(.play) .play > .controls .fine-tune-toggle {
-    width: 100% !important;
     min-height: 26px !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
   }
 
-  /* Ajuste fino (slider): só quando aberto, e SEMPRE acima da coluna — nunca
-     por cima da mesa nem da mão do herói. */
+  /* Ajuste fino (slider): primeira linha, largura toda, só quando aberto. */
   .app:has(.play) .play > .controls > .raise-slider-popover {
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open > .raise-slider-popover {
+    grid-column: 1 / -1;
+    grid-row: 1;
     display: block !important;
-    order: 1;
     position: static !important;
     inset: auto !important;
     transform: none !important;
-    align-self: center !important;
-    width: min(100%, 268px) !important;
+    width: 100% !important;
     margin: 0 !important;
+    padding: 5px 8px 4px !important;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
   }
+
+  /* Dica de tamanho do coach: coluna da esquerda, discreta e rasa. */
+  .app:has(.play) .play > .controls > .coach-size-hint {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end !important;
+    margin: 0 !important;
+    text-align: center;
+    font-size: 10px !important;
+  }
+  .app:has(.play) .play > .controls > .coach-size-hint span {
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* Painel do ajuste fino: raso, sem caixa pesada. */
+  .app:has(.play) .play > .controls .raise-control-heading {
+    margin: 0 0 3px !important;
+  }
+  .app:has(.play) .play > .controls .slider-row {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .app:has(.play) .play > .controls .unit-toggle {
+    min-height: 22px !important;
+    padding: 1px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* ---- 5b. CARTAS GRANDES na mesa em tela cheia (pedido do Allan) -------- */
+  .app:has(.play) .table-modern .seat.hero .hole .card {
+    width: 50px !important;
+    height: 71px !important;
+    border-radius: 7px !important;
+  }
+  .app:has(.play) .table-modern .seat.hero .hole .card .rank { font-size: 28px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .suit { font-size: 18px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .pip  { font-size: 28px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole { gap: 4px !important; }
+
+  /* Cartas viradas dos vilões: maiores e mais legíveis (antes ficavam
+     minúsculas e sumiam no feltro). */
+  .app:has(.play) .table-modern .seat .hole .card.back.sm {
+    width: 27px !important;
+    height: 37px !important;
+    border-width: 2px !important;
+  }
+  .app:has(.play) .table-modern .seat .hole .card.back.sm + .card.back.sm {
+    margin-left: -10px !important;
+  }
+  .app:has(.play) .table-modern .seat .hole .card.back.sm::after { font-size: 11px !important; }
 
   /* ---- 6. "Ver dicas": canto SUPERIOR DIREITO do feltro (área livre) ------
      Antes ele seguia o jogador da vez e ficava POR CIMA dos pods. */
