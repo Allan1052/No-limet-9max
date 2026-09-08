@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — Cartas de volta ao tamanho que você aprovou
+- **Cartas do jeito do seu print:** eu tinha aumentado demais e as plaquinhas
+  "D"/"VOCÊ" começaram a encavalar no canto da carta. Voltei ao tamanho que
+  você aprovou — e as plaquinhas ficaram limpas de novo em cima das cartas.
+- **"Ver dicas" mudou pro canto de baixo à DIREITA** do feltro, porque na
+  esquerda ele batia na plaquinha "coach: ~Xbb".
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — Mesa TELA CHEIA de ponta a ponta (referência GGPoker)
 - **O feltro agora ocupa a tela inteira**, encostando nas bordas (sem tarja preta
   em volta) — do jeito do print do GGPoker que você mandou.

@@ -269,28 +269,10 @@
     font-size: 11px !important;
   }
 
-  /* ---- 5b. CARTAS GRANDES na mesa em tela cheia (pedido do Allan) -------- */
-  .app:has(.play) .table-modern .seat.hero .hole .card {
-    width: 50px !important;
-    height: 71px !important;
-    border-radius: 7px !important;
-  }
-  .app:has(.play) .table-modern .seat.hero .hole .card .rank { font-size: 28px !important; }
-  .app:has(.play) .table-modern .seat.hero .hole .card .suit { font-size: 18px !important; }
-  .app:has(.play) .table-modern .seat.hero .hole .card .pip  { font-size: 28px !important; }
-  .app:has(.play) .table-modern .seat.hero .hole { gap: 4px !important; }
-
-  /* Cartas viradas dos vilões: maiores e mais legíveis (antes ficavam
-     minúsculas e sumiam no feltro). */
-  .app:has(.play) .table-modern .seat .hole .card.back.sm {
-    width: 27px !important;
-    height: 37px !important;
-    border-width: 2px !important;
-  }
-  .app:has(.play) .table-modern .seat .hole .card.back.sm + .card.back.sm {
-    margin-left: -10px !important;
-  }
-  .app:has(.play) .table-modern .seat .hole .card.back.sm::after { font-size: 11px !important; }
+  /* ---- 5b. CARTAS: tamanho do print que o Allan aprovou ------------------
+     Eu tinha aumentado as cartas (50x71) e isso fez a plaquinha "VOCÊ"/"D"
+     encavalar no canto da carta. O Allan mandou o print do jeito certo:
+     voltamos ao tamanho padrão do tema (41x57 no herói, versos pequenos). */
 
   /* ---- 6. "Ver dicas": no MEIO da mesa, embaixo do status (pedido do Allan;
      antes ficava no topo e atrapalhava). ---------------------------------- */
@@ -299,8 +281,8 @@
     position: absolute !important;
     top: auto !important;
     bottom: 2% !important;
-    left: 4% !important;
-    right: auto !important;
+    right: 4% !important;
+    left: auto !important;
     transform: none !important;
     z-index: 12 !important;
     min-height: 26px !important;
