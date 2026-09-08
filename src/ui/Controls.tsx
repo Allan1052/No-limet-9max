@@ -6,6 +6,7 @@ import { useT } from "../i18n";
 import type { LegalActions } from "../game/betting";
 import type { Action } from "../game/engine";
 import "./controlsHierarchy.css";
+import "./tableFinalLayout.css";
 
 function haptic() {
   if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);

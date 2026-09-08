@@ -1,3 +1,9 @@
+> 🛑 **REGRA NOVA (2026-09-08) — LAYOUT DA MESA:** pare de criar camadas novas de CSS.
+> O arquivo **`src/ui/tableFinalLayout.css`** agora é o **autoritário** do layout da mesa.
+> Leia **`docs/handoff/2026-09-08-REGRA-layout-mesa.md`** ANTES de mexer na mesa.
+> (A sobreposição — dica/painel/"Ver dicas" cobrindo pods e cartas — vinha de 4 camadas
+> de CSS brigando. O Claude consolidou; ajustes agora se fazem NAQUELE arquivo.)
+
 > 🎨 **UI — mesa tela cheia (RODADA 3, 2026-09-08, mais recente):** ajustes novos do
 > Allan em **`docs/handoff/2026-09-08-FEEDBACK-mesa-rodada3.md`** (dica dentro da mesa;
 > "Call ou Fold" dourado no feltro; controles não podem tampar oponentes/ações; barra de

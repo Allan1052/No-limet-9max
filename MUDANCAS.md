@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — RESGATE do layout da mesa (parou a sobreposição)
+- **Problema:** a mesa tinha virado uma briga de **4 arquivos de CSS** (cada rodada do
+  ChatGPT criou uma camada nova com regras "flutuantes" e `!important`). Resultado: a
+  **dica cobria os jogadores**, o **painel de aumento cobria a sua mão**, o **"Ver dicas"
+  grudava no jogador da vez e tapava os pods**, e a mesa aparecia **cortada**.
+- **O que fiz:** criei **um único arquivo de layout que manda em tudo**
+  (`tableFinalLayout.css`, carregado por último). Ele impõe uma estrutura simples em
+  coluna — **dica no topo → mesa no meio (ocupa todo o espaço) → status → botões
+  embaixo** — com **tudo em fluxo, nada flutuando**. Assim é **impossível** um elemento
+  cobrir o outro.
+- **Também:** o **"Ver dicas" parou de seguir o jogador da vez** (ia pra cima dos pods);
+  agora fica fixo no **canto superior direito**, e o **X de sair** no canto esquerdo.
+  Os **atalhos de aumento (Pote/4BB/3BB/2BB)** viraram uma **coluna dentro da barra de
+  baixo**, sem flutuar sobre a mesa. Mesa **centralizada** e em **tela cheia sempre**.
+- Onde: **mesa do jogo no celular**. Sem mudança no motor, ranges, ICM ou decisões.
+
 ## 2026-09-08 — ChatGPT — Atualização 6: mesa centralizada e botões sem corte
 - A mesa foi corrigida para proporção **4:3 horizontal**, centralizada com margem e com os **9 jogadores dentro do feltro**, menores e uniformes.
 - **Fold / Call(Check) / Raise** ficam fixos na barra inferior; **Pote / 4BB / 3BB / 2BB** ficam em uma coluna própria à direita, sem sobreposição nem corte.

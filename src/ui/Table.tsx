@@ -118,9 +118,8 @@ export function PokerTable({
   const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
   const positions = tablePositions(seatsInPlay, table.buttonSeat);
   const leaveTable = () => window.dispatchEvent(new CustomEvent("nav-to", { detail: "treino" }));
-  const activeSeat = replayActorSeat ?? table.toAct;
-  const activePos = activeSeat != null ? SEAT_POS[activeSeat] : undefined;
-  const tipsPos = activePos ? towardCenter(activePos, 0.24) : { top: "68%", left: "50%" };
+  // "Ver dicas" fica num canto FIXO do feltro (CSS) — antes ele seguia o
+  // jogador da vez e acabava cobrindo os pods.
 
   return (
     <div className={`table-wrap table-modern ${celebrate ? "celebrate" : ""}`}>
@@ -150,7 +149,6 @@ export function PokerTable({
       {onShowTips ? (
         <button
           className={`tbl-tips-btn${showTips ? " has-feedback" : ""}`}
-          style={{ top: tipsPos.top, left: tipsPos.left }}
           onClick={onShowTips}
         >
           💡 {t("tips.button")}
