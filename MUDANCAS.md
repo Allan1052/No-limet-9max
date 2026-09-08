@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — ChatGPT — Atualização 6: mesa centralizada e botões sem corte
+- A mesa foi corrigida para proporção **4:3 horizontal**, centralizada com margem e com os **9 jogadores dentro do feltro**, menores e uniformes.
+- **Fold / Call(Check) / Raise** ficam fixos na barra inferior; **Pote / 4BB / 3BB / 2BB** ficam em uma coluna própria à direita, sem sobreposição nem corte.
+- O centro ficou mais limpo, com a logo **Call ou Fold** como marca d’água discreta, e **Ver dicas** foi deslocado para perto do jogador da vez. Onde: **mesa do jogo no celular**. Sem mudança no motor.
+
 ## 2026-09-08 — ChatGPT — Mesa rodada 5: presets editáveis e centralização
 - Removido o **2BB duplicado** da coluna rápida; permanecem três atalhos de aumento, agora personalizáveis em BB e persistidos no aparelho.
 - **Fold / Call(Check) / Raise** usam a largura útil inteira; a coluna rápida flutua acima sem comprimir os três botões principais.
@@ -76,7 +81,7 @@ o teste com semente fixa (determinístico), então a publicação não trava mai
 - Onde: **mesa do jogo** (durante a mão). Entre as mãos volta ao layout normal.
 
 ## 2026-09-07 — Claude — Correções: mesa preenche a tela + botão "fechar" do range
-- **Mesa imersiva:** antes ela só subia e sobrava um **vão embaixo** (a mesa tinha
+- **Mesa imersiva:** antes ela só subia e sobrava um **vão vazio embaixo** (a mesa tinha
   altura fixa e travava num mínimo). Agora ela **estica de verdade** pra preencher a
   tela toda durante a mão (flexbox), sem espaço vago.
 - **Popup de range:** o botão **"fechar" estava sumindo** atrás do menu de baixo.
