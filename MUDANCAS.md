@@ -83,3 +83,104 @@ o teste com semente fixa (determinístico), então a publicação não trava mai
   destaque acima. Pods ainda mais limpos e enxutos.
 - Onde: **mesa do jogo** e **Review**. 2º dos 4 upgrades (faltam: modo imersivo/tela
   cheia total e botões flutuando).
+
+## 2026-09-07 — Claude — Feltro premium (upgrade #1 de 4)
+- O feltro ganhou acabamento "caro": **verde com mais profundidade**, **brilho
+  central**, **vinheta** escura nas bordas e um **aro tipo almofada com fio dourado**
+  em volta (parece a borda de couro da mesa de verdade).
+- Onde: **mesa do jogo** e **Review**. É o 1º dos 4 upgrades combinados (faltam:
+  cartas atrás do avatar, modo imersivo/tela cheia total e botões flutuando).
+
+## 2026-09-07 — Claude — Mesa mais limpa: versos pequenos + pods compactos
+- As **cartas escondidas dos vilões** (os versos "CF") estavam grandes e enchiam a
+  mesa, escondendo o feltro. Agora ficam **pequenas e discretas** — a mesa "respira"
+  e o feltro verde aparece de novo.
+- Os **pods** ficaram mais **compactos**, com menos sobreposição entre jogadores.
+- As cartas reveladas no showdown seguem legíveis, e a sua mão (herói) segue grande.
+- Onde: **mesa do jogo** e **Review**.
+
+## 2026-09-07 — Claude — Nova mesa (Etapa 3): mesa maior + Review em tela cheia
+- A **mesa de jogo ficou bem maior** — o teto de altura subiu (de 515 pra 700px) e
+  sobra menos espaço pras barras, então a mesa enche mais a tela nos celulares
+  grandes. Sua **carta (herói) aumentou** também.
+- O **Review (Replay da mão) agora abre em TELA CHEIA**, com a mesma mesa grande do
+  jogo — em vez da janelinha antiga. Fica ótimo pra gravar vídeo.
+- Onde: **mesa do jogo** e **Review/Replay** (Hoje/Treino, ao revisar uma mão).
+- Passo firme rumo à tela cheia total; ainda dá pra afinar o tamanho com seu retorno.
+
+## 2026-09-07 — Claude — Popup de range modernizado + cartas da mão limpas
+- Quando você **clica no "RANGE"** de um jogador, o popup ganhou um visual novo,
+  no capricho da mesa: fundo verde-dourado, título e "profundidade" (bb) em pílula
+  dourada, mão do jogador num painel, legenda em etiquetas e botão **fechar** dourado.
+- As **duas cartas da mão** no topo do popup estavam poluídas (índice no canto) —
+  agora ficam **limpas, centralizadas e grandes**, fáceis de ler.
+- Onde: **popup de range** (Jogar/Treino, ao tocar no selo RANGE de um jogador).
+
+## 2026-09-07 — Claude — Ajuste: cartas do vilão mais limpas e legíveis
+- As **cartas dos oponentes** (pequenas) estavam poluídas com o índice no canto +
+  naipe grande. Agora as cartas **pequenas** ficam **limpas e centralizadas**
+  (número sobre naipe) e um pouco **maiores** pra ler. O índice no canto + naipe
+  grande fica só nas **cartas grandes** (mesa e a sua mão).
+- Também recentralizei o **verso das cartas** (tinha desalinhado na Etapa 1).
+- Onde: **mesa do jogo**. Ajuste dentro da reforma da mesa (Etapas 3 e 4 ainda vêm).
+
+## 2026-09-07 — Claude — Nova mesa (Etapa 2): avatar + fichas em BB azul nos jogadores
+- Cada jogador agora tem um **avatar** (círculo com a inicial do nome, cor própria) —
+  dá cara à mesa no estilo GG. É um selo gerado, não foto real (o app não guarda
+  avatar/bandeira por jogador).
+- As **fichas (stack)** dos oponentes ficaram em **azul BB**, mais fáceis de bater o olho.
+  O seu assento (herói) mantém o destaque dourado de sempre.
+- Onde: **mesa do jogo**. É a **2ª etapa** da reforma da mesa. Faltam: mesa em tela
+  cheia (Etapa 3) e botões flutuantes (Etapa 4).
+
+## 2026-09-07 — Claude — Nova mesa (Etapa 1): cartas com número/naipe no canto
+- As cartas agora têm o **número e o naipe no canto** e um **naipe grande** embaixo,
+  igual a um baralho de verdade (e igual à maquete que você aprovou). Fica fácil de
+  ler mesmo quando as cartas se encostam.
+- Onde: **mesa do jogo** (Torneio / Treino).
+- É a **1ª etapa** da reforma da mesa (rumo ao visual estilo GG). As próximas etapas
+  (pods dos jogadores, mesa em tela cheia e botões flutuantes) vêm em seguida, cada
+  uma testada e no ar aos poucos pra não quebrar o app.
+
+## 2026-09-06 — Claude — Cartas mais legíveis: baralho de 4 cores + cartas maiores
+- Agora cada naipe tem **cor própria** (padrão dos apps modernos tipo GGPoker):
+  **espadas preto, copas vermelho, ouros azul, paus verde**. Antes eram só duas
+  cores (vermelho/preto), o que fazia copas×ouros e paus×espadas se confundirem.
+- As **cartas da mesa** (comunitárias) e as **suas cartas** (mão do herói) ficaram
+  **maiores**, com número e naipe graúdos, pra ler de um olhar. As cartas dos
+  oponentes (versos) seguem pequenas — não precisa ler.
+- Onde: **mesa do jogo** (Torneio / Treino). É o primeiro passo da melhoria de
+  layout; o redesign visual completo da mesa fica com o Manus.
+
+## 2026-09-06 — Claude — Área de handoff Claude⇄ChatGPT no Git — nada visível
+**Ajuste interno: NADA muda no app.** Criei uma pasta `docs/handoff/` pros dois
+agentes trocarem direto pelo Git, sem o Allan no meio: o Claude escreve os pedidos
+em `REQUESTS.md`, o ChatGPT deposita os fixtures em `inbox/`, e o Claude processa
+e move pra `processed/`. Já deixei a lista de prioridades pro ChatGPT (completar o
+artigo de ICM <10bb e ampliar o blind battle).
+
+## 2026-09-06 — Claude — Motor V3: 2º lote do ChatGPT + banco de evidências — nada visível
+**Ajuste interno: NADA muda no app.** Entrou o 2º lote do ChatGPT (6 spots de
+bolha/mesa final, artigo de <10bb ICM). Implementei a regra que o ChatGPT sugeriu
+(e que é a certa): **dois níveis** —
+- **PRONTO-PRO-LIVE:** contexto completo + célula pura por mão → pode dirigir o
+  jogo. Desse lote, só o **BUB3** (LJ 8bb defendendo shove na bolha) se qualifica.
+- **EVIDÊNCIA:** certificado pela fonte mas com contexto incompleto/sem células →
+  guardado no banco de evidências pra completar depois, **nunca** dirige o jogo
+  (BUB1, BUB2, BUB4, FT8).
+- Um classificador automático (`assessLiveReadiness`) separa os dois; o validador
+  foi relaxado pra aceitar evidência, mantendo o rigor (barra parcial vai em
+  notes, não inventa nada).
+- Nota honesta: o BUB3 é bolha/ICM — em chipEV o V2 pagaria TT/AQs (certo pelas
+  odds); o fold certificado é 100% ICM, então comparar exige a estrutura de
+  premiação (próximo passo). Não é bug do V2. SELO 61/61, 3978 testes verdes.
+
+## 2026-09-06 — Claude — 1ª melhoria do V3 no motor: AKo/AQo all-in a ~20bb (BB vs SB)
+**Primeira correção de jogo vinda do gabarito do V3!** O auditor (comparando o V2
+com o dado real do solver, spot FTBB4) achou um vazamento: no **BB defendendo o
+open do SB** com stack curto (13–22bb), o V2 dava um **3-bet não-all-in** com
+**AKo/AQo** — e a 20bb isso te compromete e ainda joga dominado se levar um shove.
+O solver dá **all-in** nessas. Corrigido: **AKo/AQo agora vão de all-in** nesse
+spot (broadway offsuit, stack curto). As suited/AA/pares seguem no 3-bet normal
+(como o solver também mostra). A 100bb e ≤10bb nada muda. Onde: sua dica quando
+você está no BB, curto, contra um open do SB. SELO 61/61, 3974 testes verdes.
