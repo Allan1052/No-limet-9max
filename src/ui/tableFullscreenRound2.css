@@ -200,6 +200,89 @@
     right: auto;
     z-index: 25;
   }
+
+  /* Rodada 3 — o feltro ocupa a área visual central e os controles ficam fora da rota dos assentos. */
+  .app.nav-hidden .table-modern .felt {
+    inset: 5% 2% 5%;
+  }
+
+  .app:has(.play) .table-modern .felt {
+    inset: 5% 2% 5%;
+  }
+
+  /* A ação principal do herói sobe para uma zona segura, longe do cockpit inferior. */
+  .app:has(.play) .table-modern .seat.hero {
+    top: 74% !important;
+    z-index: 24;
+  }
+
+  .app:has(.play) .table-modern .seat:nth-of-type(3),
+  .app:has(.play) .table-modern .seat:nth-of-type(10) {
+    z-index: 18;
+  }
+
+  /* Dica geral passa a morar dentro do feltro, no topo/centro. */
+  .app.nav-hidden .tbl-tips-btn,
+  .app:has(.play) .tbl-tips-btn {
+    top: 9%;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    color: #f0d77f;
+  }
+
+  /* A dica ativa do coach deixa de consumir uma faixa externa e flutua sobre o feltro. */
+  .app:has(.play) .play-coach-bar {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    z-index: 26;
+    width: min(76vw, 300px);
+    margin: 0;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.26);
+  }
+
+  /* Marca central vira identidade visível do Call ou Fold, sem usar arte de terceiros. */
+  .app:has(.play) .table-modern .table-brand-mark {
+    top: 42%;
+    opacity: .95;
+    gap: 2px;
+    pointer-events: none;
+  }
+
+  .app:has(.play) .table-modern .table-brand-mark img {
+    width: 34px;
+    height: 34px;
+    opacity: .78;
+  }
+
+  .app:has(.play) .table-modern .table-brand-mark span {
+    color: #f0d77f;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-shadow: 0 2px 12px rgba(230,196,84,.32);
+  }
+
+  /* HUD fica abaixo da marca e acima do herói, sem disputar espaço com cartas. */
+  .app:has(.play) .play-tstatus {
+    top: 57%;
+    width: min(68vw, 280px);
+  }
+
+  /* Entre mãos, Nova mão fica pequeno no rodapé; a mesa continua visível. */
+  .app:has(.play) .play > .controls.action-row:not(.controls-v2) {
+    position: absolute;
+    left: 50%;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    z-index: 30;
+    width: min(56vw, 220px);
+    margin: 0;
+    transform: translateX(-50%);
+    background: transparent;
+  }
 }
 
 @media (max-width: 400px) {
@@ -214,9 +297,16 @@
   }
 
   .app:has(.play) .table-modern .seat:not(.hero) { width: 74px; }
-  .app:has(.play) .table-modern .seat.hero { width: 94px; }
+  .app:has(.play) .table-modern .seat.hero {
+    top: 72% !important;
+    width: 94px;
+  }
   .app:has(.play) .play-tstatus {
     top: 54%;
     width: min(42vw, 280px);
+  }
+  .app:has(.play) .play-coach-bar {
+    top: 11%;
+    width: min(46vw, 280px);
   }
 }
