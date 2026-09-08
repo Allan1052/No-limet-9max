@@ -31,10 +31,12 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
   const [raiseTo, setRaiseTo] = useState(startTo);
+  const [presetsOpen, setPresetsOpen] = useState(false);
 
   useEffect(() => {
     const start = defaultRaiseTo ?? legal.minRaiseTo;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
+    setPresetsOpen(false);
   }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
 
   useEffect(() => {
@@ -48,8 +50,13 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const clampRaise = (to: number) => Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(to)));
   const presetTo = (bb: number) => clampRaise(bb * bigBlind);
   const potTo = clampRaise(pot + legal.callAmount);
+  const choosePreset = (to: number) => {
+    setRaiseTo(to);
+    setPresetsOpen(false);
+  };
   const submitRaise = () => {
     haptic();
+    setPresetsOpen(false);
     onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
   };
 
@@ -74,12 +81,24 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
         </div>
       </div>
 
-      <div className="raise-control-panel">
-        <div className="raise-preset-stack" aria-label="Atalhos de aumento">
-          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(potTo)}>Pote</button>
-          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(4))}>4BB</button>
-          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(3))}>3BB</button>
-          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(2))}>2BB</button>
+      <div className={`raise-control-panel${presetsOpen ? " is-open" : ""}`}>
+        <div className="raise-preset-stack" aria-label="Controles de aumento">
+          <div className="raise-preset-menu" aria-hidden={!presetsOpen}>
+            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(potTo)}>Pote</button>
+            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(4))}>4BB</button>
+            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(3))}>3BB</button>
+            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(2))}>2BB</button>
+          </div>
+          <button
+            className="btn raise-preset-toggle"
+            type="button"
+            disabled={!canRaise}
+            aria-expanded={presetsOpen}
+            aria-label={presetsOpen ? "Fechar tamanhos de aumento" : "Abrir tamanhos de aumento"}
+            onClick={() => setPresetsOpen((open) => !open)}
+          >
+            <span aria-hidden="true">{presetsOpen ? "⌄" : "⌃"}</span>
+          </button>
           <button className="btn primary raise-submit" disabled={!canRaise} onClick={submitRaise}>
             <span>{legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}</span>
             <strong>{fmtAmount(raiseTo, bigBlind, unit)}</strong>
