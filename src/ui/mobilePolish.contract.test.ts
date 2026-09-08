@@ -54,7 +54,7 @@ describe("Etapa 5 - acabamento mobile", () => {
   });
 
   it("centraliza o feltro e compacta pods e avatar sem sobrepor cartas", () => {
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .felt {\n    inset: 5% 2% 12%;");
+    expect(tableCss).toContain(".app.nav-hidden .table-modern .felt {\n    inset: 5% 2% 5%;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .pod {\n    padding: 4px 5px 3px;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .ava {\n    width: 24px;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .hole {\n    position: relative;\n    z-index: 5;");
@@ -85,6 +85,7 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(controlsCss).toContain("grid-template-columns: minmax(0, 1fr) 92px;");
     expect(controlsCss).toContain("max-width: 330px;");
     expect(controlsCss).toContain("left: 7px;");
+    expect(tableCss).toContain("top: 74% !important;");
   });
 
   it("leva a marca e o HUD para dentro da composição visual da mesa", () => {
