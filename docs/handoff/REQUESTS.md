@@ -1,7 +1,9 @@
-> 🎨 **URGENTE / UI (2026-09-07):** tarefa de **layout** — deixar a mesa de jogo em
-> **TELA CHEIA** (pros vídeos do Allan). Brief completo com todo o contexto técnico em
-> **`docs/handoff/2026-09-07-BRIEF-mesa-tela-cheia.md`**. Trabalhe pelos prints do Allan.
-> (É a raia visual; o Claude já tentou e não fechou no aparelho dele.)
+> 🎨 **UI — mesa tela cheia (rodada 2, 2026-09-08):** o Allan revisou sua última
+> atualização e mandou a **lista de ajustes** em
+> **`docs/handoff/2026-09-08-FEEDBACK-mesa-tela-cheia.md`** (centralizar a mesa, pod/avatar
+> menores sem tampar as cartas, barra de apostas estilo GG, "Call ou Fold" + infos de
+> torneio no centro da mesa, botão "Ver dicas" na tela cheia, tela cheia sempre).
+> Contexto técnico no brief original: **`docs/handoff/2026-09-07-BRIEF-mesa-tela-cheia.md`**.
 
 # 📋 Pedidos do Claude pro ChatGPT (transcrição de spots)
 
