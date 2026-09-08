@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 // @ts-ignore — disponível no ambiente Node/Vitest.
 import { readFileSync } from "node:fs";
 
-const round6Css = readFileSync(new URL("./tableRound6.css", import.meta.url), "utf8");
+const tableCss = readFileSync(new URL("./tableRound4.css", import.meta.url), "utf8");
 const controlsCss = readFileSync(new URL("./controlsHierarchy.css", import.meta.url), "utf8");
 const tableTsx = readFileSync(new URL("./Table.tsx", import.meta.url), "utf8");
 const controlsTsx = readFileSync(new URL("./Controls.tsx", import.meta.url), "utf8");
@@ -10,19 +10,19 @@ const appTsx = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8");
 
 describe("Atualização 6 — correção do layout base da mesa", () => {
   it("trava a mesa mobile em proporção horizontal 4:3 e centraliza com margem", () => {
-    expect(round6Css).toContain("aspect-ratio: 4 / 3");
-    expect(round6Css).toContain("max-width: 95%");
-    expect(round6Css).toContain("margin: 0 auto");
-    expect(round6Css).toContain("left: 50%");
-    expect(round6Css).toContain("transform: translate(-50%, -50%)");
+    expect(tableCss).toContain("aspect-ratio: 4 / 3");
+    expect(tableCss).toContain("max-width: 95%");
+    expect(tableCss).toContain("margin: 0 auto");
+    expect(tableCss).toContain("left: 50%");
+    expect(tableCss).toContain("transform: translate(-50%, -50%)");
   });
 
   it("mantém todos os pods dentro do feltro e uniformes", () => {
     expect(tableTsx).toContain('{ top: "82%", left: "50%" }');
     expect(tableTsx).toContain('{ top: "50%", left: "15%" }');
     expect(tableTsx).toContain('{ top: "50%", left: "85%" }');
-    expect(round6Css).toContain("width: 76px !important");
-    expect(round6Css).toContain("transform: scale(.8) !important");
+    expect(tableCss).toContain("width: 76px !important");
+    expect(tableCss).toContain("transform: scale(.8) !important");
   });
 
   it("separa barra de ações inferior e painel de apostas direito sem corte", () => {
@@ -35,16 +35,16 @@ describe("Atualização 6 — correção do layout base da mesa", () => {
   });
 
   it("limpa o centro e deixa a marca como água a 15%", () => {
-    expect(round6Css).toContain("opacity: .15");
-    expect(round6Css).toContain(".table-brand-mark");
-    expect(round6Css).toContain(".tbl-center-col .tbl-hint");
-    expect(round6Css).toContain("display: none");
+    expect(tableCss).toContain("opacity: .15");
+    expect(tableCss).toContain(".table-brand-mark");
+    expect(tableCss).toContain(".tbl-center-col .tbl-hint");
+    expect(tableCss).toContain("display: none");
   });
 
-  it("fixa Nova mão acima da action bar e desloca Ver dicas para o jogador da vez", () => {
+  it("fixa Nova mão acima da action bar e desloca Ver dicas para fora do centro", () => {
     expect(appTsx).toContain("new-hand-bottom-center");
-    expect(round6Css).toContain(".new-hand-bottom-center");
-    expect(round6Css).toContain(".tbl-tips-btn");
-    expect(round6Css).toContain("top: auto");
+    expect(tableCss).toContain(".new-hand-bottom-center");
+    expect(tableCss).toContain(".tbl-tips-btn");
+    expect(tableCss).toContain("top: auto");
   });
 });
