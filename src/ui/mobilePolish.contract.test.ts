@@ -32,4 +32,19 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(progressCss).toContain("padding: 4px 6px 6px");
     expect(progressCss).toContain("font-size: 8px");
   });
+
+  it("reduz o peso visual dos pods no modo imersivo", () => {
+    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .pod");
+    expect(tableCss).toContain("background: rgba(8,12,10,.68);");
+  });
+
+  it("mantém herói e jogador ativo como focos da mesa", () => {
+    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat.hero .pod");
+    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat.acting .pod");
+  });
+
+  it("integra os controles ao feltro sem painel pesado", () => {
+    expect(controlsCss).toContain("background: linear-gradient(");
+    expect(controlsCss).toContain("rgba(5,8,7,.88) 100%");
+  });
 });
