@@ -6,21 +6,30 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm install
       - run: npm test
       - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-round6
-          path: dist
-          if-no-files-found: error
+      - name: Commitar dist gerado
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist
+          if git diff --cached --quiet; then
+            echo "dist já está atualizado"
+          else
+            git commit -m "build: rebuild dist atualização 6"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
