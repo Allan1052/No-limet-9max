@@ -11,6 +11,31 @@ function haptic() {
   if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);
 }
 
+type QuickRaise = { kind: "pot" } | { kind: "bb"; bb: number };
+export const DEFAULT_QUICK_RAISES: QuickRaise[] = [
+  { kind: "pot" },
+  { kind: "bb", bb: 4 },
+  { kind: "bb", bb: 3 },
+];
+const QUICK_RAISE_KEY = "calloufold.quickRaiseConfig.v1";
+
+function loadQuickRaises(): QuickRaise[] {
+  if (typeof window === "undefined") return DEFAULT_QUICK_RAISES;
+  try {
+    const raw = localStorage.getItem(QUICK_RAISE_KEY);
+    if (!raw) return DEFAULT_QUICK_RAISES;
+    const parsed = JSON.parse(raw) as QuickRaise[];
+    if (!Array.isArray(parsed) || parsed.length !== 3) return DEFAULT_QUICK_RAISES;
+    return parsed.map((item, index) => {
+      if (item?.kind === "pot") return item;
+      const bb = Number((item as { bb?: number })?.bb);
+      return Number.isFinite(bb) && bb >= 2 && bb <= 100 ? { kind: "bb", bb } : DEFAULT_QUICK_RAISES[index];
+    });
+  } catch {
+    return DEFAULT_QUICK_RAISES;
+  }
+}
+
 interface ControlsProps {
   legal: LegalActions;
   active: boolean;
@@ -29,6 +54,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
   const [raiseTo, setRaiseTo] = useState(startTo);
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
+  const [quickRaiseConfig, setQuickRaiseConfig] = useState<QuickRaise[]>(loadQuickRaises);
 
   useEffect(() => {
     const start = defaultRaiseTo ?? legal.minRaiseTo;
@@ -48,7 +74,32 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const clampRaise = (to: number) => Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(to)));
   const presetTo = (bb: number) => clampRaise(bb * bigBlind);
   const potTo = clampRaise(pot + legal.callAmount);
+  const quickTo = (item: QuickRaise) => item.kind === "pot" ? potTo : presetTo(item.bb);
+  const quickLabel = (item: QuickRaise) => item.kind === "pot" ? "Pote" : `${item.bb:g}BB`.replace(":g", "");
   const choosePreset = (to: number) => setRaiseTo(to);
+
+  const editQuickRaise = (index: number) => {
+    const current = quickRaiseConfig[index];
+    const initial = current.kind === "pot" ? "POTE" : String(current.bb);
+    const value = window.prompt("Editar atalho: digite a quantidade de BB (ex.: 3.5). Para usar o pote, digite POTE.", initial);
+    if (value == null) return;
+    const normalized = value.trim().toUpperCase();
+    let nextItem: QuickRaise;
+    if (normalized === "POTE" || normalized === "POT") {
+      nextItem = { kind: "pot" };
+    } else {
+      const bb = Number(value.replace(",", "."));
+      if (!Number.isFinite(bb) || bb < 2 || bb > 100) {
+        window.alert("Escolha um valor entre 2 e 100 BB.");
+        return;
+      }
+      nextItem = { kind: "bb", bb: Math.round(bb * 10) / 10 };
+    }
+    const next = quickRaiseConfig.map((item, i) => i === index ? nextItem : item);
+    setQuickRaiseConfig(next);
+    try { localStorage.setItem(QUICK_RAISE_KEY, JSON.stringify(next)); } catch { /* storage indisponível */ }
+  };
+
   const submitRaise = () => {
     haptic();
     setFineTuneOpen(false);
@@ -83,18 +134,17 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
 
       <div className="raise-side-tools">
         <div className="raise-size-stack" aria-label="Tamanhos rápidos de aumento">
-          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(potTo)}>
-            <span>Pote</span><strong>{fmtAmount(potTo, bigBlind, unit)}</strong>
-          </button>
-          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(4))}>
-            <span>4BB</span><strong>{fmtAmount(presetTo(4), bigBlind, unit)}</strong>
-          </button>
-          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(3))}>
-            <span>3BB</span><strong>{fmtAmount(presetTo(3), bigBlind, unit)}</strong>
-          </button>
-          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(2))}>
-            <span>2BB</span><strong>{fmtAmount(presetTo(2), bigBlind, unit)}</strong>
-          </button>
+          {quickRaiseConfig.map((item, index) => {
+            const to = quickTo(item);
+            return (
+              <div className="raise-size-item" key={`${index}-${quickLabel(item)}`}>
+                <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(to)}>
+                  <span>{quickLabel(item)}</span><strong>{fmtAmount(to, bigBlind, unit)}</strong>
+                </button>
+                <button className="raise-size-edit" type="button" aria-label={`Editar atalho ${index + 1}`} title="Editar atalho" onClick={() => editQuickRaise(index)}>✎</button>
+              </div>
+            );
+          })}
         </div>
 
         <button
