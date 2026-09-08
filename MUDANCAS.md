@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — ChatGPT — Mesa rodada 4: cockpit, saída e atualização
+- O botão **Treinar** volta a abrir primeiro o hub de treinos; a mesa não captura mais a navegação automaticamente.
+- A mesa ganhou **X para sair**, entorno mais claro e geometria centralizada; Fold/Call/Raise ficam lado a lado e Pote/4BB/3BB/2BB viraram a coluna rápida à direita.
+- A setinha agora abre só o **ajuste fino por slider**, e o botão de versão do Perfil força atualização real do PWA com feedback visível. Onde: **mesa, Treinar e Perfil**. Sem mudança no motor.
+
 ## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 3
 - A dica foi levada para dentro do feltro e a marca **Call ou Fold** ganhou destaque dourado no centro da mesa.
 - Os aumentos **Pote/4BB/3BB/2BB** ficam recolhidos atrás de uma setinha e abrem para cima, liberando espaço para jogadores, cartas e ações.
