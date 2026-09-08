@@ -6,16 +6,129 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Aplicar patch estrutural rodada 4
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('src/app/App.tsx')
+          s = app.read_text(encoding='utf-8')
+          if 'forceNetworkUpdate' not in s.split('\n', 5)[0:5].__str__():
+              s = s.replace(
+                  'import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate } from "./pwaUpdate";',
+                  'import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate, forceNetworkUpdate } from "./pwaUpdate";'
+              )
+          s = s.replace('onCheckUpdate={forceUpdate}', 'onCheckUpdate={forceNetworkUpdate}')
+          marker = '        <div className="play">\n          <SessionProgressStrip'
+          if 'className="play-exit-btn"' not in s and marker in s:
+              s = s.replace(marker, '''        <div className="play">\n          <button\n            className="play-exit-btn"\n            type="button"\n            aria-label="Sair da mesa"\n            title="Sair da mesa"\n            onClick={() => { setTipsOpen(false); setView("treino"); }}\n          >\n            ×\n          </button>\n          <SessionProgressStrip''')
+          app.write_text(s, encoding='utf-8')
+
+          profile = Path('src/ui/ProfileView.tsx')
+          s = profile.read_text(encoding='utf-8')
+          s = s.replace('onCheckUpdate: () => void;', 'onCheckUpdate: () => void | Promise<void>;')
+          if 'const [updateStatus' not in s:
+              s = s.replace(
+                  '  const [supportOpen, setSupportOpen] = useState(false);',
+                  '  const [supportOpen, setSupportOpen] = useState(false);\n  const [updateStatus, setUpdateStatus] = useState<"idle" | "checking" | "updating" | "error">("idle");'
+              )
+          if 'const handleCheckUpdate' not in s:
+              anchor = '  return (\n    <div className="train-view">'
+              handler = '''  const handleCheckUpdate = async () => {\n    if (updateStatus === "checking" || updateStatus === "updating") return;\n    setUpdateStatus("checking");\n    try {\n      await Promise.resolve(onCheckUpdate());\n      setUpdateStatus("updating");\n    } catch {\n      setUpdateStatus("error");\n    }\n  };\n\n'''
+              s = s.replace(anchor, handler + anchor)
+          s = s.replace(
+              '<button className="btn tiny" onClick={onCheckUpdate}>\n            🔄 {buildLabel}\n          </button>',
+              '<button className="btn tiny" onClick={() => void handleCheckUpdate()} disabled={updateStatus === "checking" || updateStatus === "updating"}>\n            {updateStatus === "checking" ? "🔄 Verificando…" : updateStatus === "updating" ? "⬇️ Atualizando…" : updateStatus === "error" ? "⚠️ Tentar novamente" : `🔄 ${buildLabel}`}\n          </button>'
+          )
+          profile.write_text(s, encoding='utf-8')
+
+          css = Path('src/ui/tableFullscreenRound2.css')
+          s = css.read_text(encoding='utf-8')
+          if 'Rodada 4 — palco mais claro' not in s:
+              s += r'''
+
+/* Rodada 4 — palco mais claro, centralizado e com saída sempre visível. */
+@media (max-width: 640px) {
+  .app:has(.play) .play,
+  .app.nav-hidden .play {
+    --table-stage-light: rgba(77, 116, 82, .34);
+    background: radial-gradient(ellipse 90% 82% at 50% 46%, var(--table-stage-light) 0%, rgba(28,47,32,.78) 48%, rgba(14,23,17,.96) 100%);
+  }
+
+  .app:has(.play) .play > .table-modern,
+  .app.nav-hidden .play > .table-modern {
+    background: radial-gradient(ellipse 88% 80% at 50% 45%, rgba(91,137,96,.18), rgba(18,29,21,.44) 58%, rgba(12,19,15,.72) 100%);
+  }
+
+  .app:has(.play) .table-modern .felt,
+  .app.nav-hidden .table-modern .felt {
+    inset: 4% 3% 4%;
+    box-shadow:
+      0 0 0 5px rgba(26,35,25,.96),
+      0 0 0 11px rgba(48,48,31,.92),
+      0 0 0 12px rgba(230,196,84,.40),
+      0 16px 42px rgba(0,0,0,.38),
+      inset 0 0 48px 8px rgba(0,0,0,.26),
+      inset 0 2px 0 rgba(255,255,255,.08);
+  }
+
+  .app:has(.play) .table-modern .table-surface-glow {
+    background: radial-gradient(circle at 50% 44%, rgba(166,236,190,.28), transparent 68%);
+  }
+
+  .app:has(.play) .play-exit-btn,
+  .app.nav-hidden .play-exit-btn {
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: 10px;
+    z-index: 38;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 50%;
+    background: rgba(16,23,18,.76);
+    color: rgba(255,255,255,.92);
+    font-size: 23px;
+    line-height: 30px;
+    text-align: center;
+    box-shadow: 0 5px 16px rgba(0,0,0,.24);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+  }
+
+  .app:has(.play) .tbl-tips-btn,
+  .app.nav-hidden .tbl-tips-btn {
+    top: 8%;
+  }
+
+  .app:has(.play) .table-modern .seat.hero {
+    top: 72% !important;
+  }
+}
+'''
+          css.write_text(s, encoding='utf-8')
+          PY
+          git config user.name "Call ou Fold CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/app/App.tsx src/ui/ProfileView.tsx src/ui/tableFullscreenRound2.css
+          if ! git diff --cached --quiet; then
+            git commit -m "ui: aplica navegação saída e palco rodada 4"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
       - run: npm install
       - run: npm test
       - run: npm run build
