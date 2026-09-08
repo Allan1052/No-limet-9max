@@ -54,19 +54,37 @@ describe("Etapa 5 - acabamento mobile", () => {
   });
 
   it("centraliza o feltro e compacta pods e avatar sem sobrepor cartas", () => {
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .felt {\n    inset: 7% 2% 7%;");
+    expect(tableCss).toContain(".app.nav-hidden .table-modern .felt {\n    inset: 5% 2% 12%;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .pod {\n    padding: 4px 5px 3px;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .ava {\n    width: 24px;");
     expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .hole {\n    position: relative;\n    z-index: 5;");
   });
 
-  it("usa cockpit com ações à esquerda e pilha de aumentos à direita", () => {
-    expect(controlsTsx).toContain("raise-preset-stack");
+  it("mantém a dica dentro do feltro e destaca a marca Call ou Fold em dourado", () => {
+    expect(tableCss).toContain(".app:has(.play) .tbl-tips-btn");
+    expect(tableCss).toContain("top: 9%;");
+    expect(tableCss).toContain("left: 50%;");
+    expect(tableCss).toContain("color: #f0d77f;");
+    expect(tableTsx).toContain("Call ou Fold");
+    expect(tableCss).toContain("text-shadow: 0 2px 12px rgba(230,196,84,.32)");
+  });
+
+  it("recolhe os presets de aumento atrás de uma setinha e expande para cima", () => {
+    expect(controlsTsx).toContain("const [presetsOpen, setPresetsOpen] = useState(false)");
+    expect(controlsTsx).toContain("raise-preset-toggle");
+    expect(controlsTsx).toContain("aria-expanded={presetsOpen}");
     expect(controlsTsx).toContain("Pote");
     expect(controlsTsx).toContain("4BB");
     expect(controlsTsx).toContain("3BB");
     expect(controlsTsx).toContain("2BB");
+    expect(controlsCss).toContain(".raise-preset-menu");
+    expect(controlsCss).toContain("bottom: calc(100% + 5px);");
+  });
+
+  it("protege a zona do herói deixando o cockpit compacto no canto inferior", () => {
     expect(controlsCss).toContain("grid-template-columns: minmax(0, 1fr) 92px;");
+    expect(controlsCss).toContain("max-width: 330px;");
+    expect(controlsCss).toContain("left: 7px;");
   });
 
   it("leva a marca e o HUD para dentro da composição visual da mesa", () => {
