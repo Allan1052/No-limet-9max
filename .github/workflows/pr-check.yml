@@ -6,43 +6,16 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm install
       - run: npm test
       - run: npm run build
-      - name: Registrar rodada 5 e commitar dist
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("MUDANCAS.md")
-          text = p.read_text(encoding="utf-8")
-          title = "## 2026-09-08 — ChatGPT — Mesa rodada 5: presets editáveis e centralização"
-          if title not in text:
-              entry = """\n## 2026-09-08 — ChatGPT — Mesa rodada 5: presets editáveis e centralização\n- Removido o **2BB duplicado** da coluna rápida; permanecem três atalhos de aumento, agora personalizáveis em BB e persistidos no aparelho.\n- **Fold / Call(Check) / Raise** usam a largura útil inteira; a coluna rápida flutua acima sem comprimir os três botões principais.\n- Mesa recebeu novo ajuste de centralização óptica, entorno um pouco mais claro e marca **Call ou Fold** menor para não disputar espaço com board/pote. Sem mudança no motor.\n"""
-              marker = "---\n"
-              pos = text.find(marker)
-              if pos < 0:
-                  raise SystemExit("marcador de MUDANCAS.md não encontrado")
-              pos += len(marker)
-              text = text[:pos] + entry + text[pos:]
-              p.write_text(text, encoding="utf-8")
-          PY
-          git config user.name "Call ou Fold CI"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A -f -- dist MUDANCAS.md
-          if ! git diff --cached --quiet; then
-            git commit -m "build: rebuild dist rodada 5"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
