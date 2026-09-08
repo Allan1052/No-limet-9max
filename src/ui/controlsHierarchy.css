@@ -1,3 +1,5 @@
+@import "./tableRound4.css";
+
 /* Cockpit mobile: estratégia de interação inspirada em mesas modernas, identidade Call ou Fold. */
 .controls-v2 {
   display: grid;
