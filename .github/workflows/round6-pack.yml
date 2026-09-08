@@ -1,0 +1,52 @@
+name: Empacotar Atualizacao 6
+
+on:
+  push:
+    branches:
+      - ui/mesa-round6-layout-fix-final
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+      - name: Registrar mudancas
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("MUDANCAS.md")
+          text = p.read_text(encoding="utf-8")
+          marker = "## 2026-09-08 — ChatGPT — Atualização 6: mesa centralizada e botões sem corte"
+          if marker not in text:
+              entry = """## 2026-09-08 — ChatGPT — Atualização 6: mesa centralizada e botões sem corte
+- A mesa foi corrigida para proporção **4:3 horizontal**, centralizada com margem e com os **9 jogadores dentro do feltro**, menores e uniformes.
+- **Fold / Call(Check) / Raise** ficam fixos na barra inferior; **Pote / 4BB / 3BB / 2BB** ficam em uma coluna própria à direita, sem sobreposição nem corte.
+- O centro ficou mais limpo, com a logo **Call ou Fold** como marca d’água discreta, e **Ver dicas** foi deslocado para perto do jogador da vez. Onde: **mesa do jogo no celular**. Sem mudança no motor.
+
+"""
+              sep = "\n---\n\n"
+              text = text.replace(sep, sep + entry, 1) if sep in text else entry + text
+              p.write_text(text, encoding="utf-8")
+          PY
+      - name: Commitar dist e registro
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist MUDANCAS.md
+          if git diff --cached --quiet; then
+            echo "Nada novo para empacotar"
+          else
+            git commit -m "build: rebuild dist atualização 6"
+            git push origin HEAD:ui/mesa-round6-layout-fix-final
+          fi
