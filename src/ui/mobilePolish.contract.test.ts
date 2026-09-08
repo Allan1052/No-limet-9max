@@ -5,15 +5,16 @@ import { readFileSync } from "node:fs";
 const tableCss =
   readFileSync(new URL("./tableModern.css", import.meta.url), "utf8") +
   "\n" +
-  readFileSync(new URL("./tableFullscreenRound2.css", import.meta.url), "utf8");
+  readFileSync(new URL("./tableFullscreenRound2.css", import.meta.url), "utf8") +
+  "\n" +
+  readFileSync(new URL("./tableRound4.css", import.meta.url), "utf8");
 const controlsCss = readFileSync(new URL("./controlsHierarchy.css", import.meta.url), "utf8");
 const progressCss = readFileSync(new URL("./sessionProgressStrip.css", import.meta.url), "utf8");
 const controlsTsx = readFileSync(new URL("./Controls.tsx", import.meta.url), "utf8");
 const tableTsx = readFileSync(new URL("./Table.tsx", import.meta.url), "utf8");
-const appTsx = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8");
 const navTsx = readFileSync(new URL("./BottomNav.tsx", import.meta.url), "utf8");
 const pwaTs = readFileSync(new URL("../app/pwaUpdate.ts", import.meta.url), "utf8");
-const profileTsx = readFileSync(new URL("./ProfileView.tsx", import.meta.url), "utf8");
+const mainTsx = readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
 
 describe("Etapa 5 - acabamento mobile", () => {
   it("reserva espaço para a barra inferior do celular", () => {
@@ -29,7 +30,7 @@ describe("Etapa 5 - acabamento mobile", () => {
   it("mantém os controles flutuando sobre o feltro no modo imersivo", () => {
     expect(controlsCss).toContain(".app.nav-hidden .controls-v2");
     expect(controlsCss).toContain("position: absolute;");
-    expect(controlsCss).toContain("bottom: max(6px, env(safe-area-inset-bottom, 0px));");
+    expect(controlsCss).toContain("bottom: max(8px, env(safe-area-inset-bottom, 0px));");
   });
 
   it("mantém os três botões principais confortáveis para toque", () => {
@@ -109,18 +110,19 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
   });
 
   it("oferece um X fixo para sair da mesa e voltar ao hub Treinar", () => {
-    expect(appTsx).toContain("play-exit-btn");
-    expect(appTsx).toContain("aria-label=\"Sair da mesa\"");
-    expect(appTsx).toContain("setView(\"treino\")");
+    expect(tableTsx).toContain("play-exit-btn");
+    expect(tableTsx).toContain("aria-label=\"Sair da mesa\"");
+    expect(tableTsx).toContain('detail: "treino"');
   });
 
   it("abre Treinar no hub de treino e não direto na mesa", () => {
     expect(navTsx).toContain('views: ["treino", "play", "torneio", "campanha", "ultra", "ft", "drill"]');
   });
 
-  it("força atualização com estado visível e reload de rede", () => {
-    expect(profileTsx).toContain("updateStatus");
-    expect(profileTsx).toContain("Verificando");
+  it("força atualização com feedback visível, revalidação do SW e limpeza de caches", () => {
+    expect(mainTsx).toContain("Verificando…");
+    expect(mainTsx).toContain("Atualizando…");
+    expect(mainTsx).toContain("forceNetworkUpdate");
     expect(pwaTs).toContain("forceNetworkUpdate");
     expect(pwaTs).toContain("registration.update()");
     expect(pwaTs).toContain("caches.keys()");
