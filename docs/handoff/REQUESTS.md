@@ -1,9 +1,9 @@
-> 🎨 **UI — mesa tela cheia (rodada 2, 2026-09-08):** o Allan revisou sua última
-> atualização e mandou a **lista de ajustes** em
-> **`docs/handoff/2026-09-08-FEEDBACK-mesa-tela-cheia.md`** (centralizar a mesa, pod/avatar
-> menores sem tampar as cartas, barra de apostas estilo GG, "Call ou Fold" + infos de
-> torneio no centro da mesa, botão "Ver dicas" na tela cheia, tela cheia sempre).
-> Contexto técnico no brief original: **`docs/handoff/2026-09-07-BRIEF-mesa-tela-cheia.md`**.
+> 🎨 **UI — mesa tela cheia (RODADA 3, 2026-09-08, mais recente):** ajustes novos do
+> Allan em **`docs/handoff/2026-09-08-FEEDBACK-mesa-rodada3.md`** (dica dentro da mesa;
+> "Call ou Fold" dourado no feltro; controles não podem tampar oponentes/ações; barra de
+> aumentos vertical COLAPSADA atrás de uma setinha; centralizar a mesa).
+> Rodadas anteriores: `2026-09-08-FEEDBACK-mesa-tela-cheia.md` e
+> `2026-09-07-BRIEF-mesa-tela-cheia.md` (contexto técnico completo).
 
 # 📋 Pedidos do Claude pro ChatGPT (transcrição de spots)
 
