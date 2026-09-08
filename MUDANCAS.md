@@ -23,6 +23,15 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — A mesa não sobe mais quando você abre a setinha
+- **Antes:** ao tocar na setinha, as barras Pote/4BB/3BB entravam na barra de
+  baixo e **empurravam a mesa pra cima**. **Agora:** essas barras **flutuam no
+  canto direito** (onde já tinha espaço vazio) e a **mesa fica parada** — abre e
+  fecha sem mexer em nada.
+- **"Ver dicas" voltou pro canto de baixo à esquerda** (a direita agora é das
+  barras de aumento), e a plaquinha "coach: ~Xbb" saiu de cima do feltro.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — Cartas de volta ao tamanho que você aprovou
 - **Cartas do jeito do seu print:** eu tinha aumentado demais e as plaquinhas
   "D"/"VOCÊ" começaram a encavalar no canto da carta. Voltei ao tamanho que

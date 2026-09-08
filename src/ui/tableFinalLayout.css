@@ -150,7 +150,7 @@
      RAISE, abrindo no sentido vertical. Fechada, sobra só a setinha. */
   .app:has(.play) .play > .controls,
   .app.nav-hidden .play > .controls {
-    position: static !important;
+    position: relative !important;
     inset: auto !important;
     top: auto !important;
     left: auto !important;
@@ -208,12 +208,18 @@
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open .raise-size-stack {
-    grid-column: 3;
-    grid-row: 2;
+    /* FLUTUANTE: fica por cima do canto direito do feltro, que está livre.
+       Assim abrir a setinha NÃO muda a altura da barra e a mesa não sobe. */
+    position: absolute !important;
+    right: 8px !important;
+    bottom: 60px !important;
+    left: auto !important;
+    top: auto !important;
+    z-index: 30 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 4px !important;
-    width: 100% !important;
+    width: calc((100% - 26px) / 3) !important;
   }
   .app:has(.play) .play > .controls .raise-size-option {
     width: 100% !important;
@@ -243,6 +249,7 @@
 
   /* Dica de tamanho do coach: coluna da esquerda, discreta e rasa. */
   .app:has(.play) .play > .controls > .coach-size-hint {
+    position: static !important;
     grid-column: 1;
     grid-row: 2;
     align-self: end !important;
@@ -281,8 +288,8 @@
     position: absolute !important;
     top: auto !important;
     bottom: 2% !important;
-    right: 4% !important;
-    left: auto !important;
+    left: 4% !important;
+    right: auto !important;
     transform: none !important;
     z-index: 12 !important;
     min-height: 26px !important;
