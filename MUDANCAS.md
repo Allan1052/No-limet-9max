@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — ChatGPT — Mesa rodada 5: presets editáveis e centralização
+- Removido o **2BB duplicado** da coluna rápida; permanecem três atalhos de aumento, agora personalizáveis em BB e persistidos no aparelho.
+- **Fold / Call(Check) / Raise** usam a largura útil inteira; a coluna rápida flutua acima sem comprimir os três botões principais.
+- Mesa recebeu novo ajuste de centralização óptica, entorno um pouco mais claro e marca **Call ou Fold** menor para não disputar espaço com board/pote. Sem mudança no motor.
+
 ## 2026-09-08 — ChatGPT — Mesa rodada 4: cockpit, saída e atualização
 - O botão **Treinar** volta a abrir primeiro o hub de treinos; a mesa não captura mais a navegação automaticamente.
 - A mesa ganhou **X para sair**, entorno mais claro e geometria centralizada; Fold/Call/Raise ficam lado a lado e Pote/4BB/3BB/2BB viraram a coluna rápida à direita.
