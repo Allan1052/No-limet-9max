@@ -43,6 +43,7 @@
 
 .action-choice:not(:disabled):active,
 .raise-preset:not(:disabled):active,
+.raise-preset-toggle:not(:disabled):active,
 .raise-submit:not(:disabled):active {
   transform: translateY(1px) scale(.985);
   filter: brightness(.94);
@@ -71,11 +72,40 @@
 }
 
 .raise-preset-stack {
+  position: relative;
   display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: 4px;
 }
 
+.raise-preset-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 5px);
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(230,196,84,.16);
+  border-radius: 10px;
+  background: rgba(8,12,10,.94);
+  box-shadow: 0 10px 24px rgba(0,0,0,.38);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+}
+
+.raise-control-panel.is-open .raise-preset-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .raise-preset,
+.raise-preset-toggle,
 .raise-submit {
   min-height: 34px;
   padding: 5px 7px;
@@ -85,13 +115,24 @@
   touch-action: manipulation;
 }
 
-.raise-preset {
+.raise-preset,
+.raise-preset-toggle {
   border-color: rgba(255,255,255,.13);
   background: rgba(18,24,21,.90);
   color: rgba(255,255,255,.88);
 }
 
+.raise-preset-toggle {
+  grid-column: 1;
+  min-width: 30px;
+  padding: 4px;
+  color: #f0d77f;
+  font-size: 16px;
+  line-height: 1;
+}
+
 .raise-submit {
+  grid-column: 2;
   min-height: 42px;
   display: flex;
   flex-direction: column;
@@ -169,19 +210,21 @@
   .unit-toggle-secondary { min-height: 26px; padding: 3px 6px; font-size: 8px; }
   .slider-row-v2 input[type="range"] { min-height: 20px; }
 
-  /* Rodada 2: ações ficam no canto inferior esquerdo e a pilha de tamanhos à direita. */
+  /* Rodada 3: cockpit fica compacto no canto inferior e libera a zona do herói. */
   .app.nav-hidden .controls-v2,
   .app:has(.play) .controls-v2 {
     position: absolute;
     left: 7px;
-    right: 7px;
+    right: auto;
     bottom: max(6px, env(safe-area-inset-bottom, 0px));
     z-index: 30;
+    width: calc(100% - 14px);
+    max-width: 330px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 92px;
     align-items: end;
     gap: 5px;
-    padding: 24px 0 0;
+    padding: 14px 0 0;
     background: linear-gradient(
       180deg,
       rgba(5,8,7,0) 0%,
@@ -212,19 +255,21 @@
   .app.nav-hidden .controls-v2 .raise-control-panel,
   .app:has(.play) .controls-v2 .raise-control-panel {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 1;
     padding: 4px;
   }
 
   .app.nav-hidden .controls-v2 .raise-slider-compact,
   .app:has(.play) .controls-v2 .raise-slider-compact {
-    grid-column: 1;
+    grid-column: 1 / span 2;
     grid-row: 2;
+    padding-top: 4px;
+    padding-bottom: 3px;
   }
 
   .app.nav-hidden .controls-v2 .coach-size-hint,
   .app:has(.play) .controls-v2 .coach-size-hint {
-    grid-column: 1;
+    grid-column: 1 / span 2;
     grid-row: 3;
     justify-self: start;
   }
@@ -245,7 +290,7 @@
   .app:has(.play) .controls-v2 {
     left: auto;
     right: 6px;
-    width: min(52vw, 560px);
-    padding-top: 14px;
+    width: min(48vw, 330px);
+    padding-top: 10px;
   }
 }
