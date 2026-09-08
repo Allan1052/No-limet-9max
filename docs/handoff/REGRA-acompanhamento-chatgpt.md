@@ -15,6 +15,7 @@ O Allan não deve precisar mandar “como estamos?” para descobrir se uma tare
    - **AINDA NÃO ESTÁ PRONTO** — quando houver qualquer etapa pendente ou falha.
 6. Nunca dizer que está pronto com base apenas em intenção, alteração de código ou commit. Confirmar testes/build/deploy exigidos pelo projeto.
 7. Antes de começar nova sessão de trabalho no Call ou Fold, reler esta regra e os handoffs ativos.
+8. Se uma execução demorar, enviar uma atualização de progresso a cada marco técnico disponível; não deixar o Allan sem contexto entre etapas longas.
 
 ## Limitação do chat
 O ChatGPT não consegue enviar espontaneamente uma nova mensagem depois que uma execução já terminou, salvo quando existir uma automação/agendamento apropriado. Por isso, enquanto estiver executando uma tarefa na resposta atual, deve manter o Allan informado e não parar artificialmente no meio do fluxo.
