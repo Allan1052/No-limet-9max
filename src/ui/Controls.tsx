@@ -1,4 +1,4 @@
-// Controles do herói: Fold, Check/Call, Raise, BB. All-in segue via slider no máximo.
+// Controles do herói: Fold, Check/Call, Raise e atalhos rápidos fixos.
 import { useEffect, useState } from "react";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
@@ -9,31 +9,6 @@ import "./controlsHierarchy.css";
 
 function haptic() {
   if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);
-}
-
-type QuickRaise = { kind: "pot" } | { kind: "bb"; bb: number };
-export const DEFAULT_QUICK_RAISES: QuickRaise[] = [
-  { kind: "pot" },
-  { kind: "bb", bb: 4 },
-  { kind: "bb", bb: 3 },
-];
-const QUICK_RAISE_KEY = "calloufold.quickRaiseConfig.v1";
-
-function loadQuickRaises(): QuickRaise[] {
-  if (typeof window === "undefined") return DEFAULT_QUICK_RAISES;
-  try {
-    const raw = localStorage.getItem(QUICK_RAISE_KEY);
-    if (!raw) return DEFAULT_QUICK_RAISES;
-    const parsed = JSON.parse(raw) as QuickRaise[];
-    if (!Array.isArray(parsed) || parsed.length !== 3) return DEFAULT_QUICK_RAISES;
-    return parsed.map((item, index) => {
-      if (item?.kind === "pot") return item;
-      const bb = Number((item as { bb?: number })?.bb);
-      return Number.isFinite(bb) && bb >= 2 && bb <= 100 ? { kind: "bb", bb } : DEFAULT_QUICK_RAISES[index];
-    });
-  } catch {
-    return DEFAULT_QUICK_RAISES;
-  }
 }
 
 interface ControlsProps {
@@ -54,7 +29,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
   const [raiseTo, setRaiseTo] = useState(startTo);
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
-  const [quickRaiseConfig, setQuickRaiseConfig] = useState<QuickRaise[]>(loadQuickRaises);
 
   useEffect(() => {
     const start = defaultRaiseTo ?? legal.minRaiseTo;
@@ -74,31 +48,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const clampRaise = (to: number) => Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(to)));
   const presetTo = (bb: number) => clampRaise(bb * bigBlind);
   const potTo = clampRaise(pot + legal.callAmount);
-  const quickTo = (item: QuickRaise) => item.kind === "pot" ? potTo : presetTo(item.bb);
-  const quickLabel = (item: QuickRaise) => item.kind === "pot" ? "Pote" : `${item.bb}BB`;
   const choosePreset = (to: number) => setRaiseTo(to);
-
-  const editQuickRaise = (index: number) => {
-    const current = quickRaiseConfig[index];
-    const initial = current.kind === "pot" ? "POTE" : String(current.bb);
-    const value = window.prompt("Editar atalho: digite a quantidade de BB (ex.: 3.5). Para usar o pote, digite POTE.", initial);
-    if (value == null) return;
-    const normalized = value.trim().toUpperCase();
-    let nextItem: QuickRaise;
-    if (normalized === "POTE" || normalized === "POT") {
-      nextItem = { kind: "pot" };
-    } else {
-      const bb = Number(value.replace(",", "."));
-      if (!Number.isFinite(bb) || bb < 2 || bb > 100) {
-        window.alert("Escolha um valor entre 2 e 100 BB.");
-        return;
-      }
-      nextItem = { kind: "bb", bb: Math.round(bb * 10) / 10 };
-    }
-    const next = quickRaiseConfig.map((item, i) => i === index ? nextItem : item);
-    setQuickRaiseConfig(next);
-    try { localStorage.setItem(QUICK_RAISE_KEY, JSON.stringify(next)); } catch { /* storage indisponível */ }
-  };
 
   const submitRaise = () => {
     haptic();
@@ -107,10 +57,16 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   };
 
   const actionLabel = legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet");
+  const quickRaises = [
+    { label: "Pote", to: potTo },
+    { label: "4BB", to: presetTo(4) },
+    { label: "3BB", to: presetTo(3) },
+    { label: "2BB", to: presetTo(2) },
+  ];
 
   return (
     <div className={`controls controls-v2${fineTuneOpen ? " fine-tune-open" : ""}`}>
-      <div className="action-row action-row-primary">
+      <div className="action-row action-row-primary bottom-action-bar">
         <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
           <span className="action-choice-label">{t("ctrl.fold")}</span>
         </button>
@@ -132,19 +88,20 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
         </button>
       </div>
 
-      <div className="raise-side-tools">
+      <div className="raise-side-tools right-bet-panel">
         <div className="raise-size-stack" aria-label="Tamanhos rápidos de aumento">
-          {quickRaiseConfig.map((item, index) => {
-            const to = quickTo(item);
-            return (
-              <div className="raise-size-item" key={`${index}-${quickLabel(item)}`}>
-                <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(to)}>
-                  <span>{quickLabel(item)}</span><strong>{fmtAmount(to, bigBlind, unit)}</strong>
-                </button>
-                <button className="raise-size-edit" type="button" aria-label={`Editar atalho ${index + 1}`} title="Editar atalho" onClick={() => editQuickRaise(index)}>✎</button>
-              </div>
-            );
-          })}
+          {quickRaises.map((item) => (
+            <button
+              className="btn raise-size-option"
+              type="button"
+              key={item.label}
+              disabled={!canRaise}
+              onClick={() => choosePreset(item.to)}
+            >
+              <span>{item.label}</span>
+              <strong>{fmtAmount(item.to, bigBlind, unit)}</strong>
+            </button>
+          ))}
         </div>
 
         <button
