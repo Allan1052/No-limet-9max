@@ -61,12 +61,12 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(tableCss).toContain(".app:has(.play) .tbl-tips-btn");
     expect(tableCss).toContain("left: 50%;");
     expect(tableCss).toContain("color: #f0d77f;");
-    expect(tableTsx).toContain("Call ou Fold");
+    expect(tableTsx).toContain("brand-logo-splash.png");
     expect(tableCss).toContain("text-shadow: 0 2px 12px rgba(230,196,84,.32)");
   });
 
   it("leva a marca e o HUD para dentro da composição visual da mesa", () => {
-    expect(tableTsx).toContain("Call ou Fold");
+    expect(tableTsx).toContain("table-brand-mark");
     expect(tableCss).toContain(".app:has(.play) .play-tstatus");
     expect(tableCss).toContain("position: absolute;");
   });
@@ -121,29 +121,31 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
   });
 });
 
-describe("Rodada 5 - presets editáveis e centralização óptica", () => {
-  it("remove o 2BB duplicado e mantém exatamente três atalhos rápidos", () => {
-    expect(controlsTsx).not.toContain('<span>2BB</span>');
-    expect(controlsTsx).toContain("DEFAULT_QUICK_RAISES");
-    expect(controlsTsx).toContain("raise-size-stack");
+describe("Rodada 6 - layout base centralizado e botões sem corte", () => {
+  it("usa quatro atalhos verticais fixos à direita, incluindo 2BB", () => {
+    expect(controlsTsx).toContain('{ label: "Pote", to: potTo }');
+    expect(controlsTsx).toContain('{ label: "4BB", to: presetTo(4) }');
+    expect(controlsTsx).toContain('{ label: "3BB", to: presetTo(3) }');
+    expect(controlsTsx).toContain('{ label: "2BB", to: presetTo(2) }');
+    expect(controlsTsx).toContain("right-bet-panel");
+    expect(controlsTsx).not.toContain("raise-size-edit");
   });
 
-  it("permite editar os atalhos rápidos em BB e persiste localmente", () => {
-    expect(controlsTsx).toContain("quickRaiseConfig");
-    expect(controlsTsx).toContain("localStorage");
-    expect(controlsTsx).toContain("raise-size-edit");
-    expect(controlsTsx).toContain("Editar atalho");
-  });
-
-  it("dá largura total aos três botões principais e sobrepõe a coluna sem empurrá-los", () => {
-    expect(controlsCss).toContain("padding:0;");
-    expect(controlsCss).toContain("width:min(92px,24vw)");
+  it("fixa os três botões principais na barra inferior", () => {
+    expect(controlsTsx).toContain("bottom-action-bar");
+    expect(controlsCss).toContain("bottom:10px");
     expect(controlsCss).toContain("right:10px");
   });
 
-  it("reduz a marca central para não disputar com board e pote", () => {
-    expect(tableCss).toContain(".table-brand-mark span");
-    expect(tableCss).toContain("font-size:12px");
+  it("mantém todos os nove assentos em posições seguras dentro do feltro", () => {
+    expect(tableTsx).toContain('{ top: "82%", left: "50%" }');
+    expect(tableTsx).toContain('{ top: "50%", left: "15%" }');
+    expect(tableTsx).toContain('{ top: "50%", left: "85%" }');
+  });
+
+  it("deixa a marca central somente como imagem discreta", () => {
+    expect(tableTsx).toContain("brand-logo-splash.png");
+    expect(tableTsx).not.toContain("<span>Call ou Fold</span>");
     expect(tableCss).toContain("opacity:.15");
   });
 });
