@@ -6,16 +6,49 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm install
       - run: npm test
       - run: npm run build
+      - name: Registrar rodada 3 e commitar dist
+        shell: bash
+        run: |
+          if [ "$(git log -1 --pretty=%s)" = "build: rebuild dist rodada 3" ]; then
+            echo "dist da rodada 3 já foi commitado"
+            exit 0
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("MUDANCAS.md")
+          text = p.read_text(encoding="utf-8")
+          title = "## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 3"
+          if title not in text:
+              entry = """\n## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 3\n- A dica foi levada para dentro do feltro e a marca **Call ou Fold** ganhou destaque dourado no centro da mesa.\n- Os aumentos **Pote/4BB/3BB/2BB** ficam recolhidos atrás de uma setinha e abrem para cima, liberando espaço para jogadores, cartas e ações.\n- A mesa ficou centralizada e a região do herói foi protegida dos controles. Onde: **mesa do jogo no celular**. Sem mudança no motor.\n"""
+              marker = "---\n"
+              pos = text.find(marker)
+              if pos < 0:
+                  raise SystemExit("marcador de MUDANCAS.md não encontrado")
+              pos += len(marker)
+              text = text[:pos] + entry + text[pos:]
+              p.write_text(text, encoding="utf-8")
+          PY
+          git config user.name "Call ou Fold CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A -f -- dist MUDANCAS.md
+          if git diff --cached --quiet; then
+            echo "nenhuma mudança de dist/registro para commitar"
+            exit 0
+          fi
+          git commit -m "build: rebuild dist rodada 3"
+          git push origin HEAD:${{ github.head_ref }}
