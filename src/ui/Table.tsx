@@ -99,9 +99,7 @@ export function PokerTable({
         const before = prev[p.seat] ?? 0;
         if (before > 0 && (p.committed ?? 0) === 0 && p.status !== "out") {
           const pos = SEAT_POS[p.seat];
-          if (pos) {
-            born.push({ id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, from: towardCenter(pos, 0.36), amount: before });
-          }
+          if (pos) born.push({ id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, from: towardCenter(pos, 0.36), amount: before });
         }
       }
     }
@@ -119,9 +117,14 @@ export function PokerTable({
 
   const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
   const positions = tablePositions(seatsInPlay, table.buttonSeat);
+  const leaveTable = () => window.dispatchEvent(new CustomEvent("nav-to", { detail: "treino" }));
 
   return (
     <div className={`table-wrap table-modern ${celebrate ? "celebrate" : ""}`}>
+      {!readOnly ? (
+        <button className="play-exit-btn" type="button" aria-label="Sair da mesa" title="Sair da mesa" onClick={leaveTable}>×</button>
+      ) : null}
+
       <div className="felt">
         <div className="table-surface-glow" />
         <div className="table-brand-mark">
@@ -135,11 +138,7 @@ export function PokerTable({
         <Board
           board={table.board}
           pot={table.players.reduce((s, p) => s + p.totalCommitted, 0)}
-          chipPot={
-            table.handOver
-              ? table.players.reduce((s, p) => s + p.totalCommitted, 0)
-              : table.players.reduce((s, p) => s + p.totalCommitted - p.committed, 0)
-          }
+          chipPot={table.handOver ? table.players.reduce((s, p) => s + p.totalCommitted, 0) : table.players.reduce((s, p) => s + p.totalCommitted - p.committed, 0)}
           bigBlind={table.bigBlind}
           inline
           buyIn={buyIn}
@@ -162,9 +161,7 @@ export function PokerTable({
         const pos = SEAT_POS[p.seat] ?? { top: "50%", left: "50%" };
         const isOmaha = table.variant === "omaha";
         const SeatComponent = isOmaha ? OmahaSeat : Seat;
-        const acting = replayActorSeat != null
-          ? replayActorSeat === p.seat
-          : table.toAct === p.seat && !table.handOver;
+        const acting = replayActorSeat != null ? replayActorSeat === p.seat : table.toAct === p.seat && !table.handOver;
         return (
           <SeatComponent
             key={p.seat}
@@ -188,26 +185,16 @@ export function PokerTable({
         const pos = SEAT_POS[p.seat];
         if (!pos) return null;
         const b = towardCenter(pos, 0.36);
-        return (
-          <div key={`bet-${p.seat}`} className="seat-bet" style={{ top: b.top, left: b.left }}>
-            <ChipStack amount={p.committed} bigBlind={table.bigBlind} />
-          </div>
-        );
+        return <div key={`bet-${p.seat}`} className="seat-bet" style={{ top: b.top, left: b.left }}><ChipStack amount={p.committed} bigBlind={table.bigBlind} /></div>;
       })}
 
-      {table.handOver ? null : sweeps.map((s) => (
-        <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />
-      ))}
+      {table.handOver ? null : sweeps.map((s) => <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />)}
 
       {(() => {
         const pos = SEAT_POS[table.buttonSeat];
         if (!pos) return null;
         const b = towardCenter(pos, 0.28);
-        return (
-          <div className="dealer-btn" style={{ top: b.top, left: b.left }}>
-            D
-          </div>
-        );
+        return <div className="dealer-btn" style={{ top: b.top, left: b.left }}>D</div>;
       })()}
     </div>
   );
