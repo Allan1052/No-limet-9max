@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 2
+- A mesa ficou mais centralizada e os jogadores menores, com avatar reduzido para deixar as cartas sempre livres.
+- Os controles agora deixam **Desistir/Pagar à esquerda** e empilham **Pote/4BB/3BB/2BB/Aumentar à direita**; o status do torneio e **Ver dicas** ficam sobre o feltro.
+- A tela de jogo passa a manter a experiência imersiva também entre as mãos. Onde: **mesa do jogo no celular**. Sem mudança no motor.
+
 ## 2026-09-07 — ChatGPT — Mesa premium consolidada
 - A mesa em tela cheia ganhou uma hierarquia mais limpa: jogadores menos “encaixotados”, herói/vez de agir mais destacados e centro da mesa mais legível.
 - Os controles continuam flutuando sobre o feltro, agora com menos painel escuro e aparência mais integrada à mesa.

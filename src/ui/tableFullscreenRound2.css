@@ -1,0 +1,222 @@
+/* Rodada 2 — refinamento visual da mesa fullscreen pedido pelo Allan.
+   Somente apresentação/layout; não altera motor, ranges, ICM ou decisões. */
+
+@media (max-width: 640px) {
+  /* A mesa fica imersiva durante toda a view de jogo, inclusive entre mãos. */
+  .app:has(.play) .topbar,
+  .app:has(.play) .hub-subnav,
+  .app:has(.play) .session-progress-wrap,
+  .app:has(.play) .bottom-nav {
+    display: none !important;
+  }
+
+  .app:has(.play) .play {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    background: #0b0e08;
+    overflow: hidden;
+  }
+
+  .app:has(.play) .play > .table-modern {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    z-index: 1;
+  }
+
+  /* Feltro realmente centralizado: mesma folga em cima e embaixo. */
+  .app.nav-hidden .table-modern .felt {
+    inset: 7% 2% 7%;
+    border-radius: 48% / 44%;
+  }
+
+  .app:has(.play) .table-modern .felt {
+    inset: 7% 2% 7%;
+    border-radius: 48% / 44%;
+  }
+
+  /* Pods mais enxutos; cartas ficam acima de qualquer avatar/badge. */
+  .app.nav-hidden .table-modern .seat .pod {
+    padding: 4px 5px 3px;
+  }
+
+  .app:has(.play) .table-modern .seat .pod {
+    padding: 4px 5px 3px;
+    min-height: 0;
+  }
+
+  .app.nav-hidden .table-modern .seat .hole {
+    position: relative;
+    z-index: 5;
+  }
+
+  .app:has(.play) .table-modern .seat .hole {
+    position: relative;
+    z-index: 5;
+    margin-top: 2px;
+    margin-bottom: 3px;
+  }
+
+  .app.nav-hidden .table-modern .seat .ava {
+    width: 24px;
+    height: 24px;
+  }
+
+  .app:has(.play) .table-modern .seat .ava {
+    position: relative;
+    z-index: 3;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 2px auto 0;
+    font-size: 10px;
+    line-height: 24px;
+  }
+
+  .app:has(.play) .table-modern .seat:not(.hero) {
+    width: 76px;
+  }
+
+  .app:has(.play) .table-modern .seat.hero {
+    width: 108px;
+  }
+
+  .app:has(.play) .table-modern .seat .name {
+    margin-top: 2px;
+    font-size: 9px;
+    line-height: 1.05;
+  }
+
+  .app:has(.play) .table-modern .seat .stack {
+    margin-top: 1px;
+    font-size: 10px;
+    line-height: 1.05;
+  }
+
+  .app:has(.play) .table-modern .seat .badge {
+    min-height: 10px;
+    margin-top: 2px;
+    padding: 1px 4px;
+    font-size: 7px;
+    line-height: 1;
+  }
+
+  .app:has(.play) .table-modern .seat .pos-tag,
+  .app:has(.play) .table-modern .hero-kicker,
+  .app:has(.play) .table-modern .range-flag {
+    transform: scale(.82);
+    transform-origin: center;
+  }
+
+  /* Marca d'água central com a identidade do próprio app. */
+  .app:has(.play) .table-modern .table-brand-mark {
+    top: 39%;
+    opacity: .16;
+    gap: 1px;
+  }
+
+  .app:has(.play) .table-modern .table-brand-mark img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .app:has(.play) .table-modern .table-brand-mark span {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    white-space: nowrap;
+  }
+
+  /* HUD do torneio sai da faixa externa e passa a flutuar dentro do feltro. */
+  .app:has(.play) .play-tstatus {
+    position: absolute;
+    top: 58%;
+    left: 50%;
+    z-index: 14;
+    width: min(72vw, 300px);
+    margin: 0;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .app:has(.play) .play-tstatus .tstatus {
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 7px;
+    border: 1px solid rgba(230,196,84,.16);
+    border-radius: 999px;
+    background: rgba(7,12,9,.64);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 5px 16px rgba(0,0,0,.24);
+    font-size: 8px;
+    white-space: nowrap;
+  }
+
+  .app:has(.play) .play-tstatus .ts-progress {
+    display: none;
+  }
+
+  /* Ver dicas permanece acessível na mesa inteira, discreto no canto superior. */
+  .app.nav-hidden .tbl-tips-btn,
+  .app:has(.play) .tbl-tips-btn {
+    display: inline-flex !important;
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: 10px;
+    z-index: 25;
+    min-height: 34px;
+    align-items: center;
+    padding: 6px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(230,196,84,.28);
+    background: rgba(8,12,10,.72);
+    color: #f0d77f;
+    font-size: 9px;
+    font-weight: 800;
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+    box-shadow: 0 6px 16px rgba(0,0,0,.26);
+  }
+
+  .app:has(.play) .tbl-tips-btn.has-feedback {
+    border-color: rgba(230,196,84,.65);
+    box-shadow: 0 0 0 1px rgba(230,196,84,.12), 0 6px 18px rgba(0,0,0,.30);
+  }
+
+  .app:has(.play) .tbl-update-btn {
+    top: max(10px, env(safe-area-inset-top, 0px));
+    left: 10px;
+    right: auto;
+    z-index: 25;
+  }
+}
+
+@media (max-width: 400px) {
+  .app:has(.play) .table-modern .seat:not(.hero) { width: 72px; }
+  .app:has(.play) .table-modern .seat.hero { width: 102px; }
+  .app:has(.play) .play-tstatus { width: min(76vw, 280px); }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .app:has(.play) .table-modern .felt {
+    inset: 5% 2.5% 5%;
+  }
+
+  .app:has(.play) .table-modern .seat:not(.hero) { width: 74px; }
+  .app:has(.play) .table-modern .seat.hero { width: 94px; }
+  .app:has(.play) .play-tstatus {
+    top: 54%;
+    width: min(42vw, 280px);
+  }
+}

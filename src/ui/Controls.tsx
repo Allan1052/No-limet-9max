@@ -26,7 +26,7 @@ interface ControlsProps {
   applyCoachNonce?: number;
 }
 
-export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, coachBetSize, applyCoachNonce }: ControlsProps) {
+export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseTo, coachBetSize, applyCoachNonce }: ControlsProps) {
   const { t } = useT();
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
@@ -37,8 +37,6 @@ export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, co
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
   }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
 
-  // Toque na dica do coach: preenche o valor sugerido (bb → fichas), limitado
-  // ao mínimo/máximo legal. Só dispara quando o nonce muda (cada toque).
   useEffect(() => {
     if (!applyCoachNonce || !coachBetSize || coachBetSize <= 0) return;
     const to = Math.round(coachBetSize * bigBlind);
@@ -47,6 +45,13 @@ export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, co
   }, [applyCoachNonce]);
 
   const canRaise = active && legal.canRaise && legal.maxRaiseTo > legal.minRaiseTo;
+  const clampRaise = (to: number) => Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(to)));
+  const presetTo = (bb: number) => clampRaise(bb * bigBlind);
+  const potTo = clampRaise(pot + legal.callAmount);
+  const submitRaise = () => {
+    haptic();
+    onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
+  };
 
   return (
     <div className="controls controls-v2">
@@ -66,20 +71,25 @@ export function Controls({ legal, active, bigBlind, onAction, defaultRaiseTo, co
               <span className="action-choice-value">{fmtAmount(legal.callAmount, bigBlind, unit)}</span>
             </button>
           )}
-
-          <button className="btn primary action-choice action-choice-raise" disabled={!canRaise} onClick={() => {
-            haptic();
-            onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
-          }}>
-            <span className="action-choice-label">{legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}</span>
-            <span className="action-choice-value">{fmtAmount(raiseTo, bigBlind, unit)}</span>
-          </button>
         </div>
       </div>
 
       <div className="raise-control-panel">
+        <div className="raise-preset-stack" aria-label="Atalhos de aumento">
+          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(potTo)}>Pote</button>
+          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(4))}>4BB</button>
+          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(3))}>3BB</button>
+          <button className="btn raise-preset" type="button" disabled={!canRaise} onClick={() => setRaiseTo(presetTo(2))}>2BB</button>
+          <button className="btn primary raise-submit" disabled={!canRaise} onClick={submitRaise}>
+            <span>{legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}</span>
+            <strong>{fmtAmount(raiseTo, bigBlind, unit)}</strong>
+          </button>
+        </div>
+      </div>
+
+      <div className="raise-slider-compact">
         <div className="raise-control-heading">
-          <span className="control-section-label">DEFINA O TAMANHO DO RAISE</span>
+          <span className="control-section-label">AJUSTE FINO</span>
           <div className="raise-heading-actions">
             <span className="raise-amount">{fmtAmount(raiseTo, bigBlind, unit)}</span>
             <button className="btn unit-toggle unit-toggle-secondary" type="button" onClick={() => setUnit(unit === "bb" ? "chips" : "bb")} title={t("unit.toggle")}>
