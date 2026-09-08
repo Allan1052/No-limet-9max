@@ -1,149 +1,37 @@
 /* Rodadas 4/5/6 — palco mobile e geometria base da mesa. */
 @media (max-width: 640px) {
-  .app:has(.play) .play,
-  .app.nav-hidden .play {
-    --table-stage-light: rgba(89, 132, 94, .38);
-    background: radial-gradient(ellipse 94% 70% at 50% 45%, var(--table-stage-light) 0%, rgba(33,54,37,.76) 52%, rgba(15,25,18,.93) 100%);
-  }
+  .app:has(.play) .play, .app.nav-hidden .play { --table-stage-light:rgba(89,132,94,.38); background:radial-gradient(ellipse 94% 70% at 50% 45%,var(--table-stage-light) 0%,rgba(33,54,37,.76) 52%,rgba(15,25,18,.93) 100%); }
+  .app:has(.play) .play > .table-modern, .app.nav-hidden .play > .table-modern { position:absolute; inset:auto !important; left:50%; top:45%; width:95%; max-width:95%; height:auto; min-height:0; aspect-ratio:4 / 3; margin:0 auto; transform:translate(-50%, -50%); display:flex; align-items:center; justify-content:center; overflow:visible; background:radial-gradient(ellipse 92% 84% at 50% 50%,rgba(105,154,111,.23),rgba(22,35,25,.43) 60%,rgba(13,21,16,.68) 100%); }
+  .app:has(.play) .table-modern .felt, .app.nav-hidden .table-modern .felt { inset:12px !important; border-radius:48% / 44%; box-shadow:0 0 0 5px rgba(28,38,27,.93),0 0 0 9px rgba(52,53,34,.88),0 0 0 10px rgba(230,196,84,.40),0 12px 32px rgba(0,0,0,.30),inset 0 0 34px 6px rgba(0,0,0,.22); }
+  .app:has(.play) .table-modern .table-surface-glow, .app.nav-hidden .table-modern .table-surface-glow { background:radial-gradient(circle at 50% 48%,rgba(176,241,198,.28),transparent 70%); }
 
-  /* Rodada 6: a mesa deixa de copiar o 9:16 da viewport. O próprio container
-     passa a ser horizontal 4:3, centralizado e com margem real nas laterais. */
-  .app:has(.play) .play > .table-modern,
-  .app.nav-hidden .play > .table-modern {
-    position: absolute;
-    inset: auto !important;
-    left: 50%;
-    top: 45%;
-    width: 95%;
-    max-width: 95%;
-    height: auto;
-    min-height: 0;
-    aspect-ratio: 4 / 3;
-    margin: 0 auto;
-    transform: translate(-50%, -50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: visible;
-    background: radial-gradient(ellipse 92% 84% at 50% 50%, rgba(105,154,111,.23), rgba(22,35,25,.43) 60%, rgba(13,21,16,.68) 100%);
-  }
+  /* SEAT_POS visual da rodada 6: nove pontos seguros, todos com folga da borda. */
+  .app:has(.play) .table-modern .seat:nth-of-type(3) { top:82% !important; left:50% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(4) { top:72% !important; left:22% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(5) { top:50% !important; left:15% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(6) { top:28% !important; left:22% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(7) { top:18% !important; left:39% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(8) { top:18% !important; left:61% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(9) { top:28% !important; left:78% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(10) { top:50% !important; left:85% !important; }
+  .app:has(.play) .table-modern .seat:nth-of-type(11) { top:72% !important; left:78% !important; }
 
-  .app:has(.play) .table-modern .felt,
-  .app.nav-hidden .table-modern .felt {
-    inset: 12px !important;
-    border-radius: 48% / 44%;
-    box-shadow: 0 0 0 5px rgba(28,38,27,.93), 0 0 0 9px rgba(52,53,34,.88), 0 0 0 10px rgba(230,196,84,.40), 0 12px 32px rgba(0,0,0,.30), inset 0 0 34px 6px rgba(0,0,0,.22);
-  }
+  .app:has(.play) .table-modern .seat, .app.nav-hidden .table-modern .seat, .app:has(.play) .table-modern .seat.hero, .app.nav-hidden .table-modern .seat.hero { width:76px !important; }
+  .app:has(.play) .table-modern .seat .pod, .app.nav-hidden .table-modern .seat .pod, .app:has(.play) .table-modern .seat.hero .pod, .app.nav-hidden .table-modern .seat.hero .pod { transform:scale(.8) !important; transform-origin:center; background:rgba(8,12,10,.68); }
 
-  .app:has(.play) .table-modern .table-surface-glow,
-  .app.nav-hidden .table-modern .table-surface-glow {
-    background: radial-gradient(circle at 50% 48%, rgba(176,241,198,.28), transparent 70%);
-  }
+  .app:has(.play) .table-modern .tbl-center-col, .app.nav-hidden .table-modern .tbl-center-col { left:50%; top:49%; }
+  .app:has(.play) .table-modern .tbl-center-col .tbl-hint, .app.nav-hidden .table-modern .tbl-center-col .tbl-hint { display:none; }
+  .app:has(.play) .table-modern .table-brand-mark, .app.nav-hidden .table-modern .table-brand-mark { top:50%; gap:1px; opacity:.15; pointer-events:none; }
+  .app:has(.play) .table-modern .table-brand-mark img, .app.nav-hidden .table-modern .table-brand-mark img { width:42px; height:42px; opacity:1; }
+  .app:has(.play) .table-modern .table-brand-mark span, .app.nav-hidden .table-modern .table-brand-mark span { font-size:12px; letter-spacing:1.1px; color:#f0d77f; }
 
-  /* Todos os pods têm o mesmo envelope; o herói não cresce mais. */
-  .app:has(.play) .table-modern .seat,
-  .app.nav-hidden .table-modern .seat,
-  .app:has(.play) .table-modern .seat.hero,
-  .app.nav-hidden .table-modern .seat.hero {
-    width: 76px !important;
-  }
+  .app:has(.play) .play-exit-btn, .app.nav-hidden .play-exit-btn { position:absolute; top:-42px; right:0; z-index:38; width:34px; height:34px; padding:0; border:1px solid rgba(255,255,255,.22); border-radius:50%; background:rgba(16,23,18,.76); color:rgba(255,255,255,.94); font-size:23px; line-height:30px; text-align:center; box-shadow:0 5px 16px rgba(0,0,0,.24); }
+  .app:has(.play) .tbl-tips-btn, .app.nav-hidden .tbl-tips-btn { top:auto; bottom:calc(100% - 34px); left:50%; right:auto; min-height:26px; padding:4px 8px; transform:translateX(-50%); font-size:8px; }
 
-  .app:has(.play) .table-modern .seat .pod,
-  .app.nav-hidden .table-modern .seat .pod,
-  .app:has(.play) .table-modern .seat.hero .pod,
-  .app.nav-hidden .table-modern .seat.hero .pod {
-    transform: scale(.8) !important;
-    transform-origin: center;
-    background: rgba(8,12,10,.68);
-  }
-
-  /* Centro limpo: board/pote e fichas permanecem; dica textual sai do miolo. */
-  .app:has(.play) .table-modern .tbl-center-col,
-  .app.nav-hidden .table-modern .tbl-center-col {
-    left: 50%;
-    top: 49%;
-  }
-
-  .app:has(.play) .table-modern .tbl-center-col .tbl-hint,
-  .app.nav-hidden .table-modern .tbl-center-col .tbl-hint {
-    display: none;
-  }
-
-  .app:has(.play) .table-modern .table-brand-mark,
-  .app.nav-hidden .table-modern .table-brand-mark {
-    top: 50%;
-    gap: 1px;
-    opacity: .15;
-    pointer-events: none;
-  }
-
-  .app:has(.play) .table-modern .table-brand-mark img,
-  .app.nav-hidden .table-modern .table-brand-mark img {
-    width: 42px;
-    height: 42px;
-    opacity: 1;
-  }
-
-  .app:has(.play) .table-modern .table-brand-mark span,
-  .app.nav-hidden .table-modern .table-brand-mark span {
-    font-size: 12px;
-    letter-spacing: 1.1px;
-    color: #f0d77f;
-  }
-
-  .app:has(.play) .play-exit-btn,
-  .app.nav-hidden .play-exit-btn {
-    position: absolute;
-    top: -42px;
-    right: 0;
-    z-index: 38;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border: 1px solid rgba(255,255,255,.22);
-    border-radius: 50%;
-    background: rgba(16,23,18,.76);
-    color: rgba(255,255,255,.94);
-    font-size: 23px;
-    line-height: 30px;
-    text-align: center;
-    box-shadow: 0 5px 16px rgba(0,0,0,.24);
-  }
-
-  /* Dicas deixam o centro e ficam como pequena pílula junto à parte superior
-     do feltro, acima da zona do jogador da vez. */
-  .app:has(.play) .tbl-tips-btn,
-  .app.nav-hidden .tbl-tips-btn {
-    top: auto;
-    bottom: calc(100% - 34px);
-    left: 50%;
-    right: auto;
-    min-height: 26px;
-    padding: 4px 8px;
-    transform: translateX(-50%);
-    font-size: 8px;
-  }
-
-  /* Nova mão usa o controle já existente, agora ancorado acima da action bar. */
-  .app:has(.play) .play > .controls.action-row:not(.controls-v2) {
-    position: fixed;
-    left: 50%;
-    bottom: 72px;
-    z-index: 36;
-    width: min(56vw, 220px);
-    margin: 0;
-    transform: translateX(-50%);
-  }
-
-  .new-hand-bottom-center { bottom: 72px; left: 50%; transform: translateX(-50%); }
+  .app:has(.play) .play > .controls.action-row:not(.controls-v2) { position:fixed; left:50%; bottom:72px; z-index:36; width:min(56vw,220px); margin:0; transform:translateX(-50%); }
+  .new-hand-bottom-center { bottom:72px; left:50%; transform:translateX(-50%); }
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
-  .app:has(.play) .play > .table-modern,
-  .app.nav-hidden .play > .table-modern {
-    top: 50%;
-    width: min(78vw, 620px);
-    max-width: 95%;
-    aspect-ratio: 4 / 3;
-  }
+@media (orientation:landscape) and (max-height:520px) {
+  .app:has(.play) .play > .table-modern, .app.nav-hidden .play > .table-modern { top:50%; width:min(78vw,620px); max-width:95%; aspect-ratio:4 / 3; }
 }
