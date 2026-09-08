@@ -10,6 +10,7 @@ import { useT } from "../i18n";
 import { tablePositions } from "../ranges/positions";
 import type { TableState } from "../game/state";
 import "./tableModern.css";
+import "./tableFullscreenRound2.css";
 import "./coachV2Hint.css";
 
 const SEAT_POS: Array<{ top: string; left: string }> = [
