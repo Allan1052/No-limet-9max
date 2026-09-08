@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — Mesa TELA CHEIA de ponta a ponta (referência GGPoker)
+- **O feltro agora ocupa a tela inteira**, encostando nas bordas (sem tarja preta
+  em volta) — do jeito do print do GGPoker que você mandou.
+- **Dica do coach saiu do topo** e foi pro miolo da mesa, numa faixa livre logo
+  acima do pote. Sem o "tocar para usar" — é só pra ler mesmo.
+- **"Ver dicas" foi pro canto de baixo à esquerda do feltro**, onde não tapa
+  ficha, carta nem pod de ninguém.
+- **Blinds (25/50) foram pra dentro da mesa** (texto discreto, igual o GG faz com
+  as infos do torneio).
+- **Ajuste fino (slider) não aparece mais** na mesa — os tamanhos saem da coluna
+  vertical que abre na setinha (Pote / 4BB / 3BB), em cima do RAISE.
+- **Plaquinha de ação embaixo do nome saiu** (Fold / Call 2bb): as fichas na mesa
+  já mostram isso, e o pod ficou menor, sobrando espaço.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — Barra de aumentos como você pediu + cartas maiores
 - **Só a setinha fica em cima do Call.** Ao tocar nela, os tamanhos
   **Pote / 4BB / 3BB** abrem no sentido vertical **em cima do RAISE** (e o

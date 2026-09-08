@@ -32,8 +32,8 @@
     flex-direction: column !important;
     align-items: stretch !important;
     justify-content: flex-start !important;
-    gap: 4px !important;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 0 !important;
+    padding: 0 0 calc(4px + env(safe-area-inset-bottom, 0px)) !important;
     background: radial-gradient(120% 80% at 50% 30%, #16301f 0%, #0c1710 55%, #070c08 100%) !important;
     overflow: hidden !important;
   }
@@ -47,21 +47,31 @@
     display: none !important;
   }
 
-  /* ---- 2. Dica do coach: FAIXA FINA no topo (nunca sobre os pods) ---- */
+  /* ---- 2. Dica do coach: no MEIO do feltro, abaixo do pote/marca --------
+     O Allan pediu pra tirar do topo (atrapalhava) e trazer pro miolo da mesa,
+     que é justamente a área vazia — como o GG faz com as infos do torneio. */
   .app:has(.play) .play > .play-coach-bar {
-    position: static !important;
-    flex: 0 0 auto !important;
-    order: 0;
-    width: 100% !important;
-    max-width: 100% !important;
+    position: absolute !important;
+    top: 33% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(76%, 300px) !important;
+    max-width: min(76%, 300px) !important;
+    max-height: 38px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
     margin: 0 !important;
-    transform: none !important;
-    padding: 5px 10px !important;
+    z-index: 14 !important;
+    padding: 4px 10px !important;
     border-radius: 10px !important;
-    font-size: 12px !important;
-    line-height: 1.25 !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
     text-align: center;
   }
+  /* "tocar para usar" não precisa aparecer — a dica é só pra ler. */
+  .app:has(.play) .play > .play-coach-bar .coach-tap { display: none !important; }
 
   /* ---- 3. A MESA ocupa todo o espaço livre (e fica centralizada) ---- */
   .app:has(.play) .play > .table-modern,
@@ -92,20 +102,41 @@
 
   /* Feltro centralizado dentro da mesa, com folga igual dos dois lados. */
   .app:has(.play) .table-modern .felt {
-    inset: 3% 1% 4% !important;
+    inset: 0 -7% -1% !important;
     /* Em retrato a mesa fica alta: raio fixo = formato "estádio" (igual às
        mesas de app de poker), em vez de um ovo esticado. */
     border-radius: 168px !important;
   }
 
-  /* ---- 4. Status do torneio: faixa fina, em fluxo ---- */
+  /* ---- 4. Status do torneio: DENTRO do feltro, discreto (igual GG) ------ */
   .app:has(.play) .play > .play-tstatus {
-    position: static !important;
-    flex: 0 0 auto !important;
-    order: 2;
-    width: 100% !important;
+    position: absolute !important;
+    top: 24% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: auto !important;
+    max-width: 60% !important;
     margin: 0 !important;
-    transform: none !important;
+    z-index: 11 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    text-align: center;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .4px;
+    color: rgba(255, 255, 255, .74) !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+    pointer-events: none;
+  }
+  .app:has(.play) .play > .play-tstatus * {
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: inherit !important;
   }
 
   /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
@@ -131,8 +162,8 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
     background: none !important;
+    padding: 0 8px !important;
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     align-items: end !important;
@@ -196,9 +227,9 @@
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open > .raise-slider-popover {
+    display: none !important;
     grid-column: 1 / -1;
     grid-row: 1;
-    display: block !important;
     position: static !important;
     inset: auto !important;
     transform: none !important;
@@ -261,19 +292,19 @@
   }
   .app:has(.play) .table-modern .seat .hole .card.back.sm::after { font-size: 11px !important; }
 
-  /* ---- 6. "Ver dicas": canto SUPERIOR DIREITO do feltro (área livre) ------
-     Antes ele seguia o jogador da vez e ficava POR CIMA dos pods. */
+  /* ---- 6. "Ver dicas": no MEIO da mesa, embaixo do status (pedido do Allan;
+     antes ficava no topo e atrapalhava). ---------------------------------- */
   .app:has(.play) .tbl-tips-btn,
   .app.nav-hidden .tbl-tips-btn {
     position: absolute !important;
-    top: 6px !important;
-    right: 6px !important;
-    left: auto !important;
-    bottom: auto !important;
+    top: auto !important;
+    bottom: 2% !important;
+    left: 4% !important;
+    right: auto !important;
     transform: none !important;
     z-index: 12 !important;
-    min-height: 28px !important;
-    padding: 5px 10px !important;
+    min-height: 26px !important;
+    padding: 4px 12px !important;
     font-size: 11px !important;
     white-space: nowrap;
   }
@@ -285,6 +316,12 @@
     left: 6px !important;
     right: auto !important;
     z-index: 12 !important;
+  }
+
+  /* Plaquinha de ação embaixo do nome (Fold/Call 2bb): não precisa — as fichas
+     na mesa já mostram a aposta. Some pra ganhar espaço no pod. */
+  .app:has(.play) .table-modern .seat .badge {
+    display: none !important;
   }
 
   /* ---- 7. Marca "Call ou Fold" no centro do feltro (nossa identidade) ---- */
