@@ -7,7 +7,6 @@ const controlsCss = readFileSync(new URL("./controlsHierarchy.css", import.meta.
 const progressCss = readFileSync(new URL("./sessionProgressStrip.css", import.meta.url), "utf8");
 const controlsTsx = readFileSync(new URL("./Controls.tsx", import.meta.url), "utf8");
 const tableTsx = readFileSync(new URL("./Table.tsx", import.meta.url), "utf8");
-const appTsx = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8");
 
 describe("Etapa 5 - acabamento mobile", () => {
   it("reserva espaço para a barra inferior do celular", () => {
@@ -67,16 +66,16 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(controlsCss).toContain("grid-template-columns: minmax(0, 1fr) 92px;");
   });
 
-  it("leva marca e informações do torneio para dentro da mesa", () => {
-    expect(tableTsx).toContain("table-meta-overlay");
+  it("leva a marca e o HUD para dentro da composição visual da mesa", () => {
     expect(tableTsx).toContain("Call ou Fold");
-    expect(appTsx).toContain("tableMeta={playInfo}");
-    expect(appTsx).not.toContain("{playInfo ? <div className=\"play-tstatus\">{playInfo}</div> : null}");
+    expect(tableCss).toContain(".app:has(.play) .play-tstatus");
+    expect(tableCss).toContain("position: absolute;");
   });
 
-  it("mantém Ver dicas acessível e mesa imersiva durante toda a view de jogo", () => {
-    expect(appTsx).toContain('const navHidden = view === "play";');
-    expect(appTsx).toContain("showTips={controller.feedback.length > 0}");
+  it("mantém Ver dicas acessível e mesa fullscreen em toda a tela de jogo", () => {
+    expect(tableTsx).toContain("{onShowTips ? (");
+    expect(tableCss).toContain(".app:has(.play) .play {");
+    expect(tableCss).toContain(".app:has(.play) .bottom-nav");
     expect(tableCss).toContain(".app.nav-hidden .tbl-tips-btn");
   });
 });
