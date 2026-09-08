@@ -14,15 +14,15 @@ import "./tableFullscreenRound2.css";
 import "./coachV2Hint.css";
 
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "86%", left: "50%" },
-  { top: "76%", left: "20%" },
-  { top: "50%", left: "10%" },
-  { top: "25%", left: "15%" },
-  { top: "13%", left: "37%" },
-  { top: "13%", left: "63%" },
-  { top: "25%", left: "85%" },
-  { top: "50%", left: "90%" },
-  { top: "76%", left: "80%" },
+  { top: "82%", left: "50%" },
+  { top: "73%", left: "24%" },
+  { top: "50%", left: "15%" },
+  { top: "27%", left: "24%" },
+  { top: "16%", left: "40%" },
+  { top: "16%", left: "60%" },
+  { top: "27%", left: "76%" },
+  { top: "50%", left: "85%" },
+  { top: "73%", left: "76%" },
 ];
 
 function towardCenter(pos: { top: string; left: string }, f: number) {
@@ -118,6 +118,9 @@ export function PokerTable({
   const seatsInPlay = table.players.filter((p) => p.status !== "out").map((p) => p.seat);
   const positions = tablePositions(seatsInPlay, table.buttonSeat);
   const leaveTable = () => window.dispatchEvent(new CustomEvent("nav-to", { detail: "treino" }));
+  const activeSeat = replayActorSeat ?? table.toAct;
+  const activePos = activeSeat != null ? SEAT_POS[activeSeat] : undefined;
+  const tipsPos = activePos ? towardCenter(activePos, 0.24) : { top: "68%", left: "50%" };
 
   return (
     <div className={`table-wrap table-modern ${celebrate ? "celebrate" : ""}`}>
@@ -129,7 +132,6 @@ export function PokerTable({
         <div className="table-surface-glow" />
         <div className="table-brand-mark">
           <img src={`${getBasePath()}brand-logo-splash.png`} alt="" aria-hidden="true" />
-          <span>Call ou Fold</span>
         </div>
       </div>
 
@@ -146,7 +148,11 @@ export function PokerTable({
       </div>
 
       {onShowTips ? (
-        <button className={`tbl-tips-btn${showTips ? " has-feedback" : ""}`} onClick={onShowTips}>
+        <button
+          className={`tbl-tips-btn${showTips ? " has-feedback" : ""}`}
+          style={{ top: tipsPos.top, left: tipsPos.left }}
+          onClick={onShowTips}
+        >
           💡 {t("tips.button")}
         </button>
       ) : null}
