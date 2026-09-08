@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 // @ts-ignore — disponível no ambiente Node/Vitest; o projeto não declara @types/node no build.
 import { readFileSync } from "node:fs";
 
-const tableCss = readFileSync(new URL("./tableModern.css", import.meta.url), "utf8");
+const tableCss =
+  readFileSync(new URL("./tableModern.css", import.meta.url), "utf8") +
+  "\n" +
+  readFileSync(new URL("./tableFullscreenRound2.css", import.meta.url), "utf8");
 const controlsCss = readFileSync(new URL("./controlsHierarchy.css", import.meta.url), "utf8");
 const progressCss = readFileSync(new URL("./sessionProgressStrip.css", import.meta.url), "utf8");
 const controlsTsx = readFileSync(new URL("./Controls.tsx", import.meta.url), "utf8");
