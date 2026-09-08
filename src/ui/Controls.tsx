@@ -1,6 +1,4 @@
-// Controles do herói: Fold, Check/Call, Raise, BB. All-in foi removido por
-// pedido do Allan (08/08): botão grande perto do slider causava toques
-// acidentais. All-in continua possível: slider no máximo vira all-in.
+// Controles do herói: Fold, Check/Call, Raise, BB. All-in segue via slider no máximo.
 import { useEffect, useState } from "react";
 import { fmtAmount } from "../app/format";
 import { useSettings } from "../app/settings";
@@ -22,7 +20,6 @@ interface ControlsProps {
   isOmaha?: boolean;
   defaultRaiseTo?: number;
   coachBetSize?: number;
-  /** Muda quando o Allan toca na dica do coach: preenche o valor sugerido. */
   applyCoachNonce?: number;
 }
 
@@ -31,18 +28,19 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const { unit, setUnit } = useSettings();
   const startTo = defaultRaiseTo ?? legal.minRaiseTo;
   const [raiseTo, setRaiseTo] = useState(startTo);
-  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [fineTuneOpen, setFineTuneOpen] = useState(false);
 
   useEffect(() => {
     const start = defaultRaiseTo ?? legal.minRaiseTo;
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, start)));
-    setPresetsOpen(false);
+    setFineTuneOpen(false);
   }, [legal.minRaiseTo, legal.maxRaiseTo, defaultRaiseTo]);
 
   useEffect(() => {
     if (!applyCoachNonce || !coachBetSize || coachBetSize <= 0) return;
     const to = Math.round(coachBetSize * bigBlind);
     setRaiseTo(Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, to)));
+    setFineTuneOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyCoachNonce]);
 
@@ -50,63 +48,68 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const clampRaise = (to: number) => Math.max(legal.minRaiseTo, Math.min(legal.maxRaiseTo, Math.round(to)));
   const presetTo = (bb: number) => clampRaise(bb * bigBlind);
   const potTo = clampRaise(pot + legal.callAmount);
-  const choosePreset = (to: number) => {
-    setRaiseTo(to);
-    setPresetsOpen(false);
-  };
+  const choosePreset = (to: number) => setRaiseTo(to);
   const submitRaise = () => {
     haptic();
-    setPresetsOpen(false);
+    setFineTuneOpen(false);
     onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
   };
 
+  const actionLabel = legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet");
+
   return (
-    <div className="controls controls-v2">
-      <div className="action-panel">
-        <div className="action-row action-row-primary">
-          <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
-            <span className="action-choice-label">{t("ctrl.fold")}</span>
-          </button>
+    <div className={`controls controls-v2${fineTuneOpen ? " fine-tune-open" : ""}`}>
+      <div className="action-row action-row-primary">
+        <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
+          <span className="action-choice-label">{t("ctrl.fold")}</span>
+        </button>
 
-          {legal.canCheck ? (
-            <button className="btn action-choice action-choice-call" disabled={!active} onClick={() => { haptic(); onAction({ type: "check" }); }}>
-              <span className="action-choice-label">{t("ctrl.check")}</span>
-            </button>
-          ) : (
-            <button className="btn action-choice action-choice-call" disabled={!active || !legal.canCall} onClick={() => { haptic(); onAction({ type: "call" }); }}>
-              <span className="action-choice-label">{t("ctrl.call")}</span>
-              <span className="action-choice-value">{fmtAmount(legal.callAmount, bigBlind, unit)}</span>
-            </button>
-          )}
-        </div>
+        {legal.canCheck ? (
+          <button className="btn action-choice action-choice-call" disabled={!active} onClick={() => { haptic(); onAction({ type: "check" }); }}>
+            <span className="action-choice-label">{t("ctrl.check")}</span>
+          </button>
+        ) : (
+          <button className="btn action-choice action-choice-call" disabled={!active || !legal.canCall} onClick={() => { haptic(); onAction({ type: "call" }); }}>
+            <span className="action-choice-label">{t("ctrl.call")}</span>
+            <span className="action-choice-value">{fmtAmount(legal.callAmount, bigBlind, unit)}</span>
+          </button>
+        )}
+
+        <button className="btn primary action-choice raise-submit" disabled={!canRaise} onClick={submitRaise}>
+          <span className="action-choice-label">{actionLabel}</span>
+          <span className="action-choice-value">{fmtAmount(raiseTo, bigBlind, unit)}</span>
+        </button>
       </div>
 
-      <div className={`raise-control-panel${presetsOpen ? " is-open" : ""}`}>
-        <div className="raise-preset-stack" aria-label="Controles de aumento">
-          <div className="raise-preset-menu" aria-hidden={!presetsOpen}>
-            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(potTo)}>Pote</button>
-            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(4))}>4BB</button>
-            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(3))}>3BB</button>
-            <button className="btn raise-preset" type="button" tabIndex={presetsOpen ? 0 : -1} disabled={!canRaise} onClick={() => choosePreset(presetTo(2))}>2BB</button>
-          </div>
-          <button
-            className="btn raise-preset-toggle"
-            type="button"
-            disabled={!canRaise}
-            aria-expanded={presetsOpen}
-            aria-label={presetsOpen ? "Fechar tamanhos de aumento" : "Abrir tamanhos de aumento"}
-            onClick={() => setPresetsOpen((open) => !open)}
-          >
-            <span aria-hidden="true">{presetsOpen ? "⌄" : "⌃"}</span>
+      <div className="raise-side-tools">
+        <div className="raise-size-stack" aria-label="Tamanhos rápidos de aumento">
+          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(potTo)}>
+            <span>Pote</span><strong>{fmtAmount(potTo, bigBlind, unit)}</strong>
           </button>
-          <button className="btn primary raise-submit" disabled={!canRaise} onClick={submitRaise}>
-            <span>{legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet")}</span>
-            <strong>{fmtAmount(raiseTo, bigBlind, unit)}</strong>
+          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(4))}>
+            <span>4BB</span><strong>{fmtAmount(presetTo(4), bigBlind, unit)}</strong>
+          </button>
+          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(3))}>
+            <span>3BB</span><strong>{fmtAmount(presetTo(3), bigBlind, unit)}</strong>
+          </button>
+          <button className="btn raise-size-option" type="button" disabled={!canRaise} onClick={() => choosePreset(presetTo(2))}>
+            <span>2BB</span><strong>{fmtAmount(presetTo(2), bigBlind, unit)}</strong>
           </button>
         </div>
+
+        <button
+          className="btn fine-tune-toggle"
+          type="button"
+          disabled={!canRaise}
+          aria-expanded={fineTuneOpen}
+          aria-label={fineTuneOpen ? "Fechar ajuste fino" : "Abrir ajuste fino"}
+          onClick={() => setFineTuneOpen((open) => !open)}
+        >
+          <span aria-hidden="true">⌃</span>
+        </button>
       </div>
 
-      <div className="raise-slider-compact">
+      <div className="raise-slider-popover" aria-hidden={!fineTuneOpen}>
         <div className="raise-control-heading">
           <span className="control-section-label">AJUSTE FINO</span>
           <div className="raise-heading-actions">
