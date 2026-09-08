@@ -10,6 +10,10 @@ const controlsCss = readFileSync(new URL("./controlsHierarchy.css", import.meta.
 const progressCss = readFileSync(new URL("./sessionProgressStrip.css", import.meta.url), "utf8");
 const controlsTsx = readFileSync(new URL("./Controls.tsx", import.meta.url), "utf8");
 const tableTsx = readFileSync(new URL("./Table.tsx", import.meta.url), "utf8");
+const appTsx = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8");
+const navTsx = readFileSync(new URL("./BottomNav.tsx", import.meta.url), "utf8");
+const pwaTs = readFileSync(new URL("../app/pwaUpdate.ts", import.meta.url), "utf8");
+const profileTsx = readFileSync(new URL("./ProfileView.tsx", import.meta.url), "utf8");
 
 describe("Etapa 5 - acabamento mobile", () => {
   it("reserva espaço para a barra inferior do celular", () => {
@@ -50,42 +54,14 @@ describe("Etapa 5 - acabamento mobile", () => {
 
   it("integra os controles ao feltro sem painel pesado", () => {
     expect(controlsCss).toContain("background: linear-gradient(");
-    expect(controlsCss).toContain("rgba(5,8,7,.88) 100%");
-  });
-
-  it("centraliza o feltro e compacta pods e avatar sem sobrepor cartas", () => {
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .felt {\n    inset: 5% 2% 5%;");
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .pod {\n    padding: 4px 5px 3px;");
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .ava {\n    width: 24px;");
-    expect(tableCss).toContain(".app.nav-hidden .table-modern .seat .hole {\n    position: relative;\n    z-index: 5;");
   });
 
   it("mantém a dica dentro do feltro e destaca a marca Call ou Fold em dourado", () => {
     expect(tableCss).toContain(".app:has(.play) .tbl-tips-btn");
-    expect(tableCss).toContain("top: 9%;");
     expect(tableCss).toContain("left: 50%;");
     expect(tableCss).toContain("color: #f0d77f;");
     expect(tableTsx).toContain("Call ou Fold");
     expect(tableCss).toContain("text-shadow: 0 2px 12px rgba(230,196,84,.32)");
-  });
-
-  it("recolhe os presets de aumento atrás de uma setinha e expande para cima", () => {
-    expect(controlsTsx).toContain("const [presetsOpen, setPresetsOpen] = useState(false)");
-    expect(controlsTsx).toContain("raise-preset-toggle");
-    expect(controlsTsx).toContain("aria-expanded={presetsOpen}");
-    expect(controlsTsx).toContain("Pote");
-    expect(controlsTsx).toContain("4BB");
-    expect(controlsTsx).toContain("3BB");
-    expect(controlsTsx).toContain("2BB");
-    expect(controlsCss).toContain(".raise-preset-menu");
-    expect(controlsCss).toContain("bottom: calc(100% + 5px);");
-  });
-
-  it("protege a zona do herói deixando o cockpit compacto no canto inferior", () => {
-    expect(controlsCss).toContain("grid-template-columns: minmax(0, 1fr) 92px;");
-    expect(controlsCss).toContain("max-width: 330px;");
-    expect(controlsCss).toContain("left: 7px;");
-    expect(tableCss).toContain("top: 74% !important;");
   });
 
   it("leva a marca e o HUD para dentro da composição visual da mesa", () => {
@@ -99,5 +75,54 @@ describe("Etapa 5 - acabamento mobile", () => {
     expect(tableCss).toContain(".app:has(.play) .play {");
     expect(tableCss).toContain(".app:has(.play) .bottom-nav");
     expect(tableCss).toContain(".app.nav-hidden .tbl-tips-btn");
+  });
+});
+
+describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", () => {
+  it("mantém Fold, Call/Check e Raise como três ações principais lado a lado", () => {
+    expect(controlsTsx).toContain("action-choice-fold");
+    expect(controlsTsx).toContain("action-choice-call");
+    expect(controlsTsx).toContain("raise-submit");
+    expect(controlsCss).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))");
+  });
+
+  it("deixa 2BB, 3BB, 4BB e Pote sempre na coluna de tamanhos, sem depender da setinha", () => {
+    expect(controlsTsx).toContain("2BB");
+    expect(controlsTsx).toContain("3BB");
+    expect(controlsTsx).toContain("4BB");
+    expect(controlsTsx).toContain("Pote");
+    expect(controlsTsx).toContain("raise-size-stack");
+    expect(controlsTsx).not.toContain("presetsOpen");
+  });
+
+  it("usa a setinha apenas para abrir e fechar o ajuste fino por slider", () => {
+    expect(controlsTsx).toContain("fineTuneOpen");
+    expect(controlsTsx).toContain("fine-tune-toggle");
+    expect(controlsTsx).toContain("raise-slider-popover");
+    expect(controlsCss).toContain(".raise-slider-popover");
+  });
+
+  it("clareia o entorno e centraliza a mesa com geometria simétrica", () => {
+    expect(tableCss).toContain("--table-stage-light");
+    expect(tableCss).toContain("inset: 4% 3% 4%");
+    expect(tableCss).toContain("background: radial-gradient");
+  });
+
+  it("oferece um X fixo para sair da mesa e voltar ao hub Treinar", () => {
+    expect(appTsx).toContain("play-exit-btn");
+    expect(appTsx).toContain("aria-label=\"Sair da mesa\"");
+    expect(appTsx).toContain("setView(\"treino\")");
+  });
+
+  it("abre Treinar no hub de treino e não direto na mesa", () => {
+    expect(navTsx).toContain('views: ["treino", "play", "torneio", "campanha", "ultra", "ft", "drill"]');
+  });
+
+  it("força atualização com estado visível e reload de rede", () => {
+    expect(profileTsx).toContain("updateStatus");
+    expect(profileTsx).toContain("Verificando");
+    expect(pwaTs).toContain("forceNetworkUpdate");
+    expect(pwaTs).toContain("registration.update()");
+    expect(pwaTs).toContain("caches.keys()");
   });
 });
