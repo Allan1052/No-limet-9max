@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-07 — ChatGPT — Mesa premium consolidada
+- A mesa em tela cheia ganhou uma hierarquia mais limpa: jogadores menos “encaixotados”, herói/vez de agir mais destacados e centro da mesa mais legível.
+- Os controles continuam flutuando sobre o feltro, agora com menos painel escuro e aparência mais integrada à mesa.
+- Onde: **mesa do jogo durante a mão**. Sem mudança no motor, ranges, ICM ou decisões.
+
 ## 2026-09-07 — ChatGPT — Mesa em tela cheia com controles sobre o feltro
 - Durante a mão no celular, a **mesa agora usa a viewport inteira** e o feltro vai quase até as bordas.
 - **Fold/Call/Raise e o slider flutuam na parte inferior sobre o feltro**, em vez de diminuir a área da mesa.
@@ -48,7 +53,7 @@ o teste com semente fixa (determinístico), então a publicação não trava mai
   sólido comendo uma faixa fixa. A **mesa estica por cima** e enche a tela.
 - Motivo: a mesa "continuava do mesmo tamanho" porque a barra de botões ocupava um
   espaço fixo; agora ela flutua e libera a mesa.
-- Onde: **mesa do jogo** (durante a mão). Entre as mãos volta o layout normal.
+- Onde: **mesa do jogo** (durante a mão). Entre as mãos volta ao layout normal.
 
 ## 2026-09-07 — Claude — Correções: mesa preenche a tela + botão "fechar" do range
 - **Mesa imersiva:** antes ela só subia e sobrava um **vão embaixo** (a mesa tinha
