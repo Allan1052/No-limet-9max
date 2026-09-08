@@ -75,7 +75,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   const presetTo = (bb: number) => clampRaise(bb * bigBlind);
   const potTo = clampRaise(pot + legal.callAmount);
   const quickTo = (item: QuickRaise) => item.kind === "pot" ? potTo : presetTo(item.bb);
-  const quickLabel = (item: QuickRaise) => item.kind === "pot" ? "Pote" : `${item.bb:g}BB`.replace(":g", "");
+  const quickLabel = (item: QuickRaise) => item.kind === "pot" ? "Pote" : `${item.bb}BB`;
   const choosePreset = (to: number) => setRaiseTo(to);
 
   const editQuickRaise = (index: number) => {
