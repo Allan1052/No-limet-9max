@@ -67,22 +67,31 @@
   bottom: 58px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-end;
   gap: 4px;
-  width: 86px;
+  width: min(90px, 24vw);
   z-index: 34;
 }
 
 .raise-size-stack {
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 3px;
 }
 
-.raise-size-option {
-  min-height: 31px;
+.raise-size-item {
   display: grid;
-  grid-template-columns: 28px 1fr;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  gap: 2px;
+  align-items: stretch;
+}
+
+.raise-size-option {
+  min-height: 32px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(28px, auto) 1fr;
   align-items: center;
   gap: 3px;
   padding: 3px 5px;
@@ -99,15 +108,28 @@
 
 .raise-size-option strong {
   color: #f0d77f;
-  font-size: 10px;
+  font-size: 9px;
   text-align: right;
   white-space: nowrap;
+}
+
+.raise-size-edit {
+  min-width: 22px;
+  padding: 0;
+  border: 1px solid rgba(230,196,84,.22);
+  border-radius: 7px;
+  background: rgba(17,21,19,.92);
+  color: rgba(240,215,127,.78);
+  font-size: 11px;
+  line-height: 1;
+  touch-action: manipulation;
 }
 
 .fine-tune-toggle {
   width: 34px;
   min-height: 32px;
-  align-self: start;
+  align-self: flex-start;
+  margin-right: calc(100% - 34px);
   border: 1px solid rgba(230,196,84,.45);
   border-radius: 50%;
   background: rgba(17,21,19,.94);
@@ -127,7 +149,7 @@
   left: 50%;
   bottom: 58px;
   z-index: 33;
-  width: min(58vw, 230px);
+  width: min(62vw, 250px);
   padding: 7px 9px 6px;
   border: 1px solid rgba(230,196,84,.24);
   border-radius: 12px;
@@ -218,12 +240,12 @@
     width: auto;
     max-width: none;
     display: block;
-    padding: 0 96px 0 0;
+    padding: 0;
     background: linear-gradient(
       180deg,
       rgba(18,24,19,0) 0%,
-      rgba(18,24,19,.20) 42%,
-      rgba(18,24,19,.42) 100%
+      rgba(18,24,19,.18) 42%,
+      rgba(18,24,19,.38) 100%
     );
   }
 
@@ -240,17 +262,18 @@
 
   .app.nav-hidden .controls-v2 .raise-slider-popover,
   .app:has(.play) .controls-v2 .raise-slider-popover {
-    left: calc(50% - 48px);
+    left: 50%;
   }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
   .app.nav-hidden .controls-v2,
   .app:has(.play) .controls-v2 {
-    left: auto;
-    right: 7px;
-    width: min(58vw, 390px);
-    padding-right: 90px;
+    left: 50%;
+    right: auto;
+    width: min(70vw, 500px);
+    padding: 0;
+    transform: translateX(-50%);
   }
 
   .action-choice { min-height: 43px; }
