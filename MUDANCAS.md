@@ -23,6 +23,11 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 3
+- A dica foi levada para dentro do feltro e a marca **Call ou Fold** ganhou destaque dourado no centro da mesa.
+- Os aumentos **Pote/4BB/3BB/2BB** ficam recolhidos atrás de uma setinha e abrem para cima, liberando espaço para jogadores, cartas e ações.
+- A mesa ficou centralizada e a região do herói foi protegida dos controles. Onde: **mesa do jogo no celular**. Sem mudança no motor.
+
 ## 2026-09-08 — ChatGPT — Mesa fullscreen rodada 2
 - A mesa ficou mais centralizada e os jogadores menores, com avatar reduzido para deixar as cartas sempre livres.
 - Os controles agora deixam **Desistir/Pagar à esquerda** e empilham **Pote/4BB/3BB/2BB/Aumentar à direita**; o status do torneio e **Ver dicas** ficam sobre o feltro.
