@@ -87,15 +87,6 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
     expect(controlsCss).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))");
   });
 
-  it("deixa 2BB, 3BB, 4BB e Pote sempre na coluna de tamanhos, sem depender da setinha", () => {
-    expect(controlsTsx).toContain("2BB");
-    expect(controlsTsx).toContain("3BB");
-    expect(controlsTsx).toContain("4BB");
-    expect(controlsTsx).toContain("Pote");
-    expect(controlsTsx).toContain("raise-size-stack");
-    expect(controlsTsx).not.toContain("presetsOpen");
-  });
-
   it("usa a setinha apenas para abrir e fechar o ajuste fino por slider", () => {
     expect(controlsTsx).toContain("fineTuneOpen");
     expect(controlsTsx).toContain("fine-tune-toggle");
@@ -126,5 +117,31 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
     expect(pwaTs).toContain("forceNetworkUpdate");
     expect(pwaTs).toContain("registration.update()");
     expect(pwaTs).toContain("caches.keys()");
+  });
+});
+
+describe("Rodada 5 - presets editáveis e centralização óptica", () => {
+  it("remove o 2BB duplicado e mantém exatamente três atalhos rápidos", () => {
+    expect(controlsTsx).not.toContain('<span>2BB</span>');
+    expect(controlsTsx).toContain("DEFAULT_QUICK_RAISES");
+    expect(controlsTsx).toContain("raise-size-stack");
+  });
+
+  it("permite editar os atalhos rápidos em BB e persiste localmente", () => {
+    expect(controlsTsx).toContain("quickRaiseConfig");
+    expect(controlsTsx).toContain("localStorage");
+    expect(controlsTsx).toContain("raise-size-edit");
+    expect(controlsTsx).toContain("Editar atalho");
+  });
+
+  it("dá largura total aos três botões principais e sobrepõe a coluna sem empurrá-los", () => {
+    expect(controlsCss).toContain("padding: 0;");
+    expect(controlsCss).toContain("width: min(90px, 24vw);");
+    expect(controlsCss).toContain("right: 0;");
+  });
+
+  it("reduz a marca central para não disputar com board e pote", () => {
+    expect(tableCss).toContain(".table-brand-mark span");
+    expect(tableCss).toContain("font-size: 13px");
   });
 });
