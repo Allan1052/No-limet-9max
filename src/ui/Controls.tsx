@@ -62,7 +62,6 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
     { label: "Pote", to: potTo },
     { label: "4BB", to: presetTo(4) },
     { label: "3BB", to: presetTo(3) },
-    { label: "2BB", to: presetTo(2) },
   ];
 
   return (

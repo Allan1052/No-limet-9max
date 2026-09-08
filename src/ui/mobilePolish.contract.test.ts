@@ -122,11 +122,11 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
 });
 
 describe("Rodada 6 - layout base centralizado e botões sem corte", () => {
-  it("usa quatro atalhos verticais fixos à direita, incluindo 2BB", () => {
+  it("usa a coluna de atalhos de aumento (sem 2BB, que já é o RAISE)", () => {
     expect(controlsTsx).toContain('{ label: "Pote", to: potTo }');
     expect(controlsTsx).toContain('{ label: "4BB", to: presetTo(4) }');
     expect(controlsTsx).toContain('{ label: "3BB", to: presetTo(3) }');
-    expect(controlsTsx).toContain('{ label: "2BB", to: presetTo(2) }');
+    expect(controlsTsx).not.toContain('{ label: "2BB", to: presetTo(2) }');
     expect(controlsTsx).toContain("right-bet-panel");
     expect(controlsTsx).not.toContain("raise-size-edit");
   });

@@ -68,12 +68,23 @@
   .app.nav-hidden .play > .table-modern {
     position: relative !important;
     inset: auto !important;
+    /* tableRound4.css centraliza a mesa com left:50%/top:45% + translate(-50%,-50%).
+       Aqui a mesa está em FLUXO (flex), então esse translate só empurrava a mesa
+       pra fora da tela (era o bug do "canto cortado"). Zeramos explicitamente. */
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
     flex: 1 1 auto !important;
     order: 1;
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
+    /* theme.css limita a mesa a calc(100dvh - 325px) — sobrava um vazio preto
+       embaixo. Em tela cheia a mesa manda: sem teto. */
+    max-height: none !important;
     margin: 0 auto !important;
     aspect-ratio: auto !important;
     overflow: visible !important;
@@ -81,8 +92,10 @@
 
   /* Feltro centralizado dentro da mesa, com folga igual dos dois lados. */
   .app:has(.play) .table-modern .felt {
-    inset: 4% 2% 6% !important;
-    border-radius: 46% / 40% !important;
+    inset: 3% 1% 4% !important;
+    /* Em retrato a mesa fica alta: raio fixo = formato "estádio" (igual às
+       mesas de app de poker), em vez de um ovo esticado. */
+    border-radius: 168px !important;
   }
 
   /* ---- 4. Status do torneio: faixa fina, em fluxo ---- */
@@ -95,11 +108,22 @@
     transform: none !important;
   }
 
-  /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) -- */
+  /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
+     Estrutura pedida pelo Allan:
+        [ ajuste fino (slider) ]  ← só com a setinha aberta
+        [  Pote / 4BB / 3BB     ]  ← só com a setinha aberta
+        [       setinha         ]  ← fica logo ACIMA do botão Call
+        [  Fold | Call | RAISE  ]
+     Tudo abre no sentido VERTICAL, centralizado na coluna do Call. */
   .app:has(.play) .play > .controls,
   .app.nav-hidden .play > .controls {
     position: static !important;
     inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
     flex: 0 0 auto !important;
     order: 3;
     width: 100% !important;
@@ -107,17 +131,18 @@
     margin: 0 !important;
     padding: 0 !important;
     background: none !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 84px !important;
-    grid-template-areas: "acoes atalhos" !important;
-    align-items: end !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 6px !important;
+    border: 0 !important;
+    box-shadow: none !important;
     pointer-events: auto !important;
   }
 
-  /* Três ações principais ocupam a área da esquerda. */
+  /* Três ações principais: sempre visíveis, na base. */
   .app:has(.play) .play > .controls > .bottom-action-bar {
-    grid-area: acoes;
+    order: 3;
     position: static !important;
     inset: auto !important;
     left: auto !important; right: auto !important; bottom: auto !important;
@@ -128,19 +153,27 @@
     gap: 6px !important;
   }
 
-  /* Atalhos de aumento: COLUNA à direita, dentro da barra (sem flutuar). */
+  /* Coluna de aumentos: largura da coluna do meio, centralizada sobre o Call. */
   .app:has(.play) .play > .controls > .right-bet-panel {
-    grid-area: atalhos;
+    order: 2;
     position: static !important;
     inset: auto !important;
     left: auto !important; right: auto !important; bottom: auto !important; top: auto !important;
-    width: 100% !important;
+    align-self: center !important;
+    width: calc((100% - 12px) / 3) !important;
     margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 4px !important;
   }
+
+  /* Pedido do Allan: a pilha de tamanhos (Pote/4BB/3BB) fica ESCONDIDA por
+     padrão — na tela só aparece a setinha, logo acima do RAISE. Tocando na
+     setinha ela abre no sentido vertical (estilo GG) e some de novo ao fechar. */
   .app:has(.play) .play > .controls .raise-size-stack {
+    display: none !important;
+  }
+  .app:has(.play) .play > .controls.fine-tune-open .raise-size-stack {
     display: flex !important;
     flex-direction: column !important;
     gap: 4px !important;
@@ -157,19 +190,23 @@
     min-height: 26px !important;
   }
 
-  /* Ajuste fino (slider): só quando aberto, e SEMPRE acima da barra — nunca
+  /* Ajuste fino (slider): só quando aberto, e SEMPRE acima da coluna — nunca
      por cima da mesa nem da mão do herói. */
   .app:has(.play) .play > .controls > .raise-slider-popover {
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open > .raise-slider-popover {
     display: block !important;
-    grid-area: acoes;
+    order: 1;
     position: static !important;
     inset: auto !important;
     transform: none !important;
-    width: 100% !important;
-    margin: 0 0 6px !important;
+    align-self: center !important;
+    width: min(100%, 268px) !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
 
   /* ---- 6. "Ver dicas": canto SUPERIOR DIREITO do feltro (área livre) ------

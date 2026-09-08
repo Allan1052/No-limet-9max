@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-08 — Claude — MESA CONSERTADA DE VERDADE (olhei a tela antes de subir)
+- **O bug da mesa cortada acabou.** A mesa estava aparecendo espremida num
+  cantinho, com os botões cortados na beirada. Motivo: sobrou uma regra antiga
+  de "centralizar" que **empurrava a mesa pra fora da tela**, e outra que
+  **limitava a altura** da mesa (por isso sobrava aquele vazio preto embaixo).
+  As duas foram zeradas no arquivo que manda no layout (`tableFinalLayout.css`).
+- **Agora a mesa ocupa a tela inteira**, centralizada, no formato oval de mesa
+  de poker — as suas cartas ficam grandes e os 9 jogadores cabem sem se cobrir.
+- **Barra de aumentos do jeito que você pediu:** por padrão só aparece **uma
+  setinha, logo acima do botão Call**. Tocando nela, abre **no sentido vertical**:
+  ajuste fino (slider), depois Pote / 4BB / 3BB. Fechou, some e devolve o espaço.
+- **Tirei o atalho "2BB"** da coluna — ele já é o próprio botão RAISE.
+- **Como eu conferi desta vez:** abri o app aqui dentro num navegador de verdade,
+  tirei print da mesa e **olhei** antes de subir. Chega de subir no escuro.
+- Telas: mesa de jogo (Treinar → Jogar). Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — RESGATE do layout da mesa (parou a sobreposição)
 - **Problema:** a mesa tinha virado uma briga de **4 arquivos de CSS** (cada rodada do
   ChatGPT criou uma camada nova com regras "flutuantes" e `!important`). Resultado: a
