@@ -12,9 +12,6 @@ import type { TableState } from "../game/state";
 import "./tableModern.css";
 import "./coachV2Hint.css";
 
-// Posições (%) dos 9 assentos. Mantemos todos um pouco mais para dentro do
-// oval para que, no celular, nenhum pod invada a faixa de classificação acima
-// nem empurre os controles para fora da tela.
 const SEAT_POS: Array<{ top: string; left: string }> = [
   { top: "86%", left: "50%" },
   { top: "76%", left: "20%" },
@@ -127,8 +124,8 @@ export function PokerTable({
       <div className="felt">
         <div className="table-surface-glow" />
         <div className="table-brand-mark">
-          <img src={`${getBasePath()}brand-logo-splash.png`} alt="Call ou Fold" />
-          <span>aqui é possível</span>
+          <img src={`${getBasePath()}brand-logo-splash.png`} alt="" aria-hidden="true" />
+          <span>Call ou Fold</span>
         </div>
       </div>
 
@@ -148,8 +145,8 @@ export function PokerTable({
         />
       </div>
 
-      {showTips ? (
-        <button className="tbl-tips-btn" onClick={onShowTips}>
+      {onShowTips ? (
+        <button className={`tbl-tips-btn${showTips ? " has-feedback" : ""}`} onClick={onShowTips}>
           💡 {t("tips.button")}
         </button>
       ) : null}
