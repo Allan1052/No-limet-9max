@@ -52,14 +52,14 @@
      que é justamente a área vazia — como o GG faz com as infos do torneio. */
   .app:has(.play) .play > .play-coach-bar {
     position: absolute !important;
-    top: 33% !important;
+    top: 34px !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
     transform: translateX(-50%) !important;
-    width: min(76%, 300px) !important;
-    max-width: min(76%, 300px) !important;
-    max-height: 38px !important;
+    width: min(72%, 262px) !important;
+    max-width: min(72%, 262px) !important;
+    max-height: 36px !important;
     overflow: hidden !important;
     text-overflow: ellipsis;
     margin: 0 !important;
@@ -108,26 +108,51 @@
     border-radius: 168px !important;
   }
 
-  /* ---- 4. Status do torneio: DENTRO do feltro, discreto (igual GG) ------ */
+  /* ---- 3b. POSIÇÃO DOS ASSENTOS (tela cheia) ----------------------------
+     O tableRound4.css fixa os 9 assentos com !important (nth-of-type), então a
+     lista do Table.tsx não valia no celular. Aqui repetimos a distribuição nova
+     — 4 fileiras + herói — deixando a faixa do meio (≈43%-56%) LIVRE pro pote e
+     pras cartas comunitárias. Antes havia assento em top:50%, na mesma altura do
+     board, e as 5 cartas cobriam os pods da esquerda e da direita.
+     Mantenha em sincronia com SEAT_POS em Table.tsx. */
+  .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 87% !important; left: 50% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 74% !important; left: 24% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(5)  { top: 63% !important; left: 12% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(6)  { top: 29% !important; left: 12% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(7)  { top: 17% !important; left: 31% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(8)  { top: 17% !important; left: 69% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(9)  { top: 29% !important; left: 88% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 63% !important; left: 88% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 74% !important; left: 76% !important; }
+
+  /* ---- 4. Status do torneio: UMA LINHA no topo do feltro ----------------
+     Fica dentro da mesa (como o GG faz), mas em linha única pra não empurrar
+     nem cobrir nada. Antes ocupava 3 linhas no meio da mesa. */
   .app:has(.play) .play > .play-tstatus {
     position: absolute !important;
-    top: 24% !important;
+    top: 8px !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
-    transform: translate(-50%, -50%) !important;
+    transform: translateX(-50%) !important;
     width: auto !important;
-    max-width: 60% !important;
+    max-width: 66% !important;
     margin: 0 !important;
     z-index: 11 !important;
     padding: 0 !important;
     background: none !important;
     border: 0 !important;
     box-shadow: none !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px !important;
+    white-space: nowrap;
     text-align: center;
-    font-size: 12px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
-    letter-spacing: .4px;
+    letter-spacing: .2px;
     color: rgba(255, 255, 255, .74) !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
     pointer-events: none;
@@ -137,6 +162,10 @@
     border: 0 !important;
     box-shadow: none !important;
     color: inherit !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    white-space: nowrap;
   }
 
   /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
@@ -310,6 +339,17 @@
   /* Plaquinha de ação embaixo do nome (Fold/Call 2bb): não precisa — as fichas
      na mesa já mostram a aposta. Some pra ganhar espaço no pod. */
   .app:has(.play) .table-modern .seat .badge {
+    display: none !important;
+  }
+
+  /* Pote + cartas comunitárias no centro da faixa livre entre os assentos. */
+  .app:has(.play) .table-modern .tbl-center-col {
+    top: 49% !important;
+    left: 50% !important;
+  }
+  /* "🏆 X fichas simuladas" saía por cima da dica e do Pote — a linha de status
+     no topo do feltro já identifica o torneio. */
+  .app:has(.play) .table-modern .tbl-buyin {
     display: none !important;
   }
 

@@ -138,9 +138,11 @@ describe("Rodada 6 - layout base centralizado e botões sem corte", () => {
   });
 
   it("mantém todos os nove assentos em posições seguras dentro do feltro", () => {
-    expect(tableTsx).toContain('{ top: "82%", left: "50%" }');
-    expect(tableTsx).toContain('{ top: "50%", left: "15%" }');
-    expect(tableTsx).toContain('{ top: "50%", left: "85%" }');
+    expect(tableTsx).toContain('{ top: "87%", left: "50%" }');
+    expect(tableTsx).toContain('{ top: "63%", left: "12%" }');
+    expect(tableTsx).toContain('{ top: "63%", left: "88%" }');
+    // Nenhum assento na altura do board (evita cobrir pods com as comunitárias).
+    expect(tableTsx).not.toContain('{ top: "50%", left: "15%" }');
   });
 
   it("deixa a marca central somente como imagem discreta", () => {

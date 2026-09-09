@@ -13,16 +13,20 @@ import "./tableModern.css";
 import "./tableFullscreenRound2.css";
 import "./coachV2Hint.css";
 
+// Mesa em tela cheia é ALTA: os assentos ficam em 4 fileiras + herói embaixo,
+// e a faixa do meio (≈43%-56%) fica VAZIA de propósito — é onde entram o pote e
+// as cartas comunitárias. Antes havia assento em top:50%, exatamente na altura
+// do board, e as 5 cartas cobriam os pods da esquerda e da direita.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "82%", left: "50%" },
-  { top: "73%", left: "24%" },
-  { top: "50%", left: "15%" },
-  { top: "27%", left: "24%" },
-  { top: "16%", left: "40%" },
-  { top: "16%", left: "60%" },
-  { top: "27%", left: "76%" },
-  { top: "50%", left: "85%" },
-  { top: "73%", left: "76%" },
+  { top: "87%", left: "50%" },
+  { top: "74%", left: "24%" },
+  { top: "63%", left: "12%" },
+  { top: "29%", left: "12%" },
+  { top: "17%", left: "31%" },
+  { top: "17%", left: "69%" },
+  { top: "29%", left: "88%" },
+  { top: "63%", left: "88%" },
+  { top: "74%", left: "76%" },
 ];
 
 function towardCenter(pos: { top: string; left: string }, f: number) {

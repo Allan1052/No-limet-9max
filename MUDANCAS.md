@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Cartas da mesa não cobrem mais os oponentes
+- **O problema de verdade:** dois jogadores ficavam exatamente na mesma altura
+  das cartas comunitárias. Quando vinha o flop/turn/river, as 5 cartas passavam
+  **por cima dos pods da esquerda e da direita** (era isso que você via de
+  estranho quando abria o range no fim da mão).
+- **Arrumado:** os 9 assentos foram redistribuídos em 4 fileiras + você embaixo,
+  deixando a **faixa do meio da mesa livre** só pro pote e pras cartas. Agora as
+  comunitárias aparecem grandes, no meio, sem tapar ninguém.
+- **A linha "🏆 X fichas simuladas" saiu de dentro da mesa** — ela caía por cima
+  da dica e do "Pote".
+- **Blinds/posição viraram UMA linha no topo do feltro** (antes eram 3 linhas no
+  meio da mesa, brigando com a dica e com os pods), e a **dica do coach ficou
+  logo abaixo dela**, larga e fácil de ler.
+- Tela: mesa de jogo (pré-flop e showdown). Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-08 — Claude — A mesa não sobe mais quando você abre a setinha
 - **Antes:** ao tocar na setinha, as barras Pote/4BB/3BB entravam na barra de
   baixo e **empurravam a mesa pra cima**. **Agora:** essas barras **flutuam no
