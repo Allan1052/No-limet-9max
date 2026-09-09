@@ -630,114 +630,174 @@
   }
 
   /* ==========================================================================
-     9. MESA DE REVIEW (torneio importado) — .import-replayer.ir-fullscreen
+     9. MESA DE REVIEW (torneio importado) — TELA CHEIA DE VERDADE
      --------------------------------------------------------------------------
-     O review nunca herdou nada do que arrumamos na mesa de jogo porque todas as
-     regras acima são presas ao `.play`. Resultado no aparelho do Allan: a mesa
-     ficava numa caixinha 16/10, o conteúdo transbordava e os botões
-     "Anterior/Próximo" caíam EM CIMA dos jogadores e das cartas.
-     Aqui a tela de review vira uma coluna em fluxo, igual à mesa de jogo:
-        topo → dica do coach → MESA (ocupa o que sobra) → passo → navegação
+     O Allan reclamou (com razão) que a tela tinha CINCO fileiras de controle
+     disputando altura com a mesa. Agora a MESA É O FUNDO da tela inteira e todo
+     o resto FLUTUA sobre o feltro em faixas finas:
+
+        [✕  MÃO 4/182  ◀◀ ▶▶ ⋯]        <- topo
+        [ ✓ Coach recomendava… ]        <- veredito
+                (MESA)                  <- toque à esquerda volta, à direita avança
+        [ FLOP · Hero: Check ]          <- narração
+        [ ◀  Pré Flop Turn River ⏭ ▶ ]  <- barra única
+
+     Filtro de mãos, placar, linha do tempo, diagnóstico e "importar outra"
+     saíram da tela e foram pro menu ⋯.
      ======================================================================== */
   .import-replayer.ir-fullscreen {
-    gap: 4px !important;
-    padding: calc(6px + env(safe-area-inset-top, 0px)) 0 calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    display: block !important;
+    gap: 0 !important;
+    padding: 0 !important;
     overflow: hidden !important;
   }
-  .ir-fullscreen .ir-head {
-    order: 0;
-    flex: 0 0 auto;
-    padding: 0 6px 6px !important;
-    min-height: 40px !important;
-  }
-  /* A dica (o que o coach recomendava × o que você fez) sobe pro topo: é o
-     motivo de existir do review. */
-  .ir-fullscreen .ir-coach {
-    order: 1;
-    flex: 0 0 auto;
-    margin: 0 auto !important;
-    padding: 6px 9px !important;
-    font-size: 11.5px !important;
-    line-height: 1.35 !important;
-  }
-  /* A MESA ocupa todo o espaço que sobra (antes era uma caixa 16/10 e o
-     conteúdo vazava por cima do resto da tela). */
+
+  /* A MESA é o fundo: ocupa a tela toda. */
   .ir-fullscreen .ir-table,
   .ir-fullscreen .table-wrap.ir-table {
-    order: 2;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: auto !important;
+    max-width: none !important;
     height: auto !important;
     max-height: none !important;
     aspect-ratio: auto !important;
     margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
     overflow: visible !important;
   }
-  /* A faixa do passo atual fica ACIMA da borda do feltro (o feltro sangra um
-     pouquinho pra baixo e estava comendo o texto). */
-  .ir-fullscreen .ir-step {
-    order: 3;
-    flex: 0 0 auto;
-    position: relative;
-    z-index: 6;
-    padding: 2px 8px !important;
-    font-size: 12px !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, .85);
-  }
-  .ir-fullscreen .ir-result {
-    order: 3;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-  }
-  .ir-fullscreen > .ir-nav {
-    order: 4;
-    flex: 0 0 auto;
-    padding: 0 8px !important;
-    gap: 8px !important;
-  }
-  .ir-fullscreen > .ir-nav .btn { flex: 1 1 0; min-height: 42px; }
-  .ir-fullscreen > .ir-nav .ir-counter { flex: 0 0 auto; position: relative; z-index: 2; }
-  .ir-fullscreen .ir-timeline { order: 5; flex: 0 0 auto; }
 
-  /* ---- R2/R3: filtro de mãos, placar e atalhos de rua ------------------- */
-  .ir-fullscreen .ir-hands-bar {
-    order: 1;
-    flex: 0 0 auto;
+  /* A PokerTable desenha o seu próprio .table-wrap.table-modern DENTRO do
+     .ir-table — é ele que precisa preencher a tela (os assentos são
+     posicionados em % dele). */
+  .ir-fullscreen .ir-table > .table-wrap.table-modern {
+    position: absolute !important;
+    inset: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  /* Zonas de toque: metade esquerda volta um passo, direita avança. Ficam
+     dentro do feltro, longe das faixas de cima e de baixo. */
+  .ir-fullscreen .ir-tap {
+    position: absolute;
+    top: 13%;
+    bottom: 14%;
+    width: 46%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    z-index: 6;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ir-fullscreen .ir-tap-prev { left: 0; }
+  .ir-fullscreen .ir-tap-next { right: 0; }
+  .ir-fullscreen .ir-tap:disabled { pointer-events: none; }
+
+  /* ---- faixa do topo ---- */
+  .ir-fullscreen .ir-head {
+    position: absolute !important;
+    top: calc(4px + env(safe-area-inset-top, 0px)) !important;
+    left: 6px !important;
+    right: 6px !important;
+    z-index: 20;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    gap: 6px !important;
+  }
+  .ir-fullscreen .ir-head .btn.tiny { padding: 5px 9px !important; font-size: 13px !important; }
+  .ir-fullscreen .ir-brand {
+    position: static !important;
+    transform: none !important;
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 12px !important;
+    letter-spacing: 1.5px !important;
+    -webkit-text-fill-color: initial !important;
+    color: rgba(255, 255, 255, .78) !important;
+    background: none !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+  }
+
+  /* ---- veredito do coach: faixa fina logo abaixo do topo ---- */
+  .ir-fullscreen .ir-coach {
+    position: absolute !important;
+    top: calc(44px + env(safe-area-inset-top, 0px)) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    z-index: 18;
+    padding: 6px 9px !important;
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+    background: rgba(8, 11, 9, .88) !important;
+  }
+
+  /* ---- narração do passo: acima da barra de baixo ---- */
+  .ir-fullscreen .ir-step {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(54px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 18;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    text-align: center;
+    font-size: 12px !important;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, .9);
+  }
+
+  /* ---- barra única de baixo ---- */
+  .ir-fullscreen .ir-bar {
+    position: absolute !important;
+    left: 8px;
+    right: 8px;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    padding: 0 8px;
+    justify-content: center;
+    gap: 5px;
   }
-  .ir-fullscreen .ir-coach { order: 2; }
-  .ir-fullscreen .ir-table,
-  .ir-fullscreen .table-wrap.ir-table { order: 3; }
-  .ir-fullscreen .ir-step { order: 4; }
-  .ir-fullscreen .ir-result { order: 4; }
-  .ir-fullscreen .ir-streets {
-    order: 5;
+  .ir-fullscreen .ir-round {
     flex: 0 0 auto;
-    position: relative;
-    z-index: 6;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(230, 196, 84, .38);
+    background: rgba(12, 16, 12, .9);
+    color: var(--gold-bright, #f0d77f);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .ir-fullscreen .ir-round:disabled { opacity: .32; }
+  .ir-fullscreen .ir-round-me { border-color: rgba(140, 220, 175, .6); color: #b9ecd0; }
+  .ir-fullscreen .ir-streets {
+    flex: 1 1 auto;
     display: flex;
-    flex-wrap: nowrap;
+    justify-content: center;
     gap: 4px;
-    padding: 0 8px;
     overflow-x: auto;
   }
-  .ir-fullscreen > .ir-nav { order: 6; }
-  .ir-fullscreen .ir-timeline { order: 7 !important; }
-  .ir-fullscreen .ir-newsession { order: 9 !important; }
-
-  .ir-fullscreen .ir-filters { display: flex; gap: 4px; }
   .ir-fullscreen .ir-chip {
-    padding: 3px 8px;
+    padding: 6px 8px;
     border-radius: 999px;
     border: 1px solid rgba(230, 196, 84, .28);
-    background: rgba(16, 20, 16, .8);
+    background: rgba(12, 16, 12, .9);
     color: var(--gold-soft, #e8d79b);
     font-size: 11px;
     font-weight: 700;
@@ -749,19 +809,102 @@
     border-color: #ffe9a8;
     color: #0b0f0d;
   }
-  .ir-fullscreen .ir-chip:disabled { opacity: .35; }
-  .ir-fullscreen .ir-chip-me {
-    margin-left: auto;
-    border-color: rgba(120, 200, 150, .55);
-    color: #b9ecd0;
+  .ir-fullscreen .ir-chip:disabled { opacity: .32; }
+
+  /* ---- menu ⋯ (tudo o que saiu da tela) ---- */
+  .ir-fullscreen .ir-menu {
+    position: absolute !important;
+    top: calc(42px + env(safe-area-inset-top, 0px));
+    left: 8px;
+    right: 8px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid rgba(230, 196, 84, .32);
+    border-radius: 14px;
+    background: rgba(10, 13, 10, .97);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .6);
   }
-  .ir-fullscreen .ir-placar {
-    font-size: 11px;
+  .ir-fullscreen .ir-menu-sec {
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: .3px;
-    color: rgba(255, 255, 255, .72);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .5);
+  }
+  .ir-fullscreen .ir-menu .ir-filters { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ir-fullscreen .ir-menu-placar { font-size: 12px; color: rgba(255, 255, 255, .8); }
+  .ir-fullscreen .ir-menu-item { width: 100%; text-align: left; }
+
+  /* ---- resultado da mão: painel sobre o feltro ---- */
+  .ir-fullscreen .ir-result {
+    position: absolute !important;
+    top: calc(96px + env(safe-area-inset-top, 0px));
+    left: 8px;
+    right: 8px;
+    bottom: calc(54px + env(safe-area-inset-bottom, 0px));
+    z-index: 22;
+    overflow-y: auto;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 12px;
+    border: 1px solid rgba(230, 196, 84, .28);
+    border-radius: 14px;
+    background: rgba(8, 11, 9, .94);
+  }
+
+  /* ---- acabamento visual da mesa do review ---- */
+  .ir-fullscreen .table-modern .felt {
+    inset: 0 2% 0 !important;
+    border-radius: 47% / 21% !important;
+  }
+  .ir-fullscreen .table-modern .seat .pod { transform: scale(.84) !important; transform-origin: center; }
+  .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(1) !important; }
+  .ir-fullscreen .table-modern .seat.hero { top: 83% !important; }
+  .ir-fullscreen .table-modern .seat-bet-hero { top: 70% !important; }
+  .ir-fullscreen .table-modern .tbl-center-col { top: 46% !important; }
+  .ir-fullscreen .table-modern .table-brand-mark {
+    top: 46% !important;
+    opacity: 1 !important;
+    gap: 6px !important;
+  }
+  .ir-fullscreen .table-modern .table-brand-mark img { display: none !important; }
+  .ir-fullscreen .table-modern .table-brand-mark .brand-word {
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    letter-spacing: 5px !important;
+    text-transform: uppercase !important;
+    color: #f5c542 !important;
+    opacity: .78 !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 0 22px rgba(245, 197, 66, .3) !important;
     white-space: nowrap;
   }
+  .ir-fullscreen .table-modern .seat .pos-tag { color: #17130a !important; font-weight: 800 !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole .card {
+    width: 48px !important;
+    height: 67px !important;
+    border-radius: 7px !important;
+  }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .rank { font-size: 29px !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .suit { font-size: 19px !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .pip  { font-size: 29px !important; }
+  .ir-fullscreen .table-modern .seat.hero .ava { display: none !important; }
+  /* A plaquinha de ação do HERÓI repetia a narração logo abaixo da mesa (e
+     batia nela). Os vilões continuam com a delas — é assim que você vê o que
+     cada um fez. */
+  .ir-fullscreen .table-modern .seat.hero .badge { display: none !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole { margin: 0 !important; gap: 5px !important; }
+  .ir-fullscreen .table-modern .seat.folded { opacity: .30 !important; filter: grayscale(.85) !important; }
+  .ir-fullscreen .table-modern .seat.winner .pod {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(245, 197, 66, .95), 0 0 34px 10px rgba(245, 197, 66, .45) !important;
+  }
+
   /* Custo da decisão em bb (só em spots de pagar-ou-foldar). */
   .ir-fullscreen .ir-coach .ir-coach-cost {
     display: inline-block;
@@ -772,16 +915,12 @@
     font-weight: 800;
     white-space: nowrap;
   }
-  .ir-fullscreen .ir-coach .ir-coach-cost.bad {
-    color: #fff1ee;
-    background: linear-gradient(180deg, #c8503f, #922f22);
-  }
+  .ir-fullscreen .ir-coach .ir-coach-cost.bad { color: #fff1ee; background: linear-gradient(180deg, #c8503f, #922f22); }
   .ir-fullscreen .ir-coach .ir-coach-cost.ok {
     color: #d9f5e3;
     background: rgba(80, 150, 110, .30);
     border: 1px solid rgba(140, 220, 175, .35);
   }
-
   /* O pós-flop do coach é ESTIMATIVA — isso não pode ficar em letra miúda. */
   .ir-fullscreen .ir-coach .ir-coach-est {
     display: inline-block;
@@ -795,70 +934,5 @@
     letter-spacing: .3px;
     text-transform: uppercase;
     opacity: 1;
-  }
-  .ir-fullscreen .ir-newsession { order: 6; flex: 0 0 auto; }
-
-  /* ---- Acabamento visual da mesa do review (o mesmo da mesa de jogo) ---- */
-  .ir-fullscreen .table-modern .felt {
-    inset: 0 2% 0 !important;
-    border-radius: 47% / 21% !important;
-  }
-  .ir-fullscreen .table-modern .table-brand-mark {
-    top: 46% !important;
-    opacity: 1 !important;
-    gap: 6px !important;
-  }
-  .ir-fullscreen .table-modern .table-brand-mark img { display: none !important; }
-  .ir-fullscreen .table-modern .table-brand-mark .brand-word {
-    font-family: 'Cinzel', Georgia, serif !important;
-    font-size: 19px !important;
-    font-weight: 700 !important;
-    letter-spacing: 4.5px !important;
-    text-transform: uppercase !important;
-    color: #f5c542 !important;
-    opacity: .78 !important;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 0 22px rgba(245, 197, 66, .3) !important;
-    white-space: nowrap;
-  }
-  /* Plaquinha de posição legível (era dourado sobre dourado). */
-  .ir-fullscreen .table-modern .seat .pos-tag {
-    color: #17130a !important;
-    font-weight: 800 !important;
-  }
-  /* A mão do herói é o foco também no review. */
-  .ir-fullscreen .table-modern .seat.hero .hole .card {
-    width: 48px !important;
-    height: 67px !important;
-    border-radius: 7px !important;
-  }
-  .ir-fullscreen .table-modern .seat.hero .hole .card .rank { font-size: 29px !important; }
-  .ir-fullscreen .table-modern .seat.hero .hole .card .suit { font-size: 19px !important; }
-  .ir-fullscreen .table-modern .seat.hero .hole .card .pip  { font-size: 29px !important; }
-  .ir-fullscreen .table-modern .seat.hero .ava { display: none !important; }
-  /* Sem o avatar, a carta não precisa "morder" o nome. */
-  .ir-fullscreen .table-modern .seat.hero .hole { margin: 0 !important; gap: 5px !important; }
-  /* A tela de review tem cabeçalho, filtro, dica, passo, ruas e navegação —
-     sobra menos altura pra mesa do que na tela de jogo. Os pods encolhem (como
-     na mesa de jogo, que usa scale(.8)) pra não transbordarem por cima das
-     faixas de baixo; a MÃO DO HERÓI continua grande. */
-  .ir-fullscreen .table-modern .seat .pod { transform: scale(.8) !important; transform-origin: center; }
-  .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(.92) !important; }
-  .ir-fullscreen .table-modern .seat.hero { top: 75% !important; }
-  /* Pote + cartas comunitárias na faixa livre entre as fileiras (senão o board
-     encosta nos pods das laterais quando a mesa é 9-max). */
-  .ir-fullscreen .table-modern .tbl-center-col { top: 44% !important; }
-  /* A ficha apostada do HERÓI é calculada a partir da posição padrão do assento
-     (89%); como no review ele sobe pra 78%, ela caía em cima das cartas. */
-  .ir-fullscreen .table-modern .seat-bet-hero { top: 61% !important; }
-  /* Quem já foldou sai de cena; quem levou o pote acende. */
-  .ir-fullscreen .table-modern .seat.folded {
-    opacity: .30 !important;
-    filter: grayscale(.85) !important;
-  }
-  .ir-fullscreen .table-modern .seat.winner .pod {
-    border-color: var(--gold) !important;
-    box-shadow:
-      0 0 0 3px rgba(245, 197, 66, .95),
-      0 0 34px 10px rgba(245, 197, 66, .45) !important;
   }
 }

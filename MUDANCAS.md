@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — REVIEW EM TELA CHEIA (a mesa virou a tela inteira)
+Você estava certo: a tela tinha **cinco fileiras de botão** brigando por altura
+com a mesa. Refiz a tela:
+- **A mesa agora é o fundo da tela inteira.** Todo o resto flutua sobre o feltro
+  em faixas finas — nada mais divide espaço com a mesa.
+- **Sobraram 3 faixas:** topo (✕ · MÃO 4/182 · ◀◀ ▶▶ · ⋯), o veredito do coach
+  e uma **barra única embaixo** (◀ · Pré-Flop Flop Turn River · ⏭ · ▶).
+- **Agora dá pra tocar na mesa pra andar:** toque na **metade direita** avança um
+  lance, na **metade esquerda** volta. As setinhas continuam na barra pra quem
+  preferir botão.
+- **Sumiram da tela** (foram pro menu ⋯): filtro de mãos (Todas/Joguei/Errei),
+  placar, "Todas as ações da mão", diagnóstico e "importar outra sessão". Estão
+  todos a um toque no ⋯, sem ocupar a mesa.
+- A plaquinha de ação do herói saiu (ela repetia a narração logo abaixo da mesa).
+- Tela: Perfil → Importar → replay. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — REVIEW com 9 jogadores: ajustes finos
 Testei o review com uma mesa cheia (9 jogadores, com ante) e ajustei o que
 aparecia torto:
