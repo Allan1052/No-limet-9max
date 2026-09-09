@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — REVIEW: navegação, filtro de mãos e placar
+Continuação do review (R2, R3 e R4 da análise):
+- **A mão já abre na SUA decisão.** Antes você tinha de atravessar o fold de
+  cada vilão pra chegar na sua vez. Agora o replay abre direto no seu primeiro
+  lance — e o "◀ Anterior" rebobina se você quiser ver o que veio antes.
+- **Botão "⏭ minha vez"** pula pro seu próximo lance dentro da mão.
+- **Atalhos de rua** (Pré-Flop / Flop / Turn / River): pula direto pra rua que
+  interessa, em vez de clicar "Próximo" dez vezes.
+- **Filtro de mãos no topo: Todas · Joguei · Errei.** Num torneio de 182 mãos
+  você jogou umas poucas — o resto é fold pré-flop. As setas ◀◀ ▶▶ passam a
+  andar só dentro do filtro escolhido.
+- **Placar da sessão** ao lado do filtro: **✓ acertos · ✗ erros** (conta só as
+  mãos que o coach avaliou).
+- **O selo "estimativa (pós-flop)" ficou visível de verdade.** No pré-flop a
+  recomendação vem do motor certificado; do flop pra frente é estimativa, e isso
+  precisa estar claro — principalmente se você for usar o review em vídeo.
+- Tela: Perfil → Importar → replay. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — MESA DE REVIEW: tela cheia e sem botão em cima de nada
 Você tinha razão: **o review nunca recebeu nada do que a gente arrumou na mesa de
 jogo** — todas as regras novas estavam presas à tela de jogo. Corrigido:

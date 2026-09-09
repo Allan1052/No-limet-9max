@@ -683,6 +683,7 @@
     z-index: 6;
     padding: 2px 8px !important;
     font-size: 12px !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .85);
   }
   .ir-fullscreen .ir-result {
     order: 3;
@@ -696,8 +697,84 @@
     padding: 0 8px !important;
     gap: 8px !important;
   }
-  .ir-fullscreen > .ir-nav .btn { flex: 1 1 auto; min-height: 42px; }
+  .ir-fullscreen > .ir-nav .btn { flex: 1 1 0; min-height: 42px; }
+  .ir-fullscreen > .ir-nav .ir-counter { flex: 0 0 auto; position: relative; z-index: 2; }
   .ir-fullscreen .ir-timeline { order: 5; flex: 0 0 auto; }
+
+  /* ---- R2/R3: filtro de mãos, placar e atalhos de rua ------------------- */
+  .ir-fullscreen .ir-hands-bar {
+    order: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .ir-fullscreen .ir-coach { order: 2; }
+  .ir-fullscreen .ir-table,
+  .ir-fullscreen .table-wrap.ir-table { order: 3; }
+  .ir-fullscreen .ir-step { order: 4; }
+  .ir-fullscreen .ir-result { order: 4; }
+  .ir-fullscreen .ir-streets {
+    order: 5;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 6;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 0 8px;
+    overflow-x: auto;
+  }
+  .ir-fullscreen > .ir-nav { order: 6; }
+  .ir-fullscreen .ir-timeline { order: 7 !important; }
+  .ir-fullscreen .ir-newsession { order: 9 !important; }
+
+  .ir-fullscreen .ir-filters { display: flex; gap: 4px; }
+  .ir-fullscreen .ir-chip {
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(230, 196, 84, .28);
+    background: rgba(16, 20, 16, .8);
+    color: var(--gold-soft, #e8d79b);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ir-fullscreen .ir-chip.on {
+    background: linear-gradient(180deg, #ecd07a, #c9a227);
+    border-color: #ffe9a8;
+    color: #0b0f0d;
+  }
+  .ir-fullscreen .ir-chip:disabled { opacity: .35; }
+  .ir-fullscreen .ir-chip-me {
+    margin-left: auto;
+    border-color: rgba(120, 200, 150, .55);
+    color: #b9ecd0;
+  }
+  .ir-fullscreen .ir-placar {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    color: rgba(255, 255, 255, .72);
+    white-space: nowrap;
+  }
+  /* O pós-flop do coach é ESTIMATIVA — isso não pode ficar em letra miúda. */
+  .ir-fullscreen .ir-coach .ir-coach-est {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .08);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    opacity: 1;
+  }
   .ir-fullscreen .ir-newsession { order: 6; flex: 0 0 auto; }
 
   /* ---- Acabamento visual da mesa do review (o mesmo da mesa de jogo) ---- */
@@ -739,9 +816,13 @@
   .ir-fullscreen .table-modern .seat.hero .ava { display: none !important; }
   /* Sem o avatar, a carta não precisa "morder" o nome. */
   .ir-fullscreen .table-modern .seat.hero .hole { margin: 0 !important; gap: 5px !important; }
-  /* O pod do herói é alto: sobe um pouco pra não passar por cima da faixa do
-     passo atual, que fica logo abaixo da mesa. */
-  .ir-fullscreen .table-modern .seat.hero { top: 84% !important; }
+  /* A tela de review tem cabeçalho, filtro, dica, passo, ruas e navegação —
+     sobra menos altura pra mesa do que na tela de jogo. Os pods encolhem (como
+     na mesa de jogo, que usa scale(.8)) pra não transbordarem por cima das
+     faixas de baixo; a MÃO DO HERÓI continua grande. */
+  .ir-fullscreen .table-modern .seat .pod { transform: scale(.8) !important; transform-origin: center; }
+  .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(.92) !important; }
+  .ir-fullscreen .table-modern .seat.hero { top: 78% !important; }
   /* Quem já foldou sai de cena; quem levou o pote acende. */
   .ir-fullscreen .table-modern .seat.folded {
     opacity: .30 !important;
