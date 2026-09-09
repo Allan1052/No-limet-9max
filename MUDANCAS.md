@@ -30,10 +30,11 @@ Regras do registro:
   passa a dizer **ALL-IN** em vermelho, pra você saber que está indo com tudo.
 - **Pote / 4BB / 3BB ficaram FIXOS.** Não somem mais atrás da setinha — estão
   sempre à vista na coluna do RAISE.
-- **A setinha agora abre a barra de aumento, em pé (vertical).** Ela é uma faixa
-  fina colada na borda direita do feltro — o único corredor livre da mesa, então
-  ela **não tampa pod, carta nem botão**. O valor que você escolhe aparece ao
-  vivo no botão RAISE.
+- **A setinha agora abre a barra de aumento, em pé (vertical), ali mesmo.** Ela
+  sobe do lado da sua mão, **à esquerda das suas cartas** — não passa em cima
+  delas nem dos botões. Enquanto ela está aberta, o "Ver dicas" some (os dois
+  disputam aquele canto); fecha a barra e ele volta. O valor que você escolhe
+  aparece ao vivo no botão RAISE.
 - **P7 da auditoria: o pote ANDA até quem ganhou.** Antes a mão acabava e o pote
   simplesmente sumia. Agora as fichas saem do meio da mesa e viajam até o
   vencedor (que já acende em dourado) — é o fecho da mão, e é o que rende no
