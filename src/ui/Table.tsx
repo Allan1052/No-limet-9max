@@ -51,6 +51,22 @@ function SweepChip({ from, amount, bigBlind }: { from: { top: string; left: stri
   );
 }
 
+/** P7 da auditoria: no fim da mão o pote ANDA até quem ganhou, em vez de
+ *  simplesmente sumir. É o fecho visual da mão (e o que rende no vídeo). */
+function PayoutChip({ to, amount, bigBlind }: { to: { top: string; left: string }; amount: number; bigBlind: number }) {
+  const [go, setGo] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setGo(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const pos = go ? to : POT_CENTER;
+  return (
+    <div className="chip-sweep chip-payout" style={{ top: pos.top, left: pos.left }}>
+      <ChipStack amount={amount} bigBlind={bigBlind} showLabel={false} />
+    </div>
+  );
+}
+
 export function PokerTable({
   table,
   lastActionLabel = {},
@@ -91,6 +107,14 @@ export function PokerTable({
   const reveal = table.handOver;
 
   const [sweeps, setSweeps] = useState<Array<{ id: string; from: { top: string; left: string }; amount: number }>>([]);
+  // Chave que muda a cada mão encerrada: força o pote a "andar" de novo em vez
+  // de reaproveitar o elemento já animado da mão anterior.
+  const [payoutKey, setPayoutKey] = useState(0);
+  const wasOver = useRef(false);
+  useEffect(() => {
+    if (table.handOver && !wasOver.current) setPayoutKey((k) => k + 1);
+    wasOver.current = table.handOver;
+  }, [table.handOver]);
   const prevCommitted = useRef<Record<number, number>>({});
   const prevBoardLen = useRef(0);
   const commitSig = table.players.map((p) => `${p.seat}:${p.committed}`).join(",") + `|${table.street}|${table.handOver}`;
@@ -199,6 +223,23 @@ export function PokerTable({
       })}
 
       {table.handOver ? null : sweeps.map((s) => <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />)}
+
+      {/* Pote -> vencedor (só quando a mão acaba e alguém levou fichas). */}
+      {table.handOver && table.result
+        ? Object.entries(table.result.winningsBySeat).flatMap(([seat, amount]) => {
+            const n = Number(seat);
+            const pos = SEAT_POS[n];
+            if (!pos || !(amount > 0)) return [];
+            return [
+              <PayoutChip
+                key={`payout-${payoutKey}-${n}`}
+                to={towardCenter(pos, 0.30)}
+                amount={amount}
+                bigBlind={table.bigBlind}
+              />,
+            ];
+          })
+        : null}
 
       {(() => {
         const pos = SEAT_POS[table.buttonSeat];

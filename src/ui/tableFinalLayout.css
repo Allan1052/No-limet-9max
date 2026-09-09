@@ -234,12 +234,10 @@
     padding: 2px !important;
   }
 
-  /* Pilha de tamanhos: coluna da DIREITA (em cima do RAISE), escondida por
-     padrão — só abre quando a setinha é tocada. */
+  /* Atalhos de aumento FIXOS (Pote / 4BB / 3BB / ALL-IN): sempre à vista na
+     coluna do RAISE, flutuando sobre o canto livre do feltro — abrir ou fechar
+     a barra não mexe na altura da barra de ações nem na mesa. */
   .app:has(.play) .play > .controls .raise-size-stack {
-    display: none !important;
-  }
-  .app:has(.play) .play > .controls.fine-tune-open .raise-size-stack {
     /* FLUTUANTE: fica por cima do canto direito do feltro, que está livre.
        Assim abrir a setinha NÃO muda a altura da barra e a mesa não sobe. */
     position: absolute !important;
@@ -253,6 +251,17 @@
     gap: 4px !important;
     width: calc((100% - 26px) / 3) !important;
   }
+  .app:has(.play) .play > .controls .raise-size-option.is-allin {
+    border-color: rgba(226, 106, 92, .85) !important;
+    color: #ffd9d2 !important;
+    background: linear-gradient(180deg, rgba(96, 34, 30, .92), rgba(58, 20, 18, .92)) !important;
+  }
+  .app:has(.play) .play > .controls .raise-submit.is-allin {
+    background: linear-gradient(180deg, #e8705c, #b83b2c) !important;
+    color: #fff6f2 !important;
+    border-color: #ffb3a4 !important;
+  }
+
   .app:has(.play) .play > .controls .raise-size-option {
     width: 100% !important;
     min-height: 26px !important;
@@ -260,23 +269,54 @@
     font-size: 10px !important;
   }
 
-  /* Ajuste fino (slider): primeira linha, largura toda, só quando aberto. */
+  /* Barra de aumento (a "setinha"): coluna VERTICAL no canto direito do feltro.
+     Só existe enquanto estiver aberta — um toque na setinha some com ela e
+     devolve a mesa limpa. Fica ACIMA da coluna de atalhos, longe das cartas e
+     dos botões de ação. */
   .app:has(.play) .play > .controls > .raise-slider-popover {
     display: none !important;
   }
   .app:has(.play) .play > .controls.fine-tune-open > .raise-slider-popover {
-    display: none !important;
-    grid-column: 1 / -1;
-    grid-row: 1;
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    width: 100% !important;
+    display: flex !important;
+    position: absolute !important;
+    /* Faixa estreita colada na borda direita do feltro: é o único corredor
+       livre — não encosta no pod do CO, no do HJ, nas cartas nem nos botões. */
+    right: 4px !important;
+    bottom: 190px !important;
+    left: auto !important;
+    top: auto !important;
+    width: 34px !important;
+    height: 142px !important;
     margin: 0 !important;
-    padding: 5px 8px 4px !important;
+    padding: 4px 2px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    transform: none !important;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    z-index: 34 !important;
+  }
+  /* No formato vertical não cabe rótulo nem troca de unidade: fica o valor. */
+  /* A barra é só a barra: o valor escolhido aparece ao vivo no botão RAISE. */
+  .app:has(.play) .play > .controls .raise-slider-popover .raise-control-heading {
+    display: none !important;
+  }
+  .app:has(.play) .play > .controls .raise-slider-popover .slider-row {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* input[type=range] em pé: rotação é o que funciona em todo Android. */
+  .app:has(.play) .play > .controls .raise-slider-popover input[type="range"] {
+    width: 130px !important;
+    margin: 0 !important;
+    transform: rotate(-90deg) !important;
   }
 
   /* Dica de tamanho do coach: coluna da esquerda, discreta e rasa. */
@@ -572,5 +612,25 @@
 
   @media (prefers-reduced-motion: reduce) {
     .app:has(.play) .table-modern .seat.winner .pod { animation: none !important; }
+  }
+
+  /* P7 — o pote ANDA até o vencedor no fim da mão (antes ele só sumia). */
+  .app:has(.play) .table-modern .chip-payout {
+    z-index: 9 !important;
+    transition:
+      top .8s cubic-bezier(.25, .8, .3, 1),
+      left .8s cubic-bezier(.25, .8, .3, 1) !important;
+    animation: cf-payout 1.9s ease forwards !important;
+    filter: drop-shadow(0 0 10px rgba(245, 197, 66, .55));
+  }
+  @keyframes cf-payout {
+    0%, 60% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .app:has(.play) .table-modern .chip-payout {
+      transition: none !important;
+      animation: cf-payout 1.2s step-end forwards !important;
+    }
   }
 }

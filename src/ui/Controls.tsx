@@ -57,11 +57,15 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
     onAction(raiseTo >= legal.maxRaiseTo ? { type: "allin" } : { type: "raise", to: raiseTo });
   };
 
-  const actionLabel = legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet");
+  // Quando o valor escolhido bate no teto, a ação É all-in — o botão principal
+  // precisa dizer isso, senão o Allan não sabe que está indo com tudo.
+  const isAllIn = canRaise && raiseTo >= legal.maxRaiseTo;
+  const actionLabel = isAllIn ? t("ctrl.allin") : legal.callAmount > 0 ? t("ctrl.raise") : t("ctrl.bet");
   const quickRaises = [
     { label: "Pote", to: potTo },
     { label: "4BB", to: presetTo(4) },
     { label: "3BB", to: presetTo(3) },
+    { label: t("ctrl.allin"), to: legal.maxRaiseTo },
   ];
 
   return (
@@ -82,7 +86,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
           </button>
         )}
 
-        <button className="btn primary action-choice raise-submit" disabled={!canRaise} onClick={submitRaise}>
+        <button className={`btn primary action-choice raise-submit${isAllIn ? " is-allin" : ""}`} disabled={!canRaise} onClick={submitRaise}>
           <span className="action-choice-label">{actionLabel}</span>
           <span className="action-choice-value">{fmtAmount(raiseTo, bigBlind, unit)}</span>
         </button>
@@ -92,7 +96,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
         <div className="raise-size-stack" aria-label="Tamanhos rápidos de aumento">
           {quickRaises.map((item) => (
             <button
-              className="btn raise-size-option"
+              className={`btn raise-size-option${item.to >= legal.maxRaiseTo ? " is-allin" : ""}`}
               type="button"
               key={item.label}
               disabled={!canRaise}
@@ -109,7 +113,7 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
           type="button"
           disabled={!canRaise}
           aria-expanded={fineTuneOpen}
-          aria-label={fineTuneOpen ? "Fechar ajuste fino" : "Abrir ajuste fino"}
+          aria-label={fineTuneOpen ? "Fechar a barra de aumento" : "Abrir a barra de aumento"}
           onClick={() => setFineTuneOpen((open) => !open)}
         >
           <span aria-hidden="true">⌃</span>

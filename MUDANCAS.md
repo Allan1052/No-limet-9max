@@ -23,6 +23,23 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Botão de ALL-IN, atalhos fixos, barra vertical e o pote andando
+- **Agora dá pra ir de ALL-IN.** Não existia botão nenhum pra isso — se o coach
+  dissesse "all-in", você não tinha como. Entrou o atalho **All-in** (em
+  vermelho, embaixo do 3BB) e, quando o valor bate no teto, o botão principal
+  passa a dizer **ALL-IN** em vermelho, pra você saber que está indo com tudo.
+- **Pote / 4BB / 3BB ficaram FIXOS.** Não somem mais atrás da setinha — estão
+  sempre à vista na coluna do RAISE.
+- **A setinha agora abre a barra de aumento, em pé (vertical).** Ela é uma faixa
+  fina colada na borda direita do feltro — o único corredor livre da mesa, então
+  ela **não tampa pod, carta nem botão**. O valor que você escolhe aparece ao
+  vivo no botão RAISE.
+- **P7 da auditoria: o pote ANDA até quem ganhou.** Antes a mão acabava e o pote
+  simplesmente sumia. Agora as fichas saem do meio da mesa e viajam até o
+  vencedor (que já acende em dourado) — é o fecho da mão, e é o que rende no
+  vídeo. Com isso a auditoria fecha: P1 a P9 todos feitos.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Marca em destaque, mesa mais oval e bloco 3
 Pedidos seus desta rodada:
 - **"CALL OU FOLD" maior e com cor forte.** Saiu do creme lavado: agora é um
