@@ -23,6 +23,23 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — REVIEW: quanto o fold/call custou, em bb
+- **Agora o review diz o preço da decisão.** Quando você estava numa situação de
+  **pagar ou foldar** no pós-flop, aparece **"💸 custou ≈ X,Xbb"** na barra do
+  coach. Quando você acertou o lado, aparece **"👍 pagar valia +X,Xbb"**.
+- **Como a conta é feita (sem invenção):** EV de pagar = equity × (pote + call) −
+  call. Como foldar vale zero, nesses spots esse número **é exatamente** a
+  diferença entre as duas escolhas. A equity vem de simulação contra o range que
+  o vilão mostrou pelas ações dele.
+- **Onde NÃO aparece, de propósito:** erro de tamanho de aposta e decisão
+  pré-flop. Ali eu teria que chutar, e chute não entra no app. O selo
+  **ESTIMATIVA (PÓS-FLOP)** continua do lado, porque o range do vilão é deduzido.
+- **Detalhe honesto:** o filtro "Errei" e o placar ✓/✗ no topo contam o
+  **pré-flop** (é o que o app avalia em todas as mãos de uma vez). O pós-flop é
+  avaliado mão a mão, quando você abre a mão. Está escrito no toque longo dos
+  botões.
+- Tela: Perfil → Importar → replay. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — REVIEW: navegação, filtro de mãos e placar
 Continuação do review (R2, R3 e R4 da análise):
 - **A mão já abre na SUA decisão.** Antes você tinha de atravessar o fold de

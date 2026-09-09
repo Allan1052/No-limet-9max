@@ -656,8 +656,9 @@
     order: 1;
     flex: 0 0 auto;
     margin: 0 auto !important;
-    padding: 7px 10px !important;
-    font-size: 12px !important;
+    padding: 6px 9px !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
   }
   /* A MESA ocupa todo o espaço que sobra (antes era uma caixa 16/10 e o
      conteúdo vazava por cima do resto da tela). */
@@ -761,6 +762,26 @@
     color: rgba(255, 255, 255, .72);
     white-space: nowrap;
   }
+  /* Custo da decisão em bb (só em spots de pagar-ou-foldar). */
+  .ir-fullscreen .ir-coach .ir-coach-cost {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ir-fullscreen .ir-coach .ir-coach-cost.bad {
+    color: #fff1ee;
+    background: linear-gradient(180deg, #c8503f, #922f22);
+  }
+  .ir-fullscreen .ir-coach .ir-coach-cost.ok {
+    color: #d9f5e3;
+    background: rgba(80, 150, 110, .30);
+    border: 1px solid rgba(140, 220, 175, .35);
+  }
+
   /* O pós-flop do coach é ESTIMATIVA — isso não pode ficar em letra miúda. */
   .ir-fullscreen .ir-coach .ir-coach-est {
     display: inline-block;

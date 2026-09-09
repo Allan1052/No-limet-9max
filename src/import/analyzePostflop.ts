@@ -181,6 +181,11 @@ export function analyzePostflopStreets(
           advAction = "call";
         }
         const potOdds = facing > 0 ? facing / (potBB + facing) : undefined;
+        // EV de PAGAR, em bb: equity × (pote + call) − call. Foldar vale 0, então
+        // num spot de pagar-ou-foldar este número É o custo da decisão errada.
+        // `facing` e `potBB` já estão em bb. É ESTIMATIVA: a equity vem de
+        // simulação contra um range de vilão deduzido das ações dele.
+        const evBB = facing > 0 ? Math.round((rec.equity * (potBB + facing) - facing) * 10) / 10 : undefined;
         out[st] = gradeDecision(
           STREET_LABEL[st],
           level,
@@ -191,6 +196,7 @@ export function analyzePostflopStreets(
             reason: rec.reason,
             equity: rec.equity,
             potOdds,
+            evBB,
             effectiveBB: effBB,
             heroPosition: hero.position,
             mix: buildMix(advAction, rec.freq),
