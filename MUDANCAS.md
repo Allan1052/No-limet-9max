@@ -23,6 +23,18 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — REVIEW com 9 jogadores: ajustes finos
+Testei o review com uma mesa cheia (9 jogadores, com ante) e ajustei o que
+aparecia torto:
+- **A sua ficha apostada saiu de cima das suas cartas.** Ela era calculada pela
+  posição padrão do assento; como no review você fica um pouco mais alto, ela
+  caía em cima da mão.
+- **Pote e cartas comunitárias desceram pra faixa livre** entre as fileiras —
+  com 9 jogadores o board encostava nos jogadores das laterais.
+- **Confirmado com a mesa cheia:** os antes não poluem mais o feltro (o pote já
+  mostra tudo), os 9 pods cabem sem se cobrir e quem foldou fica apagado.
+- Tela: Perfil → Importar → replay. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — REVIEW: quanto o fold/call custou, em bb
 - **Agora o review diz o preço da decisão.** Quando você estava numa situação de
   **pagar ou foldar** no pós-flop, aparece **"💸 custou ≈ X,Xbb"** na barra do

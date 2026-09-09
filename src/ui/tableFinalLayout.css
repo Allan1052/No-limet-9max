@@ -843,7 +843,13 @@
      faixas de baixo; a MÃO DO HERÓI continua grande. */
   .ir-fullscreen .table-modern .seat .pod { transform: scale(.8) !important; transform-origin: center; }
   .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(.92) !important; }
-  .ir-fullscreen .table-modern .seat.hero { top: 78% !important; }
+  .ir-fullscreen .table-modern .seat.hero { top: 75% !important; }
+  /* Pote + cartas comunitárias na faixa livre entre as fileiras (senão o board
+     encosta nos pods das laterais quando a mesa é 9-max). */
+  .ir-fullscreen .table-modern .tbl-center-col { top: 44% !important; }
+  /* A ficha apostada do HERÓI é calculada a partir da posição padrão do assento
+     (89%); como no review ele sobe pra 78%, ela caía em cima das cartas. */
+  .ir-fullscreen .table-modern .seat-bet-hero { top: 61% !important; }
   /* Quem já foldou sai de cena; quem levou o pote acende. */
   .ir-fullscreen .table-modern .seat.folded {
     opacity: .30 !important;

@@ -241,7 +241,7 @@ export function PokerTable({
         // A ficha do HERÓI sai um pouco mais pro centro: o pod dele é o mais
         // alto (cartas grandes) e a ficha caía em cima das cartas no review.
         const b = towardCenter(pos, p.isHero ? 0.45 : 0.36);
-        return <div key={`bet-${p.seat}`} className="seat-bet" style={{ top: b.top, left: b.left }}><ChipStack amount={p.committed} bigBlind={table.bigBlind} /></div>;
+        return <div key={`bet-${p.seat}`} className={`seat-bet${p.isHero ? " seat-bet-hero" : ""}`} style={{ top: b.top, left: b.left }}><ChipStack amount={p.committed} bigBlind={table.bigBlind} /></div>;
       })}
 
       {table.handOver ? null : sweeps.map((s) => <SweepChip key={s.id} from={s.from} amount={s.amount} bigBlind={table.bigBlind} />)}
