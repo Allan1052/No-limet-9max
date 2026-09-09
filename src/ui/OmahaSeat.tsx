@@ -12,6 +12,8 @@ interface OmahaSeatProps {
   style: React.CSSProperties;
   position?: string;
   rangeMarked?: boolean;
+  /** Levou (parte d)o pote nesta mão. */
+  winner?: boolean;
   onSelect?: (seat: number) => void;
   isOmaha?: boolean; // Indica se é Omaha (4 cartas)
 }
@@ -25,6 +27,7 @@ export function OmahaSeat({
   style,
   position,
   rangeMarked = false,
+  winner = false,
   onSelect,
   isOmaha = false,
 }: OmahaSeatProps) {
@@ -92,7 +95,7 @@ export function OmahaSeat({
 
   return (
     <div
-      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""} ${rangeMarked ? "range-open" : ""} ${isOmaha ? "omaha" : ""}`}
+      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""} ${rangeMarked ? "range-open" : ""} ${winner ? "winner" : ""} ${isOmaha ? "omaha" : ""}`}
       style={style}
     >
       <button

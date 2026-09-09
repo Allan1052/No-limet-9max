@@ -181,6 +181,7 @@ export function PokerTable({
             bigBlind={table.bigBlind}
             position={positions[p.seat]}
             rangeMarked={rangeSeats.includes(p.seat)}
+            winner={(table.result?.winningsBySeat?.[p.seat] ?? 0) > 0}
             onSelect={readOnly ? undefined : onSelectSeat}
             style={{ top: pos.top, left: pos.left }}
             isOmaha={isOmaha}

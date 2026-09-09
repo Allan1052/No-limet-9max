@@ -52,14 +52,14 @@
      que é justamente a área vazia — como o GG faz com as infos do torneio. */
   .app:has(.play) .play > .play-coach-bar {
     position: absolute !important;
-    top: 34px !important;
+    top: 30px !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
     transform: translateX(-50%) !important;
     width: min(72%, 262px) !important;
     max-width: min(72%, 262px) !important;
-    max-height: 36px !important;
+    max-height: 46px !important;   /* cabem 3 linhas: a dica parava no meio */
     overflow: hidden !important;
     text-overflow: ellipsis;
     margin: 0 !important;
@@ -102,10 +102,13 @@
 
   /* Feltro centralizado dentro da mesa, com folga igual dos dois lados. */
   .app:has(.play) .table-modern .felt {
-    inset: 0 -7% -1% !important;
-    /* Em retrato a mesa fica alta: raio fixo = formato "estádio" (igual às
-       mesas de app de poker), em vez de um ovo esticado. */
-    border-radius: 168px !important;
+    /* Antes o feltro sangrava 7% pra fora de cada lado: no celular do Allan a
+       mesa "vazava" da tela e ficava redonda demais. Agora fecha dentro da tela
+       e as pontas ficam menos circulares => leitura mais OVAL, estilo GG.
+       Os assentos NÃO se mexem: eles são posicionados pela .table-modern, não
+       pelo feltro. */
+    inset: 0 2% -1% !important;
+    border-radius: 47% / 21% !important;
   }
 
   /* ---- 3b. POSIÇÃO DOS ASSENTOS (tela cheia) ----------------------------
@@ -125,18 +128,19 @@
   .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 59% !important; left: 86% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 72% !important; left: 76% !important; }
 
-  /* ---- 4. Status do torneio: UMA LINHA no topo do feltro ----------------
-     Fica dentro da mesa (como o GG faz), mas em linha única pra não empurrar
-     nem cobrir nada. Antes ocupava 3 linhas no meio da mesa. */
+  /* ---- 4. Status do torneio: NO MIOLO DA MESA, embaixo -------------------
+     O Allan reclamou que ficar olhando lá em cima, num feltro comprido, cansa.
+     A mesa tem uma faixa central vazia entre o board e o herói (as fileiras de
+     assentos ficam nas laterais), e é ali que a informação entra. */
   .app:has(.play) .play > .play-tstatus {
     position: absolute !important;
-    top: 8px !important;
+    top: 54% !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
-    transform: translateX(-50%) !important;
+    transform: translate(-50%, -50%) !important;
     width: auto !important;
-    max-width: 66% !important;
+    max-width: 168px !important;
     margin: 0 !important;
     z-index: 11 !important;
     padding: 0 !important;
@@ -144,16 +148,16 @@
     border: 0 !important;
     box-shadow: none !important;
     display: flex !important;
-    flex-wrap: nowrap !important;
+    flex-direction: column !important;
     align-items: center;
     justify-content: center;
-    gap: 8px !important;
-    white-space: nowrap;
+    gap: 2px !important;
     text-align: center;
+    line-height: 1.3 !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     letter-spacing: .2px;
-    color: rgba(255, 255, 255, .74) !important;
+    color: rgba(255, 255, 255, .70) !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
     pointer-events: none;
   }
@@ -165,7 +169,6 @@
     padding: 0 !important;
     margin: 0 !important;
     font-size: 10px !important;
-    white-space: nowrap;
   }
 
   /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
@@ -465,12 +468,18 @@
   }
   .app:has(.play) .table-modern .table-brand-mark .brand-word {
     font-family: 'Cinzel', Georgia, serif !important;
-    font-size: 16px !important;
+    font-size: 21px !important;
     font-weight: 700 !important;
-    letter-spacing: 4.5px !important;
+    letter-spacing: 5px !important;
     text-transform: uppercase !important;
-    color: rgba(240, 215, 127, .40) !important;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, .35) !important;
+    /* Dourado quente e cheio (não o creme lavado de antes), com um fio escuro
+       embaixo pra "gravar" a marca no feltro e um brilho quente por trás. */
+    color: #f5c542 !important;
+    opacity: .82 !important;
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, .45),
+      0 2px 3px rgba(0, 0, 0, .35),
+      0 0 22px rgba(245, 197, 66, .35) !important;
     white-space: nowrap;
   }
 
@@ -515,5 +524,53 @@
   @media (prefers-reduced-motion: reduce) {
     .app:has(.play) .table-modern .seat.acting .pod { animation: none !important; }
     .app:has(.play) .table-modern .seat.acting:not(.hero) .pod::after { animation: none !important; }
+  }
+
+  /* ---- 8. AUDITORIA — BLOCO 3 --------------------------------------------
+     P6) Quem foldou continuava com o mesmo peso visual de quem está na mão.
+     P9) Não existia momento de vitória: a mão acabava e nada acontecia.
+     ---------------------------------------------------------------------- */
+
+  /* P6 — quem saiu da mão vira quase fundo. */
+  .app:has(.play) .table-modern .seat.folded {
+    opacity: .30 !important;
+    filter: grayscale(.85) !important;
+  }
+  .app:has(.play) .table-modern .seat.folded .pod {
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, .10) !important;
+  }
+
+  /* P9 — quem levou o pote acende. */
+  .app:has(.play) .table-modern .seat.winner {
+    opacity: 1 !important;
+    filter: none !important;
+    z-index: 8 !important;
+  }
+  .app:has(.play) .table-modern .seat.winner .pod {
+    border-color: var(--gold) !important;
+    box-shadow:
+      0 0 0 3px rgba(245, 197, 66, .95),
+      0 0 34px 10px rgba(245, 197, 66, .45),
+      0 8px 22px rgba(0, 0, 0, .55) !important;
+    animation: cf-winner 1.4s ease-out 2 !important;
+  }
+  @keyframes cf-winner {
+    0%   { transform: scale(.8); }
+    35%  { transform: scale(.88); }
+    100% { transform: scale(.8); }
+  }
+  /* O herói não tem o scale(.8) do tableRound4, então tem a sua própria curva. */
+  .app:has(.play) .table-modern .seat.winner.hero .pod {
+    animation-name: cf-winner-hero !important;
+  }
+  @keyframes cf-winner-hero {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app:has(.play) .table-modern .seat.winner .pod { animation: none !important; }
   }
 }

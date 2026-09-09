@@ -23,6 +23,30 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Marca em destaque, mesa mais oval e bloco 3
+Pedidos seus desta rodada:
+- **"CALL OU FOLD" maior e com cor forte.** Saiu do creme lavado: agora é um
+  **dourado quente cheio (#f5c542)**, 21px, com um fio escuro embaixo que
+  "grava" a marca no feltro e um brilho quente atrás. Aparece de longe e fica
+  bonita no vídeo, sem competir com as cartas.
+- **A mesa fechou e ficou mais oval.** Antes o feltro vazava 7% pra fora de cada
+  lado — no seu celular ela parecia redonda e passava da tela. Agora ela fecha
+  dentro da tela e as pontas ficaram menos circulares. **Os vilões não saíram do
+  lugar**: eles são posicionados pela mesa, não pelo feltro. A formação que você
+  aprovou está intacta.
+- **A informação do torneio desceu pro miolo da mesa** (posição, faixa
+  pontuável, blinds). Você não precisa mais olhar lá pro topo — ela fica na
+  faixa livre entre as cartas do meio e a sua mão.
+
+Bloco 3 da auditoria (o que eu já ia fazer):
+- **Quem foldou virou quase fundo** — antes o quadradinho de quem saiu tinha o
+  mesmo peso de quem ainda está na mão.
+- **Momento de vitória:** quem leva o pote **acende em dourado e dá uma
+  pulsada**. Antes a mão acabava e não acontecia nada — é o que dá clímax no
+  vídeo.
+- **A dica do coach parou de cortar o texto** (cabem 3 linhas agora).
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Auditoria, bloco 2: MARCA e QUEM ESTÁ JOGANDO
 - **"CALL OU FOLD" escrito em dourado no meio do feltro.** Era o que você tinha
   pedido e nunca apareceu direito: antes era só um logo de 42px com 16% de

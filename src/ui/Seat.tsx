@@ -16,6 +16,8 @@ interface SeatProps {
   position?: string;
   /** Ao final da mão, este jogador tem range pra ver (destaca o assento). */
   rangeMarked?: boolean;
+  /** Levou (parte d)o pote nesta mão — destaca o assento vencedor. */
+  winner?: boolean;
   /** Toque no assento → estatísticas (ou range, ao final da mão). */
   onSelect?: (seat: number) => void;
 }
@@ -29,6 +31,7 @@ export function Seat({
   style,
   position,
   rangeMarked = false,
+  winner = false,
   onSelect,
 }: SeatProps) {
   const { unit } = useSettings();
@@ -63,7 +66,7 @@ export function Seat({
 
   return (
     <div
-      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""} ${rangeMarked ? "range-open" : ""}`}
+      className={`seat ${acting ? "acting" : ""} ${folded ? "folded" : ""} ${player.isHero ? "hero" : ""} ${rangeMarked ? "range-open" : ""} ${winner ? "winner" : ""}`}
       style={style}
     >
       <button
