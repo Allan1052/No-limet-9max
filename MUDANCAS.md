@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Auditoria de layout, bloco 1: LEGIBILIDADE
+Três problemas que eu medi na mesa e corrigi:
+- **Sua mão era a MENOR carta da mesa.** Media 24x47 contra 46x72 das cartas do
+  meio — quase o dobro a favor delas. Agora a sua carta é **50x70, a maior da
+  mesa**, do jeito que tem que ser (e do jeito que o GG faz).
+- **Nome e stack dos vilões eram ilegíveis:** o nome saía com ~7 pixels e o stack
+  com 8 (tinha uma redução de 20% aplicada em tudo dentro do quadradinho).
+  Subiram pra ~10,5 e ~11 — e o assento ficou mais largo, então "O Certinho"
+  parou de virar "O Certin...".
+- **A plaquinha de posição (UTG/CO/BTN) era dourado sobre dourado** — contraste
+  1,36:1, praticamente invisível. Virou texto quase preto sobre o dourado.
+Junto disso: as fileiras de assentos foram reespaçadas pra ninguém se encostar
+com as cartas maiores, o verso das cartas dos vilões ficou discreto, e o avatar
+do herói saiu (a moldura dourada + "VOCÊ" já dizem que é você).
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Cartas da mesa não cobrem mais os oponentes
 - **O problema de verdade:** dois jogadores ficavam exatamente na mesma altura
   das cartas comunitárias. Quando vinha o flop/turn/river, as 5 cartas passavam

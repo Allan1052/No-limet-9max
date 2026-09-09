@@ -18,15 +18,15 @@ import "./coachV2Hint.css";
 // as cartas comunitárias. Antes havia assento em top:50%, exatamente na altura
 // do board, e as 5 cartas cobriam os pods da esquerda e da direita.
 const SEAT_POS: Array<{ top: string; left: string }> = [
-  { top: "87%", left: "50%" },
-  { top: "74%", left: "24%" },
-  { top: "63%", left: "12%" },
-  { top: "29%", left: "12%" },
+  { top: "89%", left: "50%" },
+  { top: "72%", left: "24%" },
+  { top: "59%", left: "14%" },
+  { top: "31%", left: "14%" },
   { top: "17%", left: "31%" },
   { top: "17%", left: "69%" },
-  { top: "29%", left: "88%" },
-  { top: "63%", left: "88%" },
-  { top: "74%", left: "76%" },
+  { top: "31%", left: "86%" },
+  { top: "59%", left: "86%" },
+  { top: "72%", left: "76%" },
 ];
 
 function towardCenter(pos: { top: string; left: string }, f: number) {

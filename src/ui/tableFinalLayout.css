@@ -115,15 +115,15 @@
      pras cartas comunitárias. Antes havia assento em top:50%, na mesma altura do
      board, e as 5 cartas cobriam os pods da esquerda e da direita.
      Mantenha em sincronia com SEAT_POS em Table.tsx. */
-  .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 87% !important; left: 50% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 74% !important; left: 24% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(5)  { top: 63% !important; left: 12% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(6)  { top: 29% !important; left: 12% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 89% !important; left: 50% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 72% !important; left: 24% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(5)  { top: 59% !important; left: 14% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(6)  { top: 31% !important; left: 14% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(7)  { top: 17% !important; left: 31% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(8)  { top: 17% !important; left: 69% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(9)  { top: 29% !important; left: 88% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 63% !important; left: 88% !important; }
-  .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 74% !important; left: 76% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(9)  { top: 31% !important; left: 86% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 59% !important; left: 86% !important; }
+  .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 72% !important; left: 76% !important; }
 
   /* ---- 4. Status do torneio: UMA LINHA no topo do feltro ----------------
      Fica dentro da mesa (como o GG faz), mas em linha única pra não empurrar
@@ -310,6 +310,84 @@
      encavalar no canto da carta. O Allan mandou o print do jeito certo:
      voltamos ao tamanho padrão do tema (41x57 no herói, versos pequenos). */
 
+  /* ---- 5c. AUDITORIA — BLOCO 1: legibilidade ----------------------------
+     P1) A mão do HERÓI era o menor elemento da mesa (24x47 contra 46x72 das
+         comunitárias) porque o tableRound4 aplica scale(.8) no pod inteiro.
+         O herói sai da escala e ganha carta grande — ele é o foco da tela.
+     P2) Nome do vilão renderizava a ~7px e o stack a 8px (fonte x 0,8).
+         As fontes sobem para compensar a escala e o assento fica mais largo,
+         pra o nome parar de ser cortado.
+     P3) A plaquinha de posição era DOURADO SOBRE DOURADO (contraste 1,36:1).
+         Vira texto quase preto sobre o dourado — a posição é a informação
+         mais importante do estudo pré-flop.
+     ---------------------------------------------------------------------- */
+
+  /* P2 — assento mais largo e tipografia acima do limite legível. */
+  .app:has(.play) .table-modern .seat {
+    width: 100px !important;   /* nome do bot parava de caber e virava "O Certin..." */
+  }
+  .app:has(.play) .table-modern .seat .name {
+    font-size: 13px !important;   /* x0,8 => ~10,4px na tela */
+    line-height: 1.15 !important;
+  }
+  .app:has(.play) .table-modern .seat .stack {
+    font-size: 14px !important;   /* x0,8 => ~11,2px na tela */
+  }
+  /* Cartas viradas dos vilões no showdown: também estavam pequenas demais. */
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) {
+    width: 40px !important;
+    height: 56px !important;
+  }
+  /* Verso (carta escondida) fica discreto: é só marcação de "tem mão". */
+  .app:has(.play) .table-modern .seat .hole .card.back.sm {
+    width: 26px !important;
+    height: 36px !important;
+  }
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) .rank { font-size: 22px !important; }
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) .suit { font-size: 15px !important; }
+
+  /* As plaquinhas (posição / 👁 range) ficam ACIMA das cartas — com a carta do
+     herói maior, o selo "range" estava sumindo atrás dela. */
+  .app:has(.play) .table-modern .seat .pos-tag,
+  .app:has(.play) .table-modern .seat .range-flag,
+  .app:has(.play) .table-modern .seat .hero-kicker {
+    z-index: 6 !important;
+  }
+
+  /* P3 — contraste da plaquinha de posição (UTG/CO/BTN...). */
+  .app:has(.play) .table-modern .seat .pos-tag {
+    color: #17130a !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: .2px;
+  }
+
+  /* P1 — o herói é o foco: sai da escala .8 e ganha a maior carta da mesa. */
+  .app:has(.play) .table-modern .seat.hero {
+    width: 118px !important;
+  }
+  .app:has(.play) .table-modern .seat.hero .pod {
+    transform: none !important;
+  }
+  /* Avatar sobe mais por cima das cartas: o pod do herói cresceu e precisava
+     devolver altura pra fileira de baixo não encostar nele. */
+  .app:has(.play) .table-modern .seat.hero .hole { gap: 5px !important; margin: 0 !important; }
+  /* O herói não precisa de avatar: a moldura dourada e o selo "VOCÊ" já dizem
+     que é você — e o círculo só aparecia cortado atrás das cartas. */
+  .app:has(.play) .table-modern .seat.hero .ava { display: none !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card {
+    width: 48px !important;
+    height: 67px !important;
+    border-radius: 7px !important;
+  }
+  .app:has(.play) .table-modern .seat.hero .hole .card .rank { font-size: 29px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .suit { font-size: 19px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .pip  { font-size: 29px !important; }
+  /* Herói já está em escala 1: as fontes voltam ao tamanho normal. */
+  .app:has(.play) .table-modern .seat.hero .name  { font-size: 11px !important; }
+  .app:has(.play) .table-modern .seat.hero .stack { font-size: 12.5px !important; }
+  .app:has(.play) .table-modern .seat.hero .pos-tag { font-size: 10px !important; }
+
   /* ---- 6. "Ver dicas": no MEIO da mesa, embaixo do status (pedido do Allan;
      antes ficava no topo e atrapalhava). ---------------------------------- */
   .app:has(.play) .tbl-tips-btn,
@@ -344,7 +422,7 @@
 
   /* Pote + cartas comunitárias no centro da faixa livre entre os assentos. */
   .app:has(.play) .table-modern .tbl-center-col {
-    top: 49% !important;
+    top: 46% !important;
     left: 50% !important;
   }
   /* "🏆 X fichas simuladas" saía por cima da dica e do Pote — a linha de status
