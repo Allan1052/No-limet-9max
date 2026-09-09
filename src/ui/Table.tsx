@@ -29,6 +29,24 @@ const SEAT_POS: Array<{ top: string; left: string }> = [
   { top: "72%", left: "76%" },
 ];
 
+// Mesas com MENOS de 9 jogadores (o caso do Review de torneio importado):
+// usar só os N primeiros pontos do anel de 9 jogava todo mundo pra esquerda.
+// Cada contagem tem o seu anel, sempre com o herói embaixo no centro e o resto
+// distribuído de forma simétrica.
+const SEAT_RINGS: Record<number, Array<{ top: string; left: string }>> = {
+  2: [{ top: "89%", left: "50%" }, { top: "17%", left: "50%" }],
+  3: [{ top: "89%", left: "50%" }, { top: "34%", left: "16%" }, { top: "34%", left: "84%" }],
+  4: [{ top: "89%", left: "50%" }, { top: "60%", left: "14%" }, { top: "17%", left: "50%" }, { top: "60%", left: "86%" }],
+  5: [{ top: "89%", left: "50%" }, { top: "68%", left: "16%" }, { top: "26%", left: "22%" }, { top: "26%", left: "78%" }, { top: "68%", left: "84%" }],
+  6: [{ top: "89%", left: "50%" }, { top: "72%", left: "20%" }, { top: "34%", left: "14%" }, { top: "17%", left: "50%" }, { top: "34%", left: "86%" }, { top: "72%", left: "80%" }],
+  7: [{ top: "89%", left: "50%" }, { top: "74%", left: "20%" }, { top: "45%", left: "12%" }, { top: "20%", left: "28%" }, { top: "20%", left: "72%" }, { top: "45%", left: "88%" }, { top: "74%", left: "80%" }],
+  8: [{ top: "89%", left: "50%" }, { top: "76%", left: "22%" }, { top: "55%", left: "13%" }, { top: "26%", left: "16%" }, { top: "15%", left: "50%" }, { top: "26%", left: "84%" }, { top: "55%", left: "87%" }, { top: "76%", left: "78%" }],
+};
+
+function seatRing(count: number): Array<{ top: string; left: string }> {
+  return SEAT_RINGS[count] ?? SEAT_POS;
+}
+
 function towardCenter(pos: { top: string; left: string }, f: number) {
   const t = parseFloat(pos.top);
   const l = parseFloat(pos.left);
@@ -105,6 +123,8 @@ export function PokerTable({
     return match ? match[1] : '/';
   }
   const reveal = table.handOver;
+  // Anel de assentos do tamanho da mesa (9-max no jogo, N no review importado).
+  const ring = seatRing(table.players.length);
 
   const [sweeps, setSweeps] = useState<Array<{ id: string; from: { top: string; left: string }; amount: number }>>([]);
   // Chave que muda a cada mão encerrada: força o pote a "andar" de novo em vez
@@ -126,7 +146,7 @@ export function PokerTable({
       for (const p of table.players) {
         const before = prev[p.seat] ?? 0;
         if (before > 0 && (p.committed ?? 0) === 0 && p.status !== "out") {
-          const pos = SEAT_POS[p.seat];
+          const pos = seatRing(table.players.length)[p.seat];
           if (pos) born.push({ id: `${p.seat}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, from: towardCenter(pos, 0.36), amount: before });
         }
       }
@@ -191,7 +211,7 @@ export function PokerTable({
       ) : null}
 
       {table.players.map((p) => {
-        const pos = SEAT_POS[p.seat] ?? { top: "50%", left: "50%" };
+        const pos = ring[p.seat] ?? { top: "50%", left: "50%" };
         const isOmaha = table.variant === "omaha";
         const SeatComponent = isOmaha ? OmahaSeat : Seat;
         const acting = replayActorSeat != null ? replayActorSeat === p.seat : table.toAct === p.seat && !table.handOver;
@@ -216,7 +236,7 @@ export function PokerTable({
       {table.players.map((p) => {
         if (table.handOver) return null;
         if (!p.committed || p.committed <= 0 || p.status === "out") return null;
-        const pos = SEAT_POS[p.seat];
+        const pos = ring[p.seat];
         if (!pos) return null;
         const b = towardCenter(pos, 0.36);
         return <div key={`bet-${p.seat}`} className="seat-bet" style={{ top: b.top, left: b.left }}><ChipStack amount={p.committed} bigBlind={table.bigBlind} /></div>;
@@ -228,7 +248,7 @@ export function PokerTable({
       {table.handOver && table.result
         ? Object.entries(table.result.winningsBySeat).flatMap(([seat, amount]) => {
             const n = Number(seat);
-            const pos = SEAT_POS[n];
+            const pos = ring[n];
             if (!pos || !(amount > 0)) return [];
             return [
               <PayoutChip
@@ -242,7 +262,7 @@ export function PokerTable({
         : null}
 
       {(() => {
-        const pos = SEAT_POS[table.buttonSeat];
+        const pos = ring[table.buttonSeat];
         if (!pos) return null;
         const b = towardCenter(pos, 0.28);
         return <div className="dealer-btn" style={{ top: b.top, left: b.left }}>D</div>;

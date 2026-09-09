@@ -96,10 +96,24 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
     if (p.stack <= 0) p.status = "allin";
   };
 
+  // O ante entra direto no POTE, sem virar uma fichinha na frente de cada
+  // jogador: com 9 jogadores o feltro virava um tapete de "0.1bb" e o Allan
+  // tinha de atravessar isso pra chegar na mão. Blinds continuam como fichas
+  // (elas contam a história do pré-flop).
+  const commitAnte = (name: string, delta: number) => {
+    const i = idxByName.get(name);
+    if (i === undefined) return;
+    const p = players[i];
+    const d = Math.min(delta, p.stack);
+    p.stack -= d;
+    p.totalCommitted += d; // sem `committed` => não desenha ficha no assento
+    if (p.stack <= 0) p.status = "allin";
+  };
+
   // Antes + blinds: aplicados no estado inicial, sem virar passos.
   for (const a of hand.actions) {
     if (a.street !== "preflop") break;
-    if (a.type === "ante") commit(a.player, a.amount || hand.ante);
+    if (a.type === "ante") commitAnte(a.player, a.amount || hand.ante);
     else if (a.type === "sb") commit(a.player, a.amount || hand.sb);
     else if (a.type === "bb") commit(a.player, a.amount || hand.bb);
   }

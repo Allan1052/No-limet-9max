@@ -23,6 +23,27 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — MESA DE REVIEW: tela cheia e sem botão em cima de nada
+Você tinha razão: **o review nunca recebeu nada do que a gente arrumou na mesa de
+jogo** — todas as regras novas estavam presas à tela de jogo. Corrigido:
+- **Tela cheia de verdade.** A mesa do review estava dentro de uma caixinha
+  16/10, o conteúdo transbordava e por isso o **"Anterior"/"Próximo" caía em
+  cima dos jogadores e das suas cartas**. Agora a tela é uma coluna: topo →
+  dica → mesa (ocupa o resto) → passo → navegação. **Nada em cima de nada.**
+- **A dica do coach subiu pro topo, em destaque:** "PRÉ-FLOP · Coach recomendava
+  RAISE · você fez RAISE", com ✓ verde quando bate e ✗ vermelho quando não bate.
+  Ela existia, mas estava empurrada pra fora da tela — por isso você não via.
+- **Mesa com menos de 9 jogadores parou de ficar torta.** Antes o app usava só
+  os primeiros pontos do anel de 9 e jogava todo mundo pra esquerda. Agora cada
+  quantidade (2 a 9 jogadores) tem a sua roda simétrica.
+- **Os antes sumiram do feltro.** Com 9 jogadores virava um tapete de "0.1bb" na
+  frente de cada um. Agora o ante entra direto no pote; os blinds continuam como
+  fichas (eles contam a história do pré-flop).
+- **O resto do acabamento da mesa de jogo entrou no review:** marca dourada no
+  feltro, cartas grandes na sua mão, plaquinha de posição legível, quem foldou
+  apagado e o vencedor aceso.
+- Tela: Perfil → Importar → replay da mão. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Correção: as cartas voltaram ao tamanho grande
 - **Erro meu, e sério:** na atualização anterior eu editei o arquivo de layout
   cortando um pedaço maior do que devia e **apaguei sem querer todo o bloco 1 da

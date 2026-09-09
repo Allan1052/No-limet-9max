@@ -628,4 +628,129 @@
       animation: cf-payout 1.2s step-end forwards !important;
     }
   }
+
+  /* ==========================================================================
+     9. MESA DE REVIEW (torneio importado) — .import-replayer.ir-fullscreen
+     --------------------------------------------------------------------------
+     O review nunca herdou nada do que arrumamos na mesa de jogo porque todas as
+     regras acima são presas ao `.play`. Resultado no aparelho do Allan: a mesa
+     ficava numa caixinha 16/10, o conteúdo transbordava e os botões
+     "Anterior/Próximo" caíam EM CIMA dos jogadores e das cartas.
+     Aqui a tela de review vira uma coluna em fluxo, igual à mesa de jogo:
+        topo → dica do coach → MESA (ocupa o que sobra) → passo → navegação
+     ======================================================================== */
+  .import-replayer.ir-fullscreen {
+    gap: 4px !important;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 0 calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow: hidden !important;
+  }
+  .ir-fullscreen .ir-head {
+    order: 0;
+    flex: 0 0 auto;
+    padding: 0 6px 6px !important;
+    min-height: 40px !important;
+  }
+  /* A dica (o que o coach recomendava × o que você fez) sobe pro topo: é o
+     motivo de existir do review. */
+  .ir-fullscreen .ir-coach {
+    order: 1;
+    flex: 0 0 auto;
+    margin: 0 auto !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+  }
+  /* A MESA ocupa todo o espaço que sobra (antes era uma caixa 16/10 e o
+     conteúdo vazava por cima do resto da tela). */
+  .ir-fullscreen .ir-table,
+  .ir-fullscreen .table-wrap.ir-table {
+    order: 2;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  /* A faixa do passo atual fica ACIMA da borda do feltro (o feltro sangra um
+     pouquinho pra baixo e estava comendo o texto). */
+  .ir-fullscreen .ir-step {
+    order: 3;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 6;
+    padding: 2px 8px !important;
+    font-size: 12px !important;
+  }
+  .ir-fullscreen .ir-result {
+    order: 3;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .ir-fullscreen > .ir-nav {
+    order: 4;
+    flex: 0 0 auto;
+    padding: 0 8px !important;
+    gap: 8px !important;
+  }
+  .ir-fullscreen > .ir-nav .btn { flex: 1 1 auto; min-height: 42px; }
+  .ir-fullscreen .ir-timeline { order: 5; flex: 0 0 auto; }
+  .ir-fullscreen .ir-newsession { order: 6; flex: 0 0 auto; }
+
+  /* ---- Acabamento visual da mesa do review (o mesmo da mesa de jogo) ---- */
+  .ir-fullscreen .table-modern .felt {
+    inset: 0 2% 0 !important;
+    border-radius: 47% / 21% !important;
+  }
+  .ir-fullscreen .table-modern .table-brand-mark {
+    top: 46% !important;
+    opacity: 1 !important;
+    gap: 6px !important;
+  }
+  .ir-fullscreen .table-modern .table-brand-mark img { display: none !important; }
+  .ir-fullscreen .table-modern .table-brand-mark .brand-word {
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    letter-spacing: 4.5px !important;
+    text-transform: uppercase !important;
+    color: #f5c542 !important;
+    opacity: .78 !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .45), 0 0 22px rgba(245, 197, 66, .3) !important;
+    white-space: nowrap;
+  }
+  /* Plaquinha de posição legível (era dourado sobre dourado). */
+  .ir-fullscreen .table-modern .seat .pos-tag {
+    color: #17130a !important;
+    font-weight: 800 !important;
+  }
+  /* A mão do herói é o foco também no review. */
+  .ir-fullscreen .table-modern .seat.hero .hole .card {
+    width: 48px !important;
+    height: 67px !important;
+    border-radius: 7px !important;
+  }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .rank { font-size: 29px !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .suit { font-size: 19px !important; }
+  .ir-fullscreen .table-modern .seat.hero .hole .card .pip  { font-size: 29px !important; }
+  .ir-fullscreen .table-modern .seat.hero .ava { display: none !important; }
+  /* Sem o avatar, a carta não precisa "morder" o nome. */
+  .ir-fullscreen .table-modern .seat.hero .hole { margin: 0 !important; gap: 5px !important; }
+  /* O pod do herói é alto: sobe um pouco pra não passar por cima da faixa do
+     passo atual, que fica logo abaixo da mesa. */
+  .ir-fullscreen .table-modern .seat.hero { top: 84% !important; }
+  /* Quem já foldou sai de cena; quem levou o pote acende. */
+  .ir-fullscreen .table-modern .seat.folded {
+    opacity: .30 !important;
+    filter: grayscale(.85) !important;
+  }
+  .ir-fullscreen .table-modern .seat.winner .pod {
+    border-color: var(--gold) !important;
+    box-shadow:
+      0 0 0 3px rgba(245, 197, 66, .95),
+      0 0 34px 10px rgba(245, 197, 66, .45) !important;
+  }
 }
