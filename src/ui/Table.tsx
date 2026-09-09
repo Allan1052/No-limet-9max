@@ -135,6 +135,7 @@ export function PokerTable({
         <div className="table-surface-glow" />
         <div className="table-brand-mark">
           <img src={`${getBasePath()}brand-logo-splash.png`} alt="" aria-hidden="true" />
+          <span className="brand-word" aria-hidden="true">Call ou Fold</span>
         </div>
       </div>
 

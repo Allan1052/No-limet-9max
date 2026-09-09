@@ -145,9 +145,9 @@ describe("Rodada 6 - layout base centralizado e botões sem corte", () => {
     expect(tableTsx).not.toContain('{ top: "50%", left: "15%" }');
   });
 
-  it("deixa a marca central somente como imagem discreta", () => {
+  it("mostra a marca Call ou Fold no centro do feltro (logo + nome)", () => {
     expect(tableTsx).toContain("brand-logo-splash.png");
-    expect(tableTsx).not.toContain("<span>Call ou Fold</span>");
+    expect(tableTsx).toContain("brand-word");
     expect(tableCss).toContain("opacity:.15");
   });
 });

@@ -23,6 +23,23 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Auditoria, bloco 2: MARCA e QUEM ESTÁ JOGANDO
+- **"CALL OU FOLD" escrito em dourado no meio do feltro.** Era o que você tinha
+  pedido e nunca apareceu direito: antes era só um logo de 42px com 16% de
+  opacidade, que sumia. Agora é a marca escrita, no centro da mesa — aparece
+  bonito no vídeo e fica atrás das cartas comunitárias, como marca d'água de
+  mesa de verdade.
+- **Tirei o quadradinho do logo de dentro do feltro:** aquele PNG tem fundo
+  claro e no verde ele aparecia como um retângulo esbranquiçado, não como marca.
+  O logo continua na abertura do app e no site. Se quiser ele de volta na mesa,
+  é só falar.
+- **Dá pra ver de longe quem está jogando.** Quem está na vez ganhou um **anel
+  dourado grosso que pulsa**, e os **bots ganharam uma barrinha correndo**
+  enquanto "pensam". No seu assento **não tem barra de tempo de propósito** —
+  aqui você nunca perde a mão no relógio, o app é de estudo.
+- Bônus: a plaquinha da sua posição (BTN/CO/…) saiu de cima da sua carta.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Auditoria de layout, bloco 1: LEGIBILIDADE
 Três problemas que eu medi na mesa e corrigi:
 - **Sua mão era a MENOR carta da mesa.** Media 24x47 contra 46x72 das cartas do

@@ -386,7 +386,16 @@
   /* Herói já está em escala 1: as fontes voltam ao tamanho normal. */
   .app:has(.play) .table-modern .seat.hero .name  { font-size: 11px !important; }
   .app:has(.play) .table-modern .seat.hero .stack { font-size: 12.5px !important; }
-  .app:has(.play) .table-modern .seat.hero .pos-tag { font-size: 10px !important; }
+  /* A plaquinha de posição do herói ficava DENTRO do pod (tableHierarchy.css) e,
+     com a carta grande, caía em cima dela. Vai pra fora, ao lado do "VOCÊ". */
+  .app:has(.play) .table-modern .seat.hero .pos-tag {
+    top: -9px !important;
+    left: -2px !important;
+    font-size: 10px !important;
+    background: var(--gold) !important;
+    color: #17130a !important;
+    border: 0 !important;
+  }
 
   /* ---- 6. "Ver dicas": no MEIO da mesa, embaixo do status (pedido do Allan;
      antes ficava no topo e atrapalhava). ---------------------------------- */
@@ -431,9 +440,80 @@
     display: none !important;
   }
 
-  /* ---- 7. Marca "Call ou Fold" no centro do feltro (nossa identidade) ---- */
+  /* ---- 7. AUDITORIA — BLOCO 2 -------------------------------------------
+     P4) A marca no feltro era um logo de 42px com 16% de opacidade: sumia no
+         vídeo. Vira logo + "Call ou Fold" escrito em dourado, do tamanho de
+         uma marca de mesa de verdade — sem virar poluição (fica atrás das
+         cartas comunitárias, como toda marca d'água de feltro).
+     P5) Quem está agindo tinha só um brilho fraco. Ganha um ANEL dourado
+         grosso e, nos vilões, uma barrinha que corre enquanto o bot "pensa".
+         No herói não há barra de tempo: aqui ninguém perde a mão no relógio.
+     ---------------------------------------------------------------------- */
+
+  /* P4 — marca da casa no centro do feltro. */
   .app:has(.play) .table-modern .table-brand-mark {
+    top: 46% !important;   /* alinhada com o board: marca d'água atrás das cartas */
     z-index: 1 !important;
-    opacity: .16 !important;
+    opacity: 1 !important;      /* a discrição vem da cor, não da opacidade */
+    gap: 6px !important;
+  }
+  /* O PNG do logo tem fundo claro: no feltro ele aparecia como um retângulo
+     esbranquiçado, não como marca. Na mesa fica só o nome escrito — o logo
+     continua na abertura do app e no site. */
+  .app:has(.play) .table-modern .table-brand-mark img {
+    display: none !important;
+  }
+  .app:has(.play) .table-modern .table-brand-mark .brand-word {
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    letter-spacing: 4.5px !important;
+    text-transform: uppercase !important;
+    color: rgba(240, 215, 127, .40) !important;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, .35) !important;
+    white-space: nowrap;
+  }
+
+  /* P5 — quem está agindo: anel dourado forte (vale pra herói e vilão). */
+  .app:has(.play) .table-modern .seat.acting .pod {
+    position: relative !important;   /* âncora da barrinha de "pensando" */
+    border-color: var(--gold) !important;
+    box-shadow:
+      0 0 0 3px rgba(230, 196, 84, .95),
+      0 0 22px 4px rgba(230, 196, 84, .45),
+      0 6px 18px rgba(0, 0, 0, .55) !important;
+    animation: cf-acting-ring 1.6s ease-in-out infinite !important;
+  }
+  @keyframes cf-acting-ring {
+    50% {
+      box-shadow:
+        0 0 0 3px rgba(230, 196, 84, .60),
+        0 0 30px 8px rgba(230, 196, 84, .30),
+        0 6px 18px rgba(0, 0, 0, .55);
+    }
+  }
+
+  /* Barrinha de "pensando" — SÓ nos vilões. O herói não tem relógio. */
+  .app:has(.play) .table-modern .seat.acting:not(.hero) .pod::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 3px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, rgba(230,196,84,.15), var(--gold), rgba(230,196,84,.15));
+    background-size: 220% 100%;
+    animation: cf-thinking 1.1s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes cf-thinking {
+    from { background-position: 120% 0; }
+    to   { background-position: -120% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app:has(.play) .table-modern .seat.acting .pod { animation: none !important; }
+    .app:has(.play) .table-modern .seat.acting:not(.hero) .pod::after { animation: none !important; }
   }
 }
