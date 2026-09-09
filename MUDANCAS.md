@@ -23,6 +23,18 @@ Regras do registro:
 
 ---
 
+## 2026-09-09 — Claude — Correção: as cartas voltaram ao tamanho grande
+- **Erro meu, e sério:** na atualização anterior eu editei o arquivo de layout
+  cortando um pedaço maior do que devia e **apaguei sem querer todo o bloco 1 da
+  auditoria** (cartas grandes do herói, nome/stack legíveis, plaquinha de
+  posição com contraste). Por isso as cartas encolheram no seu celular. Já
+  restaurei tudo — a sua carta voltou aos **50x70**, a maior da mesa.
+- **Tirei o botão fixo de All-in** (o que ficava embaixo do 3BB), como você
+  pediu. Pra ir de all-in agora: arraste a barra da setinha até o topo (ou toque
+  em "Pote" quando o pote for maior que o seu stack) — o botão principal vira
+  **ALL-IN em vermelho** avisando que é tudo.
+- Tela: mesa de jogo. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — Botão de ALL-IN, atalhos fixos, barra vertical e o pote andando
 - **Agora dá pra ir de ALL-IN.** Não existia botão nenhum pra isso — se o coach
   dissesse "all-in", você não tinha como. Entrou o atalho **All-in** (em

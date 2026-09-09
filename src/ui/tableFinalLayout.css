@@ -328,6 +328,113 @@
     pointer-events: none !important;
   }
 
+  /* Dica de tamanho do coach: coluna da esquerda, discreta e rasa. */
+  .app:has(.play) .play > .controls > .coach-size-hint {
+    position: static !important;
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end !important;
+    margin: 0 !important;
+    text-align: center;
+    font-size: 10px !important;
+  }
+  .app:has(.play) .play > .controls > .coach-size-hint span {
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* ---- 5b. CARTAS: tamanho do print que o Allan aprovou ------------------
+     Eu tinha aumentado as cartas (50x71) e isso fez a plaquinha "VOCÊ"/"D"
+     encavalar no canto da carta. O Allan mandou o print do jeito certo:
+     voltamos ao tamanho padrão do tema (41x57 no herói, versos pequenos). */
+
+  /* ---- 5c. AUDITORIA — BLOCO 1: legibilidade ----------------------------
+     P1) A mão do HERÓI era o menor elemento da mesa (24x47 contra 46x72 das
+         comunitárias) porque o tableRound4 aplica scale(.8) no pod inteiro.
+         O herói sai da escala e ganha carta grande — ele é o foco da tela.
+     P2) Nome do vilão renderizava a ~7px e o stack a 8px (fonte x 0,8).
+         As fontes sobem para compensar a escala e o assento fica mais largo,
+         pra o nome parar de ser cortado.
+     P3) A plaquinha de posição era DOURADO SOBRE DOURADO (contraste 1,36:1).
+         Vira texto quase preto sobre o dourado — a posição é a informação
+         mais importante do estudo pré-flop.
+     ---------------------------------------------------------------------- */
+
+  /* P2 — assento mais largo e tipografia acima do limite legível. */
+  .app:has(.play) .table-modern .seat {
+    width: 100px !important;   /* nome do bot parava de caber e virava "O Certin..." */
+  }
+  .app:has(.play) .table-modern .seat .name {
+    font-size: 13px !important;   /* x0,8 => ~10,4px na tela */
+    line-height: 1.15 !important;
+  }
+  .app:has(.play) .table-modern .seat .stack {
+    font-size: 14px !important;   /* x0,8 => ~11,2px na tela */
+  }
+  /* Cartas viradas dos vilões no showdown: também estavam pequenas demais. */
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) {
+    width: 40px !important;
+    height: 56px !important;
+  }
+  /* Verso (carta escondida) fica discreto: é só marcação de "tem mão". */
+  .app:has(.play) .table-modern .seat .hole .card.back.sm {
+    width: 26px !important;
+    height: 36px !important;
+  }
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) .rank { font-size: 22px !important; }
+  .app:has(.play) .table-modern .seat .hole .card.sm:not(.back) .suit { font-size: 15px !important; }
+
+  /* As plaquinhas (posição / 👁 range) ficam ACIMA das cartas — com a carta do
+     herói maior, o selo "range" estava sumindo atrás dela. */
+  .app:has(.play) .table-modern .seat .pos-tag,
+  .app:has(.play) .table-modern .seat .range-flag,
+  .app:has(.play) .table-modern .seat .hero-kicker {
+    z-index: 6 !important;
+  }
+
+  /* P3 — contraste da plaquinha de posição (UTG/CO/BTN...). */
+  .app:has(.play) .table-modern .seat .pos-tag {
+    color: #17130a !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: .2px;
+  }
+
+  /* P1 — o herói é o foco: sai da escala .8 e ganha a maior carta da mesa. */
+  .app:has(.play) .table-modern .seat.hero {
+    width: 118px !important;
+  }
+  .app:has(.play) .table-modern .seat.hero .pod {
+    transform: none !important;
+  }
+  /* Avatar sobe mais por cima das cartas: o pod do herói cresceu e precisava
+     devolver altura pra fileira de baixo não encostar nele. */
+  .app:has(.play) .table-modern .seat.hero .hole { gap: 5px !important; margin: 0 !important; }
+  /* O herói não precisa de avatar: a moldura dourada e o selo "VOCÊ" já dizem
+     que é você — e o círculo só aparecia cortado atrás das cartas. */
+  .app:has(.play) .table-modern .seat.hero .ava { display: none !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card {
+    width: 48px !important;
+    height: 67px !important;
+    border-radius: 7px !important;
+  }
+  .app:has(.play) .table-modern .seat.hero .hole .card .rank { font-size: 29px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .suit { font-size: 19px !important; }
+  .app:has(.play) .table-modern .seat.hero .hole .card .pip  { font-size: 29px !important; }
+  /* Herói já está em escala 1: as fontes voltam ao tamanho normal. */
+  .app:has(.play) .table-modern .seat.hero .name  { font-size: 11px !important; }
+  .app:has(.play) .table-modern .seat.hero .stack { font-size: 12.5px !important; }
+  /* A plaquinha de posição do herói ficava DENTRO do pod (tableHierarchy.css) e,
+     com a carta grande, caía em cima dela. Vai pra fora, ao lado do "VOCÊ". */
+  .app:has(.play) .table-modern .seat.hero .pos-tag {
+    top: -9px !important;
+    left: -2px !important;
+    font-size: 10px !important;
+    background: var(--gold) !important;
+    color: #17130a !important;
+    border: 0 !important;
+  }
+
   /* ---- 6. "Ver dicas": no MEIO da mesa, embaixo do status (pedido do Allan;
      antes ficava no topo e atrapalhava). ---------------------------------- */
   .app:has(.play) .tbl-tips-btn,
