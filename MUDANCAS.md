@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Atualização do app fica LEVE (só baixa o que mudou)
+Corrigido o problema que eu tinha diagnosticado. Foram duas correções, porque a
+primeira sozinha não resolvia:
+1. **O carimbo de versão virou a data do último commit** (era a hora do build).
+   Assim, construir duas vezes o mesmo código gera arquivos idênticos.
+2. **O carimbo saiu de dentro do app.** Só a primeira correção não bastava: como
+   o valor ficava embutido no código, **cada publicação ainda trocava 15 dos 24
+   arquivos**. Agora ele vai numa etiqueta do `index.html` (que não tem código
+   dentro) e o app lê de lá.
+- **Medido:** trocando só o carimbo, **0 de 24 arquivos** mudam de nome (antes
+  eram 15).
+- **O que muda pra você:** a partir da **próxima** publicação, o celular baixa
+  só o que realmente mudou, em vez do app inteiro. **Esta** publicação ainda
+  troca tudo, porque o código mudou de verdade.
+- A tela de Perfil continua mostrando "Versão · Atualizado em DD/MM/AAAA HH:MM"
+  igual — agora com a data do commit que gerou a versão.
+- Suíte: 4012 testes passando, SELO 61/61.
+
 ## 2026-09-10 — Claude — Achado: toda publicação troca o app INTEIRO (e não precisava)
 *(Nada mudou no app — é um diagnóstico. A correção depende de você.)*
 - Descobri, testando a ferramenta nova, que **dois builds do mesmo código geram

@@ -524,8 +524,8 @@ export function App() {
           onOpenProgress={() => startNavigationTransition(() => setProgressOpen(true))}
           onOpenAchievements={() => startNavigationTransition(() => setAchievementsOpen(true))}
           onOpenHistory={() => startNavigationTransition(() => setHistoryLogOpen(true))}
-          buildLabel={formatBuild(__BUILD_ID__)}
-          fullBuildLabel={formatBuildFull(__BUILD_ID__)}
+          buildLabel={formatBuild(readBuildId())}
+          fullBuildLabel={formatBuildFull(readBuildId())}
           onCheckUpdate={forceUpdate}
         /></Suspense>
       ) : view === "importar" ? (
@@ -815,6 +815,17 @@ export function App() {
  * Formata o carimbo de versão (ISO em UTC gerado no build) no FUSO LOCAL do
  * jogador — ex.: um usuário no Brasil vê a hora dele, não a do servidor.
  */
+/**
+ * Carimbo de versão. Vem de uma <meta> no index.html (injetada no build), NÃO de
+ * uma constante compilada: se ele morasse dentro do JS, cada publicação mudaria
+ * o hash de quase todos os arquivos e o celular rebaixaria o app inteiro.
+ */
+function readBuildId(): string {
+  if (typeof document === "undefined") return "dev";
+  const meta = document.querySelector('meta[name="cf-build"]');
+  return meta?.getAttribute("content") || "dev";
+}
+
 function formatBuild(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso; // formato antigo: mostra como veio

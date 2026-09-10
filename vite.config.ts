@@ -2,12 +2,40 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { execFileSync } from "node:child_process";
 
 // Caminho base: "/" para domínio customizado calloufold.com.br
 // Se voltar para GitHub Pages padrão (allan1052.github.io/No-limet-9max/), mudar para "/No-limet-9max/"
 const base = "/";
 
-const buildId = new Date().toISOString();
+// CARIMBO DE VERSÃO — precisa ser ESTÁVEL para o mesmo código.
+//
+// Antes era `new Date().toISOString()`: mudava a cada build, entrava dentro do
+// bundle e fazia TODOS os arquivos trocarem de hash mesmo sem mudança de código.
+// Efeito no celular do Allan: cada publicação rebaixava o app inteiro (é a
+// explicação mais provável do "fechar e reabrir 2x" ser sempre pesado).
+//
+// Agora vem da DATA DO ÚLTIMO COMMIT: continua sendo uma data de verdade (o
+// rótulo do Perfil segue igual), mas dois builds do mesmo commit geram bytes
+// idênticos — então o navegador só rebaixa o que realmente mudou.
+function resolveBuildId(): string {
+  try {
+    const iso = execFileSync("git", ["log", "-1", "--format=%cI"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (iso) return iso;
+  } catch {
+    // sem git (tarball, sandbox): cai no fallback abaixo
+  }
+  return process.env.SOURCE_DATE_EPOCH
+    ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString()
+    : "dev";
+}
+
+// FAKE_BUILD_ID existe só para reproduzir o teste de determinismo: com ele dá
+// para trocar o carimbo e conferir que NENHUM arquivo com hash muda de nome.
+const buildId = process.env.FAKE_BUILD_ID || resolveBuildId();
 
 export default defineConfig({
   base,
@@ -38,11 +66,20 @@ export default defineConfig({
   esbuild: {
     target: "es2022",
   },
-  define: {
-    __BUILD_ID__: JSON.stringify(buildId),
-  },
   plugins: [
     react(),
+    // O carimbo de versão NÃO entra no bundle: vai como <meta> no index.html,
+    // que não tem hash no nome. Quando ele morava dentro do JS, trocar só a
+    // data fazia 15 dos 24 arquivos mudarem de nome — e o celular rebaixava o
+    // app inteiro a cada publicação. Agora muda só o index.html (2 KB).
+    {
+      name: "cf-build-stamp",
+      transformIndexHtml() {
+        return [
+          { tag: "meta", attrs: { name: "cf-build", content: buildId }, injectTo: "head" as const },
+        ];
+      },
+    },
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: false,

@@ -104,11 +104,27 @@ pacote cita o nome do outro, **o bundle inteiro é reescrito**.
    commitado **não é o que vai pro ar** — ele é redundante para o deploy.
    A regra "o app é servido do dist commitado" está desatualizada.
 
-### Correção proposta (NÃO aplicada — é área de deploy, precisa do Allan)
+### ✅ Corrigido em 10/09 (autorizado pelo Allan)
 
-- Alimentar o rótulo de versão com algo **estável por commit** em vez do relógio:
-  `process.env.GITHUB_SHA` (+ data do commit) no CI, caindo para `"dev"` no
-  ambiente local. Dois builds do mesmo código passam a gerar bytes idênticos, e
-  o navegador só rebaixa o que realmente mudou.
-- **Decisão separada:** parar (ou não) de commitar o `dist`. O CI reconstrói de
-  qualquer jeito. Isso mexe numa regra da casa, então é decisão do Allan.
+Foram **duas** correções, porque a primeira sozinha não bastava:
+
+**1. O carimbo virou a data do ÚLTIMO COMMIT** (`git log -1 --format=%cI`) em vez
+do relógio. Dois builds do mesmo código passam a gerar bytes idênticos.
+*Medição: 3 builds seguidos → mesmo hash.*
+
+**2. O carimbo saiu de DENTRO do bundle.** Só a correção 1 não resolvia: como o
+valor morava numa constante compilada, **cada commit novo ainda trocava 15 dos
+24 arquivos** (efeito cascata — um pacote cita o nome do outro). Agora ele vai
+como `<meta name="cf-build">` no `index.html`, que não tem hash no nome, e o app
+lê de lá em tempo de execução.
+*Medição: trocando só o carimbo, **0 de 24** arquivos mudam de nome (antes: 15).*
+
+Resultado prático: a partir da próxima publicação, o celular só rebaixa **o que
+realmente mudou** — e não mais o app inteiro. (A publicação desta correção ainda
+troca tudo, porque o código de fato mudou.)
+
+### Decisão que continua em aberto
+
+Parar (ou não) de commitar o `dist`. O CI reconstrói de qualquer jeito, então o
+`dist` commitado não é o que vai pro ar. Isso mexe numa regra da casa — decisão
+do Allan.
