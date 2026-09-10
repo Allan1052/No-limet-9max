@@ -14,6 +14,59 @@
 }
 
 :root {
+  /* ==========================================================================
+     TOKENS DO DESIGN SYSTEM — Call ou Fold  (passo 1 da auditoria de 10/09/2026)
+     --------------------------------------------------------------------------
+     Por que existem: o app tinha ~30 tokens de COR e ZERO de espaçamento,
+     tipografia ou raio. Resultado: 14 tamanhos de letra diferentes entre 8 e
+     17px, 455 !important e cada tela parecendo de uma época.
+
+     REGRA: código NOVO usa token. Nada de valor solto em px para espaço, raio,
+     fonte ou duração. O que já existe migra aos poucos, tela por tela — este
+     bloco só ADICIONA, não muda nada do que está no ar.
+     ========================================================================== */
+
+  /* --- Espaçamento (escala 4/8/12/16/24/32) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* --- Raio --- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;    /* base dos cards */
+  --r-pill: 999px;
+
+  /* --- Tipografia (escala curta e previsível) ---
+     PISO: nada que carregue DECISÃO fica abaixo de --fs-min (11px) já contando
+     qualquer redução aplicada ao contêiner. --fs-label é só para rótulo
+     acessório (ex.: "ESTIMATIVA"), nunca para valor que o jogador usa. */
+  --fs-label: 10px;
+  --fs-min: 11px;
+  --fs-sm: 12px;
+  --fs-body: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-display: 26px;
+
+  /* --- Alvo de toque --- */
+  --tap: 44px;      /* mínimo para qualquer controle de decisão */
+  --tap-sm: 40px;   /* tolerado em botão secundário/redondo apertado */
+
+  /* --- Animação funcional (curta; nunca atrasa a decisão) --- */
+  --dur-fast: 120ms;
+  --dur-base: 160ms;
+
+  /* --- Dourado em 3 níveis semânticos (apelidos do que já existe:
+         não muda cor nenhuma, só dá nome ao uso) --- */
+  --gold-primary: #e6c454;
+  --gold-hover: #f7e79b;
+  --gold-glow: rgba(230, 196, 84, 0.45);
+
   /* Cores Premium Atualizadas - Alinhadas com os Vídeos */
   --bg: #0a0d0a;
   --bg2: #0f1410;

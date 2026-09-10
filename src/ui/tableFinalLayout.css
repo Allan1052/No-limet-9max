@@ -225,13 +225,25 @@
   }
 
   /* Setinha: coluna do MEIO (em cima do Call). */
+  /* A setinha tinha 24px de altura. Cresce para 32px e ganha uma área de toque
+     de 44px que se estende PARA CIMA (o feltro), nunca para baixo — senão ela
+     roubaria toque do botão Call, que fica logo abaixo. */
   .app:has(.play) .play > .controls .fine-tune-toggle {
     grid-column: 2;
     grid-row: 2;
     align-self: end !important;
+    position: relative !important;
     width: 100% !important;
-    min-height: 24px !important;
+    min-height: 32px !important;
     padding: 2px !important;
+  }
+  .app:has(.play) .play > .controls .fine-tune-toggle::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: calc(32px - var(--tap));
   }
 
   /* Atalhos de aumento FIXOS (Pote / 4BB / 3BB / ALL-IN): sempre à vista na
@@ -262,11 +274,17 @@
     border-color: #ffb3a4 !important;
   }
 
+  /* Passo 2 da auditoria: alvo de toque e leitura. Eram 26px de altura com
+     rótulo de 10px — abaixo do mínimo. A coluna FLUTUA sobre o feltro, então
+     crescer não empurra a mesa. */
   .app:has(.play) .play > .controls .raise-size-option {
     width: 100% !important;
-    min-height: 26px !important;
-    padding: 2px 6px !important;
-    font-size: 10px !important;
+    min-height: var(--tap-sm) !important;
+    padding: 4px 8px !important;
+    font-size: var(--fs-min) !important;
+  }
+  .app:has(.play) .play > .controls .raise-size-option strong {
+    font-size: var(--fs-sm) !important;
   }
 
   /* Barra de aumento: sai da SETINHA e sobe ali mesmo, em pé.
@@ -459,6 +477,13 @@
     left: 6px !important;
     right: auto !important;
     z-index: 12 !important;
+  }
+
+  /* A plaquinha de ação do vilão carrega DECISÃO (o que ele fez): nunca abaixo
+     do piso de leitura. */
+  .app:has(.play) .table-modern .seat .badge,
+  .ir-fullscreen .table-modern .seat .badge {
+    font-size: var(--fs-min) !important;
   }
 
   /* Plaquinha de ação embaixo do nome (Fold/Call 2bb): não precisa — as fichas
@@ -777,8 +802,8 @@
   }
   .ir-fullscreen .ir-round {
     flex: 0 0 auto;
-    width: 40px;
-    height: 40px;
+    width: var(--tap);
+    height: var(--tap);
     padding: 0;
     border-radius: 50%;
     border: 1px solid rgba(230, 196, 84, .38);
@@ -789,7 +814,16 @@
     cursor: pointer;
   }
   .ir-fullscreen .ir-round:disabled { opacity: .32; }
-  .ir-fullscreen .ir-round-me { border-color: rgba(140, 220, 175, .6); color: #b9ecd0; }
+  /* "⏭ minha vez" é uso pontual: sai da barra (que ficou apertada com os alvos
+     de 44px) e vira botão flutuante no canto, acima dela. */
+  .ir-fullscreen .ir-round-me {
+    position: absolute;
+    right: 6px;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    border-color: rgba(140, 220, 175, .6);
+    color: #b9ecd0;
+    background: rgba(12, 16, 12, .94);
+  }
   .ir-fullscreen .ir-streets {
     flex: 1 1 auto;
     display: flex;
@@ -798,12 +832,13 @@
     overflow-x: auto;
   }
   .ir-fullscreen .ir-chip {
-    padding: 6px 8px;
-    border-radius: 999px;
+    min-height: var(--tap-sm);
+    padding: 6px 9px;
+    border-radius: var(--r-pill);
     border: 1px solid rgba(230, 196, 84, .28);
     background: rgba(12, 16, 12, .9);
     color: var(--gold-soft, #e8d79b);
-    font-size: 11px;
+    font-size: var(--fs-sm);
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;

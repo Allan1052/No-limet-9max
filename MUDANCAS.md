@@ -23,6 +23,30 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Passos 1 e 2 da auditoria: base do visual + botões que dá pra acertar
+**Passo 1 — a base (você não vê, mas era a causa da bagunça).**
+Criei a camada oficial de medidas do app: espaçamento (4/8/12/16/24/32), raios,
+escala de letra, tempo de animação, os 3 níveis de dourado e o **tamanho mínimo
+de toque**. Antes existiam ~30 cores nomeadas e **zero** padrão de espaço ou
+letra — por isso o app tinha 14 tamanhos de fonte diferentes e cada tela parecia
+de uma época. **Nada mudou de aparência nesta parte**: é só a régua. A regra
+agora é: código novo usa a régua.
+
+**Passo 2 — o que você sente na mão.**
+- **Botões pequenos demais viraram alvos de verdade.** A setinha era 24px, os
+  atalhos Pote/4BB/3BB eram 26px e o "Ver dicas" 26px — o mínimo é 44px. Agora
+  os atalhos e o "Ver dicas" têm 40px e a setinha tem 32px **com área de toque de
+  44px que se estende só pra cima** (pra ela não roubar o toque do Call, que fica
+  logo abaixo). Como esses botões flutuam sobre o feltro, **a mesa não encolheu**.
+- **Os valores dos botões pararam de ser miudinhos.** "Call 7bb" e "RAISE 12BB"
+  estavam com 9px; os atalhos com 8px. Foram pro piso de leitura (11–12px).
+- **A plaquinha de ação do vilão** (Fold / Call 2bb) subiu pra 11px — é decisão,
+  não pode ser miúda.
+- **No Review**, as setas ficaram com 44px e os botões de rua com 40px. Como
+  ficaram apertados na largura, o "Pré-Flop" virou **"Pré"** e o **⏭ saiu da
+  barra**: agora é um botão redondo flutuando no canto, acima dela.
+- Suíte: 4010 testes passando, SELO 61/61.
+
 ## 2026-09-10 — Claude — Auditoria do ChatGPT revisada e guardada no projeto
 *(Só documento — nada do app mudou nesta entrada.)*
 - Li a "Auditoria Premium" do ChatGPT inteira e conferi **cada afirmação contra o
