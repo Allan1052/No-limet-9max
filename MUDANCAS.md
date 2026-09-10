@@ -23,6 +23,16 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Review: fim das repetições na tela
+Você apontou certo: a mesma informação aparecia 2 ou 3 vezes.
+- **A faixa de narração embaixo da mesa saiu.** Ela dizia "Vilão 5: Call 3.4bb"
+  — exatamente o que já estava escrito na plaquinha do assento dele, com a ficha
+  de 3.4bb do lado, e a rua já estava marcada nos botões Pré-Flop/Flop/Turn/River.
+  Era repetição pura. Sobrou espaço e a mesa desceu pra ocupar.
+- **A plaquinha do assento parou de repetir o nome.** Era "Vilão 5: Call 3.4bb"
+  logo abaixo do nome "Vilão 5". Agora é só a ação: **"Call 3.4bb"**.
+- Tela: Perfil → Importar → replay. Suíte: 4008 testes passando, SELO 61/61.
+
 ## 2026-09-10 — Claude — Review: a ficha que VOCÊ apostou voltou pro seu lugar
 - A sua ficha apostada estava subindo pro meio da mesa e parecia ficha de outro
   jogador (ou de ninguém). Agora ela fica **colada no seu assento**, no canto de

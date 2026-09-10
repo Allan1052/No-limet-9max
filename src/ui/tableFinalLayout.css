@@ -877,12 +877,13 @@
   }
   .ir-fullscreen .table-modern .seat .pod { transform: scale(.84) !important; transform-origin: center; }
   .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(1) !important; }
-  .ir-fullscreen .table-modern .seat.hero { top: 80% !important; }
+  /* Sem a faixa de narração embaixo, o herói desce e a mesa respira. */
+  .ir-fullscreen .table-modern .seat.hero { top: 84% !important; }
   /* A ficha que VOCÊ apostou fica colada no seu assento, no canto de cima à
      direita (o selo "VOCÊ" ocupa o meio e a plaquinha de posição, a esquerda).
      Antes ela subia pro meio da mesa e parecia ficha de outro jogador. */
   .ir-fullscreen .table-modern .seat-bet-hero {
-    top: 70% !important;
+    top: 74% !important;
     left: 62% !important;
   }
   .ir-fullscreen .table-modern .seat.hero .hero-kicker { z-index: 7 !important; }

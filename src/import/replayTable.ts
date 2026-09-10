@@ -20,8 +20,11 @@ import type { HandHistory, ReplayEvent } from "../app/replay";
 export interface ReplayFrame {
   /** Estado da mesa NESTE passo, no formato que a PokerTable renderiza. */
   state: TableState;
-  /** Rótulo legível do passo (ex.: "UTG abre 2.5bb", "Flop", "Resultado"). */
+  /** Rótulo legível do passo (ex.: "Vilão 3: Call 2bb", "Flop", "Resultado"). */
   label: string;
+  /** Só a AÇÃO, sem o nome ("Call 2bb"): o nome já está no assento, então a
+   *  plaquinha do pod não precisa repeti-lo. */
+  shortLabel?: string;
   /** Índice (assento no array) de quem agiu neste passo; -1 quando não é ação. */
   actorSeat: number;
   /** Rua deste passo. */
@@ -209,6 +212,7 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
     frames.push({
       state: snapshot(i, a.street),
       label: `${p.name}: ${actionLabel(a, bb)}`,
+      shortLabel: actionLabel(a, bb),
       actorSeat: i,
       street: gameStreet(a.street),
     });
@@ -315,6 +319,7 @@ export function handHistoryToReplay(h: HandHistory): ReplayFrame[] {
     frames.push({
       state: baseState(ev.seats, ev.board, ev.seat, false, false),
       label: `${ev.name}: ${ev.actionLabel}`,
+      shortLabel: ev.actionLabel,
       actorSeat: ev.seat,
       street: streetFromBoard(ev.board.length),
     });
