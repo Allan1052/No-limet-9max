@@ -18,6 +18,7 @@ import { cardsFromString } from "../engine/cards";
 const base = {
   profile: BASELINE_PROFILE,
   effectiveBB: 40,
+  variant: "holdem",
 } as const;
 
 describe("BB nunca folda em pote não aberto", () => {
