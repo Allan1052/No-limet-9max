@@ -23,6 +23,42 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Achado: toda publicação troca o app INTEIRO (e não precisava)
+*(Nada mudou no app — é um diagnóstico. A correção depende de você.)*
+- Descobri, testando a ferramenta nova, que **dois builds do mesmo código geram
+  arquivos com nomes diferentes**. Causa: o `vite.config.ts` carimba a
+  **data e hora do build** dentro do código (é o rótulo de versão que aparece no
+  Perfil). Como esse carimbo muda toda vez, **o pacote inteiro é reescrito**.
+- **Efeito prático no seu celular:** a cada publicação o app **baixa tudo de
+  novo**, mesmo que só um texto tenha mudado. É a explicação mais provável para
+  a atualização ser sempre pesada e exigir fechar/reabrir 2×.
+- **E mais:** o robô que publica (GitHub Actions) **reconstrói o app do zero** e
+  publica a versão dele. Ou seja, o `dist` que eu venho commitando **não é o que
+  vai pro ar** — a regra antiga ("o app é servido do dist commitado") está
+  desatualizada.
+- **Não mexi em nada disso** — é a área que publica o app, e um erro ali te deixa
+  sem site. As duas propostas estão escritas em
+  `docs/handoff/2026-09-10-EXPERIMENTO-camadas-css.md` e a decisão é sua.
+
+## 2026-09-10 — Claude — Passo 3: MEDI antes de mexer, e não compensava mexer
+*(Nada mudou no app nesta entrada — foi investigação. Mas o resultado importa.)*
+- O passo 3 era "apagar as camadas de CSS mortas da mesa". **Antes de refatorar,
+  eu medi** — abri o app num navegador de verdade, desliguei cada camada uma por
+  uma e comparei tudo o que aparece na tela.
+- **Resultado: nenhuma delas é lixo.** Desligar cada uma muda de 6 a 18 coisas —
+  o botão ✕ encolhe, a marca do feltro sai do lugar, o "Ver dicas" perde a cor,
+  as suas cartas mudam de tamanho. Não é entulho acumulado: **é a base do visual
+  espalhada em 4 arquivos**.
+- **Decisão: não fazer.** Seria migrar regras vivas, com risco alto e **zero
+  ganho visível pra você**. Fica pra quando houver uma mudança estrutural na
+  mesa que justifique. Está tudo registrado em
+  `docs/handoff/2026-09-10-EXPERIMENTO-camadas-css.md`.
+- **O que ficou de bom:** criei uma ferramenta que **prova em segundos** se uma
+  mudança visual mexeu em algo que não devia (`tools/layout-fingerprint/`). É
+  exatamente o que faltava no dia em que eu apaguei sem querer um bloco inteiro
+  e as suas cartas encolheram — os testes ficaram verdes porque nenhum deles
+  olha a tela. Esse agora olha.
+
 ## 2026-09-10 — Claude — Dica muda a cada lance TAMBÉM no pós-flop + cartas somem no fold
 **1. Pós-flop por decisão (fecha o que faltava).**
 Antes, o app avaliava **uma decisão por rua**. Se você apostava no flop, levava um

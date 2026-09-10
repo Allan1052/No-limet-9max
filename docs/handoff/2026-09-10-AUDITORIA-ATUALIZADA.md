@@ -37,8 +37,8 @@ Qualquer proposta que as desfaça deve ser recusada.
 | A setinha abre a **barra de aumento vertical**, à esquerda da mão | no ar |
 | Mesa de jogo e mesa de **Review** em tela cheia, controles flutuando | no ar |
 | Review: nomes **"Você" / "Vilão 1..8"**, número no avatar | no ar |
-| Review: **suas cartas aparecem mesmo nas mãos que você foldou** | no ar |
-| Review: veredito do coach **por decisão** no pré-flop | no ar |
+| No quadro do **próprio fold** as cartas do herói aparecem; **do quadro seguinte em diante somem** (com elas à mostra parecia que ele seguia na jogada) | no ar |
+| Review: veredito do coach **por decisão** — pré-flop **e pós-flop** | no ar |
 | Motor: **o BB nunca folda em pote não aberto** (bug do "foldar AK") | no ar |
 | Motor: BB **defende pelo preço** contra min-raise | no ar |
 
@@ -147,14 +147,20 @@ precisa varrer tela por tela e checar se algum deles carrega decisão.
 |---|---|---|---|---|
 | 1 | **Tokens** (espaço, tipografia, raio) — só **adicionar**, sem trocar nada | baixo | alto | código novo passa a usar; nada quebra |
 | 2 | **Alvos de toque + fontes decisivas** | baixo | alto | o Allan sente na mão no mesmo dia |
-| 3 | **Consolidar as camadas de CSS mortas** no arquivo autoritário | **alto** | **o maior** | uma tela por vez, print antes/depois |
+| 3 | ~~Consolidar as camadas de CSS "mortas"~~ | — | — | **MEDIDO: não são mortas.** Ver `2026-09-10-EXPERIMENTO-camadas-css.md` |
 | 4 | **Pós-mão** com CTA único + **Perfil como Player Hub** | médio | alto | |
 | 5 | **Sua Mão** em fluxo guiado | médio | médio | |
 | — | **Motor: veredito por decisão no pós-flop** | médio | alto | pedido do Allan, roda em paralelo |
 
-**Sobre o passo 3, com franqueza:** é exatamente ali que mais se quebrou coisa.
-A regra é: **uma tela por vez, com print antes e depois**, e só segue quando
-estiver igual ou melhor. Nada de "consolidar tudo num commit".
+**Sobre o passo 3 — atualizado em 10/09 com medição.** A hipótese de que as 4
+camadas eram código morto foi **testada e refutada**: desligar cada uma muda de
+6 a 18 coisas na tela (ver `2026-09-10-EXPERIMENTO-camadas-css.md`). Não é
+limpeza barata, é migração de regras vivas — risco alto, ganho invisível.
+**Recomendação: não fazer agora**, só quando houver mudança estrutural na mesa.
+
+O experimento deixou uma coisa melhor que o passo 3: a **impressão digital de
+layout** (`tools/layout-fingerprint/`), que prova em segundos se uma mudança
+visual mexeu no que não devia. Use antes de todo push que toca em CSS.
 
 ---
 
