@@ -123,8 +123,17 @@ Resultado prático: a partir da próxima publicação, o celular só rebaixa **o
 realmente mudou** — e não mais o app inteiro. (A publicação desta correção ainda
 troca tudo, porque o código de fato mudou.)
 
-### Decisão que continua em aberto
+### ✅ Decidido em 10/09 pelo Allan: o `dist` saiu do repositório
 
-Parar (ou não) de commitar o `dist`. O CI reconstrói de qualquer jeito, então o
-`dist` commitado não é o que vai pro ar. Isso mexe numa regra da casa — decisão
-do Allan.
+O `dist` entrou no `.gitignore` (commit `79d77e3`). Motivo: o workflow roda
+`npm run build` e publica o `dist` **gerado no CI** — o commitado nunca ia pro
+ar, só inchava o histórico (dezenas de arquivos reescritos por push, diff
+ilegível).
+
+**O que continua obrigatório:** rodar `npm run build` antes do push. Ele roda o
+`tsc`, que pega erro de tipo que o `vitest` sozinho não pega — já barrou um
+deploy. A regra mudou de "commite o dist" para "construa antes de subir".
+
+Conferido antes: o `CNAME` do domínio vem de `public/CNAME`, então o build do CI
+o regenera — `calloufold.com.br` não foi afetado. Primeira publicação sem `dist`
+commitado: execução nº 643, `build` e `deploy` ambos **success**.

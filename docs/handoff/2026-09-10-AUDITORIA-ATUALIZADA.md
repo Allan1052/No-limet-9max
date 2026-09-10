@@ -106,8 +106,11 @@ precisa varrer tela por tela e checar se algum deles carrega decisão.
   conforme o celular e a versão do sistema — a marca não controla.
 - **Progressão unificada**: XP, streak, conquistas, missões, campanha e ranking
   contando uma história só.
-- **Critérios de aceite** do PDF batem com as regras da casa (build verde, `dist`
-  reconstruído, `MUDANCAS.md`, versão publicada verificada). Mantidos.
+- **Critérios de aceite** do PDF batem com as regras da casa (build verde,
+  `MUDANCAS.md`, versão publicada verificada). Mantidos — com uma ressalva: o
+  PDF pede o `dist` reconstruído **e commitado**, e o `dist` deixou de ser
+  commitado em 10/09 (o CI reconstrói e publica o dele). Construir antes do
+  push continua obrigatório; commitar, não.
 
 ---
 
@@ -170,7 +173,8 @@ visual mexeu no que não devia. Use antes de todo push que toca em CSS.
 - Suíte inteira verde antes de publicar (`npx vitest run`) — hoje **4010** testes.
 - `npm run build` (que roda `tsc`) antes do push. Rodar só o `vitest` **não basta**
   — já barrou um deploy.
-- `dist` reconstruído e commitado; entrada nova no `MUDANCAS.md`, em português.
+- **Não commitar o `dist`** (está no `.gitignore` desde 10/09/2026 — o CI
+  reconstrói e publica o dele). Entrada nova no `MUDANCAS.md`, em português.
 - Fluxo: `git fetch origin main && git rebase origin/main && git push origin HEAD:main`.
   **Nunca force-push.**
 - Layout da mesa: só em **`src/ui/tableFinalLayout.css`** (ver
@@ -191,6 +195,6 @@ Uma atualização só está pronta quando:
    qualquer redução aplicada ao contêiner);
 5. **todo texto sobre fundo tem contraste ≥ 4,5:1** (medir, não olhar);
 6. navegação e pós-mão têm CTA principal inequívoco;
-7. build e testes verdes, `dist` reconstruído, `MUDANCAS.md` atualizado;
+7. build e testes verdes, `MUDANCAS.md` atualizado (o `dist` **não** vai no commit);
 8. nenhum selo ou ressalva de honestidade foi removido;
 9. **a versão publicada foi verificada por print**, não apenas o commit.
