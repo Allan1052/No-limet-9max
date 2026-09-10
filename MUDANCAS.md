@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Review: a ficha que VOCÊ apostou voltou pro seu lugar
+- A sua ficha apostada estava subindo pro meio da mesa e parecia ficha de outro
+  jogador (ou de ninguém). Agora ela fica **colada no seu assento**, no canto de
+  cima à direita — o selo "VOCÊ" ocupa o meio e a plaquinha da posição, a
+  esquerda, então esse canto ficou livre pra ela.
+- Tela: Perfil → Importar → replay. Suíte: 4008 testes passando, SELO 61/61.
+
 ## 2026-09-10 — Claude — ⚠️ BUG GRAVE DE MOTOR CORRIGIDO: o BB estava sendo mandado FOLDAR
 Você pegou um erro sério, e era do MOTOR (não do layout). Três coisas:
 
