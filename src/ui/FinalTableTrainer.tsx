@@ -264,12 +264,14 @@ function FtContextPanel({
   return (
     <div className="ft-context-panel">
       <div className="ft-ctx-title">📊 Mesa Final · ICM</div>
-      <div className="ft-ctx-bar">
-        <div
-          className="ft-ctx-fill"
-          style={{ width: `${icmPercent}%` }}
-          aria-label={String(icmPercent)}
-        />
+      <div className="ft-ctx-row">
+        <div className="ft-ctx-bar">
+          <div
+            className="ft-ctx-fill"
+            style={{ width: `${icmPercent}%` }}
+            aria-label={String(icmPercent)}
+          />
+        </div>
         <span className="ft-ctx-pct">{icmPercent}% {liveBand === "medio" ? "ICM" : liveBand === "muito_curto" || liveBand === "curto" ? "risco" : "poder"}</span>
       </div>
       <ul className="ft-ctx-lines">
@@ -313,6 +315,10 @@ export function FinalTableTrainer() {
   const [phase, setPhase] = useState<"setup" | "playing" | "done">("setup");
   const [session, setSession] = useState<FtSession | null>(null);
   const [tipsOpen, setTipsOpen] = useState(false);
+  // Painel de ICM e dica longa do coach: abrem sob demanda, para não
+  // disputar espaço com a mesa (que agora é tela cheia).
+  const [ctxOpen, setCtxOpen] = useState(false);
+  const [coachAberto, setCoachAberto] = useState(false);
   const [coachLine, setCoachLine] = useState<string>("");
   const configRef = useRef<FtConfig | null>(null);
   const sessionRef = useRef<FtSession | null>(null);
@@ -398,18 +404,50 @@ export function FinalTableTrainer() {
     setSession(null);
   };
 
+  // PADRÃO DO APP: toda tela que abre mesa é TELA CHEIA. A Mesa Final passa a
+  // usar a MESMA classe `.play` da mesa de jogo, então herda o layout já
+  // aprovado (mesa ocupando a tela, sem navegação embaixo) em vez de ter um
+  // layout próprio. Antes, o painel de ICM e a lista de stacks empurravam a
+  // mesa para 628px de altura — ou seja, para fora da tela.
   return (
-    <div className="ft-trainer">
+    <div className={`ft-trainer${phase === "playing" ? " play" : ""}`}>
       {phase === "playing" && (
         <div className="ft-topbar">
           <button className="btn tiny" onClick={restart}>
             ← {t("ft.back")}
           </button>
-          <span className="ft-topbar-title">📊 {t("ft.title")}</span>
-          <FtContextPanel session={session} controller={controller} />
+          <span className="ft-topbar-title">{t("ft.title")}</span>
+          <button
+            className="btn tiny ft-ctx-btn"
+            aria-expanded={ctxOpen}
+            onClick={() => setCtxOpen((o) => !o)}
+          >
+            📊 ICM
+          </button>
         </div>
       )}
-      <div className="ft-coach-bar">{coachLine}</div>
+      {phase === "playing" && ctxOpen ? (
+        // A lista de stacks REPETE o que cada assento da mesa já mostra. Em vez
+        // de competir com a mesa, ela abre sob demanda — o mesmo padrão do menu
+        // "⋯" da tela de Review, que o Allan aprovou.
+        <div className="ft-ctx-sheet" onClick={() => setCtxOpen(false)}>
+          <div className="ft-ctx-sheet-inner" onClick={(e) => e.stopPropagation()}>
+            <FtContextPanel session={session} controller={controller} />
+            <button className="btn ft-ctx-close" onClick={() => setCtxOpen(false)}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <div
+        className={`ft-coach-bar play-coach-bar${coachAberto ? " aberta" : ""}`}
+        role="button"
+        tabIndex={0}
+        title="Tocar para ver a dica inteira"
+        onClick={() => setCoachAberto((o) => !o)}
+      >
+        <span className="ft-coach-txt">{coachLine}</span>
+      </div>
       <PokerTable
         table={controller.table}
         lastActionLabel={controller.lastActionLabel}
@@ -418,7 +456,9 @@ export function FinalTableTrainer() {
         buyIn={controller.tournament?.buyIn}
       />
       {phase === "playing" && controller.lastHand ? (
-        <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+        <div className="ft-hand-actions">
+          <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+        </div>
       ) : null}
       {phase === "playing" && controller.table.handOver ? (
         <div className="ft-actions">

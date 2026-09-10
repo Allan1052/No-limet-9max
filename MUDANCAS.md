@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Mesa Final agora abre em TELA CHEIA (padrão do app)
+- **O que mudou:** a tela de **Mesa Final** (Treinar → Mais ⋯) passou a abrir
+  com a mesa ocupando a tela inteira, igual à mesa de jogo normal.
+- **Como estava (medido):** a mesa começava a **628px** de uma tela de 915px —
+  o painel de ICM e a lista com os 9 stacks empurravam a mesa para baixo e era
+  preciso **rolar a tela para ver as próprias cartas**. Agora a mesa começa em
+  0 e ocupa **100% da largura e 90% da altura**.
+- **O que saiu da frente:** a lista de stacks repetia o que cada assento da mesa
+  já mostra. Ela agora abre no botão **📊 ICM**, no alto — mesmo padrão do menu
+  "⋯" da tela de Review, que você aprovou. A dica do coach virou a mesma faixa
+  flutuante da mesa de jogo e **abre inteira ao toque**.
+- **Como foi feito:** a Mesa Final passou a usar a MESMA regra de layout da mesa
+  de jogo, em vez de ter a dela. Assim o padrão vale para as duas de verdade — e
+  qualquer melhoria futura na mesa chega nas duas de uma vez.
+- **De quebra:** o rótulo de ICM (ex.: "40% ICM") ficava escrito em cor escura
+  DENTRO da barra escura e sumia. Agora fica ao lado dela, legível.
+- **Onde:** Treinar → Mais ⋯ (Estudo de Mesa Final).
+
 ## 2026-09-10 — Claude — Regra nova para os dois agentes não se atrapalharem
 - **O que mudou:** nada no app. É uma regra de trabalho, escrita no `AGENTS.md`
   (Regra Nº 6), que vale para o Claude e para o Manus/ChatGPT.

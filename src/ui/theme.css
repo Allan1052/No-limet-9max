@@ -6501,9 +6501,14 @@ body {
   border-radius: 6px; overflow: hidden; margin-bottom: 4px;
 }
 .ft-ctx-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright)); transition: width 0.3s ease; }
+/* O rótulo ficava DENTRO da barra, em texto escuro (#0d0f0d): na parte NÃO
+   preenchida, fundo escuro sobre texto escuro — sumia. Agora ele fica ao lado
+   da barra, com cor própria e tamanho legível. */
+.ft-ctx-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.ft-ctx-row .ft-ctx-bar { flex: 1 1 auto; margin-bottom: 0; }
 .ft-ctx-pct {
-  position: absolute; inset: 0; text-align: center; line-height: 12px;
-  font-size: 9px; font-weight: 800; color: #0d0f0d; text-shadow: 0 0 3px rgba(247, 231, 155, 0.6);
+  flex: 0 0 auto; white-space: nowrap;
+  font-size: var(--fs-min, 11px); font-weight: 800; color: var(--gold-soft, #ecd07a);
 }
 .ft-ctx-lines { list-style: none; padding: 0; margin: 0 0 4px; color: var(--text-dim); line-height: 1.5; }
 .ft-ctx-stacks { display: flex; flex-wrap: wrap; gap: 4px; }
