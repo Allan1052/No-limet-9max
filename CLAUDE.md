@@ -18,6 +18,11 @@ como solver GTO profissional nem como diagnóstico estatístico definitivo.
 - **Manus** = visual/UI/site/produto: landing, layout, cópia, fluxos.
 Ao dividir tarefas, respeitar essas raias e coordenar pelo Allan.
 
+⚠️ **Os dois publicam na mesma branch.** Antes de mexer, ver o que o outro subiu
+(`git fetch origin main && git log --oneline HEAD..origin/main` + topo do
+`MUDANCAS.md`). E **nunca** dizer o que está no ar olhando só a própria última
+publicação — já deu diagnóstico errado. Regra completa: **`AGENTS.md`, Regra Nº 6**.
+
 ## Deploy
 O site/app publica a partir da branch **main** (é assim que a atualização chega
 no celular do Allan). Fluxo: commitar a fonte, `git fetch origin main`,

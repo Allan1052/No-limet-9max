@@ -23,6 +23,20 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Regra nova para os dois agentes não se atrapalharem
+- **O que mudou:** nada no app. É uma regra de trabalho, escrita no `AGENTS.md`
+  (Regra Nº 6), que vale para o Claude e para o Manus/ChatGPT.
+- **Por que:** hoje eu errei um diagnóstico. Você mandou um print e eu disse que
+  seu celular estava travado numa versão velha — **não estava**. O horário que
+  aparecia era de uma publicação do OUTRO agente, feita depois da minha. Eu
+  comparei só com o que EU tinha publicado e conclui errado.
+- **O que a regra obriga agora:** (1) olhar o que o outro agente subiu antes de
+  começar; (2) rodar os testes de novo se o envio trouxer código dele;
+  (3) nunca dizer "está no ar" olhando só a própria publicação; (4) quando você
+  perguntar "chegou?", pedir o **código de 7 letras** do Perfil em vez de
+  comparar horário.
+- **Onde:** nenhuma tela. Arquivos `AGENTS.md` e `CLAUDE.md`.
+
 ## 2026-09-10 — Claude — O Perfil agora RESPONDE "meu app está atualizado?"
 - **O que mudou:** a linha **Versão**, no topo do Perfil, deixou de mostrar só
   uma data. Agora ela diz, em português:
