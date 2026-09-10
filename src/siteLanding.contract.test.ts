@@ -1,3 +1,4 @@
+// @ts-nocheck -- Site-only contract uses Node built-ins under Vitest; the app tsconfig intentionally has no Node typings.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
