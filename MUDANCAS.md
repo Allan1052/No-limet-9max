@@ -23,6 +23,26 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Dica muda a cada lance TAMBÉM no pós-flop + cartas somem no fold
+**1. Pós-flop por decisão (fecha o que faltava).**
+Antes, o app avaliava **uma decisão por rua**. Se você apostava no flop, levava um
+raise e decidia de novo **na mesma rua**, só a aposta era avaliada. Agora cada
+lance tem o seu veredito. Exemplo testado numa mão real:
+- você aposta no flop → *"recomendava APOSTA · você fez APOSTA ✓"*;
+- o vilão dá raise, você paga → a barra vira *"recomendava RAISE · você fez CALL ✗
+  · 👍 pagar valia +18,0bb"*.
+O limite honesto continua escrito na tela: o range do vilão é apertado uma vez
+por rua, então duas decisões na mesma rua usam a mesma leitura — por isso o selo
+**ESTIMATIVA (PÓS-FLOP)**.
+
+**2. Suas cartas somem quando você folda.**
+Você reclamou que, depois de foldar, a mão continuava à mostra e parecia que você
+ainda estava na jogada. Agora: **no quadro do próprio fold as cartas ainda
+aparecem** (é ali que você vê o que jogou fora) e, **do quadro seguinte em
+diante, elas somem e o assento apaga** — como numa mesa de verdade. Vale para
+você e para os vilões, no jogo e no review.
+- Suíte: 4012 testes passando (2 novos), SELO 61/61.
+
 ## 2026-09-10 — Claude — Passos 1 e 2 da auditoria: base do visual + botões que dá pra acertar
 **Passo 1 — a base (você não vê, mas era a causa da bagunça).**
 Criei a camada oficial de medidas do app: espaçamento (4/8/12/16/24/32), raios,

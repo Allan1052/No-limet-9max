@@ -596,10 +596,6 @@
     opacity: .30 !important;
     filter: grayscale(.85) !important;
   }
-  .app:has(.play) .table-modern .seat.hero.folded {
-    opacity: .82 !important;
-    filter: none !important;
-  }
   .app:has(.play) .table-modern .seat.folded .pod {
     box-shadow: none !important;
     border-color: rgba(255, 255, 255, .10) !important;
@@ -950,11 +946,6 @@
     color: #17130a !important;
     border: 0 !important;
     z-index: 6 !important;
-  }
-  /* Foldou? O assento apaga — mas as SUAS cartas continuam legíveis. */
-  .ir-fullscreen .table-modern .seat.hero.folded {
-    opacity: .82 !important;
-    filter: none !important;
   }
   .ir-fullscreen .table-modern .seat.hero .hole .card {
     width: 48px !important;

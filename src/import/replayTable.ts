@@ -196,8 +196,12 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
     if (i === undefined) continue;
     const p = players[i];
 
+    // O FOLD é marcado DEPOIS de tirar o retrato deste passo: assim o quadro em
+    // que o jogador desiste ainda mostra a mão dele (o Allan quer ver o que
+    // jogou fora) e só a partir do próximo o assento aparece vazio.
+    let foldNow = false;
     if (a.type === "fold") {
-      p.status = "folded";
+      foldNow = true;
     } else if (a.type === "call" || a.type === "bet") {
       commit(a.player, a.amount);
       if (a.allIn) p.status = "allin";
@@ -220,6 +224,7 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
       actorSeat: i,
       street: gameStreet(a.street),
     });
+    if (foldNow) p.status = "folded";
   }
 
   // Quadro final: resultado (board completo, mão encerrada).

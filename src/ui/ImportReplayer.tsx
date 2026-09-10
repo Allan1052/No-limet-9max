@@ -12,7 +12,7 @@ import type { ParsedHand, ParsedAction, Street } from "../import/handHistory";
 import { parsedHandToReplay, replayDisplayNames } from "../import/replayTable";
 import type { FeedbackItem } from "../feedback/analyzer";
 import type { SessionReport } from "../import/analyzeSession";
-import { analyzePostflopStreets } from "../import/analyzePostflop";
+import { analyzePostflopSteps } from "../import/analyzePostflop";
 import { analyzePreflopSteps } from "../import/analyzePreflopSteps";
 import { SessionDiagnosis } from "./SessionDiagnosis";
 import { drawHandShareCard, shareDataFromHand } from "../app/handShareCard";
@@ -33,7 +33,17 @@ function famOf(label:string):"fold"|"check"|"call"|"aggro" { const t=label.toLow
 
 export function ImportReplayer({hands,reports,session,startIndex=0,onBack,onNewSession,_previewStep}:{hands:ParsedHand[];reports:{handId:string;feedback?:FeedbackItem;heroCardsText:string;effectiveBB:number;situation:string;skipped?:string}[];session?:SessionReport;startIndex?:number;onBack?:()=>void;onNewSession?:()=>void;_previewStep?:number;}) {
   const {t}=useT(); const [handIdx,setHandIdx]=useState(startIndex); const [showDiag,setShowDiag]=useState(false); const [menuOpen,setMenuOpen]=useState(false); const hand=hands[handIdx]; const report=reports[handIdx]; const frames=useMemo(()=>parsedHandToReplay(hand),[hand]); const nameLabel=useMemo(()=>replayDisplayNames(hand),[hand]); const show=(n:string)=>nameLabel[n]??n; const [stepIdx,setStepIdx]=useState(_previewStep??0); const frame=frames[Math.min(stepIdx,Math.max(0,frames.length-1))]; const atEnd=stepIdx>=frames.length-1; const isLastHand=handIdx===hands.length-1;
-  const streetFb=useMemo(()=>analyzePostflopStreets(hand,"free"),[hand]); const fb=report?.feedback;
+  // Pós-flop POR DECISÃO: se o Allan aposta, leva raise e decide de novo na mesma
+  // rua, cada lance tem o seu veredito. O resumo por rua (usado no card e no
+  // "quanto custou") passa a ser a ÚLTIMA decisão de cada rua — mesma coisa que
+  // o analisador por rua devolvia, sem rodar a simulação duas vezes.
+  const postSteps=useMemo(()=>analyzePostflopSteps(hand,"free"),[hand]);
+  const streetFb=useMemo(()=>{
+    const m: Record<string, FeedbackItem> = {};
+    for(const st of postSteps) m[st.street]=st.feedback;
+    return m as Partial<Record<Street, FeedbackItem>>;
+  },[postSteps]);
+  const fb=report?.feedback;
 
   // ---- R2: navegação. O replayTable sempre põe o HERÓI no assento 0, então
   // os passos em que ele age são os frames com actorSeat===0. Num torneio de
@@ -95,7 +105,15 @@ export function ImportReplayer({hands,reports,session,startIndex=0,onBack,onNewS
     for(const st of preSteps) if(st.actionIdx<=cur) chosen=st;
     return chosen.feedback;
   },[preSteps,frame,fb]);
-  const coachFb=curStreet==="flop"||curStreet==="turn"||curStreet==="river"?streetFb[curStreet]:preflopFb;
+  const postflopFb=useMemo(()=>{
+    const mine=postSteps.filter((st)=>st.street===curStreet);
+    if(!mine.length) return streetFb[curStreet];
+    const cur=frame?.actionIdx??-1;
+    let chosen=mine[0];
+    for(const st of mine) if(st.actionIdx<=cur) chosen=st;
+    return chosen.feedback;
+  },[postSteps,frame,curStreet,streetFb]);
+  const coachFb=curStreet==="flop"||curStreet==="turn"||curStreet==="river"?postflopFb:preflopFb;
   const mistakeFixBB=useMemo(()=>{const isBad=(it:FeedbackItem)=>{const good=it.rating==="boa"||it.rating==="ok";const matched=!!it.heroAction&&famOf(it.heroAction)===famOf(it.advice);return !good&&!matched;};const worst={bb:0};for(const street of ["flop","turn","river"] as const){const it=streetFb[street];if(it&&isBad(it)&&(it.betSizeBB??0)>worst.bb)worst.bb=it.betSizeBB??0;}if(coachFb&&isBad(coachFb)&&(coachFb.betSizeBB??0)>worst.bb)worst.bb=coachFb.betSizeBB??0;return worst.bb>0?worst.bb:undefined;},[streetFb,coachFb]);
   const toHistory=useMemo(()=>{const heroSeat=hand.seats.find(s=>s.isHero)?.seat??0;const names:Record<number,string>={};const startingStacks:Record<number,number>={};const holeCards:Record<number,import("../engine/cards").Card[]>={};for(const s of hand.seats){names[s.seat]=s.name;startingStacks[s.seat]=s.stack;}if(hand.heroCards.length>=2)holeCards[heroSeat]=hand.heroCards;for(const[nm,cards]of Object.entries(hand.shownCards??{})){const seat=hand.seats.find(s=>s.name===nm)?.seat;if(seat!==undefined&&cards.length>0)holeCards[seat]=cards;}const bbChips=hand.bb||1;const events=hand.actions.map((a:ParsedAction)=>{const seat=hand.seats.find(s=>s.name===a.player)?.seat??0;const isHero=a.player===(hand.heroName??"Você");const type=String(a.type);let label=ACTION_PT[type]??type;if(a.amount>0&&(type==="bet"||type==="raise"||type==="allin"||type==="call"))label=`${label} ${fmtBB(a.amount,bbChips)}`;if(a.allIn&&type!=="allin")label=`${label} (all-in)`;return{street:a.street,seat,name:a.player,isHero,actionLabel:label,actionType:type==="allin"?"allin":type==="bet"?"bet":type,board:hand.board,pot:a.amount};});let potChips=0;let comm:Record<string,number>={};let curSt:string|null=null;for(const a of hand.actions){if(a.street!==curSt){comm={};curSt=a.street;}if(a.type==="sb"||a.type==="bb"||a.type==="ante"||a.type==="call"||a.type==="bet"){potChips+=a.amount;comm[a.player]=(comm[a.player]??0)+a.amount;}else if(a.type==="raise"){const delta=Math.max(0,a.amount-(comm[a.player]??0));potChips+=delta;comm[a.player]=a.amount;}else if(a.type==="uncalled")potChips=Math.max(0,potChips-a.amount);}const showdown:any=Object.keys(hand.shownCards??{}).length>0||(hand.winners??[]).length>0?{showdown:true,pots:[{amount:potChips}],winningsBySeat:(hand.winners??[]).reduce<Record<string,number>>((o,nm)=>{const seat=hand.seats.find(s=>s.name===nm)?.seat;if(seat!==undefined)o[String(seat)]=1;return o;},{}),handValueBySeat:hand.shownCards??{}}:undefined;return{events,holeCards,names,heroSeat,finalBoard:hand.board,buttonSeat:hand.buttonSeat,bigBlind:hand.bb,startingStacks,result:showdown,heroPosition:hand.seats.find(s=>s.isHero)?.position};},[hand]);
   if(showDiag&&session)return <div className="import-replayer"><div className="ir-head"><button className="btn tiny" onClick={()=>setShowDiag(false)}>◀ Voltar ao replay</button><span className="ir-counter">🏁 Diagnóstico</span><span/></div><SessionDiagnosis report={session} onReview={()=>{setShowDiag(false);setHandIdx(0);setStepIdx(0);}} onTrain={onBack}/></div>;

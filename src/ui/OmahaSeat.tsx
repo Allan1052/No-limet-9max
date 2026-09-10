@@ -56,7 +56,7 @@ export function OmahaSeat({
 
   // Para Omaha, exibir 4 cartas em um grid 2x2
   const renderOmahaCards = () => {
-    if (player.holeCards.length === 0 || (folded && !player.isHero)) return null;
+    if (player.holeCards.length === 0 || folded) return null;
     
     if (showCards) {
       return (
@@ -79,7 +79,7 @@ export function OmahaSeat({
 
   // Para Texas Hold'em, exibir 2 cartas
   const renderTexasCards = () => {
-    if (player.holeCards.length === 0 || (folded && !player.isHero)) return null;
+    if (player.holeCards.length === 0 || folded) return null;
     
     if (showCards) {
       return player.holeCards.map((c, i) => <CardView key={i} card={c} small />);

@@ -66,6 +66,61 @@ interface Spot {
   facingAllIn: boolean; // a aposta enfrentada é um all-in? (não dá pra aumentar)
 }
 
+/**
+ * TODAS as decisões do herói numa rua (não só a última), com o índice da ação.
+ * É o que permite a dica mudar a cada lance: se o Allan aposta, leva raise e
+ * decide de novo na mesma rua, são DUAS decisões para avaliar.
+ */
+export function reconstructSpots(
+  hand: ParsedHand,
+  street: Street,
+  bb: number,
+): Array<Spot & { actionIdx: number }> {
+  const out: Array<Spot & { actionIdx: number }> = [];
+  let potChips = 0;
+  let committed: Record<string, number> = {};
+  let allInBy: Record<string, boolean> = {};
+  let curStreet: Street | null = null;
+
+  for (let i = 0; i < hand.actions.length; i++) {
+    const a = hand.actions[i];
+    if (a.street !== curStreet) {
+      committed = {};
+      allInBy = {};
+      curStreet = a.street;
+    }
+    if (a.player === hand.heroName && a.street === street && isVoluntary(a.type)) {
+      const maxC = Object.values(committed).reduce((m, v) => Math.max(m, v), 0);
+      const heroC = committed[hand.heroName] ?? 0;
+      const facingAllIn = Object.keys(committed).some(
+        (p) => p !== hand.heroName && allInBy[p] && committed[p] >= maxC && maxC > heroC,
+      );
+      out.push({
+        potBB: potChips / bb,
+        facingBB: Math.max(0, maxC - heroC) / bb,
+        heroType: a.type,
+        facingAllIn,
+        actionIdx: i,
+      });
+    }
+    if (a.allIn && a.player !== hand.heroName) allInBy[a.player] = true;
+    if (a.type === "ante") {
+      potChips += a.amount || hand.ante;
+    } else if (a.type === "sb" || a.type === "bb" || a.type === "call" || a.type === "bet") {
+      const d = a.amount || (a.type === "sb" ? hand.sb : a.type === "bb" ? hand.bb : 0);
+      potChips += d;
+      committed[a.player] = (committed[a.player] ?? 0) + d;
+    } else if (a.type === "raise") {
+      const delta = Math.max(0, a.amount - (committed[a.player] ?? 0));
+      potChips += delta;
+      committed[a.player] = a.amount;
+    } else if (a.type === "uncalled") {
+      potChips = Math.max(0, potChips - a.amount);
+    }
+  }
+  return out;
+}
+
 /** Reconstrói o pote (bb) e a aposta enfrentada (bb) na última ação do herói da rua. */
 function reconstructSpot(hand: ParsedHand, street: Street, bb: number): Spot | null {
   let potChips = 0;
@@ -224,6 +279,105 @@ export function analyzePostflopStreets(
     }
   } catch {
     // Reconstrução incerta (mão fora do padrão) — melhor não mostrar dica errada.
+    return out;
+  }
+  return out;
+}
+
+/** Uma decisão pós-flop avaliada, ligada ao passo do replay. */
+export interface PostflopStepFeedback {
+  actionIdx: number;
+  street: StreetName;
+  feedback: FeedbackItem;
+}
+
+/**
+ * Dica pós-flop por DECISÃO (não por rua).
+ *
+ * Pedido do Allan, irmão do que já foi feito no pré-flop: se ele aposta no flop,
+ * leva um raise e decide de novo NA MESMA RUA, cada decisão precisa do seu
+ * veredito — a barra muda conforme ele anda os passos.
+ *
+ * Limite honesto: o range do vilão é apertado UMA vez por rua (com a última
+ * ação dele naquela rua). Duas decisões na mesma rua usam o mesmo range —
+ * continua sendo ESTIMATIVA, como já está marcado na tela.
+ */
+export function analyzePostflopSteps(
+  hand: ParsedHand,
+  level: UserSubscriptionLevel = "free",
+): PostflopStepFeedback[] {
+  const out: PostflopStepFeedback[] = [];
+  try {
+    const hero = hand.seats.find((s) => s.isHero);
+    if (!hero || !hero.position || hand.heroCards.length < 2 || hand.bb <= 0) return out;
+    const heroHt = cardsToHandType(hand.heroCards);
+    if (!heroHt) return out;
+    const bb = hand.bb;
+    const effBB = Math.round((hero.stack / bb) * 10) / 10;
+    const villainPos = guessVillainPosition(hand);
+    let villainRange: Range = preflopOpenRange(villainPos, effBB);
+
+    for (const st of ["flop", "turn", "river"] as StreetName[]) {
+      if (hand.board.length < BOARD_LEN[st]) break;
+      const boardCards = hand.board.slice(0, BOARD_LEN[st]);
+      const board: BoardState = { street: st, cards: boardCards };
+      const texture = analyzeBoard(board);
+      const spots = reconstructSpots(hand, st, bb);
+
+      for (const spot of spots) {
+        if (!spot.heroType) continue;
+        const facing =
+          spot.heroType === "call" || spot.heroType === "raise" || spot.heroType === "fold"
+            ? spot.facingBB
+            : 0;
+        const potBB = spot.potBB > 0 ? spot.potBB : 6;
+        const rec = heroBestAction(heroHt, board, facing, potBB, texture, villainRange, 400);
+        let advAction = rec.action === "betSmall" || rec.action === "betBig" ? "bet" : rec.action;
+        if (spot.facingAllIn && (advAction === "raise" || advAction === "bet")) advAction = "call";
+        const potOdds = facing > 0 ? facing / (potBB + facing) : undefined;
+        const evBB =
+          facing > 0 ? Math.round((rec.equity * (potBB + facing) - facing) * 10) / 10 : undefined;
+
+        out.push({
+          actionIdx: spot.actionIdx,
+          street: st,
+          feedback: gradeDecision(
+            STREET_LABEL[st],
+            level,
+            spot.heroType,
+            {
+              kind: "postflop",
+              action: advAction,
+              reason: rec.reason,
+              equity: rec.equity,
+              potOdds,
+              evBB,
+              effectiveBB: effBB,
+              heroPosition: hero.position,
+              mix: buildMix(advAction, rec.freq),
+              betSizePct: rec.sizePct,
+              betSizeBB: rec.sizeBB,
+            },
+            { heroPosition: hero.position, heroBB: effBB },
+          ),
+        });
+      }
+
+      const vAct = villainLastAction(hand, st);
+      if (vAct) {
+        const last = spots.length ? spots[spots.length - 1] : null;
+        const snap = continueVillainRange(villainRange, vAct, board, {
+          heroPosition: hero.position,
+          villainPosition: villainPos,
+          heroStackBB: effBB,
+          villainStackBB: effBB,
+          potBB: last?.potBB || 6,
+          facedBetBB: 4,
+        });
+        villainRange = snap.range;
+      }
+    }
+  } catch {
     return out;
   }
   return out;

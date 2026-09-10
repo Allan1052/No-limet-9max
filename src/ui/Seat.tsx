@@ -83,9 +83,10 @@ export function Seat({
         {rangeMarked ? <div className="range-flag">👁 range</div> : null}
         {/* Cartas no TOPO, "atrás" do avatar (estilo GG): o avatar sobe por cima. */}
         <div className="hole">
-          {/* Foldou? Some com as cartas — MENOS as suas: o Allan quer rever o
-              que jogou fora, principalmente no review do torneio. */}
-          {player.holeCards.length === 0 || (folded && !player.isHero) ? null : showCards ? (
+          {/* Foldou? As cartas somem (inclusive as suas): com elas à mostra
+              parecia que você ainda estava na jogada. No review, o quadro do
+              próprio fold ainda mostra a mão — quem segura isso é o replay. */}
+          {player.holeCards.length === 0 || folded ? null : showCards ? (
             // Herói: carta grande (índice no canto). Vilão revelado: carta pequena limpa.
             player.holeCards.map((c, i) => <CardView key={i} card={c} small={!player.isHero} />)
           ) : (
