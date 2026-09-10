@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Suspense, useTransition } from "react";
 import { useGame } from "./useGame";
-import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate } from "./pwaUpdate";
+import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate, probeVersion, type VersionStatus } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
 import { Controls } from "../ui/Controls";
 import { Replayer } from "../ui/Replayer";
@@ -299,6 +299,21 @@ export function App() {
   const [updateReady, setUpdateReady] = useState(updateAvailable());
   useEffect(() => onUpdateAvailable(() => setUpdateReady(true)), []);
 
+  // Estado da versão MOSTRADO NO PERFIL, em palavras. Antes a tela só exibia a
+  // data do build — que é convertida pelo relógio do celular e não responde a
+  // pergunta que o jogador tem ("estou atualizado?"). A verificação roda ao
+  // abrir o Perfil; "checking" é o estado enquanto a resposta não chegou.
+  const [versionStatus, setVersionStatus] = useState<VersionStatus | "checking">("checking");
+  useEffect(() => {
+    if (view !== "perfil") return;
+    let alive = true;
+    setVersionStatus(updateAvailable() ? "outdated" : "checking");
+    probeVersion()
+      .then((s) => { if (alive) setVersionStatus(s); })
+      .catch(() => { if (alive) setVersionStatus("unknown"); });
+    return () => { alive = false; };
+  }, [view]);
+
   // Botão "Atualizar" SEMPRE disponível: verifica em silêncio se o servidor já
   // está servindo versão nova (a cada 10 min + quando o app volta do segundo
   // plano). Assim o banner/botão aparece mesmo sem o SW avisar. (16/08)
@@ -526,6 +541,8 @@ export function App() {
           onOpenHistory={() => startNavigationTransition(() => setHistoryLogOpen(true))}
           buildLabel={formatBuild(readBuildId())}
           fullBuildLabel={formatBuildFull(readBuildId())}
+          buildCommit={readCommit()}
+          versionStatus={updateReady ? "outdated" : versionStatus}
           onCheckUpdate={forceUpdate}
         /></Suspense>
       ) : view === "importar" ? (
@@ -824,6 +841,18 @@ function readBuildId(): string {
   if (typeof document === "undefined") return "dev";
   const meta = document.querySelector('meta[name="cf-build"]');
   return meta?.getAttribute("content") || "dev";
+}
+
+/**
+ * Código curto da versão (ex.: "3d358be"), injetado no index.html pelo build.
+ * É o identificador de SUPORTE: não depende do relógio do aparelho, então serve
+ * para o jogador dizer exatamente qual versão ele tem. Vazio quando o build não
+ * teve acesso ao git — nesse caso a tela simplesmente não mostra o código.
+ */
+function readCommit(): string {
+  if (typeof document === "undefined") return "";
+  const meta = document.querySelector('meta[name="cf-commit"]');
+  return meta?.getAttribute("content") || "";
 }
 
 function formatBuild(iso: string): string {

@@ -23,6 +23,26 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — O Perfil agora RESPONDE "meu app está atualizado?"
+- **O que mudou:** a linha **Versão**, no topo do Perfil, deixou de mostrar só
+  uma data. Agora ela diz, em português:
+  - **✓ Seu app está atualizado** (verde) — quando o app perguntou ao servidor
+    e confirmou;
+  - **⬇️ Existe uma versão nova** + botão **Atualizar agora** (dourado, grande);
+  - **Não deu para verificar agora** — quando está sem internet.
+- **Por que mudou:** a data sozinha não respondia nada. Pior: ela é convertida
+  pelo **relógio do próprio celular**, então um aparelho com a hora errada
+  mostrava um horário que não batia com nada e parecia defeito do app. Foi
+  exatamente o que aconteceu hoje.
+- **Honestidade:** o "atualizado" **só** aparece quando o app realmente
+  conseguiu falar com o servidor. Sem resposta, ele diz que não conseguiu
+  verificar — nunca afirma estar em dia "no chute".
+- **Extra para suporte:** embaixo, pequeno, aparece a data e um **código de 7
+  letras da versão** (ex.: `3d358be`). Esse código não depende de relógio nenhum:
+  basta o jogador ler ele pra gente saber exatamente qual versão está no
+  aparelho. Serve para o Allan e para qualquer pessoa que peça ajuda.
+- **Onde:** aba **Perfil**, primeira linha (Versão).
+
 ## 2026-09-10 — Claude — O `dist` sai do repositório (ajuste interno)
 - **O que mudou:** a pasta `dist` (o app "montado") **não é mais guardada no
   repositório**. Nada muda na sua tela — é arrumação de bastidor.

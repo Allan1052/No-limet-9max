@@ -2,7 +2,7 @@
 // Testes do checkForUpdate (detecção automática de nova versão) — 16/08
 // ---------------------------------------------------------------------------
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { extractBundleHash } from "./pwaUpdate";
+import { extractBundleHash, compareBundles } from "./pwaUpdate";
 
 describe("pwaUpdateCheck", () => {
   beforeEach(() => {
@@ -28,5 +28,28 @@ describe("pwaUpdateCheck", () => {
     // HTML real é sempre o bundle da aplicação.
     const real = `<script type="module" src="/assets/index-DeO0JheB.js"></script><script src="/assets/vendor-CdGPq-lP.js"></script>`;
     expect(extractBundleHash(real)).toBe("DeO0JheB");
+  });
+});
+
+describe("compareBundles — a regra que decide o que o Perfil mostra", () => {
+  it("mesmo pacote rodando e no servidor = está atualizado", () => {
+    expect(compareBundles("CdRqW9Nd", "CdRqW9Nd")).toBe("current");
+  });
+
+  it("pacote diferente no servidor = existe versão nova", () => {
+    expect(compareBundles("CdRqW9Nd", "DefY3Ftt")).toBe("outdated");
+  });
+
+  // Honestidade: sem resposta do servidor NÃO se afirma "está atualizado".
+  it("sem resposta do servidor, o veredito é 'não deu para verificar'", () => {
+    expect(compareBundles("CdRqW9Nd", "")).toBe("unknown");
+  });
+
+  it("sem saber o pacote local (modo dev), também não conclui nada", () => {
+    expect(compareBundles("", "CdRqW9Nd")).toBe("unknown");
+  });
+
+  it("nenhum dos dois lados conhecido continua sendo 'não verificado'", () => {
+    expect(compareBundles("", "")).toBe("unknown");
   });
 });

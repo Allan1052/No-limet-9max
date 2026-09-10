@@ -18,6 +18,7 @@ import { SeuJogoPanel } from "./SeuJogoPanel";
 import { syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
 import { trackEvent } from "../app/analytics";
+import type { VersionStatus } from "../app/pwaUpdate";
 
 export function ProfileView({
   gameVariant,
@@ -29,6 +30,8 @@ export function ProfileView({
   onOpenHistory,
   buildLabel,
   fullBuildLabel,
+  buildCommit,
+  versionStatus,
   onCheckUpdate,
 }: {
   gameVariant: "holdem" | "omaha";
@@ -40,6 +43,8 @@ export function ProfileView({
   onOpenHistory: () => void;
   buildLabel: string;
   fullBuildLabel: string;
+  buildCommit: string;
+  versionStatus: VersionStatus | "checking";
   onCheckUpdate: () => void;
 }) {
   const { t } = useT();
@@ -135,13 +140,35 @@ export function ProfileView({
         </div>
 
         {/* Versão / Atualizar — logo no TOPO (pedido do Allan: sem precisar rolar
-            a tela até o fim pra checar/atualizar a versão). */}
+            a tela até o fim pra checar/atualizar a versão).
+
+            A tela RESPONDE a pergunta ("estou atualizado?") em vez de mostrar só
+            uma data. A data sozinha era pior que inútil: ela é convertida pelo
+            relógio do aparelho, então um celular com a hora errada exibia um
+            horário que não batia com nada. O selo "atualizado" só aparece
+            quando o app conseguiu perguntar ao servidor de verdade; sem
+            resposta, ele diz que não conseguiu verificar. */}
         <div className="profile-setting profile-version-row">
           <span className="ps-label">{t("profile.version")}</span>
-          <button className="btn tiny" onClick={onCheckUpdate}>
-            🔄 {buildLabel}
+          <span className={`ps-version-status is-${versionStatus}`}>
+            {versionStatus === "current"
+              ? `✓ ${t("profile.versionCurrent")}`
+              : versionStatus === "outdated"
+                ? `⬇️ ${t("profile.versionOutdated")}`
+                : versionStatus === "unknown"
+                  ? t("profile.versionUnknown")
+                  : t("profile.versionChecking")}
+          </span>
+          <button
+            className={`btn tiny${versionStatus === "outdated" ? " ps-version-cta" : ""}`}
+            onClick={onCheckUpdate}
+          >
+            {versionStatus === "outdated" ? t("profile.versionUpdateNow") : `🔄 ${buildLabel}`}
           </button>
-          <span className="ps-note">Atualizado em {fullBuildLabel}</span>
+          <span className="ps-note ps-version-tech">
+            {t("profile.versionUpdatedAt")} {fullBuildLabel}
+            {buildCommit ? ` · ${buildCommit}` : ""}
+          </span>
         </div>
 
         {/* Progressão — XP + Conquistas */}

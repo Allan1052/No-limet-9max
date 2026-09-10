@@ -33,9 +33,27 @@ function resolveBuildId(): string {
     : "dev";
 }
 
+// Código curto do commit publicado. Serve para SUPORTE: quando o Allan (ou
+// qualquer jogador) diz "meu app está estranho", esse código identifica sem
+// margem de dúvida qual versão está no aparelho — diferente da data, que é
+// convertida pelo relógio do celular e engana quando ele está errado.
+function resolveCommit(): string {
+  try {
+    const sha = execFileSync("git", ["log", "-1", "--format=%h"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (sha) return sha;
+  } catch {
+    // sem git (tarball, sandbox): fica vazio e a tela simplesmente não mostra
+  }
+  return "";
+}
+
 // FAKE_BUILD_ID existe só para reproduzir o teste de determinismo: com ele dá
 // para trocar o carimbo e conferir que NENHUM arquivo com hash muda de nome.
 const buildId = process.env.FAKE_BUILD_ID || resolveBuildId();
+const buildCommit = process.env.FAKE_BUILD_COMMIT || resolveCommit();
 
 export default defineConfig({
   base,
@@ -77,6 +95,7 @@ export default defineConfig({
       transformIndexHtml() {
         return [
           { tag: "meta", attrs: { name: "cf-build", content: buildId }, injectTo: "head" as const },
+          { tag: "meta", attrs: { name: "cf-commit", content: buildCommit }, injectTo: "head" as const },
         ];
       },
     },
