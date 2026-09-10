@@ -131,7 +131,7 @@ function anatHandCards(ht: string): string {
 
 function anatBucket(action: string): keyof AnatDist {
   if (action === "fold") return "fold";
-  if (action === "call" || action === "limp") return "call";
+  if (action === "call" || action === "limp" || action === "check") return "call";
   return "raise";
 }
 

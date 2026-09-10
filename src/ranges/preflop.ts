@@ -32,7 +32,7 @@ import {
   type Range,
 } from "./types";
 
-export type PreflopAction = "fold" | "raise" | "call" | "3bet" | "jam";
+export type PreflopAction = "fold" | "check" | "raise" | "call" | "3bet" | "jam";
 
 export interface PreflopContext {
   heroPosition: Position;
@@ -361,13 +361,24 @@ const BB_DEFEND: Partial<Record<Position, { defend: number; v3b: number }>> = {
   SB: { defend: 0.62, v3b: 0.09 },
 };
 
-function facingRaiseParams(hero: Position, raiser: Position): FacingParams {
+function facingRaiseParams(hero: Position, raiser: Position, openSizeBB?: number): FacingParams {
   const inPosition = posIndex(hero) > posIndex(raiser) && hero !== "SB" && hero !== "BB";
 
   if (hero === "BB") {
     const t = BB_DEFEND[raiser] ?? { defend: 0.2, v3b: 0.05 };
+    // PREÇO: a tabela acima é calibrada para a abertura padrão (2.5bb → o BB
+    // completa 1.5bb). Contra um MIN-RAISE (1.5–2bb) o BB paga uma ninharia num
+    // pote já grande e defende MUITO mais largo; contra um open enorme, menos.
+    // Bug pego pelo Allan no review: T7s no BB pagando 0.5bb num pote de 5.7bb
+    // (11:1 de preço) saía FOLD porque a largura ignorava o tamanho da aposta.
+    // Na abertura padrão o fator é exatamente 1 — o gabarito não se mexe.
+    // A tabela é calibrada para o open padrão de 2bb (o BB completa 1bb). O
+    // fator SÓ ALARGA quando o open é menor que isso — nunca aperta, pra não
+    // mexer no que já está calibrado contra o gabarito e o benchmark externo.
+    const callBB = Math.max(0.25, (openSizeBB ?? BASE_OPEN_BB) - 1);
+    const priceFactor = Math.min(1.6, Math.max(1, Math.sqrt((BASE_OPEN_BB - 1) / callBB)));
     return {
-      defendPct: t.defend,
+      defendPct: Math.min(0.92, t.defend * priceFactor),
       value3betPct: t.v3b,
       bluffExtraPct: t.v3b * 0.8, // blefes ~ proporcionais ao valor
       inPosition: false, // BB fica OOP pós-flop
@@ -494,7 +505,54 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
         shoveBonus,
       });
       const openPct = rangePercent(range);
-      
+
+      // ----- BB em pote NÃO ABERTO: não existe "abrir", nem foldar -----------
+      // O BB já pagou o blind. Se ninguém aumentou (pote com limpers, ou walk),
+      // a decisão é ISOLAR com valor ou PASSAR de graça — foldar seria jogar
+      // fora um flop que já está pago.
+      // BUG que isto conserta (pego pelo Allan no review do torneio): a range de
+      // RFI do BB vale 0% por definição (ninguém "abre" do BB), então TODA mão
+      // caía fora da range e o motor mandava FOLDAR — inclusive AK.
+      if (ctx.heroPosition === "BB") {
+        const limpers = Math.max(0, Math.floor(ctx.limpers ?? 0));
+        // Mais limpers = pote maior, mas também mais gente pra passar: o raise
+        // de isolamento fica mais apertado (e maior, via openRaiseSize).
+        const isoBase = limpers >= 3 ? 0.11 : limpers === 2 ? 0.14 : 0.18;
+        const isoRange = buildTopRange(
+          Math.min(0.6, Math.max(0.04, isoBase * widthFactor * sd.factor * icmFactor)),
+        );
+        if (freqIn(isoRange, handType) >= 0.15) {
+          if (sd.pushFold) {
+            return {
+              action: "jam",
+              sizeBB: ctx.effectiveBB,
+              reason: `Stack raso (${Math.round(ctx.effectiveBB)}bb) no BB: com ${handType} o all-in cobra quem entrou barato.`,
+              handType,
+              mix: bandMix("jam", rangePercent(isoRange), handType),
+            };
+          }
+          return {
+            action: "raise",
+            sizeBB: openRaiseSize(ctx),
+            reason:
+              limpers > 0
+                ? `${handType}: do BB você isola ${limpers} limper${limpers > 1 ? "s" : ""} — raise para ${openRaiseSize(ctx).toFixed(1)}bb cobra quem quis flop barato.`
+                : `${handType}: do BB, mão forte demais para dar um flop de graça.`,
+            handType,
+            mix: bandMix("raise", rangePercent(isoRange), handType),
+          };
+        }
+        return {
+          action: "check",
+          sizeBB: 0,
+          reason:
+            limpers > 0
+              ? `${handType} não isola bem, mas você JÁ pagou o big blind: passa e vê o flop de graça (foldar aqui seria jogar fora um flop pago).`
+              : `${handType} do BB: passa e vê o flop — o blind já está pago.`,
+          handType,
+        };
+      }
+
       // Threshold mínimo: no push/fold aceita freq 0.05 (mãos marginais shoveiam).
       // No jogo profundo mantém 0.15 para evitar borderline absurdas.
       // Isso elimina "borderline" absurdas (ex: KQo em UTG com freq 0.01, QJo com freq 0.02).
@@ -528,7 +586,8 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       // Fora do range de abertura → limp especulativo ou fold
       // Threshold mínimo de 15% para limp (evita limp com mãos marginal).
       const LIMP_MIN_FREQ = 0.15;
-      if (ctx.profile.limpFactor > 0 && !sd.pushFold && ctx.heroPosition !== "BB") {
+      // (o BB já saiu acima: lá não existe limp, existe check.)
+      if (ctx.profile.limpFactor > 0 && !sd.pushFold) {
         const limpRange = rangeSubtract(
           buildTopRange(openPct + ctx.profile.limpFactor * 0.4),
           range,
@@ -561,7 +620,7 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
       handType: handType,
     };
   }
-  const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition!);
+  const p = facingRaiseParams(ctx.heroPosition, ctx.raiserPosition!, ctx.openSizeBB);
 
   {
     // Lógica Hold'em: enfrentando um raise.

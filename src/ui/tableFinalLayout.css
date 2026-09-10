@@ -878,7 +878,9 @@
   .ir-fullscreen .table-modern .seat .pod { transform: scale(.84) !important; transform-origin: center; }
   .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(1) !important; }
   .ir-fullscreen .table-modern .seat.hero { top: 80% !important; }
-  .ir-fullscreen .table-modern .seat-bet-hero { top: 70% !important; }
+  /* A ficha apostada do herói caía em cima do selo "VOCÊ" (virava "V7bbÊ"). */
+  .ir-fullscreen .table-modern .seat-bet-hero { top: 64% !important; }
+  .ir-fullscreen .table-modern .seat.hero .hero-kicker { z-index: 7 !important; }
   .ir-fullscreen .table-modern .tbl-center-col { top: 46% !important; }
   .ir-fullscreen .table-modern .table-brand-mark {
     top: 46% !important;

@@ -5,7 +5,10 @@ describe("anatomia por faixa — números reais do motor", () => {
   it("o ideal sai do motor: Fold é a maioria (~80%), Call baixo (~5%)", () => {
     const d = idealDistribution();
     expect(d.fold + d.call + d.raise).toBe(100);
-    expect(d.fold).toBeGreaterThanOrEqual(75); // fold é a maioria
+    // Fold continua sendo a maioria — mas caiu de ~80% para ~74% quando o motor
+    // parou de mandar o BB FOLDAR em pote não aberto (ele já pagou o blind: ali
+    // a ação é passar). O número antigo embutia folds impossíveis.
+    expect(d.fold).toBeGreaterThanOrEqual(70); // fold é a maioria
     expect(d.fold).toBeLessThanOrEqual(85);
     expect(d.call).toBeLessThanOrEqual(10); // o motor quase não paga pré-flop
     expect(d.raise).toBeGreaterThan(d.call);

@@ -23,6 +23,35 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — ⚠️ BUG GRAVE DE MOTOR CORRIGIDO: o BB estava sendo mandado FOLDAR
+Você pegou um erro sério, e era do MOTOR (não do layout). Três coisas:
+
+**1. O BB nunca mais folda um flop que já está pago.**
+Quando ninguém aumentava (pote só com limpers), o motor mandava **FOLDAR** — e
+mandava foldar TUDO, inclusive **AK**. Motivo: a "range de abertura do BB" vale
+0% por definição (ninguém *abre* do big blind), então toda mão caía fora da
+range e a resposta padrão era fold. Agora, no BB e com o pote não aberto:
+- mão forte → **aumenta** (isola quem entrou barato);
+- o resto → **passa** e vê o flop, que já está pago.
+Foldar ali era jogar fora um flop pelo qual você já pagou.
+
+**2. O BB agora defende pelo PREÇO.** Contra um min-raise (você completa uma
+ninharia num pote grande), a largura de defesa era a mesma de um aumento
+padrão — e mãos como **T7s pagando 0,5bb num pote de 5,7bb** saíam como fold.
+Agora o tamanho da aposta entra na conta. **Contra o aumento padrão nada muda**
+(o gabarito e o benchmark externo ficaram intactos).
+
+**3. Efeito colateral honesto:** na tela "Anatomia do torneio", o "Fold ideal"
+caiu de ~80% para ~74%. O número antigo embutia folds impossíveis do BB. O
+número novo é o certo.
+
+Também: a ficha que você apostou parou de cair em cima do selo "VOCÊ".
+
+⚠️ Isso muda o **placar do seu review**: parte das mãos marcadas como "errei"
+eram erro do app, não seu. Reimporte a sessão pra ver o placar certo.
+- SELO GTO segue **61/61**. Suíte: **4008 testes** passando (5 novos, de
+  regressão, pra esse bug nunca mais voltar).
+
 ## 2026-09-10 — Claude — REVIEW: nomes de gente, plaquinha fora da carta e a sua mão sempre visível
 - **Os nomes viraram "Vilão 1" a "Vilão 8" e "Você".** Aqueles códigos do site
   ("a968e2a8", "756ec986") não diziam nada, ocupavam o quadradinho inteiro e
