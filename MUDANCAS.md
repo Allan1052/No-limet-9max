@@ -23,6 +23,22 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — REVIEW: nomes de gente, plaquinha fora da carta e a sua mão sempre visível
+- **Os nomes viraram "Vilão 1" a "Vilão 8" e "Você".** Aqueles códigos do site
+  ("a968e2a8", "756ec986") não diziam nada, ocupavam o quadradinho inteiro e
+  ainda cobriam carta. Agora o círculo mostra o **número** do vilão, então dá pra
+  identificar cada um de relance. Vale também na narração ("Você: Raise → 2.2bb")
+  e no resultado ("Vilão 1 levou o pote").
+- **A plaquinha da sua posição (BB/CO/…) saiu de cima da sua carta** — foi pra
+  fora do quadradinho, ao lado do selo "VOCÊ", igual à mesa de jogo.
+- **As suas cartas continuam à vista mesmo nas mãos que você foldou.** Antes,
+  quando você foldava, as suas cartas sumiam e você não conseguia rever o que
+  jogou fora — que é justamente o que mais interessa num review. O assento
+  apaga (pra ficar claro que você saiu), mas a mão continua legível.
+- **O painel de resultado virou uma folha embaixo**: a mesa continua à vista por
+  cima dele (antes ele tomava a tela inteira e ficava metade vazio).
+- Tela: Perfil → Importar → replay. Suíte: 4003 testes passando, SELO 61/61.
+
 ## 2026-09-09 — Claude — REVIEW EM TELA CHEIA (a mesa virou a tela inteira)
 Você estava certo: a tela tinha **cinco fileiras de botão** brigando por altura
 com a mesa. Refiz a tela:

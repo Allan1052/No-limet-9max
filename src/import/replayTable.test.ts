@@ -38,7 +38,8 @@ describe("Replay na mesa real — parsedHandToReplay", () => {
   it("estado inicial: herói no índice 0, blinds já postados", () => {
     const f = parsedHandToReplay(sampleHand());
     const s0 = f[0].state;
-    expect(s0.players[0].name).toBe("Hero");
+    // O nome que vai pra MESA é o rótulo amigável (o hash do site não diz nada).
+    expect(s0.players[0].name).toBe("Você");
     expect(s0.players[0].isHero).toBe(true);
     expect(s0.players[0].stack).toBe(100); // BTN não posta pré-flop
     expect(s0.players[1].stack).toBe(99); // SB

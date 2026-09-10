@@ -49,6 +49,25 @@ function actionLabel(a: ParsedAction, bb: number): string {
 }
 
 /**
+ * Nome que aparece NA MESA para cada jogador do hand history.
+ * O hash do site ("a968e2a8") não diz nada, ocupa o pod inteiro e ainda cobre as
+ * cartas. Vira "Você" e "Vilão 1..8", numerados no sentido do anel a partir do
+ * herói. O nome original continua no arquivo importado.
+ */
+export function replayDisplayNames(hand: ParsedHand): Record<string, string> {
+  const seated = [...hand.seats].sort((a, b) => a.seat - b.seat);
+  const heroIdx = seated.findIndex((s) => s.isHero);
+  const base = heroIdx >= 0 ? heroIdx : 0;
+  const out: Record<string, string> = {};
+  let villainNo = 0;
+  for (let k = 0; k < seated.length; k++) {
+    const s = seated[(base + k) % seated.length];
+    out[s.name] = s.isHero ? "Você" : `Vilão ${++villainNo}`;
+  }
+  return out;
+}
+
+/**
  * Reconstrói os quadros de replay de uma mão importada como TableStates reais.
  * Antes/blinds já entram no estado inicial (o replay começa na 1ª decisão de
  * verdade). Entre as ruas, insere um quadro que abre o board (flop/turn/river).
@@ -73,9 +92,13 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
     return hand.shownCards?.[name]?.slice() ?? [];
   };
 
+  // Nome que aparece NA MESA (ver replayDisplayNames).
+  const nameLabel = replayDisplayNames(hand);
+  const labelByRingIdx = ring.map((s) => nameLabel[s.name] ?? s.name);
+
   const players: PlayerState[] = ring.map((s, i) => ({
     seat: i,
-    name: s.name,
+    name: labelByRingIdx[i],
     isHero: s.isHero,
     stack: s.stack,
     committed: 0,

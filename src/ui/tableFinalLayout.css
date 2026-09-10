@@ -571,6 +571,10 @@
     opacity: .30 !important;
     filter: grayscale(.85) !important;
   }
+  .app:has(.play) .table-modern .seat.hero.folded {
+    opacity: .82 !important;
+    filter: none !important;
+  }
   .app:has(.play) .table-modern .seat.folded .pod {
     box-shadow: none !important;
     border-color: rgba(255, 255, 255, .10) !important;
@@ -750,7 +754,7 @@
     position: absolute !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: calc(54px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
     z-index: 18;
     margin: 0 !important;
     padding: 0 6px !important;
@@ -840,13 +844,21 @@
   .ir-fullscreen .ir-menu-placar { font-size: 12px; color: rgba(255, 255, 255, .8); }
   .ir-fullscreen .ir-menu-item { width: 100%; text-align: left; }
 
-  /* ---- resultado da mão: painel sobre o feltro ---- */
+  /* ---- resultado da mão: painel sobre o feltro ----
+     Com o resultado aberto, a faixa do veredito sai de cena: o painel já traz o
+     "Coach: ..." e as duas se sobrepunham. */
+  /* Com o resultado aberto o veredito some (o painel já traz o "Coach: ..."). */
+  .ir-fullscreen:has(.ir-result) .ir-coach { display: none !important; }
+  .ir-fullscreen:has(.ir-result) .ir-step { display: none !important; }
   .ir-fullscreen .ir-result {
+    /* Folha ancorada embaixo, com a altura do conteúdo: a mesa continua à vista
+       por cima dela (o painel tomava a tela inteira e ficava metade vazio). */
     position: absolute !important;
-    top: calc(96px + env(safe-area-inset-top, 0px));
+    top: auto !important;
     left: 8px;
     right: 8px;
     bottom: calc(54px + env(safe-area-inset-bottom, 0px));
+    max-height: 58vh;
     z-index: 22;
     overflow-y: auto;
     max-width: none !important;
@@ -854,7 +866,8 @@
     padding: 12px;
     border: 1px solid rgba(230, 196, 84, .28);
     border-radius: 14px;
-    background: rgba(8, 11, 9, .94);
+    background: #0b0e0b;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .65);
   }
 
   /* ---- acabamento visual da mesa do review ---- */
@@ -864,7 +877,7 @@
   }
   .ir-fullscreen .table-modern .seat .pod { transform: scale(.84) !important; transform-origin: center; }
   .ir-fullscreen .table-modern .seat.hero .pod { transform: scale(1) !important; }
-  .ir-fullscreen .table-modern .seat.hero { top: 83% !important; }
+  .ir-fullscreen .table-modern .seat.hero { top: 80% !important; }
   .ir-fullscreen .table-modern .seat-bet-hero { top: 70% !important; }
   .ir-fullscreen .table-modern .tbl-center-col { top: 46% !important; }
   .ir-fullscreen .table-modern .table-brand-mark {
@@ -885,6 +898,21 @@
     white-space: nowrap;
   }
   .ir-fullscreen .table-modern .seat .pos-tag { color: #17130a !important; font-weight: 800 !important; }
+  /* A plaquinha de posição do HERÓI ficava DENTRO do pod, em cima da carta.
+     Vai pra fora, ao lado do selo "VOCÊ". */
+  .ir-fullscreen .table-modern .seat.hero .pos-tag {
+    top: -9px !important;
+    left: -2px !important;
+    background: var(--gold) !important;
+    color: #17130a !important;
+    border: 0 !important;
+    z-index: 6 !important;
+  }
+  /* Foldou? O assento apaga — mas as SUAS cartas continuam legíveis. */
+  .ir-fullscreen .table-modern .seat.hero.folded {
+    opacity: .82 !important;
+    filter: none !important;
+  }
   .ir-fullscreen .table-modern .seat.hero .hole .card {
     width: 48px !important;
     height: 67px !important;

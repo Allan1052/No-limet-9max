@@ -51,7 +51,9 @@ export function Seat({
   const stackLabel = fmtAmount(player.stack, bigBlind, unit);
   // Avatar-monograma: inicial do nome + cor derivada do nome (determinística).
   // Não é foto/identidade real — é um selo gerado, só pra dar cara ao assento.
-  const initial = (player.name.match(/[A-Za-z0-9]/)?.[0] ?? "?").toUpperCase();
+  // Se o nome termina em número ("Vilão 3", usado no review), o círculo mostra
+  // o NÚMERO — senão os oito vilões viravam oito "V" iguais.
+  const initial = (player.name.match(/(\d+)\s*$/)?.[1] ?? player.name.match(/[A-Za-z0-9]/)?.[0] ?? "?").toUpperCase();
   const avaHue = Array.from(player.name).reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
   const avaStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, hsl(${avaHue} 32% 34%), hsl(${avaHue} 30% 20%))`,
@@ -81,7 +83,9 @@ export function Seat({
         {rangeMarked ? <div className="range-flag">👁 range</div> : null}
         {/* Cartas no TOPO, "atrás" do avatar (estilo GG): o avatar sobe por cima. */}
         <div className="hole">
-          {player.holeCards.length === 0 || folded ? null : showCards ? (
+          {/* Foldou? Some com as cartas — MENOS as suas: o Allan quer rever o
+              que jogou fora, principalmente no review do torneio. */}
+          {player.holeCards.length === 0 || (folded && !player.isHero) ? null : showCards ? (
             // Herói: carta grande (índice no canto). Vilão revelado: carta pequena limpa.
             player.holeCards.map((c, i) => <CardView key={i} card={c} small={!player.isHero} />)
           ) : (
