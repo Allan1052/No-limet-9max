@@ -1,3 +1,11 @@
+> 🔎 **LEIA PRIMEIRO (2026-09-10) — AUDITORIA ATUALIZADA:**
+> **`docs/handoff/2026-09-10-AUDITORIA-ATUALIZADA.md`** revisa a "Auditoria Premium"
+> do ChatGPT contra o código de hoje: confirma o que estava certo (com números
+> medidos), corrige 3 recomendações feitas sobre uma versão ANTIGA do app
+> (o 2BB já foi removido; a mão do herói é a MAIOR da mesa de propósito; o motor
+> não está congelado) e lista o que faltou (Review, honestidade de claims, PWA,
+> contraste). **Se o PDF e esse arquivo divergirem, vale o arquivo.**
+
 > 🛑 **REGRA NOVA (2026-09-08) — LAYOUT DA MESA:** pare de criar camadas novas de CSS.
 > O arquivo **`src/ui/tableFinalLayout.css`** agora é o **autoritário** do layout da mesa.
 > Leia **`docs/handoff/2026-09-08-REGRA-layout-mesa.md`** ANTES de mexer na mesa.

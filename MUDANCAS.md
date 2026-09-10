@@ -23,6 +23,29 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — Auditoria do ChatGPT revisada e guardada no projeto
+*(Só documento — nada do app mudou nesta entrada.)*
+- Li a "Auditoria Premium" do ChatGPT inteira e conferi **cada afirmação contra o
+  código**. O resultado está em
+  **`docs/handoff/2026-09-10-AUDITORIA-ATUALIZADA.md`**, e é ele que vale quando
+  divergir do PDF.
+- **O diagnóstico dele está certo:** o app tem mais conteúdo do que a tela
+  consegue mostrar, e o salto vem de organizar, não de adicionar.
+- **Confirmei com número o achado principal:** 12 arquivos de CSS (um com 241 KB),
+  455 `!important`, 327 estilos soltos em 51 arquivos, 14 tamanhos de letra
+  diferentes entre 8 e 17px, e **zero** padrão de espaçamento. É a causa-raiz das
+  brigas de layout que a gente viveu.
+- **Ele pegou uma dívida minha:** vários botões estão abaixo do tamanho mínimo de
+  toque (a setinha com 24px, os presets com 26px, "Ver dicas" com 26px — o mínimo
+  é 44px). Fui eu que apertei pra caber na tela.
+- **Corrigi 3 recomendações que estavam desatualizadas:** ele pede pra manter o
+  2BB (você mandou tirar), pede o herói "só um pouco maior" (a sua mão é a maior
+  da mesa de propósito) e pede pra congelar o motor (se valesse, o bug do BB
+  mandando foldar AK ainda estaria no ar).
+- **E anotei o que faltou nele:** a tela de Review nem foi auditada, não há
+  capítulo sobre honestidade dos selos, nada sobre o "fechar e abrir 2×" e o
+  contraste não foi medido.
+
 ## 2026-09-10 — Claude — A dica agora muda a CADA decisão sua no pré-flop
 Você sentiu falta disso e tinha razão: **o app avaliava só a PRIMEIRA decisão
 pré-flop da mão**. Se você abria, o vilão dava re-raise e você decidia de novo,
