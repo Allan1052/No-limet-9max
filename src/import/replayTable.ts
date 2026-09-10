@@ -29,6 +29,8 @@ export interface ReplayFrame {
   actorSeat: number;
   /** Rua deste passo. */
   street: GameStreet;
+  /** Índice da ação no hand history (liga o passo ao veredito daquela decisão). */
+  actionIdx?: number;
 }
 
 const BOARD_TARGET: Record<ParsedStreet, number> = { preflop: 0, flop: 3, turn: 4, river: 5 };
@@ -186,7 +188,8 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
     }
   };
 
-  for (const a of hand.actions) {
+  for (let ai = 0; ai < hand.actions.length; ai++) {
+    const a = hand.actions[ai];
     if (a.type === "ante" || a.type === "sb" || a.type === "bb") continue;
     openStreetIfNeeded(a.street);
     const i = idxByName.get(a.player);
@@ -213,6 +216,7 @@ export function parsedHandToReplay(hand: ParsedHand): ReplayFrame[] {
       state: snapshot(i, a.street),
       label: `${p.name}: ${actionLabel(a, bb)}`,
       shortLabel: actionLabel(a, bb),
+      actionIdx: ai,
       actorSeat: i,
       street: gameStreet(a.street),
     });

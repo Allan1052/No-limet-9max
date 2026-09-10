@@ -21,7 +21,7 @@ import { comboToHandType } from "../ranges/types";
 // Range que CONTINUA (4-bet jam / call) quando o herói está COLD contra um 3-bet
 // (abriram e re-3-betaram ANTES dele agir). Dois já mostraram força, então é bem
 // mais apertado que "defender a própria abertura": fora daqui, folda.
-const COLD_VS_3BET_CONTINUE = new Set(["AA", "KK", "QQ", "JJ", "TT", "AKs", "AKo", "AQs"]);
+export const COLD_VS_3BET_CONTINUE = new Set(["AA", "KK", "QQ", "JJ", "TT", "AKs", "AKo", "AQs"]);
 import type { Position } from "../ranges/types";
 import type { ParsedHand } from "./handHistory";
 
@@ -55,7 +55,7 @@ export interface SessionReport {
 }
 
 /** Ação pré-flop do herói já reduzida à família que o motor entende. */
-function mapHeroAction(type: string, facingRaise: boolean, allIn: boolean): { engine: string; label: string } {
+export function mapHeroAction(type: string, facingRaise: boolean, allIn: boolean): { engine: string; label: string } {
   switch (type) {
     case "fold":
       return { engine: "fold", label: "Fold" };

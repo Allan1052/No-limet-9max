@@ -23,6 +23,26 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — A dica agora muda a CADA decisão sua no pré-flop
+Você sentiu falta disso e tinha razão: **o app avaliava só a PRIMEIRA decisão
+pré-flop da mão**. Se você abria, o vilão dava re-raise e você decidia de novo,
+a segunda decisão ficava sem veredito — a barra continuava mostrando a primeira.
+- **Agora cada decisão sua tem o seu veredito**, e a barra muda conforme você
+  avança os passos do replay. Exemplo real testado: você abre com AJ → *"Coach
+  recomendava RAISE · você fez RAISE ✓"*; o vilão dá 3-bet e você folda → a barra
+  vira *"Coach recomendava FOLD · você fez FOLD ✓"*.
+- **De quebra, a segunda decisão ficou mais certa.** Quando é VOCÊ que abriu e
+  levou o 3-bet, o motor usa o caminho "vs 3-bet" (que assume que você abriu).
+  Quando você ainda não tinha aumentado e já chegou aberto + 3-betado na sua
+  frente, ele usa a régua de "cold contra 3-bet", que é bem mais apertada. Antes
+  os dois casos caíam na mesma régua.
+- Contra all-in a conta continua sendo preço × equity, em qualquer decisão.
+
+⚠️ **Falta o mesmo no PÓS-FLOP:** se você aposta no flop e leva um raise na mesma
+rua, ainda só a primeira decisão daquela rua é avaliada. É o próximo passo — te
+aviso quando estiver pronto.
+- Suíte: 4010 testes passando (2 novos), SELO 61/61.
+
 ## 2026-09-10 — Claude — Review: fim das repetições na tela
 Você apontou certo: a mesma informação aparecia 2 ou 3 vezes.
 - **A faixa de narração embaixo da mesa saiu.** Ela dizia "Vilão 5: Call 3.4bb"
