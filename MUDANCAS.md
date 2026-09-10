@@ -23,6 +23,19 @@ Regras do registro:
 
 ---
 
+## 2026-09-10 — Claude — O `dist` sai do repositório (ajuste interno)
+- **O que mudou:** a pasta `dist` (o app "montado") **não é mais guardada no
+  repositório**. Nada muda na sua tela — é arrumação de bastidor.
+- **Por que mudou:** eu conferi o robô que publica o site e descobri que ele
+  **monta o app do zero e publica a versão dele**. Ou seja, a `dist` que eu vinha
+  guardando **nunca era a que ia pro ar** — era peso morto que ainda por cima
+  sujava o histórico (cada publicação trocava dezenas de arquivos e o registro
+  nunca mostrava o que de fato tinha mudado).
+- **O que NÃO mudou:** eu continuo rodando o `npm run build` antes de todo push.
+  Ele é quem pega erro de código que o teste sozinho não pega — isso já barrou
+  uma publicação uma vez e a trava continua de pé.
+- **Onde:** nenhuma tela. Regras atualizadas no `AGENTS.md` e no `CLAUDE.md`.
+
 ## 2026-09-10 — Claude — Atualização do app fica LEVE (só baixa o que mudou)
 Corrigido o problema que eu tinha diagnosticado. Foram duas correções, porque a
 primeira sozinha não resolvia:

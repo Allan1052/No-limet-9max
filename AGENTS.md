@@ -12,25 +12,32 @@ como estão.)
 
 ---
 
-## 🔴 REGRA Nº 2 — DEPOIS DE MEXER NO CÓDIGO, RECOMPILE O `dist`
-**O app e o site são servidos a partir da pasta `dist/` COMMITADA.**
-Se você mudar o código-fonte (`src/`, `index.html`, `site/`, `public/site/`) e
-**não** recompilar o `dist`, sua mudança **NÃO chega no celular do Allan** — o
-código novo fica no repositório, mas o que é publicado continua o antigo.
+## 🔴 REGRA Nº 2 — RODE `npm run build` ANTES DO PUSH (mas NÃO commite o `dist`)
 
-**Antes de todo push que muda a UI ou o site, rode:**
+> ⚠️ **MUDOU EM 10/09/2026.** A regra antiga dizia "o app é servido do `dist`
+> COMMITADO". **Isso não é verdade** e foi verificado no
+> `.github/workflows/deploy.yml`: o robô roda `npm install` → `npm test` →
+> `npm run build` e publica o `dist` **gerado no CI**. O `dist` commitado nunca
+> chegava ao ar — só engordava o histórico (e trocava inteiro a cada build).
+> Por isso o `dist/` agora está no `.gitignore`.
+
+**O build continua obrigatório antes do push** — por outro motivo: `npm run
+build` roda o `tsc`, e o `tsc` pega erro de tipo que a suíte de testes **não**
+pega. Já barrou um deploy uma vez.
+
+**Antes de todo push:**
 ```bash
-npx vitest run          # 1) testes passando (hoje ~3660+)
-npx vite build          # 2) recompila o dist com o seu source
-git add -A              # 3) inclui src + dist (+ index.html/site)
+npx vitest run          # 1) suíte verde (hoje ~4012 testes, SELO GTO 61/61)
+npm run build           # 2) roda tsc + vite build (NÃO commite o dist)
+git add -A              # 3) só fonte, docs e MUDANCAS.md
 git commit -m "..."     # 4) commit
 git fetch origin main && git rebase origin/main
 git push origin HEAD:main
 ```
-Confirme que `git status dist` fica **limpo** depois do build — se aparecerem
-arquivos mudados no `dist` que você não commitou, o deploy vai sair velho.
 
-Depois de subir, o Allan precisa **fechar e reabrir o app 2×** (cache do PWA).
+Depois de subir, **confirme que o deploy terminou com sucesso** (Actions) antes
+de dizer ao Allan que está pronto. Ele precisa **fechar e reabrir o app 2×**
+(cache do PWA).
 
 ---
 

@@ -8,3 +8,6 @@ coverage/
 .env
 .env.local
 .env.*.local
+
+# Build publicado pelo CI (npm run build no GitHub Actions), não pelo repositório.
+/dist/

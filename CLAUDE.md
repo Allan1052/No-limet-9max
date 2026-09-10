@@ -20,14 +20,15 @@ Ao dividir tarefas, respeitar essas raias e coordenar pelo Allan.
 
 ## Deploy
 O site/app publica a partir da branch **main** (é assim que a atualização chega
-no celular do Allan). Fluxo: commitar fonte + `dist`, `git fetch origin main`,
+no celular do Allan). Fluxo: commitar a fonte, `git fetch origin main`,
 `git rebase origin/main`, `git push origin HEAD:main`. **Nunca** force-push.
 Depois de deployar, o Allan precisa fechar/reabrir o app 2× (cache do PWA).
 
-⚠️ **SEMPRE recompilar o `dist` (`npx vite build`) depois de mexer no código e
-commitar o `dist` junto** — o app é servido do `dist` commitado; sem rebuild, a
-mudança fica no repo mas NÃO vai pro ar. Regras completas para os dois agentes
-(Claude + Manus) no arquivo **`AGENTS.md`** na raiz.
+⚠️ **NÃO commite o `dist`** (está no `.gitignore` desde 10/09/2026). O robô do
+GitHub Actions roda `npm run build` e publica o `dist` que ELE gera — o `dist`
+commitado nunca ia pro ar. **Mas rode `npm run build` antes do push assim
+mesmo**: ele roda o `tsc`, que pega erro de tipo que a suíte não pega (já barrou
+um deploy). Regras completas para os dois agentes no **`AGENTS.md`** na raiz.
 
 ## ⚠️ REGISTRO OBRIGATÓRIO — `MUDANCAS.md`
 **Todo push que muda o app** (UI, motor, site ou textos) exige uma entrada nova
