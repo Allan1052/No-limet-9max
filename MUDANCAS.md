@@ -23,6 +23,31 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — O pós-flop ganhou a trava que faltava (e eu corrijo um erro meu)
+**Primeiro, o meu erro.** Eu te disse que os bancos de referência do app não
+testavam "o vilão abriu, e agora?". **Estava errado** — eu procurei pelo nome
+errado do campo no código. A verdade é bem melhor: o app tem **615 spots de
+referência** no pré-flop, cobrindo de 8bb a 45bb, todas as posições, 3-bet,
+4-bet e ante. Peço desculpa: eu subestimei um trabalho que já estava feito.
+
+**Agora o que realmente faltava.** Procurando direito, achei a lacuna de
+verdade: o **pós-flop** — que é o que move o veredito rua a rua na tela de
+Review, o diferencial do app — tinha **5 casos de teste, todos no mesmo flop**
+(A♠8♦6♣). Qualquer erro em outra textura passaria despercebido.
+
+- **O que fiz:** um banco de **39 situações** cobrindo 8 boards diferentes
+  (seco, conectado, mesmo naipe, pareado, baixo, cartas altas) e as três ruas
+  (flop, turn, river).
+- **Só coisa indiscutível entra:** lixo contra aposta grande tem que foldar;
+  mão enorme nunca folda; sem aposta e sem mão, passa; sem aposta e com mão
+  enorme, aposta. Fronteira (par médio, projeto marginal) fica de fora — dizer
+  o que é "certo" onde a teoria discorda seria inventar.
+- **Achou algo na primeira rodada** — e era **erro meu**, não do motor: eu tinha
+  escolhido T2o como "mão lixo" num board 9-8-7, mas T-9-8-7 é projeto de
+  sequência aberto. O motor semi-blefou, que é o certo. Conferi antes de acusar.
+- **Onde:** nenhuma tela muda. É proteção para o coach do Review não começar a
+  falar besteira sem ninguém perceber.
+
 ## 2026-09-11 — Claude — Espanhol e inglês estavam pela metade
 - **O que estava acontecendo:** faltavam **48 textos em espanhol** e **47 em
   inglês**. Não quebrava nada — o que faltava aparecia em português — então a
