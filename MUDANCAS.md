@@ -23,6 +23,20 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Espanhol e inglês estavam pela metade
+- **O que estava acontecendo:** faltavam **48 textos em espanhol** e **47 em
+  inglês**. Não quebrava nada — o que faltava aparecia em português — então a
+  tela simplesmente **misturava os idiomas** e ninguém percebia. As faltas se
+  concentravam em "Aprenda do Zero", "Mesa Final", instalação e onboarding.
+- **O que fiz:** traduzi os 95 textos. Agora os três idiomas têm as mesmas
+  **576** frases.
+- **Achei mais uma coisa:** havia 7 textos **mortos** no espanhol e no inglês,
+  restos de uma renomeação antiga (`install.ios*`), que não eram usados em lugar
+  nenhum. Removidos.
+- **Para não acontecer de novo:** criei um teste que compara os três idiomas.
+  Se alguém adicionar um texto e esquecer de traduzir, a publicação para.
+- **Onde:** todas as telas, para quem usa o app em espanhol ou inglês.
+
 ## 2026-09-11 — Claude — Textos minúsculos: o "SEM DINHEIRO REAL" mal dava pra ler
 - **No Ranking:** os números que dizem a faixa de buy-in ("5 FS", "1.000 FS",
   "10.000+ FS") estavam a 9,5px — o menor texto do app, e é justamente o que a
