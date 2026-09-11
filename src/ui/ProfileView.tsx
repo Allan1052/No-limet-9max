@@ -50,8 +50,12 @@ export function ProfileView({
   const { t } = useT();
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
-  const [umamiExcluded, setUmamiExcluded] = useState(() =>
-    typeof window !== "undefined" && localStorage.getItem("umami.disabled") === "1",
+  // Desligar de rastreamento, VISÍVEL PARA TODO MUNDO (antes ficava atrás da
+   // senha de teste, então só o Allan tinha). A chave "cof.tracking.off" é lida
+   // pelo index.html ANTES de carregar qualquer script de terceiro; a
+   // "umami.disabled" é a chave que o próprio Umami respeita.
+  const [trackingOff, setTrackingOff] = useState(() =>
+    typeof window !== "undefined" && localStorage.getItem("cof.tracking.off") === "1",
   );
   const [ruaUnlocked] = useState(isDevUnlocked("rua2026"));
   const [eliteUnlocked] = useState<boolean>(() => {
@@ -83,14 +87,16 @@ export function ProfileView({
       : INSTAGRAM_URL;
     window.open(url, "_blank");
   };
-  const toggleUmamiExclusion = () => {
+  const toggleTracking = () => {
     try {
-      if (umamiExcluded) {
+      if (trackingOff) {
+        localStorage.removeItem("cof.tracking.off");
         localStorage.removeItem("umami.disabled");
-        setUmamiExcluded(false);
+        setTrackingOff(false);
       } else {
+        localStorage.setItem("cof.tracking.off", "1");
         localStorage.setItem("umami.disabled", "1");
-        setUmamiExcluded(true);
+        setTrackingOff(true);
       }
     } catch {
       /* storage indisponível */
@@ -262,9 +268,6 @@ export function ProfileView({
                 </a>
               ))}
             </div>
-            <button className="btn tiny" onClick={toggleUmamiExclusion} style={{ marginTop: 10 }}>
-              {umamiExcluded ? "✓ Este navegador está fora das métricas" : "Não contar meus testes neste navegador"}
-            </button>
           </div>
         ) : null}
 
@@ -282,7 +285,35 @@ export function ProfileView({
             lineHeight: 1.5,
           }}
         >
-          📱 Seu progresso, missões e XP ficam salvos somente neste aparelho; não sincronizam automaticamente entre celulares. 📊 O opt-out do Umami vale apenas para este navegador.
+          <div style={{ fontWeight: 800, color: "var(--gold, #c9a227)", marginBottom: 6 }}>
+            🔒 Seus dados
+          </div>
+          📱 <b>Seu progresso, missões e XP ficam salvos somente neste aparelho.</b>{" "}
+          Não sincronizam entre celulares e não vão para nenhum servidor nosso.
+          <br />
+          📊 O app usa medição de uso (páginas abertas e eventos como "instalou",
+          "resolveu a mão do dia") e um <b>pixel de publicidade da Meta</b>, usado
+          para medir o alcance das divulgações. Nenhum dos dois recebe suas mãos,
+          seu histórico ou seu progresso.
+          <br />
+          O botão abaixo desliga <b>os dois</b>, só neste navegador.
+          <div style={{ marginTop: 10 }}>
+            <button
+              className="btn tiny"
+              onClick={toggleTracking}
+              style={{ minHeight: "var(--tap-sm, 40px)" }}
+            >
+              {trackingOff
+                ? "✓ Rastreamento desligado neste navegador"
+                : "Desligar rastreamento neste navegador"}
+            </button>
+            {trackingOff ? (
+              <div style={{ marginTop: 6, fontSize: 11.5 }}>
+                Vale a partir da próxima vez que você abrir o app — nesta sessão
+                os scripts já tinham carregado.
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="profile-setting">

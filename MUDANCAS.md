@@ -23,6 +23,24 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — "Seus dados": agora o app conta a verdade e deixa desligar
+- **O que eu achei na auditoria:** o app carregava um **pixel de publicidade do
+  Facebook** em toda abertura, e o único botão para desligar rastreamento
+  estava **trancado atrás da sua senha de teste** — ou seja, só você tinha. Pior:
+  o aviso na tela falava de um botão que o jogador não podia ver.
+- **O que mudou:** o Perfil ganhou um bloco **🔒 Seus dados**, visível para todo
+  mundo, que diz em português o que é medido (páginas abertas, eventos como
+  "instalou") e **assume o pixel da Meta**, deixando claro que nenhum dos dois
+  recebe suas mãos, seu histórico ou seu progresso.
+- **O botão desliga de verdade:** conferi no navegador. Com o rastreamento
+  ligado, o app pede os dois scripts; depois de desligar, **nenhum dos dois é
+  sequer pedido**. Não é "não contar depois" — é não carregar.
+- **O que EU não decidi por você:** se o pixel deve continuar existindo. Isso é
+  decisão sua, de divulgação. Eu só fiz ele ser declarado e desligável.
+- **Ainda falta:** uma página de política de privacidade no site. Eu não publico
+  documento legal sozinho — quando você quiser, eu escrevo e você aprova.
+- **Onde:** aba **Perfil**, bloco "Seus dados".
+
 ## 2026-09-11 — Claude — O site estava ensinando errado na porta de entrada
 - **O que estava errado:** a demonstração da landing mostrava **K♠Q♠** e dizia
   *"o motor do app aponta Fold"*. Eu rodei o motor: ele manda **PAGAR** essa mão.

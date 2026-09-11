@@ -30,24 +30,47 @@
     <meta name="twitter:image" content="https://calloufold.com.br/og.png" />
     <!-- Meta Pixel (instalado em 19/08 — ID do conjunto de dados criado no Meta Business) -->
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '2895094507517479');
-      fbq('track', 'PageView');
+      // RESPEITA O DESLIGAR DO JOGADOR (Perfil -> Privacidade). Antes o pixel
+      // subia sempre: o botão do Perfil só desligava o Umami, e nem estava
+      // visível para quem não tem a senha de teste. Auditoria de 10/09/2026.
+      (function () {
+        try {
+          if (localStorage.getItem('cof.tracking.off') === '1') return;
+        } catch (e) { /* storage bloqueado: segue o padrão */ }
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '2895094507517479');
+        fbq('track', 'PageView');
+      })();
     </script>
     <!-- End Meta Pixel Code (noscript movido para o body, pois o parser do build não aceita <noscript> no <head>) -->
     <!-- Cache-buster automático via meta para evitar HTML antigo do browser -->
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="expires" content="0" />
-    <!-- ANALYTICS (privacy-first, sem cookie). O app dispara "install" e "pwa_open" via src/app/analytics.ts. -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="5324592f-e1ca-4954-8539-4ebb5e9f98c1"></script>
+    <!-- ANALYTICS de uso (Umami, sem cookie). O app dispara "install" e
+         "pwa_open" via src/app/analytics.ts. Quem desliga o rastreamento no
+         Perfil não carrega NEM o script: assim o desligar vale de verdade, e
+         não só "não contar" depois de já ter avisado o servidor.
+         O trackEvent() já é seguro sem o umami (window.umami?.track?.). -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('cof.tracking.off') === '1') return;
+        } catch (e) { /* storage bloqueado: segue o padrão */ }
+        var s = document.createElement('script');
+        s.defer = true;
+        s.src = 'https://cloud.umami.is/script.js';
+        s.setAttribute('data-website-id', '5324592f-e1ca-4954-8539-4ebb5e9f98c1');
+        document.head.appendChild(s);
+      })();
+    </script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
