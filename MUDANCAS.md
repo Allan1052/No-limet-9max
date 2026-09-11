@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — O painel de fim de mão tinha 14 botões. Agora tem 2.
+- **Medido:** depois de uma mão jogada, o painel "Ver dicas" mostrava **14
+  ações** e **precisava rolar** (972px de conteúdo em 824px de painel) — bem no
+  momento em que você só quer saber se jogou certo.
+- **Como ficou:** à vista só as duas que continuam o estudo — **NOVA MÃO**
+  (dourado, dominante) e **Rever mão**. O resto virou dois grupos que abrem ao
+  toque: **📊 Meu progresso** (evolução, conquistas, mãos da sessão, pontos
+  fracos) e **📤 Compartilhar e exportar**.
+- É o mesmo padrão do menu "⋯" da tela de Review, que você aprovou.
+- **Resultado medido:** 14 → **5 ações visíveis**, e o painel **parou de rolar**.
+- **De quebra:** o botão "💡 Ver dicas" da mesa estava com 26px de altura (o
+  passo 2 da auditoria tinha subido os outros e esse ficou para trás). Agora
+  tem 40px.
+- **Onde:** mesa de jogo, ao terminar uma mão.
+
 ## 2026-09-11 — Claude — "Suas cartas" ficou mais fácil de preencher
 - **O defeito:** na tela **Sua Mão**, escolher o naipe era uma lista suspensa
   que não cabia na largura do celular — aparecia **"♠ Es.."**, cortado.

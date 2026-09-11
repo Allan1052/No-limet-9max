@@ -427,6 +427,12 @@ export function App() {
       </button>
       {hasFirstPlayedHand ? (
         <>
+          {/* Medido em 11/09: depois de uma mão JOGADA este painel mostrava 14
+              ações e precisava rolar (972px de conteúdo em 824px de painel) —
+              bem no momento em que o jogador só quer saber se jogou certo.
+              Agora ficam à vista só as duas que continuam o estudo; o resto vai
+              para dois grupos que abrem ao toque, o mesmo padrão do menu "⋯"
+              da tela de Review. */}
           <button
             className="btn"
             disabled={!controller.lastHand}
@@ -434,29 +440,41 @@ export function App() {
           >
             {tr("btn.reviewHand")}
           </button>
-          {controller.lastHand ? (
-            <HandActions hand={controller.lastHand} feedback={controller.feedback} />
-          ) : null}
-          <button className="btn" onClick={() => { setTipsOpen(false); setProgressOpen(true); }}>
-            📊 {tr("btn.progress")}
-          </button>
-          {isXpUnlocked() ? (
-            <button className="btn" onClick={() => { setTipsOpen(false); setAchievementsOpen(true); }}>
-              🏆 Conquistas
-            </button>
-          ) : null}
-          <button className="btn" onClick={() => { setTipsOpen(false); setHistoryOpen(true); }}>
-            📋 Mãos desta sessão
-          </button>
-          <button className="btn" onClick={() => { setTipsOpen(false); setLeaksOpen(true); }}>
-            🎯 Pontos fracos
-          </button>
-          <button
-            className="btn"
-            onClick={() => downloadText(controller.exportSessionText())}
-          >
-            {tr("btn.exportHands")} ({controller.handLog.length})
-          </button>
+
+          <details className="ph-group">
+            <summary>📊 Meu progresso</summary>
+            <div className="ph-group-body">
+              <button className="btn" onClick={() => { setTipsOpen(false); setProgressOpen(true); }}>
+                📊 {tr("btn.progress")}
+              </button>
+              {isXpUnlocked() ? (
+                <button className="btn" onClick={() => { setTipsOpen(false); setAchievementsOpen(true); }}>
+                  🏆 Conquistas
+                </button>
+              ) : null}
+              <button className="btn" onClick={() => { setTipsOpen(false); setHistoryOpen(true); }}>
+                📋 Mãos desta sessão
+              </button>
+              <button className="btn" onClick={() => { setTipsOpen(false); setLeaksOpen(true); }}>
+                🎯 Pontos fracos
+              </button>
+            </div>
+          </details>
+
+          <details className="ph-group">
+            <summary>📤 Compartilhar e exportar</summary>
+            <div className="ph-group-body">
+              {controller.lastHand ? (
+                <HandActions hand={controller.lastHand} feedback={controller.feedback} />
+              ) : null}
+              <button
+                className="btn"
+                onClick={() => downloadText(controller.exportSessionText())}
+              >
+                {tr("btn.exportHands")} ({controller.handLog.length})
+              </button>
+            </div>
+          </details>
         </>
       ) : null}
       {controller.messageKey ? (

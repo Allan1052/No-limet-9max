@@ -7442,3 +7442,34 @@ body {
     width: 100%;
   }
 }
+
+/* Grupos do painel de fim de mão. O painel mostrava 14 ações e rolava; agora
+   só "Nova mão" e "Rever mão" ficam à vista e o resto abre ao toque. */
+.ph-group {
+  border: 1px solid #2a2c22;
+  border-radius: 10px;
+  background: #12150e;
+  overflow: hidden;
+}
+.ph-group > summary {
+  cursor: pointer;
+  padding: 0 14px;
+  font-size: var(--fs-body, 13px);
+  font-weight: 700;
+  color: var(--gold-soft, #ecd07a);
+  list-style: none;
+  min-height: var(--tap, 44px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ph-group > summary::-webkit-details-marker { display: none; }
+.ph-group > summary::after { content: "▾"; margin-left: auto; opacity: .7; }
+.ph-group[open] > summary::after { content: "▴"; }
+.ph-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid #2a2c22;
+}

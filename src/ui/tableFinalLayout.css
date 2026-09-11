@@ -464,9 +464,12 @@
     right: auto !important;
     transform: none !important;
     z-index: 12 !important;
-    min-height: 26px !important;
-    padding: 4px 12px !important;
-    font-size: 11px !important;
+    /* Era 26px/11px — o passo 2 da auditoria subiu os alvos da mesa, mas este
+       ficou para trás (medido em 11/09: 91x26). Vai para o tamanho de alvo
+       secundário da mesa, o mesmo dos presets de raise. */
+    min-height: var(--tap-sm, 40px) !important;
+    padding: 4px 14px !important;
+    font-size: var(--fs-sm, 12px) !important;
     white-space: nowrap;
   }
 
