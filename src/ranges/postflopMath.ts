@@ -94,3 +94,50 @@ export function postflopRequiredEquity(p: RequiredEquityParams): number {
 
   return required;
 }
+
+/**
+ * O TAMANHO DE APOSTA QUE VIRA A DECISÃO.
+ *
+ * Responde a pergunta que todo comentarista faz no vídeo — *"se ele tivesse
+ * apostado menos, aí eu pagava"* — e responde com a régua DO PRÓPRIO MOTOR.
+ *
+ * Como: `postflopRequiredEquity` cresce junto com o valor a pagar (o preço
+ * piora). Então existe um ponto em que a equity do herói empata com a exigida.
+ * Em vez de refazer a álgebra (que erraria, porque a fórmula tem colchão,
+ * penalidade de rua, disciplina e implied odds), a gente PROCURA esse ponto por
+ * bisseção na função original. Assim a resposta nunca contradiz o veredito.
+ *
+ * Devolve o valor a pagar (em bb) no ponto de virada, ou `undefined` quando não
+ * existe ponto de virada útil:
+ *  - equity baixa demais: nem uma aposta minúscula tornaria o call correto;
+ *  - equity alta demais: dentro de tamanhos plausíveis (até 10× o pote) o call
+ *    continua certo.
+ */
+export function breakEvenToCallBB(
+  equity: number,
+  base: Omit<RequiredEquityParams, "toCall">,
+): number | undefined {
+  const req = (toCall: number) => postflopRequiredEquity({ ...base, toCall });
+
+  // Piso: uma aposta simbólica. Se nem assim a equity alcança a exigida, não há
+  // tamanho que salve — dizer "se ele apostasse X" seria mentira.
+  const minToCall = Math.max(0.01, base.potBB * 0.01);
+  if (equity < req(minToCall)) return undefined;
+
+  // Teto: 10× o pote. Se ainda paga lá, não há ponto de virada plausível.
+  const maxToCall = Math.max(minToCall * 2, base.potBB * 10);
+  if (equity >= req(maxToCall)) return undefined;
+
+  let lo = minToCall;
+  let hi = maxToCall;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (equity >= req(mid)) lo = mid;
+    else hi = mid;
+  }
+  // Arredonda PARA BAIXO: o número que a gente mostra tem que ser mesmo pagável.
+  // Arredondar para cima devolvia um valor 0,3 ponto acima da virada — ou seja,
+  // a dica diria "com X valeria pagar" e pagar X já estaria errado.
+  const arredondado = Math.floor(lo * 10) / 10;
+  return arredondado >= 0.1 ? arredondado : undefined;
+}

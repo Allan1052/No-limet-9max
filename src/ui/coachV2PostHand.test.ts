@@ -106,3 +106,53 @@ describe("Coach V2 pós-mão — a leitura do range do vilão", () => {
     expect(buildCoachV2PostHandDecision({ ...base, villainRangePct: 0 }, "simple").leitura).toBeUndefined();
   });
 });
+
+describe("Coach V2 pós-mão — o que mudaria a decisão", () => {
+  const fold = { ...base, adviceFam: "fold" as const, breakEvenCallBB: 2.1 };
+
+  it("no modo SIMPLES responde a pergunta do vídeo", () => {
+    expect(buildCoachV2PostHandDecision(fold, "simple").oQueMudaria).toBe(
+      "Se ele tivesse apostado até 2.1bb, aí valeria pagar.",
+    );
+  });
+
+  it("no modo TÉCNICO fica direto", () => {
+    expect(buildCoachV2PostHandDecision(fold, "technical").oQueMudaria).toBe(
+      "Viraria call com até 2.1bb para pagar.",
+    );
+  });
+
+  // Num call já aprovado, dizer o ponto de virada é ruído: a decisão estava
+  // certa e a frase só confundiria.
+  it("só aparece quando o padrão era FOLDAR", () => {
+    const call = { ...base, adviceFam: "call" as const, breakEvenCallBB: 2.1 };
+    expect(buildCoachV2PostHandDecision(call, "simple").oQueMudaria).toBeUndefined();
+  });
+
+  it("sem ponto de virada calculado, não inventa", () => {
+    const semVirada = { ...base, adviceFam: "fold" as const };
+    expect(buildCoachV2PostHandDecision(semVirada, "simple").oQueMudaria).toBeUndefined();
+  });
+});
+
+describe("Coach V2 pós-mão — cartas que te salvavam", () => {
+  it("conta as cartas e a chance, em português", () => {
+    const v = buildCoachV2PostHandDecision({ ...base, outs: { outs: 9, chance: 0.191 } }, "simple");
+    expect(v.cartasSalvadoras).toBe("9 cartas te colocavam na frente — 19% de chance de vir na próxima.");
+  });
+
+  it("uma carta só não vira 'cartas'", () => {
+    const v = buildCoachV2PostHandDecision({ ...base, outs: { outs: 1, chance: 0.021 } }, "simple");
+    expect(v.cartasSalvadoras).toContain("1 carta te");
+  });
+
+  it("no modo técnico usa o termo do jogo", () => {
+    const v = buildCoachV2PostHandDecision({ ...base, outs: { outs: 9, chance: 0.191 } }, "technical");
+    expect(v.cartasSalvadoras).toBe("9 outs · 19% na próxima carta.");
+  });
+
+  it("sem outs, não aparece", () => {
+    expect(buildCoachV2PostHandDecision(base, "simple").cartasSalvadoras).toBeUndefined();
+    expect(buildCoachV2PostHandDecision({ ...base, outs: { outs: 0, chance: 0 } }, "simple").cartasSalvadoras).toBeUndefined();
+  });
+});

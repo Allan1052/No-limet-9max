@@ -23,6 +23,29 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — As dicas completas: o que mudaria, as outs e o Ás
+Os três últimos itens da auditoria das dicas. Estes precisaram de **conta nova**.
+
+- **"O QUE MUDARIA"** — quando o motor manda foldar, a dica agora responde a
+  pergunta do vídeo: *"Se ele tivesse apostado até 2,1bb, aí valeria pagar."*
+  Não é chute: eu **inverti a régua do próprio motor** (por busca), então a
+  resposta nunca contradiz o veredito. Se a dica diz que com 2,1bb valia pagar,
+  pagar 2,1bb é mesmo aprovado pela mesma conta que reprovou o valor real.
+- **"CARTAS QUE TE SALVAVAM"** — *"9 cartas te colocavam na frente — 19% de
+  chance de vir na próxima."* O app não sabia contar isso. Agora ele testa
+  **carta por carta** (as 47 que podiam vir) e conta quais te tiram de trás.
+  Só aparece quando você estava **atrás** e ainda havia carta por vir — para
+  quem já está na frente não existe "carta que salva".
+- **BLOQUEADOR DE ÁS** — faltava o mais comum do poker: *"Você tem o A♦ — reduz
+  os ases e o par de ases do vilão."* E quando a sua carta pareia a **mais alta
+  da mesa**, a dica agora diz isso com o peso certo ("reduz muito o top par
+  dele") em vez de tratar igual a um par qualquer.
+- **A leitura do board saiu do modo Técnico.** Os bloqueadores estavam
+  escondidos atrás daquela chave; agora aparecem para todo mundo.
+- **Velocidade:** medi a análise de uma sessão com tudo isso ligado — **234ms**.
+  Não dá pra sentir.
+- **Onde:** painel "Ver dicas" e Review (tocando na faixa do coach).
+
 ## 2026-09-11 — Claude — As dicas ganharam "A LEITURA" e "A CONTA"
 Os três primeiros itens da auditoria das dicas. **Nenhum deles inventa nada** —
 são dados que o motor já calculava e jogava fora antes de chegar na tela.

@@ -12,7 +12,7 @@ import { rankOf, suitOf, RANKS, type Card } from "../engine/cards";
 
 const SUIT_SYM = ["♣", "♦", "♥", "♠"]; // ordem de SUITS = "cdhs"
 
-export type BlockerKind = "nutFlush" | "nutFlushDraw" | "boardPair";
+export type BlockerKind = "nutFlush" | "nutFlushDraw" | "boardPair" | "aceBlocker" | "topRank";
 
 export interface BlockerNote {
   kind: BlockerKind;
@@ -25,6 +25,11 @@ export interface BlockerNote {
  * - nutFlush:     3 do naipe no board + você tem o Ás desse naipe (e não fez flush)
  * - nutFlushDraw: 2 do naipe no board + você tem o Ás desse naipe (bloqueia o projeto)
  * - boardPair:    você tem uma carta de um rank que está no board (reduz trips/2 pares)
+ * - topRank:      idem, mas do rank MAIS ALTO do board — é o bloqueador que mais
+ *                 importa, porque top par é a mão que o vilão mais tem
+ * - aceBlocker:   você tem um Ás e NÃO há Ás no board — reduz os AA e todos os
+ *                 AX dele. Era o bloqueador mais comum do poker e faltava
+ *                 (auditoria das dicas, 11/09)
  */
 export function findBlockers(hand: Card[], board: Card[]): BlockerNote[] {
   if (!hand || hand.length < 2 || board.length < 3) return [];
@@ -35,6 +40,10 @@ export function findBlockers(hand: Card[], board: Card[]): BlockerNote[] {
     boardSuit[suitOf(c)]++;
     boardRankCount.set(rankOf(c), (boardRankCount.get(rankOf(c)) ?? 0) + 1);
   }
+
+  // Carta mais alta do board — separa "bloqueia o top par" de "bloqueia um par
+  // qualquer", que têm pesos bem diferentes na leitura.
+  const topBoardRank = Math.max(...board.map(rankOf));
 
   // Quantas cartas de cada naipe o herói tem (pra saber se ele mesmo fez o flush).
   const heroSuit = [0, 0, 0, 0];
@@ -67,7 +76,16 @@ export function findBlockers(hand: Card[], board: Card[]): BlockerNote[] {
     // que pareou o board (aí o herói TEM o set — outra conversa).
     const heroHasRankTwice = hand.filter((x) => rankOf(x) === r).length >= 2;
     if (boardRankCount.has(r) && !heroHasRankTwice) {
-      add("boardPair", RANKS[r - 2]);
+      // Se o rank é o MAIS ALTO do board, o bloqueio é bem mais relevante: top
+      // par é a mão que o vilão mais costuma ter. Por isso tem nota própria.
+      add(r === topBoardRank ? "topRank" : "boardPair", RANKS[r - 2]);
+    }
+
+    // Bloqueador de Ás: você tem um Ás e NÃO há Ás no board. Reduz o AA dele e
+    // todos os AX — é o bloqueador mais comum do jogo. Só conta quando o Ás não
+    // está no board (se estiver, o caso certo é o de rank do board, acima).
+    if (isAce && !boardRankCount.has(14)) {
+      add("aceBlocker", `A${SUIT_SYM[s]}`);
     }
   }
 

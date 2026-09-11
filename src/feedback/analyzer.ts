@@ -33,6 +33,10 @@ export interface HeroAdvice {
   potOdds?: number;
   /** Largura estimada do range do vilão (0..1), para o painel de leitura. */
   villainRangePct?: number;
+  /** Tamanho de aposta que viraria a decisão (bb) — ver postflopMath. */
+  breakEvenCallBB?: number;
+  /** Cartas que colocam o herói na frente, e a chance da próxima carta. */
+  outs?: { outs: number; chance: number };
   userSubscriptionLevel?: UserSubscriptionLevel;
   /** Estratégia mista recomendada (frequências), quando disponível. */
   mix?: AdviceFreq[];
@@ -128,6 +132,12 @@ export interface FeedbackItem {
    *  é a primeira frase de qualquer comentarista — "ele abriu de UTG, isso é
    *  range apertado". Agora atravessa até a tela. */
   villainRangePct?: number;
+  /** O TAMANHO DE APOSTA QUE VIRARIA A DECISÃO (bb). Responde "e se ele
+   *  tivesse apostado menos?" usando a régua do próprio motor. */
+  breakEvenCallBB?: number;
+  /** CARTAS QUE TE SALVAVAM: quantas colocam o herói na frente e a chance de
+   *  vir uma delas na próxima carta (0..1). */
+  outs?: { outs: number; chance: number };
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -174,6 +184,8 @@ export function gradeDecision(
   const item = gradeCore(streetLabel, userSubscriptionLevel, heroAction, advice, ctx);
   // A leitura do range do vilão vem do motor e segue até a tela (antes morria aqui).
   if (advice.villainRangePct !== undefined) item.villainRangePct = advice.villainRangePct;
+  if (advice.breakEvenCallBB !== undefined) item.breakEvenCallBB = advice.breakEvenCallBB;
+  if (advice.outs !== undefined) item.outs = advice.outs;
   // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {

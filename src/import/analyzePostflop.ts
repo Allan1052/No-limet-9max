@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { rangePercent } from "../ranges/types";
+import { contarOuts } from "../train/streets/outs";
 import { rankOf, suitOf, type Card } from "../engine/cards";
 import {
   preflopOpenRange,
@@ -263,6 +264,11 @@ export function analyzePostflopStreets(
             // ações anteriores). É o que permite a dica dizer "ele está com
             // cerca de X% das mãos aqui".
             villainRangePct: rangePercent(villainRange),
+            breakEvenCallBB: facing > 0 ? rec.breakEvenBB : undefined,
+            outs: (() => {
+              const o = contarOuts(hand.heroCards, boardCards, villainRange);
+              return o ? { outs: o.outs, chance: o.chanceProximaCarta } : undefined;
+            })(),
           },
           { heroPosition: hero.position, heroBB: effBB },
         );
@@ -365,6 +371,14 @@ export function analyzePostflopSteps(
               // Mesma leitura de range da versão por rua: é o que permite a
               // dica abrir com "ele está com cerca de X% das mãos aqui".
               villainRangePct: rangePercent(villainRange),
+              // "E se ele tivesse apostado menos?" — só quando havia aposta.
+              breakEvenCallBB: facing > 0 ? rec.breakEvenBB : undefined,
+              // "Quais cartas me salvavam?" — cartas reais do herói, por isso
+              // só dá para calcular aqui (o motor trabalha com tipo de mão).
+              outs: (() => {
+                const o = contarOuts(hand.heroCards, boardCards, villainRange);
+                return o ? { outs: o.outs, chance: o.chanceProximaCarta } : undefined;
+              })(),
             },
             { heroPosition: hero.position, heroBB: effBB },
           ),

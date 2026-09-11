@@ -95,7 +95,7 @@ export function HandTipsModal({
         </div>
 
         <div className="summary">{summarize(displayItems, summaryLevel)}</div>
-        {tecnico && hasBoard ? (
+        {hasBoard ? (
           <div className="board-read">
             <div className="br-head">🧠 {t("tips.boardRead")}</div>
             {blockers.length > 0 ? (
@@ -139,6 +139,18 @@ export function HandTipsModal({
                   <div className="fb-camada">
                     <b>A conta</b>
                     {view.conta}
+                  </div>
+                ) : null}
+                {view.oQueMudaria ? (
+                  <div className="fb-camada">
+                    <b>O que mudaria</b>
+                    {view.oQueMudaria}
+                  </div>
+                ) : null}
+                {view.cartasSalvadoras ? (
+                  <div className="fb-camada">
+                    <b>Cartas que te salvavam</b>
+                    {view.cartasSalvadoras}
                   </div>
                 ) : null}
                 {view.metrics.length > 0 ? (

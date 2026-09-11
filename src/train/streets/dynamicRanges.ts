@@ -17,7 +17,7 @@
 
 import { allHandTypes, comboCount, handTypeCombos, rangeCombos, type Range } from "../../ranges/types";
 import { buildTopRange } from "../../ranges/build";
-import { postflopRequiredEquity } from "../../ranges/postflopMath";
+import { breakEvenToCallBB, postflopRequiredEquity } from "../../ranges/postflopMath";
 import { handRank, handScore } from "../../ranges/handStrength";
 import { equityHandVsRange } from "../../engine/equity";
 import { seededRng, type Card } from "../../engine/cards";
@@ -648,7 +648,7 @@ export function heroBestAction(
   villainRange: Range,
   iterations = 500,
   rng?: () => number,
-): { action: string; freq: number; reason: string; equity: number; sizePct?: number; sizeBB?: number } {
+): { action: string; freq: number; reason: string; equity: number; sizePct?: number; sizeBB?: number; breakEvenBB?: number } {
   const hit = boardHit(handType, board);
   const streetIdx = board.cards.length >= 5 ? 2 : board.cards.length === 4 ? 1 : 0;
   const equity = realEquity(handType, villainRange, board.cards, iterations, rng);
@@ -671,16 +671,24 @@ export function heroBestAction(
       heroStackBehind: potBB * 3,
     });
     const rq = Math.round(required * 100);
+    // O ponto de virada do TAMANHO da aposta — mesma régua, invertida por
+    // bisseção. É o que permite a dica dizer "se ele tivesse apostado X...".
+    const breakEvenBB = breakEvenToCallBB(equity, {
+      potBB,
+      streetIdx,
+      drawStrength: hit.draw ? 0.6 : 0,
+      heroStackBehind: potBB * 3,
+    });
     // Raise de valor: ~3x a aposta enfrentada (limitado ao pote), em bb reais.
     if (equity >= Math.max(0.66, required + 0.14)) {
       const raiseBB = Math.round(Math.min(facingBetBB * 3, potBB + facingBetBB * 2) * 10) / 10;
       return { action: "raise", freq: 0.8, reason: `equity ${p}%: valor forte — aumente para ~${raiseBB}bb`, equity, sizeBB: raiseBB, sizePct: (potBB > 0 ? raiseBB / potBB : undefined) as number };
     }
-    if (equity >= required) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço com disciplina ${rq}%`, equity };
+    if (equity >= required) return { action: "call", freq: 0.8, reason: `paga: equity ${p}% ≥ preço com disciplina ${rq}%`, equity , breakEvenBB };
     if (hit.draw && streetIdx < 2 && equity >= required - 0.05) {
-      return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto que ganha valor extra quando bate`, equity };
+      return { action: "call", freq: 0.5, reason: `marginal (equity ${p}%), mas com projeto que ganha valor extra quando bate`, equity, breakEvenBB };
     }
-    return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço com disciplina ${rq}%`, equity };
+    return { action: "fold", freq: 0.8, reason: `folda: equity ${p}% < preço com disciplina ${rq}%`, equity , breakEvenBB };
   }
   // TAMANHO — não é só o board. Combina 3 coisas (como um solver faz na direção):
   //   1) Textura: seco/travado → pequeno (~⅓); molhado → grande (~⅔/¾) pra cobrar

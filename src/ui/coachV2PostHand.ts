@@ -26,6 +26,17 @@ export interface CoachV2PostHandDecisionView {
    * técnico — ou seja, o recreativo nunca via.
    */
   conta?: string;
+  /**
+   * O QUE MUDARIA: o tamanho de aposta em que a decisão vira. Sai da régua do
+   * próprio motor (invertida por bisseção), então nunca contradiz o veredito.
+   */
+  oQueMudaria?: string;
+  /**
+   * CARTAS QUE TE SALVAVAM: quantas cartas colocam o herói na frente e a chance
+   * de vir uma delas. Só existe quando ele estava ATRÁS e ainda havia carta por
+   * vir — senão não há o que salvar.
+   */
+  cartasSalvadoras?: string;
 }
 
 function percent(value: number): string {
@@ -128,6 +139,26 @@ function buildConta(item: FeedbackItem, mode: CoachV2PostHandMode): string | und
   return `Você ganha ${emCada100(eq)} e só precisava de ${Math.round(req * 100)} — o preço estava bom.`;
 }
 
+function buildOQueMudaria(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  const virada = item.breakEvenCallBB;
+  if (virada === undefined || virada <= 0) return undefined;
+  // Só faz sentido quando o motor mandou FOLDAR: aí a frase responde "e se ele
+  // tivesse apostado menos?". Num call aprovado, dizer o ponto de virada seria
+  // ruído (a decisão já estava certa).
+  if (item.adviceFam !== "fold") return undefined;
+  if (mode === "technical") return `Viraria call com até ${virada}bb para pagar.`;
+  return `Se ele tivesse apostado até ${virada}bb, aí valeria pagar.`;
+}
+
+function buildCartasSalvadoras(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  const o = item.outs;
+  if (!o || o.outs <= 0) return undefined;
+  const chance = Math.round(o.chance * 100);
+  const cartas = o.outs === 1 ? "1 carta" : `${o.outs} cartas`;
+  if (mode === "technical") return `${o.outs} outs · ${chance}% na próxima carta.`;
+  return `${cartas} te colocavam na frente — ${chance}% de chance de vir na próxima.`;
+}
+
 export function buildCoachV2PostHandDecision(
   item: FeedbackItem,
   mode: CoachV2PostHandMode,
@@ -147,5 +178,7 @@ export function buildCoachV2PostHandDecision(
     metrics,
     leitura: buildLeitura(item, mode),
     conta: buildConta(item, mode),
+    oQueMudaria: buildOQueMudaria(item, mode),
+    cartasSalvadoras: buildCartasSalvadoras(item, mode),
   };
 }
