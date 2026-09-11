@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Textos minúsculos: o "SEM DINHEIRO REAL" mal dava pra ler
+- **No Ranking:** os números que dizem a faixa de buy-in ("5 FS", "1.000 FS",
+  "10.000+ FS") estavam a 9,5px — o menor texto do app, e é justamente o que a
+  pessoa lê pra saber onde se encaixa. Subiram para 11px. O mês/ano da
+  temporada também.
+- **O selo do rodapé** ("SEM DINHEIRO REAL · SÓ ESTUDO · PWA SEGURO") — que é a
+  frase mais importante do app — estava a 10px, na cor mais fraca e ainda com
+  transparência. Calculei o contraste: **3,09:1**, abaixo do mínimo de 4,5:1.
+  Agora está a 11px, sem transparência e com contraste de cerca de 8:1.
+  Continua discreto; agora dá pra ler.
+- **Como ficou:** nas 6 telas medidas sobrou só o rótulo da barra de baixo
+  (Hoje/Treinar/Estudar/Perfil) abaixo de 11px — e esse tem ícone em cima e
+  área de toque grande, que é o padrão de celular. Deixei de propósito.
+- **Onde:** Ranking e o rodapé de todas as telas.
+
 ## 2026-09-11 — Claude — Achei um CSS ANTIGO fantasma brigando com o app inteiro
 Este é o achado mais importante da auditoria, e explica muita coisa.
 
