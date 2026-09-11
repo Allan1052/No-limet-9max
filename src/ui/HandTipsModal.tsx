@@ -121,10 +121,26 @@ export function HandTipsModal({
                   <span className="tag">{ratingLabel(it.rating)}</span>
                 </div>
                 <div className="fb-text">
-                  {/* Ordem pedagógica: 1) decisão  2) motivo  3) matemática */}
+                  {/* Ordem pedagógica: 1) decisão 2) motivo 3) a leitura
+                      4) a conta 5) o resto da matemática. As camadas 3 e 4
+                      passaram a existir nos DOIS modos em 11/09 — antes o
+                      recreativo (modo simples, que é o padrão) não via nenhuma
+                      delas, e era justamente a parte que o Allan sentia falta. */}
                   <div className="fb-decision">{view.decisionLine}</div>
                   <div>{view.reason}</div>
                 </div>
+                {view.leitura ? (
+                  <div className="fb-camada">
+                    <b>A leitura</b>
+                    {view.leitura}
+                  </div>
+                ) : null}
+                {view.conta ? (
+                  <div className="fb-camada">
+                    <b>A conta</b>
+                    {view.conta}
+                  </div>
+                ) : null}
                 {view.metrics.length > 0 ? (
                   <div className="fb-mix">{view.metrics.join(" · ")}</div>
                 ) : null}

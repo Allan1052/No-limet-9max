@@ -897,6 +897,46 @@
      Com o resultado aberto, a faixa do veredito sai de cena: o painel já traz o
      "Coach: ..." e as duas se sobrepunham. */
   /* Com o resultado aberto o veredito some (o painel já traz o "Coach: ..."). */
+  /* Dica completa no Review (11/09): fechada é uma linha; tocando, abre "a
+     leitura" e "a conta" no espaço que sobrou no topo depois que os ◀◀ ▶▶
+     saíram. Era a única tela do app sem nenhuma das duas. */
+  .ir-fullscreen .ir-coach { cursor: pointer; }
+  .ir-fullscreen .ir-coach.aberta {
+    max-height: 62dvh !important;
+    overflow-y: auto !important;
+  }
+  .ir-fullscreen .ir-coach .ir-coach-mais {
+    margin-left: 6px;
+    opacity: .75;
+    font-size: .9em;
+  }
+  /* A faixa é uma LINHA flex (selo + texto). Sem isto, o bloco aberto virava
+     uma terceira coluna e a explicação aparecia ao LADO do veredito, espremida.
+     Ele precisa quebrar linha e ocupar a largura toda. */
+  .ir-fullscreen .ir-coach.aberta { flex-wrap: wrap !important; }
+  .ir-fullscreen .ir-coach-camadas {
+    flex: 1 0 100%;
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(236, 208, 122, .28);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .ir-fullscreen .ir-camada {
+    font-size: var(--fs-sm, 12px);
+    line-height: 1.45;
+    color: #d8d3c0;
+  }
+  .ir-fullscreen .ir-camada b {
+    display: block;
+    margin-bottom: 1px;
+    font-size: var(--fs-label, 10px);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--gold-soft, #ecd07a);
+  }
+
   .ir-fullscreen:has(.ir-result) .ir-coach { display: none !important; }
   .ir-fullscreen:has(.ir-result) .ir-step { display: none !important; }
   .ir-fullscreen .ir-result {

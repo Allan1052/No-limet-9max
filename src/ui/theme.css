@@ -7473,3 +7473,23 @@ body {
   padding: 10px 12px 12px;
   border-top: 1px solid #2a2c22;
 }
+
+/* Camadas da dica ("A leitura", "A conta") — auditoria das dicas de 11/09.
+   O dado já era calculado pelo motor e morria antes da tela; agora aparece nos
+   dois modos, com o rótulo em cima para o olho achar rápido. */
+.fb-camada {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #2a2c22;
+  font-size: var(--fs-body, 13px);
+  line-height: 1.5;
+  color: var(--text-dim, #b8b29a);
+}
+.fb-camada b {
+  display: block;
+  margin-bottom: 2px;
+  font-size: var(--fs-min, 11px);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold-soft, #ecd07a);
+}

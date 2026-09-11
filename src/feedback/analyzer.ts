@@ -123,6 +123,11 @@ export interface FeedbackItem {
   /** A aposta que o herói enfrentava era um ALL-IN de um vilão. Deixa o coach
    *  explicar o fold/call ("o vilão veio de all-in"). */
   facingAllin?: boolean;
+  /** Largura do range do vilão (0..1) no momento da decisão.
+   *  O motor já calculava isso e NUNCA mostrava (auditoria das dicas, 11/09):
+   *  é a primeira frase de qualquer comentarista — "ele abriu de UTG, isso é
+   *  range apertado". Agora atravessa até a tela. */
+  villainRangePct?: number;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -167,6 +172,8 @@ export function gradeDecision(
   ctx?: FeedbackContext,
 ): FeedbackItem {
   const item = gradeCore(streetLabel, userSubscriptionLevel, heroAction, advice, ctx);
+  // A leitura do range do vilão vem do motor e segue até a tela (antes morria aqui).
+  if (advice.villainRangePct !== undefined) item.villainRangePct = advice.villainRangePct;
   // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {

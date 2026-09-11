@@ -23,6 +23,31 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — As dicas ganharam "A LEITURA" e "A CONTA"
+Os três primeiros itens da auditoria das dicas. **Nenhum deles inventa nada** —
+são dados que o motor já calculava e jogava fora antes de chegar na tela.
+
+- **A LEITURA** — agora a dica te diz o que o vilão está jogando:
+  *"O vilão joga cerca de 28% das mãos nesse ponto — range médio."* É a primeira
+  frase de qualquer comentarista de poker, e o app sabia o número desde sempre.
+  Aparece no pré-flop (quando alguém abriu antes de você) e rua a rua no
+  pós-flop, apertando conforme o vilão age.
+- **A CONTA** — sua chance de ganhar contra o preço, **em português**:
+  *"Você ganha 22 de cada 100 vezes. Pelo preço que estava pagando, precisaria
+  ganhar 33 — faltam 11."* Antes esse número só existia se você achasse a chave
+  "Técnico", que é justamente a que o recreativo não aperta.
+- **A chave Simples/Técnico mudou de significado.** Antes ela decidia entre
+  *os números* e **nada**. Agora ela decide o **jeito de falar**: em Simples,
+  "você ganha 22 de cada 100 vezes"; em Técnico, "Equity 22% vs preço 33%".
+  A explicação chega nos dois.
+- **O Review ganhou dica completa.** Era a única tela sem nada disso. Agora a
+  faixa do coach **abre ao toque** (tem uma setinha ▾) e mostra A leitura,
+  A conta e o Por quê — no espaço que sobrou depois que os botões do topo saíram.
+- **Honestidade:** onde o motor não calcula, a dica **não aparece** em vez de
+  inventar. No pré-flop não existe "a conta" (o motor não estima equity ali), e
+  se ninguém abriu antes de você não existe "a leitura" — não há range para ler.
+- **Onde:** painel "Ver dicas" (depois da mão) e tela de Review, rua a rua.
+
 ## 2026-09-11 — Claude — Review: saíram os botões do topo, o contador desceu
 - Depois de você testar e aprovar o toque, tirei os **◀◀ ▶▶ do topo**: viraram
   duplicata e obrigavam o polegar a subir.

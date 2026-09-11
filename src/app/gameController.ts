@@ -8,6 +8,8 @@
 // A interface só lê o estado e chama `heroAct` / `botStep` / `newHand`.
 // ---------------------------------------------------------------------------
 
+import { rfiRange } from "../ranges/charts/rfi";
+import { rangePercent } from "../ranges/types";
 import { type Card, cardsToString } from "../engine/cards";
 import {
   createTable,
@@ -1031,7 +1033,13 @@ export class GameController {
       const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
       const positionLabels = ["BB", "SB", "BTN", "CO", "HJ", "LJ", "MP", "UTG1", "UTG"];
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced };
+      // A LEITURA do range de quem abriu. Usa o MESMO modelo de abertura que o
+      // motor usa para decidir (rfiRange) — não é uma estimativa paralela. Fica
+      // indefinida quando ninguém abriu antes do herói: aí não há range para ler.
+      const villainRangePct = ctx.raiserPosition
+        ? rangePercent(rfiRange(ctx.raiserPosition))
+        : undefined;
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced, villainRangePct };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);

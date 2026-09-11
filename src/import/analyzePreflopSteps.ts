@@ -11,6 +11,8 @@
 // aposta). Cada item traz o índice da ação no hand history, para o replay poder
 // mostrar o veredito certo em cada passo.
 // ---------------------------------------------------------------------------
+import { rangePercent } from "../ranges/types";
+import { rfiRange } from "../ranges/charts/rfi";
 import { preflopDecision } from "../ranges/preflop";
 import { facingAllinDecision } from "../ranges/facingAllin";
 import { BASELINE_PROFILE } from "../bots/profiles";
@@ -158,6 +160,13 @@ export function analyzePreflopSteps(
               reason: advReason,
               effectiveBB,
               mix: advMix,
+              // Quando alguém abriu antes, dá pra dizer o quão apertado é o
+              // range dele — a frase de abertura de qualquer comentarista.
+              // Mesmo modelo de abertura que o motor usa para decidir
+              // (rfiRange) — não uma estimativa paralela.
+              villainRangePct: raiserPosition
+                ? rangePercent(rfiRange(raiserPosition))
+                : undefined,
             },
             { heroPosition: hero.position, heroBB: effectiveBB },
           ),

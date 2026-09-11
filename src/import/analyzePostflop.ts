@@ -12,6 +12,7 @@
 // direção certa: valor/proteção/projeto/blefe e a conta de pagar.
 // ---------------------------------------------------------------------------
 
+import { rangePercent } from "../ranges/types";
 import { rankOf, suitOf, type Card } from "../engine/cards";
 import {
   preflopOpenRange,
@@ -258,6 +259,10 @@ export function analyzePostflopStreets(
             // Tamanho recomendado (só quando o padrão é apostar/aumentar).
             betSizePct: rec.sizePct,
             betSizeBB: rec.sizeBB,
+            // Largura do range do vilão NESTA rua (ele já vem apertado pelas
+            // ações anteriores). É o que permite a dica dizer "ele está com
+            // cerca de X% das mãos aqui".
+            villainRangePct: rangePercent(villainRange),
           },
           { heroPosition: hero.position, heroBB: effBB },
         );
@@ -357,6 +362,9 @@ export function analyzePostflopSteps(
               mix: buildMix(advAction, rec.freq),
               betSizePct: rec.sizePct,
               betSizeBB: rec.sizeBB,
+              // Mesma leitura de range da versão por rua: é o que permite a
+              // dica abrir com "ele está com cerca de X% das mãos aqui".
+              villainRangePct: rangePercent(villainRange),
             },
             { heroPosition: hero.position, heroBB: effBB },
           ),
