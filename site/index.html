@@ -39,7 +39,16 @@
 }
 </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&display=swap');
+  /* Fonte hospedada no próprio site (antes vinha do Google por @import, que é
+     a forma mais lenta: o navegador só descobre a fonte depois de baixar e ler
+     este CSS). Variável 400–900: um arquivo cobre 600, 700 e 800. */
+  @font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url('/fonts/playfair-latin.woff2') format('woff2');
+  }
 
   :root {
     --bg: #08100b;

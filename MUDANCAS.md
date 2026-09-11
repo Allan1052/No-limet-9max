@@ -23,6 +23,40 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Achei um CSS ANTIGO fantasma brigando com o app inteiro
+Este é o achado mais importante da auditoria, e explica muita coisa.
+
+- **O que estava acontecendo:** o `index.html` tinha uma linha ligando o app a
+  um arquivo de estilo **congelado em 17 de agosto** (107 KB, 1.252 regras).
+  Toda publicação empacotava esse arquivo velho junto com o atual. Ou seja: o
+  app estava sendo pintado por **duas folhas de estilo ao mesmo tempo** — a de
+  hoje e uma de um mês atrás.
+- **É provavelmente a causa daquela sensação** de "arrumo uma coisa e outra
+  desarruma". Várias regras que a gente escreveu estavam sendo sobrescritas por
+  regras antigas que ninguém sabia que ainda existiam.
+- **O que melhorou sozinho, só de tirar:** a setinha de ajuste fino voltou a ser
+  o botão redondo dourado que era pra ser (estava quadrada e cinza), a faixa da
+  dica voltou à altura certa, e os cantos arredondados dos botões voltaram ao
+  desenho atual.
+- **O app ficou mais leve:** o estilo principal caiu de **145 KB para 38 KB**.
+  São 107 KB a menos baixados por toda pessoa que abre o app.
+- **Também apaguei** a pasta `assets` da raiz do projeto: 3,8 MB de sobras de
+  builds antigos que ninguém usava.
+- **Conferi antes de tirar**, com a ferramenta de impressão digital de layout:
+  19 medidas mudaram, e todas eram o desenho **correto voltando**. Depois
+  conferi a mesa por print e as 6 telas pela régua — nada quebrou.
+
+## 2026-09-11 — Claude — As fontes agora são do próprio site
+- **O que mudou:** as fontes da marca (Cinzel e Playfair) deixaram de ser
+  buscadas no Google e passaram a ser servidas pelo próprio calloufold.com.br.
+- **Por quê:** do jeito antigo, o celular precisava baixar o estilo, ler a
+  primeira linha, pedir um arquivo ao Google e só então as fontes — fila pura
+  antes de aparecer qualquer coisa na tela. E sem internet a marca
+  "CALL OU FOLD" do feltro aparecia em outra fonte.
+- **Custo:** 3 arquivos, 103 KB no total, servidos junto com o app.
+- **Conferido no navegador:** o app e o site **não pedem mais nada ao Google**,
+  e a marca do feltro carrega em Cinzel normalmente.
+
 ## 2026-09-11 — Claude — Todo botão do app agora cabe no dedo
 - **O que mudou:** os botões pequenos do app cresceram para o tamanho mínimo
   que o dedo alcança bem (44px). Medido: eram **72 botões pequenos demais** em

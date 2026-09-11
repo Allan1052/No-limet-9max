@@ -1,4 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+/* =============================================================================
+   FONTES DA MARCA — hospedadas no PRÓPRIO site (10/09/2026)
+   -----------------------------------------------------------------------------
+   Antes era um @import do Google Fonts NESTA MESMA LINHA. Dois problemas
+   medidos: (1) @import dentro do CSS é a forma mais lenta de carregar fonte —
+   o navegador precisa baixar este arquivo, ler a primeira linha, e SÓ ENTÃO
+   pedir o CSS do Google e depois os arquivos; (2) a marca "CALL OU FOLD" do
+   feltro é Cinzel, então a identidade do app dependia de um servidor que não é
+   nosso (offline, caía para Georgia).
+
+   São fontes VARIÁVEIS: 3 arquivos (92 KB somados) cobrem 400 e 700 de cada
+   família mais o itálico do Playfair. `font-display: swap` mantém o texto
+   legível enquanto a fonte carrega.
+   ============================================================================= */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/cinzel-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/playfair-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/playfair-italic-latin.woff2') format('woff2');
+}
 
 /* -------------------------------------------------------------------------
    Tema visual — dark gold, inspirado no estilo GGPoker.
