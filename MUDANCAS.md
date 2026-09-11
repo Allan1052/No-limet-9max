@@ -23,6 +23,13 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Review: saíram os botões do topo, o contador desceu
+- Depois de você testar e aprovar o toque, tirei os **◀◀ ▶▶ do topo**: viraram
+  duplicata e obrigavam o polegar a subir.
+- O **"Mão 2 / 3" desceu** para a barra de baixo, na altura do polegar.
+- O topo agora tem só **✕** e **⋯** — sobrou espaço livre na melhor parte da
+  tela, que é onde a dica do coach pode crescer.
+
 ## 2026-09-11 — Claude — Review: agora é o TOQUE que troca de mão
 - **O problema que você apontou:** para trocar de mão os botões ficavam **lá em
   cima** (◀◀ ▶▶), e para andar rua a rua os botões ficam **lá embaixo**. O

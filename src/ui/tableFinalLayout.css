@@ -787,6 +787,21 @@
     text-shadow: 0 1px 5px rgba(0, 0, 0, .9);
   }
 
+  /* Contador da mão: desceu do topo para cá (11/09). Fica antes das setas,
+     na altura do polegar, e libera o topo da tela. */
+  .ir-fullscreen .ir-bar .ir-bar-hand {
+    flex: 0 0 auto;
+    font-size: var(--fs-min, 11px);
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--gold-soft, #ecd07a);
+    opacity: .9;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    padding-right: 2px;
+  }
+
   /* ---- barra única de baixo ---- */
   .ir-fullscreen .ir-bar {
     position: absolute !important;
