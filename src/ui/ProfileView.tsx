@@ -301,7 +301,7 @@ export function ProfileView({
             <button
               className="btn tiny"
               onClick={toggleTracking}
-              style={{ minHeight: "var(--tap-sm, 40px)" }}
+              style={{ minHeight: "var(--tap, 44px)" }}
             >
               {trackingOff
                 ? "✓ Rastreamento desligado neste navegador"

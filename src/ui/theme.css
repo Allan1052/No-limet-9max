@@ -7321,3 +7321,58 @@ body {
     width: 100%;
   }
 }
+
+/* =============================================================================
+   ALVOS DE TOQUE — critério 3 da auditoria (mínimo 44px)
+   -----------------------------------------------------------------------------
+   Medido em 10/09/2026 pela régua `tools/audit-ui/`: 72 alvos abaixo de 44px em
+   6 telas. O passo 2 da auditoria anterior cobriu só a MESA; o resto do app
+   nunca foi feito. Os piores: "Trocar avatar" 22px, bandeiras de idioma 24px,
+   Simples/Técnico 26px, abas do hub 31px (essas aparecem em 4 telas).
+
+   Escopo: `.app:not(:has(.play))` — ou seja, tudo MENOS as telas de mesa, que
+   têm dimensões próprias definidas em tableFinalLayout.css e já foram ajustadas.
+   ============================================================================= */
+@media (max-width: 860px) {
+  .app:not(:has(.play)) .btn,
+  .app:not(:has(.play)) .hub-chip,
+  .app:not(:has(.play)) .variant-btn,
+  .app:not(:has(.play)) .lang-opt,
+  .app:not(:has(.play)) .mode-opt,
+  .app:not(:has(.play)) .lb-tab,
+  .app:not(:has(.play)) .lb-tier,
+  .app:not(:has(.play)) .lb-rules-toggle,
+  .app:not(:has(.play)) .hl-stack-btn,
+  .app:not(:has(.play)) summary {
+    min-height: var(--tap, 44px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Bandeirinhas: o menor alvo do app inteiro (24×32). Precisam de largura
+     também, não só altura. */
+  .app:not(:has(.play)) .lang-opt {
+    min-width: var(--tap, 44px);
+  }
+  /* <summary> vira flex, mas precisa manter o triângulo de abrir/fechar. */
+  .app:not(:has(.play)) summary {
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  /* Campos de formulário: só altura mínima. Trocar o `display` de <input> e
+     <select> quebra o controle nativo. */
+  .app:not(:has(.play)) input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  .app:not(:has(.play)) select,
+  .app:not(:has(.play)) textarea {
+    min-height: var(--tap, 44px);
+  }
+  /* Botões que ocupam a linha inteira não podem virar inline-flex (encolheriam
+     para o tamanho do texto). */
+  .app:not(:has(.play)) .btn.primary.wide,
+  .app:not(:has(.play)) .profile-evolution,
+  .app:not(:has(.play)) .btn[style*="width: 100%"] {
+    display: flex;
+    width: 100%;
+  }
+}

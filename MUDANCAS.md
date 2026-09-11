@@ -23,6 +23,19 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Todo botão do app agora cabe no dedo
+- **O que mudou:** os botões pequenos do app cresceram para o tamanho mínimo
+  que o dedo alcança bem (44px). Medido: eram **72 botões pequenos demais** em
+  6 telas; agora são **zero**.
+- **Os piores eram:** "Trocar avatar" (22px), as bandeirinhas de idioma (24px),
+  Simples/Técnico (26px) e as abas do topo (31px) — essas apareciam em 4 telas.
+- **Também:** os campos e listas da tela "Sua Mão" (posição, cartas, stack) e as
+  faixas do Ranking.
+- **Onde:** Hoje, Treinar, Estudar, Perfil, Ranking e Importar. As telas de mesa
+  não foram tocadas (já tinham sido ajustadas antes).
+- Conferi tela por tela depois da mudança: nenhuma passou a rolar para os lados
+  e nenhum layout quebrou.
+
 ## 2026-09-11 — Claude — "Seus dados": agora o app conta a verdade e deixa desligar
 - **O que eu achei na auditoria:** o app carregava um **pixel de publicidade do
   Facebook** em toda abertura, e o único botão para desligar rastreamento
