@@ -23,6 +23,21 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — O site estava ensinando errado na porta de entrada
+- **O que estava errado:** a demonstração da landing mostrava **K♠Q♠** e dizia
+  *"o motor do app aponta Fold"*. Eu rodei o motor: ele manda **PAGAR** essa mão.
+  Ou seja, quem respondia "Call" — que é o que o app ensina — era informado de
+  que tinha errado. Era a **primeira experiência** de quem chega pelo site.
+- **Como corrigi:** troquei um naipe. Agora a demonstração mostra **K♠Q♥**
+  (naipes diferentes), que o motor **realmente folda**.
+- **E a lição ficou melhor:** o veredito agora explica o detalhe que o
+  recreativo não sabe — *se as duas fossem do mesmo naipe, o motor pagaria*.
+  Isso é verdade (conferido) e mostra profundidade do app em uma frase.
+- **Para nunca mais acontecer:** criei um teste que **lê o HTML do site**, pega
+  as cartas que estão na tela e pergunta ao motor. Se o site ou o motor mudarem
+  sozinhos, a publicação para. Conferi que o teste pega o erro antigo.
+- **Onde:** calloufold.com.br (landing, bloco "Spot de demonstração").
+
 ## 2026-09-10 — Claude — Mesa Final agora abre em TELA CHEIA (padrão do app)
 - **O que mudou:** a tela de **Mesa Final** (Treinar → Mais ⋯) passou a abrir
   com a mesa ocupando a tela inteira, igual à mesa de jogo normal.

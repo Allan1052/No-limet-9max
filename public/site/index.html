@@ -177,6 +177,7 @@
   .spot-meta { display:inline-flex; margin:20px auto 0; padding:9px 13px; border-radius:999px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.07); font-size:13px; color:#d6ddd8; }
   .demo-cards { display:flex; justify-content:center; gap:9px; margin:25px 0 21px; }
   .card { width:72px; height:101px; background:#f8f5ed; border-radius:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#171a18; line-height:1; box-shadow:0 12px 25px rgba(0,0,0,.3); }
+  .card.red { color:#b3261e; }
   .card:first-child { transform:rotate(-4deg); }
   .card:last-child { transform:rotate(4deg) translateY(-3px); }
   .card .r { font:800 33px/1 Georgia,serif; }
@@ -343,9 +344,9 @@
         <h2>Call ou Fold?</h2>
         <p class="lead">Você está no CO com 25bb. UTG abre 3x e ainda há jogadores para falar.</p>
         <p class="spot-meta">CO · 25bb · UTG raise 3x</p>
-        <div class="demo-cards" aria-hidden="true">
+        <div class="demo-cards" role="img" aria-label="Rei de espadas e Dama de copas">
           <div class="card"><span class="r">K</span><span class="s">♠</span></div>
-          <div class="card"><span class="r">Q</span><span class="s">♠</span></div>
+          <div class="card red"><span class="r">Q</span><span class="s">♥</span></div>
         </div>
         <div class="demo-actions">
           <button class="act fold" data-a="fold">Fold</button>
@@ -475,8 +476,8 @@
         trackCof('landing_demo_answered', { answer: button.dataset.a });
         verdict.className = 'verdict show';
         verdict.innerHTML = call
-          ? '<span class="no">Aqui é Fold.</span> K♠Q♠ é uma mão bonita, mas no CO, com 25bb, você enfrenta um raise de 3x de UTG e ainda há jogadores atrás. Neste spot, o motor do app aponta <b>Fold</b> como linha principal: pagar só porque as cartas parecem fortes pode custar fichas.'
-          : '<span class="ok">Boa decisão.</span> K♠Q♠ parece forte, mas no CO, com 25bb, o raise de 3x de UTG representa um range mais forte e ainda há jogadores para falar. Aqui, o <b>Fold</b> preserva suas fichas para spots melhores — é exatamente o tipo de disciplina que o app treina.';
+          ? '<span class="no">Aqui é Fold.</span> K♠Q♥ é bonita, mas o UTG abre com um range apertado e ainda há jogadores atrás. Neste spot o motor do app aponta <b>Fold</b>: pagar só porque as cartas parecem fortes custa fichas. <b>E olha o detalhe que muda tudo:</b> se as duas fossem do mesmo naipe (K♠Q♠), o motor pagaria. É esse tipo de diferença que o app te mostra, mão a mão.'
+          : '<span class="ok">Boa decisão.</span> K♠Q♥ parece forte, mas o UTG abre com um range apertado e ainda há jogadores para falar — aqui o <b>Fold</b> guarda suas fichas para spots melhores. <b>E olha o detalhe que muda tudo:</b> se as duas fossem do mesmo naipe (K♠Q♠), o motor pagaria. É esse tipo de diferença que o app te mostra, mão a mão.';
         verdict.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     });
