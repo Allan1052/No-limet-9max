@@ -367,8 +367,9 @@ export function GtoValidationSection() {
       <p className="lb-gto">
         <b>E fazemos um teste externo, aberto.</b> Comparamos o motor com uma
         referência <b>independente</b> (push/fold no estilo Nash + teoria
-        consolidada) em {ext.total} spots de 8 a 20bb. Hoje ele bate em{" "}
-        {extPct}%.{" "}
+        consolidada) em {ext.total} spots de <b>8 a 45bb</b>, cobrindo abertura,
+        defesa contra aumento, 3-bet, 4-bet, sensibilidade a tamanho de aposta e
+        ante. Hoje ele bate em {extPct}% ({ext.matched} de {ext.total}).{" "}
         {ext.misses.length === 0 ? (
           <>
             Quando algum spot foge da referência, a gente <b>mostra aqui</b> em

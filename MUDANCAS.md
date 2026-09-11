@@ -23,6 +23,36 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Review: agora é o TOQUE que troca de mão
+- **O problema que você apontou:** para trocar de mão os botões ficavam **lá em
+  cima** (◀◀ ▶▶), e para andar rua a rua os botões ficam **lá embaixo**. O
+  polegar subia e descia o tempo todo.
+- **O que mudou (invertido, como você pediu):** **tocar na mesa agora troca de
+  mão** — lado direito vai para a próxima, lado esquerdo volta. E o **passo a
+  passo / rua a rua continua nos botões de baixo** (◀ ▶, Pré/Flop/Turn/River e
+  o ⏭ "sua vez"), que já existiam e ficam na altura do polegar.
+- Os ◀◀ ▶▶ do topo continuam lá: são a única pista visível de que dá pra
+  navegar entre mãos, e mostram quando não tem mão anterior ou próxima.
+- **Conferido no navegador** com 3 mãos importadas: toque na direita foi Mão 1
+  → 2 → 3, toque na esquerda voltou para a 2, o botão ▶ de baixo andou o passo
+  **sem trocar a mão**, e o chip "Flop" pulou a rua na mesma mão.
+
+## 2026-09-11 — Claude — O selo agora diz o tamanho certo (615, não 61)
+- **O que mudou:** o selo verde que aparece nas dicas dizia *"Bate com a teoria
+  em 100% de 61 spots"*. Agora diz **"Bate com a referência em 612 de 615
+  spots"**.
+- **Por quê:** auditando, descobri que o app tem **dois** bancos de referência —
+  o interno (61 spots) e um **externo, com 554 spots** comparados contra
+  referência independente. O selo estava contando só um: ele **prometia menos
+  do que o app entrega**.
+- **Por que "612 de 615" e não "99%":** porque 99,51% arredonda para 100% e
+  afirmaria acerto total — e existem **3 divergências conhecidas**, todas
+  documentadas no código com o motivo. Mostrar a fração não deixa margem.
+- **Também corrigi** um número velho na tela de Ranking: dizia que o teste
+  externo cobria "8 a 20bb"; o correto, medido, é **8 a 45bb**, incluindo
+  defesa contra aumento, 3-bet, 4-bet, tamanho de aposta e ante.
+- **Onde:** selo nas "Dicas da mão" e texto explicativo no Ranking.
+
 ## 2026-09-11 — Claude — O painel de fim de mão tinha 14 botões. Agora tem 2.
 - **Medido:** depois de uma mão jogada, o painel "Ver dicas" mostrava **14
   ações** e **precisava rolar** (972px de conteúdo em 824px de painel) — bem no

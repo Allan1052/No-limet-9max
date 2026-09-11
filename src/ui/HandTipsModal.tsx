@@ -7,6 +7,7 @@ import type { TransKey } from "../i18n/translations";
 import { findBlockers } from "../bots/blockers";
 import { useMemo } from "react";
 import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
+import { runExternalBenchmark } from "../ranges/_calibration/externalBenchmark";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
 import { buildCoachV2PostHandDecision } from "./coachV2PostHand";
@@ -145,14 +146,23 @@ export function HandTipsModal({
 }
 
 // ---------------------------------------------------------------------------
-// Selo de confiança: teste INTERNO de qualidade. Comparamos as decisões de
-// range com a teoria num banco nosso de spots de referência. Número sempre
-// dinâmico (runCalibration). Honestidade: é controle de qualidade nosso, NÃO
-// certificação externa de GTO nem promessa de solver.
+// Selo de confiança. Número sempre dinâmico — nunca escrito à mão.
+//
+// 11/09/2026: o selo dizia só "61 spots", que é o banco INTERNO. Auditando,
+// medimos que existe também um banco EXTERNO com 554 spots comparados contra
+// referência independente — ou seja, o selo prometia MENOS do que o app
+// entrega. Agora soma os dois.
+//
+// Mostramos a FRAÇÃO (612 de 615), não a porcentagem: 99,51% arredonda para
+// 100% e afirmaria acerto total, quando há 3 divergências conhecidas e
+// documentadas no banco externo. Honestidade: é controle de qualidade nosso,
+// NÃO certificação externa de GTO nem promessa de solver.
 // ---------------------------------------------------------------------------
 export function GtoSealChip() {
   const cal = useMemo(() => runCalibration(), []);
-  const pct = Math.round(cal.score * 100);
+  const ext = useMemo(() => runExternalBenchmark(), []);
+  const totalSpots = cal.total + ext.total;
+  const totalOk = cal.matched + ext.matched;
   return (
     <div
       style={{
@@ -170,7 +180,7 @@ export function GtoSealChip() {
         textAlign: "center",
       }}
     >
-      ✓ Bate com a teoria em {pct}% de {cal.total} spots · teste interno
+      ✓ Bate com a referência em {totalOk} de {totalSpots} spots · teste próprio
     </div>
   );
 }
