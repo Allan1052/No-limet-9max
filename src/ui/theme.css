@@ -5542,11 +5542,37 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+/* "Suas cartas": valor em cima, naipe embaixo em 4 botões. Antes eram duas
+   listas suspensas lado a lado e a do naipe não cabia — "♠ Espadas" aparecia
+   como "♠ Es..". */
 .hl-card-picker {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
+/* 2x2 por carta: quatro em linha dariam 36px de largura cada (abaixo do
+   mínimo de 44). Em duas linhas cada botão fica com ~44x44 de verdade. */
+.hl-suit-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.hl-suit-btn {
+  flex: 1 1 calc(50% - 3px);
+  min-width: 44px;
+  min-height: var(--tap, 44px);
+  font-size: 20px;
+  line-height: 1;
+  font-family: inherit;
+  background: #12140d;
+  color: #f0ede0;
+  border: 1px solid #2f331f;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.hl-suit-btn.vermelho { color: #e2695a; }
+.hl-suit-btn.on {
+  background: linear-gradient(180deg, var(--gold-soft, #e8cf7f), var(--gold, #d8b24a));
+  border-color: var(--gold-dim, #8a7326);
+  color: #14120a;
+}
+.hl-suit-btn.on.vermelho { color: #8f1d13; }
 .hl-select-rank,
 .hl-select-suit { min-width: 0; }
 .hl-stack-row {

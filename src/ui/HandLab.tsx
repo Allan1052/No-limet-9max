@@ -306,17 +306,27 @@ export function HandLab() {
                   </option>
                 ))}
               </select>
-              <select
-                className="hl-select hl-select-suit"
-                value={c.s}
-                onChange={(e) => c.setS(e.target.value)}
-              >
+              {/* O naipe era uma lista suspensa com "♠ Espadas", que na largura
+                  de celular aparecia CORTADA ("♠ Es.."). Virou 4 botões: um
+                  toque em vez de dois, sem texto cortado e com a cor do naipe
+                  à vista. O nome completo continua no leitor de tela. */}
+              <div className="hl-suit-row" role="group" aria-label={`Naipe da carta ${c.n}`}>
                 {SUIT_OPTIONS.map((su) => (
-                  <option key={su.key} value={su.key}>
-                    {su.symbol} {su.name}
-                  </option>
+                  <button
+                    key={su.key}
+                    type="button"
+                    className={`hl-suit-btn${c.s === su.key ? " on" : ""}${
+                      su.key === "h" || su.key === "d" ? " vermelho" : ""
+                    }`}
+                    aria-pressed={c.s === su.key}
+                    aria-label={su.name}
+                    title={su.name}
+                    onClick={() => c.setS(su.key)}
+                  >
+                    {su.symbol}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           ))}
         </div>

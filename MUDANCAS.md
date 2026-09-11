@@ -23,6 +23,14 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — "Suas cartas" ficou mais fácil de preencher
+- **O defeito:** na tela **Sua Mão**, escolher o naipe era uma lista suspensa
+  que não cabia na largura do celular — aparecia **"♠ Es.."**, cortado.
+- **O que mudou:** o naipe virou **4 botões** (♠ ♥ ♦ ♣), com as cores certas.
+  Um toque em vez de dois, nada cortado, e dá pra ver o naipe de longe.
+- Cada botão tem 78×44 — bem acima do mínimo para o dedo.
+- **Onde:** Estudar → Sua Mão, bloco "Suas cartas".
+
 ## 2026-09-11 — Claude — O pós-flop ganhou a trava que faltava (e eu corrijo um erro meu)
 **Primeiro, o meu erro.** Eu te disse que os bancos de referência do app não
 testavam "o vilão abriu, e agora?". **Estava errado** — eu procurei pelo nome
