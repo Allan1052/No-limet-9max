@@ -156,6 +156,7 @@ export function analyzePreflopSteps(
             mapped.engine,
             {
               kind: "preflop",
+              origem: effectiveBB <= 12 ? "pushFold" : "range",
               action: advAction,
               reason: advReason,
               effectiveBB,

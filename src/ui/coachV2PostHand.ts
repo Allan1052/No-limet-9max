@@ -1,4 +1,5 @@
 import type { FeedbackItem } from "../feedback/analyzer";
+import { temDadoPara } from "../feedback/coachContract";
 
 export type CoachV2PostHandMode = "simple" | "technical";
 
@@ -112,6 +113,8 @@ function emCada100(value: number): string {
 }
 
 function buildLeitura(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  // Porta do contrato: sem o campo, a frase não nasce (coachContract.ts).
+  if (!temDadoPara("leituraRange", item as unknown as Record<string, unknown>)) return undefined;
   const vr = item.villainRangePct;
   if (vr === undefined || vr <= 0) return undefined;
   const pct = percent(vr);
@@ -120,6 +123,7 @@ function buildLeitura(item: FeedbackItem, mode: CoachV2PostHandMode): string | u
 }
 
 function buildConta(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  if (!temDadoPara("equityPreco", item as unknown as Record<string, unknown>)) return undefined;
   const eq = item.equity;
   const req = item.potOdds; // equity EXIGIDA pelo preço
   if (eq === undefined) return undefined;
@@ -140,6 +144,7 @@ function buildConta(item: FeedbackItem, mode: CoachV2PostHandMode): string | und
 }
 
 function buildOQueMudaria(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  if (!temDadoPara("breakEven", item as unknown as Record<string, unknown>)) return undefined;
   const virada = item.breakEvenCallBB;
   if (virada === undefined || virada <= 0) return undefined;
   // Só faz sentido quando o motor mandou FOLDAR: aí a frase responde "e se ele
@@ -151,6 +156,7 @@ function buildOQueMudaria(item: FeedbackItem, mode: CoachV2PostHandMode): string
 }
 
 function buildCartasSalvadoras(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  if (!temDadoPara("outs", item as unknown as Record<string, unknown>)) return undefined;
   const o = item.outs;
   if (!o || o.outs <= 0) return undefined;
   const chance = Math.round(o.chance * 100);
@@ -166,9 +172,10 @@ export function buildCoachV2PostHandDecision(
   const metrics: string[] = [];
 
   if (mode === "technical") {
-    if (item.evBB !== undefined) metrics.push(`EV ${signedBB(item.evBB)}`);
-    if (item.betSizePct !== undefined && item.betSizeBB !== undefined) {
-      metrics.push(`Sizing ~${percent(item.betSizePct)} · ${item.betSizeBB}bb`);
+    const fonte = item as unknown as Record<string, unknown>;
+    if (temDadoPara("ev", fonte)) metrics.push(`EV ${signedBB(item.evBB!)}`);
+    if (temDadoPara("sizing", fonte)) {
+      metrics.push(`Sizing ~${percent(item.betSizePct!)} · ${item.betSizeBB}bb`);
     }
   }
 

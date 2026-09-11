@@ -70,6 +70,51 @@
     line-height: 1.2 !important;
     text-align: center;
   }
+  /* CAMADA 2 da dica ao vivo (11/09): a faixa continua curta, e o ▾ abre o
+     contexto que o app já calculava e nunca mostrava. Botão próprio para não
+     roubar o toque que preenche o tamanho sugerido. */
+  .app:has(.play) .play > .play-coach-bar .coach-mais {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    min-width: 26px;
+    min-height: 22px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 12px;
+    line-height: 1;
+    opacity: .75;
+    cursor: pointer;
+  }
+  .app:has(.play) .play > .play-coach-bar.aberta {
+    max-height: 52dvh !important;
+    overflow-y: auto !important;
+    width: min(84%, 306px) !important;
+    max-width: min(84%, 306px) !important;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-ctx {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 10px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(236, 208, 122, .28);
+    text-align: left;
+    font-size: var(--fs-min, 11px);
+    font-variant-numeric: tabular-nums;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-ctx-item {
+    display: contents;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-ctx-item b {
+    color: var(--gold-soft, #ecd07a);
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+
   /* "tocar para usar" não precisa aparecer — a dica é só pra ler. */
   .app:has(.play) .play > .play-coach-bar .coach-tap { display: none !important; }
 

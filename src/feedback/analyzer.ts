@@ -25,6 +25,25 @@ function pc(x: number): string {
 
 import { UserSubscriptionLevel } from "../app/gameController";
 
+/**
+ * DE ONDE VEIO A RECOMENDAÇÃO.
+ *
+ * Pedido da auditoria do Coach (11/09): antes de explicar causalidade, o coach
+ * precisa SABER o que determinou a decisão. Só entram valores verdadeiros por
+ * CONSTRUÇÃO — isto é, que a gente sabe pelo caminho de código que produziu a
+ * recomendação, não por adivinhação.
+ *
+ * ⚠️ "icm" NÃO está aqui de propósito. O app tem componentes de ICM, mas saber
+ * que estamos na bolha não prova que foi o ICM que mudou a decisão. Enquanto o
+ * motor não devolver essa diferença medida (decidir com e sem ICM e comparar),
+ * dizer "foi por ICM" seria exatamente a alucinação que a auditoria proíbe.
+ */
+export type OrigemDecisao =
+  | "preco"      // pós-flop enfrentando aposta: equity contra a equity exigida
+  | "forcaMao"   // pós-flop sem aposta: força da mão contra o range dele
+  | "range"      // pré-flop: a mão está dentro ou fora da range da posição
+  | "pushFold";  // stack curto: a decisão é empurrar ou desistir
+
 export interface HeroAdvice {
   kind: "preflop" | "postflop";
   action: string; // fold | check | call | raise | 3bet | bet | jam
@@ -37,6 +56,8 @@ export interface HeroAdvice {
   breakEvenCallBB?: number;
   /** Cartas que colocam o herói na frente, e a chance da próxima carta. */
   outs?: { outs: number; chance: number };
+  /** O que determinou a recomendação (ver OrigemDecisao). */
+  origem?: OrigemDecisao;
   userSubscriptionLevel?: UserSubscriptionLevel;
   /** Estratégia mista recomendada (frequências), quando disponível. */
   mix?: AdviceFreq[];
@@ -138,6 +159,8 @@ export interface FeedbackItem {
   /** CARTAS QUE TE SALVAVAM: quantas colocam o herói na frente e a chance de
    *  vir uma delas na próxima carta (0..1). */
   outs?: { outs: number; chance: number };
+  /** O que determinou a recomendação (ver OrigemDecisao). */
+  origem?: OrigemDecisao;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -186,6 +209,7 @@ export function gradeDecision(
   if (advice.villainRangePct !== undefined) item.villainRangePct = advice.villainRangePct;
   if (advice.breakEvenCallBB !== undefined) item.breakEvenCallBB = advice.breakEvenCallBB;
   if (advice.outs !== undefined) item.outs = advice.outs;
+  if (advice.origem !== undefined) item.origem = advice.origem;
   // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {

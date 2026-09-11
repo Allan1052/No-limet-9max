@@ -249,6 +249,7 @@ export function analyzePostflopStreets(
           spot.heroType,
           {
             kind: "postflop",
+            origem: facing > 0 ? "preco" : "forcaMao",
             action: advAction,
             reason: rec.reason,
             equity: rec.equity,
@@ -358,6 +359,7 @@ export function analyzePostflopSteps(
             spot.heroType,
             {
               kind: "postflop",
+              origem: facing > 0 ? "preco" : "forcaMao",
               action: advAction,
               reason: rec.reason,
               equity: rec.equity,

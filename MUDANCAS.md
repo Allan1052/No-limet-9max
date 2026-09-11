@@ -23,6 +23,32 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Toque na dica ao vivo + trava contra frase sem dado
+
+Três coisas, todas nascidas da auditoria que o ChatGPT fez das nossas dicas.
+
+- **A DICA AO VIVO AGORA ABRE.** Durante a mão, a faixa do coach continua curta
+  (ela não pode roubar o lugar da mesa), mas ganhou um **▾** no canto. Tocando
+  nele, ela abre e mostra o contexto que o app **já calculava e nunca mostrava**:
+  posição, seu stack, pote, quanto falta pagar, sua chance, a chance que o preço
+  exige, SPR, quão largo é o range do vilão e o tamanho sugerido. Tocar na faixa
+  continua preenchendo o valor sugerido, igual antes — o ▾ é botão separado
+  justamente para não roubar esse atalho. Onde: mesa de jogo (Treinar → Jogar).
+- **TRAVA "SEM DADO, SEM FRASE".** A regra da casa sempre foi não inventar
+  número. Agora ela virou **mecanismo**: cada tipo de frase do coach declara num
+  registro único de qual dado ela depende, e um teste tira esse dado e exige que
+  a frase **suma**. Na prática: nenhum de nós dois consegue mais escrever uma
+  frase bonita sem lastro sem quebrar a suíte. São 31 testes só disso.
+- **"DE ONDE VEIO A RECOMENDAÇÃO".** As dicas agora sabem dizer se a base foi o
+  preço, a força da mão, o range da posição ou push/fold. Só esses quatro — o
+  ICM ficou **de fora de propósito**: saber que estamos perto da bolha não prova
+  que foi o ICM que mudou a decisão, e prometer isso seria justamente o tipo de
+  frase sem lastro que a trava acima existe para impedir.
+
+Onde ver: mesa de jogo (o ▾ na faixa da dica) e Revisão da mão.
+
+---
+
 ## 2026-09-11 — Claude — As dicas completas: o que mudaria, as outs e o Ás
 Os três últimos itens da auditoria das dicas. Estes precisaram de **conta nova**.
 

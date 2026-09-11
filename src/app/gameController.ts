@@ -1039,7 +1039,10 @@ export class GameController {
       const villainRangePct = ctx.raiserPosition
         ? rangePercent(rfiRange(ctx.raiserPosition))
         : undefined;
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced, villainRangePct };
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced, villainRangePct,
+        // Verdadeiro por construção: com stack curto o motor decide por
+        // push/fold; acima disso, pela range da posição.
+        origem: ctx.effectiveBB <= 12 ? "pushFold" : "range" };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);
@@ -1068,6 +1071,9 @@ export class GameController {
       kind: "postflop",
       action: d.action,
       reason: d.reason,
+      // Verdadeiro por construção: com aposta na mesa a decisão sai da conta
+      // equity x equity exigida; sem aposta, sai da força da mão contra a range.
+      origem: ctx.toCall > 0 ? "preco" : "forcaMao",
       equity: d.equity,
       potOdds: d.requiredEquity || undefined,
       villainRangePct: d.villainRangePct,

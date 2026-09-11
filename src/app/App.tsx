@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense, useTransition } from "react";
+import { useState, useEffect, useRef, Suspense, useTransition, useMemo} from "react";
 import { useGame } from "./useGame";
 import { updateAvailable, applyUpdate, onUpdateAvailable, checkForUpdate, probeVersion, type VersionStatus } from "./pwaUpdate";
 import { PokerTable } from "../ui/Table";
@@ -74,6 +74,7 @@ import { legalActions } from "../game/betting";
 import { addTournamentResult } from "./resultsLog";
 import { appendHandLog } from "./handHistoryLog";
 import { computeHeroCoachDecision } from "./coachV2Live";
+import { temDadoPara } from "../feedback/coachContract";
 import { buildCoachV2HintView } from "../ui/coachV2Hint";
 import "../ui/theme.css";
 
@@ -296,6 +297,7 @@ export function App() {
   // Atualização do app: avisa quando há versão nova e recarrega num momento
   // seguro (entre mãos, na tela de jogo) para não interromper uma decisão nem
   // fazer perder algo digitado em outra aba (ex.: colar mãos no Importar).
+  const [coachAberto, setCoachAberto] = useState(false);
   const [updateReady, setUpdateReady] = useState(updateAvailable());
   useEffect(() => onUpdateAvailable(() => setUpdateReady(true)), []);
 
@@ -377,6 +379,34 @@ export function App() {
   // "Porquê" curto só nos spots que enganam (ex.: fold com preço barato). Vem do
   // motivo real do motor — não aparece nas jogadas óbvias.
   const coachTrapNote = hint ? coachHintView?.trapNote : undefined;
+  // CAMADA 2 (auditoria do Coach, 11/09): a dica ao vivo continua curta — duas
+  // linhas que não roubam o lugar da mesa — mas ganha um ▾ que abre o contexto
+  // que o app JÁ calcula e nunca mostrava: posição, stack, pote, preço, equity,
+  // SPR, range do vilão e sizing. Campo ausente simplesmente não aparece.
+  const coachContexto = useMemo(() => {
+    const d = coachDecision;
+    if (!d) return [] as Array<{ k: string; v: string }>;
+    const fonte = d as unknown as Record<string, unknown>;
+    const linhas: Array<{ k: string; v: string }> = [];
+    const pct = (x: number) => `${Math.round(x * 100)}%`;
+    const bb = (x: number) => `${Math.round(x * 10) / 10}bb`;
+    if (d.heroPosition) linhas.push({ k: "Posição", v: d.heroPosition });
+    if (d.effectiveBB !== undefined) linhas.push({ k: "Seu stack", v: bb(d.effectiveBB) });
+    if (d.potBB !== undefined) linhas.push({ k: "Pote", v: bb(d.potBB) });
+    if (d.toCallBB) linhas.push({ k: "Para pagar", v: bb(d.toCallBB) });
+    if (temDadoPara("equityPreco", fonte)) {
+      linhas.push({ k: "Sua chance", v: pct(d.equity!) });
+      if (d.requiredEquity !== undefined) linhas.push({ k: "Precisa de", v: pct(d.requiredEquity) });
+    }
+    if (temDadoPara("spr", fonte)) linhas.push({ k: "SPR", v: String(d.spr) });
+    if (temDadoPara("leituraRange", { villainRangePct: d.villainRangePct })) {
+      linhas.push({ k: "Range dele", v: `~${pct(d.villainRangePct!)}` });
+    }
+    if (temDadoPara("sizing", fonte)) {
+      linhas.push({ k: "Tamanho", v: `~${pct(d.betSizePct!)} · ${d.betSizeBB}bb` });
+    }
+    return linhas;
+  }, [coachDecision]);
   // Tamanho (bb) que o coach sugere apostar/aumentar — o MESMO que aparece na
   // dica ("Bet ~8.6bb"). Quando existe, a dica vira clicável e preenche esse
   // valor no controle de raise/bet (pedido do Allan).
@@ -592,7 +622,7 @@ export function App() {
           <SessionProgressStrip summary={progress()} tournament={controller.tournamentProgress()} />
           {heroTurn && hint ? (
             <div
-              className={`play-coach-bar${coachTrapNote ? " has-why" : ""}${hintFillable ? " fillable" : ""}`}
+              className={`play-coach-bar${coachTrapNote ? " has-why" : ""}${hintFillable ? " fillable" : ""}${coachAberto ? " aberta" : ""}`}
               role={hintFillable ? "button" : undefined}
               tabIndex={hintFillable ? 0 : undefined}
               title={hintFillable ? "Tocar para preencher o valor sugerido" : undefined}
@@ -601,6 +631,33 @@ export function App() {
               <span className="coach-action">💡 {hint}</span>
               {coachTrapNote ? <span className="coach-why">{coachTrapNote}</span> : null}
               {hintFillable ? <span className="coach-tap">tocar para usar</span> : null}
+              {coachContexto.length > 0 ? (
+                <button
+                  type="button"
+                  className="coach-mais"
+                  aria-expanded={coachAberto}
+                  aria-label={coachAberto ? "Fechar detalhes da dica" : "Ver detalhes da dica"}
+                  onClick={(e) => {
+                    // Botão PRÓPRIO, e não a faixa inteira: tocar na faixa já
+                    // preenche o tamanho sugerido quando ela é "fillable", e
+                    // roubar esse toque quebraria um atalho que já era usado.
+                    e.stopPropagation();
+                    setCoachAberto((o) => !o);
+                  }}
+                >
+                  {coachAberto ? "▴" : "▾"}
+                </button>
+              ) : null}
+              {coachAberto && coachContexto.length > 0 ? (
+                <span className="coach-ctx">
+                  {coachContexto.map((l) => (
+                    <span key={l.k} className="coach-ctx-item">
+                      <b>{l.k}</b>
+                      {l.v}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
             </div>
           ) : null}
           <PokerTable
