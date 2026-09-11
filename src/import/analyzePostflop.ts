@@ -14,6 +14,7 @@
 
 import { rangePercent } from "../ranges/types";
 import { contarOuts } from "../train/streets/outs";
+import { topoDoRange } from "../ranges/topoRange";
 import { rankOf, suitOf, type Card } from "../engine/cards";
 import {
   preflopOpenRange,
@@ -265,6 +266,10 @@ export function analyzePostflopStreets(
             // ações anteriores). É o que permite a dica dizer "ele está com
             // cerca de X% das mãos aqui".
             villainRangePct: rangePercent(villainRange),
+            // "O topo do range dele": quanto do range JÁ APERTADO pelas ações
+            // dele forma trinca ou melhor neste board. Aqui a leitura é a mais
+            // forte do app, porque o range foi estreitado pela linha real dele.
+            topoRangePct: topoDoRange(villainRange, boardCards, hand.heroCards)?.fracao,
             breakEvenCallBB: facing > 0 ? rec.breakEvenBB : undefined,
             outs: (() => {
               const o = contarOuts(hand.heroCards, boardCards, villainRange);
@@ -373,6 +378,8 @@ export function analyzePostflopSteps(
               // Mesma leitura de range da versão por rua: é o que permite a
               // dica abrir com "ele está com cerca de X% das mãos aqui".
               villainRangePct: rangePercent(villainRange),
+              // Quanto do range apertado dele forma trinca ou melhor aqui.
+              topoRangePct: topoDoRange(villainRange, boardCards, hand.heroCards)?.fracao,
               // "E se ele tivesse apostado menos?" — só quando havia aposta.
               breakEvenCallBB: facing > 0 ? rec.breakEvenBB : undefined,
               // "Quais cartas me salvavam?" — cartas reais do herói, por isso

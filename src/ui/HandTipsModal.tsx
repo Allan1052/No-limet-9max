@@ -11,6 +11,9 @@ import { runExternalBenchmark } from "../ranges/_calibration/externalBenchmark";
 import type { Card } from "../engine/cards";
 import { UserSubscriptionLevel } from "../app/gameController";
 import { buildCoachV2PostHandDecision } from "./coachV2PostHand";
+import { ExploitPanel } from "./ExploitPanel";
+import { vilaoPrincipalDaMao } from "../bots/vilaoPrincipal";
+import type { HandHistory } from "../app/replay";
 
 type TipsMode = "free" | "technical";
 
@@ -26,6 +29,7 @@ export function HandTipsModal({
   heroBB: _heroBB,
   icmPhase: _icmPhase,
   actions,
+  hand,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
@@ -43,6 +47,8 @@ export function HandTipsModal({
   heroBB?: number;
   /** Fase ICM do torneio — mantida por compatibilidade da API. */
   icmPhase?: "early" | "bubble" | "itm";
+  /** A mão que acabou — usada só para descobrir contra QUEM ela foi. */
+  hand?: HandHistory | null;
 }) {
   const { t } = useT();
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
@@ -66,6 +72,12 @@ export function HandTipsModal({
   // calculado pelo Motor V2 em cada decisão.
   const hasBoard = board.length >= 3;
   const blockers = tecnico && hasBoard ? findBlockers(heroHand, board) : [];
+
+  // "COMO BATER ESTE VILÃO" — o app já sabia disso (deriva dos parâmetros reais
+  // do bot), mas só aparecia se você tocasse no assento dele. Aqui ele encontra
+  // quem lê as dicas. Em mão importada de gente de verdade não há perfil, e o
+  // painel corretamente não aparece.
+  const vilao = useMemo(() => vilaoPrincipalDaMao(hand), [hand]);
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -135,10 +147,22 @@ export function HandTipsModal({
                     {view.leitura}
                   </div>
                 ) : null}
+                {view.topoRange ? (
+                  <div className="fb-camada">
+                    <b>O topo do range dele</b>
+                    {view.topoRange}
+                  </div>
+                ) : null}
                 {view.conta ? (
                   <div className="fb-camada">
                     <b>A conta</b>
                     {view.conta}
+                  </div>
+                ) : null}
+                {view.pesoDaBolha ? (
+                  <div className="fb-camada">
+                    <b>O peso da bolha</b>
+                    {view.pesoDaBolha}
                   </div>
                 ) : null}
                 {view.oQueMudaria ? (
@@ -165,6 +189,9 @@ export function HandTipsModal({
             );
           })
         )}
+        {vilao ? (
+          <ExploitPanel profile={vilao.profile} titulo={`Como bater ${vilao.nome}`} />
+        ) : null}
         {actions ? (
           <div className="tips-actions controls action-row">{actions}</div>
         ) : null}

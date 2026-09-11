@@ -75,6 +75,7 @@ import { addTournamentResult } from "./resultsLog";
 import { appendHandLog } from "./handHistoryLog";
 import { computeHeroCoachDecision } from "./coachV2Live";
 import { temDadoPara } from "../feedback/coachContract";
+import { actionLabel } from "../feedback/analyzer";
 import { buildCoachV2HintView } from "../ui/coachV2Hint";
 import "../ui/theme.css";
 
@@ -401,6 +402,14 @@ export function App() {
     if (temDadoPara("spr", fonte)) linhas.push({ k: "SPR", v: String(d.spr) });
     if (temDadoPara("leituraRange", { villainRangePct: d.villainRangePct })) {
       linhas.push({ k: "Range dele", v: `~${pct(d.villainRangePct!)}` });
+    }
+    // "Range limitado": quanto do range dele forma trinca ou melhor NESTE board.
+    if (temDadoPara("topoRange", fonte)) {
+      linhas.push({ k: "Trinca+ no range dele", v: pct(d.topoRangePct!) });
+    }
+    // O ICM só fala quando foi MEDIDO (motor rodado com e sem os prêmios).
+    if (temDadoPara("icmDelta", fonte)) {
+      linhas.push({ k: "Valendo só fichas", v: actionLabel(d.icmDelta!.semIcm) });
     }
     if (temDadoPara("sizing", fonte)) {
       linhas.push({ k: "Tamanho", v: `~${pct(d.betSizePct!)} · ${d.betSizeBB}bb` });
@@ -795,6 +804,7 @@ export function App() {
           })()}
           onClose={() => setTipsOpen(false)}
           actions={postHandActions}
+          hand={controller.lastHand}
         />
       ) : null}
 

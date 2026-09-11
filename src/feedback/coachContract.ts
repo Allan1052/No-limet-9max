@@ -30,7 +30,10 @@ export type FamiliaDica =
   | "ev"
   | "sizing"
   | "spr"
-  | "origem";
+  | "origem"
+  | "topoRange"
+  | "icmDelta"
+  | "exploit";
 
 export interface ContratoDica {
   familia: FamiliaDica;
@@ -109,6 +112,33 @@ export const CONTRATO_DICAS: ContratoDica[] = [
     promessa:
       "Mostra a relação entre stack e pote. NÚMERO apenas: transformar SPR em " +
       "regra ('SPR baixo = jogar por stacks') seria conclusão que o app não calcula.",
+  },
+  {
+    familia: "topoRange",
+    rotulo: "O topo do range dele (range limitado)",
+    exige: ["topoRangePct"],
+    promessa:
+      "Diz que fração do range dele forma trinca ou melhor NESTE board. É " +
+      "contagem sobre o mesmo range que o motor usou para calcular a equity. " +
+      "Entrega o número e para: não conclui 'logo, blefe' — a ação é do motor.",
+  },
+  {
+    familia: "icmDelta",
+    rotulo: "O ICM medido",
+    exige: ["icmDelta"],
+    promessa:
+      "Só afirma que o ICM mudou a decisão quando o motor, rodado DUAS VEZES " +
+      "(com e sem os prêmios na conta), devolve respostas diferentes. Sem essa " +
+      "diferença medida, o app não fala em ICM — é a regra que criou este campo.",
+  },
+  {
+    familia: "exploit",
+    rotulo: "Como explorar este vilão",
+    exige: ["profileId"],
+    promessa:
+      "Deriva o vazamento do vilão dos PARÂMETROS REAIS do perfil que o bot " +
+      "usa para jogar. Só existe contra bot conhecido da mesa de treino; em mão " +
+      "importada o oponente é humano desconhecido e a frase corretamente some.",
   },
   {
     familia: "origem",

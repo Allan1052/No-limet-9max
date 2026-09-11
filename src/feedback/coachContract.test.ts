@@ -20,6 +20,8 @@ function fonteCompleta(familia: FamiliaDica): Record<string, unknown> {
       : campo === "outs" ? { outs: 9, chance: 0.19 }
       : campo === "adviceFam" ? "fold"
       : campo === "origem" ? "preco"
+      : campo === "icmDelta" ? { comIcm: "fold", semIcm: "call" }
+      : campo === "profileId" ? "callstation"
       : 0.5;
   }
   return out;
@@ -95,14 +97,32 @@ describe("as frases do pós-mão obedecem ao contrato", () => {
     villainRangePct: 0.26,
     breakEvenCallBB: 2.1,
     outs: { outs: 9, chance: 0.19 },
+    topoRangePct: 0.04,
+    icmDelta: { comIcm: "fold", semIcm: "call" },
   };
 
-  it("com tudo presente, as quatro camadas aparecem", () => {
+  it("com tudo presente, as seis camadas aparecem", () => {
     const v = buildCoachV2PostHandDecision(base, "simple");
     expect(v.leitura).toBeDefined();
     expect(v.conta).toBeDefined();
     expect(v.oQueMudaria).toBeDefined();
     expect(v.cartasSalvadoras).toBeDefined();
+    expect(v.topoRange).toBeDefined();
+    expect(v.pesoDaBolha).toBeDefined();
+  });
+
+  it("a camada do ICM afirma a diferença MEDIDA, nas duas direções", () => {
+    const simples = buildCoachV2PostHandDecision(base, "simple").pesoDaBolha!;
+    expect(simples).toContain("valendo só fichas o padrão seria CALL");
+    expect(simples).toContain("com o prêmio em jogo, é FOLD");
+    const tecnico = buildCoachV2PostHandDecision(base, "technical").pesoDaBolha!;
+    expect(tecnico).toContain("FOLD");
+    expect(tecnico).toContain("CALL");
+  });
+
+  it("range sem nenhuma trinca vira a frase do range limitado", () => {
+    const v = buildCoachV2PostHandDecision({ ...base, topoRangePct: 0 }, "simple");
+    expect(v.topoRange).toContain("Nenhuma mão");
   });
 
   it.each([
@@ -110,6 +130,8 @@ describe("as frases do pós-mão obedecem ao contrato", () => {
     ["equity", "conta"],
     ["breakEvenCallBB", "oQueMudaria"],
     ["outs", "cartasSalvadoras"],
+    ["topoRangePct", "topoRange"],
+    ["icmDelta", "pesoDaBolha"],
   ] as const)("sem %s, a camada %s some", (campo, camada) => {
     const v = buildCoachV2PostHandDecision({ ...base, [campo]: undefined }, "simple");
     expect(v[camada]).toBeUndefined();

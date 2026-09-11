@@ -10,6 +10,9 @@
 
 import { rfiRange } from "../ranges/charts/rfi";
 import { rangePercent } from "../ranges/types";
+import { buildTopRange } from "../ranges/build";
+import { topoDoRange } from "../ranges/topoRange";
+import { icmTightenFactor } from "../ranges/icm";
 import { type Card, cardsToString } from "../engine/cards";
 import {
   createTable,
@@ -29,7 +32,16 @@ import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
 import { buildFieldSeats, pickReplacement } from "../bots/field";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
-import { gradeDecision, type FeedbackContext, type FeedbackItem, type HeroAdvice, type Rating } from "../feedback/analyzer";
+import { gradeDecision, type FeedbackContext, type FeedbackItem, type HeroAdvice, type IcmDelta, type Rating } from "../feedback/analyzer";
+
+/** Agrupa a ação em família — comparar "raise" com "3bet" não é diferença de
+ *  decisão, comparar "fold" com "jam" é. Usado para medir o efeito do ICM. */
+function familiaDaAcao(action: string): "fold" | "check" | "call" | "aggro" {
+  if (action === "fold") return "fold";
+  if (action === "check") return "check";
+  if (action === "call") return "call";
+  return "aggro";
+}
 import {
   beginHand,
   emptyStats,
@@ -1026,6 +1038,49 @@ export class GameController {
     return Math.max(la.minRaiseTo, Math.min(la.maxRaiseTo, to));
   }
 
+  /**
+   * O ICM EM NÚMERO — pré-flop.
+   *
+   * Em vez de SUPOR que a bolha mexeu na decisão, a gente mede: roda o motor
+   * duas vezes no mesmo spot, uma com os prêmios do torneio na conta e outra
+   * sem, e compara. Só devolve alguma coisa quando as duas respostas de fato
+   * divergem — aí a frase "sem a bolha seria pagar; com a bolha, fold" é a
+   * leitura literal das duas execuções, não uma interpretação nossa.
+   *
+   * Duas travas importantes:
+   *  • se o ICM mal aperta neste ponto do torneio, nem rodamos (não há o que
+   *    medir, e não faz sentido pagar o custo em toda mão);
+   *  • se a re-execução COM ICM não reproduz a decisão que está na tela, o par
+   *    não é comparável e a gente cala a boca em vez de arriscar.
+   *
+   * As duas execuções usam a MESMA semente (ela é derivada das cartas e da
+   * aposta, dentro do preflopContextFor), então a única diferença entre elas é
+   * mesmo o ICM.
+   *
+   * ⚠️ NÃO existe versão pós-flop desta medida, e é de propósito. No pós-flop a
+   * decisão passa por simulação: duas execuções nunca sorteiam igual, então a
+   * diferença que aparecesse poderia ser ruído do sorteio e não efeito do ICM —
+   * exatamente o tipo de afirmação sem lastro que o contrato existe para barrar.
+   * Além disso custaria duas execuções de ~1500 simulações a cada render, o que
+   * travaria o celular. No pré-flop o motor é determinístico e barato: é onde a
+   * medida é confiável, e é onde a bolha de fato decide (empurrar ou largar).
+   */
+  private medirIcmPreflop(seat: number, acaoReal: string): IcmDelta | undefined {
+    // Só para o herói: adviceForSeat roda a cada ação da mesa (inclusive dos
+    // bots) e essa medida só é lida na dica dele. Sem isto, pagaríamos duas
+    // execuções extras do motor por ação de bot na bolha.
+    if (seat !== this.heroSeat) return undefined;
+    if (!this.payouts || this.payouts.length === 0) return undefined;
+    const comCtx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
+    if (!comCtx.icmSpot) return undefined;
+    if (icmTightenFactor(comCtx.icmSpot, BASELINE_PROFILE.icmSensitivity) > 0.97) return undefined;
+    const com = preflopDecision(comCtx).action;
+    if (com !== acaoReal) return undefined;
+    const sem = preflopDecision(preflopContextFor(this.table, seat, BASELINE_PROFILE, {})).action;
+    if (familiaDaAcao(com) === familiaDaAcao(sem)) return undefined;
+    return { comIcm: com, semIcm: sem };
+  }
+
   /** Recomendação da linha de base (quase-GTO) para o assento que vai agir. */
   private adviceForSeat(seat: number): HeroAdvice | null {
     if (this.table.toAct !== seat || this.table.handOver) return null;
@@ -1033,6 +1088,7 @@ export class GameController {
       const ctx = preflopContextFor(this.table, seat, BASELINE_PROFILE, { payouts: this.payouts });
       const d = preflopDecision(ctx);
       const positionLabels = ["BB", "SB", "BTN", "CO", "HJ", "LJ", "MP", "UTG1", "UTG"];
+      const icmDelta = this.medirIcmPreflop(seat, d.action);
       // A LEITURA do range de quem abriu. Usa o MESMO modelo de abertura que o
       // motor usa para decidir (rfiRange) — não é uma estimativa paralela. Fica
       // indefinida quando ninguém abriu antes do herói: aí não há range para ler.
@@ -1042,7 +1098,8 @@ export class GameController {
       return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced, villainRangePct,
         // Verdadeiro por construção: com stack curto o motor decide por
         // push/fold; acima disso, pela range da posição.
-        origem: ctx.effectiveBB <= 12 ? "pushFold" : "range" };
+        origem: ctx.effectiveBB <= 12 ? "pushFold" : "range",
+        icmDelta };
     }
     const ctx = postflopContextFor(this.table, seat, BASELINE_PROFILE, this.rng, 1500, this.payouts);
     const d = postflopDecision(ctx);
@@ -1077,6 +1134,17 @@ export class GameController {
       equity: d.equity,
       potOdds: d.requiredEquity || undefined,
       villainRangePct: d.villainRangePct,
+      // "O TOPO DO RANGE DELE" — quanto do range que o motor acabou de usar
+      // forma trinca ou melhor NESTE board. É contagem sobre o mesmo range da
+      // conta de equity, então nunca contradiz o número ao lado.
+      topoRangePct:
+        seat === this.heroSeat && this.table.board.length >= 3 && d.villainRangePct > 0
+          ? topoDoRange(
+              buildTopRange(d.villainRangePct),
+              this.table.board,
+              this.table.players[seat].holeCards,
+            )?.fracao
+          : undefined,
       mix: d.mix,
       evBB,
       effectiveBB: effChips / bb,

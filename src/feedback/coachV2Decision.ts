@@ -1,4 +1,4 @@
-import type { HeroAdvice } from "./analyzer";
+import type { HeroAdvice, IcmDelta } from "./analyzer";
 import { plainReason } from "./analyzer";
 
 export type CoachV2Street = "preflop" | "flop" | "turn" | "river" | string;
@@ -27,6 +27,10 @@ export interface CoachV2Decision {
   requiredEquity?: number;
   evBB?: number;
   villainRangePct?: number;
+  /** Fração do range dele que forma trinca ou melhor no board (0..1). */
+  topoRangePct?: number;
+  /** O ICM medido: a decisão sem os prêmios, quando difere da com. */
+  icmDelta?: IcmDelta;
   betSizePct?: number;
   betSizeBB?: number;
   nBet?: string;
@@ -117,6 +121,8 @@ export function buildCoachV2Decision(advice: HeroAdvice, context: CoachV2Context
     requiredEquity: advice.potOdds,
     evBB: advice.evBB,
     villainRangePct: advice.villainRangePct,
+    topoRangePct: advice.topoRangePct,
+    icmDelta: advice.icmDelta,
     betSizePct: advice.betSizePct,
     betSizeBB: advice.betSizeBB,
     nBet: advice.nBet,

@@ -23,6 +23,42 @@ Regras do registro:
 
 ---
 
+## 2026-09-11 — Claude — Como bater o vilão, range limitado e o ICM em número
+
+Os três conceitos que o app "não fornecia" e que agora fornece — cada um medido,
+nenhum inventado.
+
+- **"COMO BATER [NOME DO VILÃO]" NAS DICAS DA MÃO.** O app já sabia disso e era
+  honesto: o conselho sai dos **parâmetros reais do bot** (se o Paga-Tudo é
+  grudento, é porque o código dele diz isso). Só que estava escondido atrás de um
+  toque no assento e ninguém achava. Agora aparece no fim das dicas da mão, com
+  o nome de quem jogou contra você, o VPIP/PFR/3-bet dele e as listas de **✅
+  Faça / ❌ Não faça**. Em mão **importada** não aparece — ali o oponente é gente
+  de verdade, de quem o app não tem parâmetro nenhum.
+- **"O TOPO DO RANGE DELE" (o range limitado).** Nova camada nas dicas e na
+  Revisão: *"Do range dele, 3 em cada 100 mãos formam trinca ou melhor nesse
+  board."* É a frase do comentarista de vídeo — e é **contagem**, não opinião: o
+  app pega o mesmo range que usou pra calcular sua chance, testa combinação por
+  combinação contra o board e conta. Quando dá zero, ele diz: *"Nenhuma mão do
+  range dele forma trinca ou melhor nesse board."* Entrega o número e **para** —
+  não conclui "logo, blefe"; a jogada continua vindo do motor.
+- **O ICM EM NÚMERO.** Até hoje o app se recusava a dizer "foi o ICM", e estava
+  certo: estar na bolha não prova nada. Agora ele **mede**: roda a decisão duas
+  vezes, uma com os prêmios na conta e outra sem, e só fala quando as duas
+  respostas **diferem de verdade** — *"valendo só fichas o padrão seria CALL; com
+  o prêmio em jogo, é FOLD."* Aparece pouco, e isso é o certo: numa mesa de 9 com
+  o prêmio longe, o ICM quase nunca vira a decisão. Ele vira na **mesa final**,
+  com stack curto — e é lá que a frase nasce.
+
+⚠️ **Só no pré-flop**, de propósito. No pós-flop a decisão passa por sorteio
+(simulação), então uma diferença que aparecesse poderia ser o sorteio e não o
+ICM — e o app não afirma o que não consegue provar.
+
+Onde ver: dicas da mão (botão 💡 depois da mão), Revisão da mão e a dica ao vivo
+(no ▾).
+
+---
+
 ## 2026-09-11 — Claude — Toque na dica ao vivo + trava contra frase sem dado
 
 Três coisas, todas nascidas da auditoria que o ChatGPT fez das nossas dicas.

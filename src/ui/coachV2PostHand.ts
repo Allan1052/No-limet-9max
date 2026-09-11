@@ -1,4 +1,4 @@
-import type { FeedbackItem } from "../feedback/analyzer";
+import { actionLabel, type FeedbackItem } from "../feedback/analyzer";
 import { temDadoPara } from "../feedback/coachContract";
 
 export type CoachV2PostHandMode = "simple" | "technical";
@@ -38,6 +38,18 @@ export interface CoachV2PostHandDecisionView {
    * vir — senão não há o que salvar.
    */
   cartasSalvadoras?: string;
+  /**
+   * O TOPO DO RANGE DELE: que fração do range dele forma trinca ou melhor NESTE
+   * board. É o "range limitado" (capped) que o comentarista narra — e é
+   * contagem, não opinião. Entrega o número e para: não conclui "logo, blefe".
+   */
+  topoRange?: string;
+  /**
+   * O PESO DA BOLHA: só existe quando o motor, rodado com e sem os prêmios na
+   * conta, deu respostas DIFERENTES. É a única forma honesta de dizer "foi o
+   * ICM" — sem essa diferença medida, a frase não nasce.
+   */
+  pesoDaBolha?: string;
 }
 
 function percent(value: number): string {
@@ -165,6 +177,28 @@ function buildCartasSalvadoras(item: FeedbackItem, mode: CoachV2PostHandMode): s
   return `${cartas} te colocavam na frente — ${chance}% de chance de vir na próxima.`;
 }
 
+function buildTopoRange(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  if (!temDadoPara("topoRange", item as unknown as Record<string, unknown>)) return undefined;
+  const f = item.topoRangePct;
+  if (f === undefined) return undefined;
+  const pct = Math.round(f * 100);
+  if (mode === "technical") return `Topo do range dele: ${pct}% forma trinca ou melhor neste board.`;
+  if (pct === 0) {
+    return "Nenhuma mão do range dele forma trinca ou melhor nesse board.";
+  }
+  return `Do range dele, ${pct} em cada 100 mãos formam trinca ou melhor nesse board.`;
+}
+
+function buildPesoDaBolha(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
+  if (!temDadoPara("icmDelta", item as unknown as Record<string, unknown>)) return undefined;
+  const d = item.icmDelta;
+  if (!d) return undefined;
+  const com = actionLabel(d.comIcm);
+  const sem = actionLabel(d.semIcm);
+  if (mode === "technical") return `Com prêmios na conta: ${com.toUpperCase()}. Sem: ${sem.toUpperCase()}.`;
+  return `Os prêmios do torneio mudaram essa decisão: valendo só fichas o padrão seria ${sem.toUpperCase()}; com o prêmio em jogo, é ${com.toUpperCase()}.`;
+}
+
 export function buildCoachV2PostHandDecision(
   item: FeedbackItem,
   mode: CoachV2PostHandMode,
@@ -187,5 +221,7 @@ export function buildCoachV2PostHandDecision(
     conta: buildConta(item, mode),
     oQueMudaria: buildOQueMudaria(item, mode),
     cartasSalvadoras: buildCartasSalvadoras(item, mode),
+    topoRange: buildTopoRange(item, mode),
+    pesoDaBolha: buildPesoDaBolha(item, mode),
   };
 }

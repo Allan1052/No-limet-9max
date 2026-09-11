@@ -33,16 +33,33 @@ import { UserSubscriptionLevel } from "../app/gameController";
  * CONSTRUÇÃO — isto é, que a gente sabe pelo caminho de código que produziu a
  * recomendação, não por adivinhação.
  *
- * ⚠️ "icm" NÃO está aqui de propósito. O app tem componentes de ICM, mas saber
- * que estamos na bolha não prova que foi o ICM que mudou a decisão. Enquanto o
- * motor não devolver essa diferença medida (decidir com e sem ICM e comparar),
- * dizer "foi por ICM" seria exatamente a alucinação que a auditoria proíbe.
+ * ⚠️ "icm" continua FORA desta lista, e de propósito. Estar na bolha não prova
+ * que foi o ICM que mudou a decisão — e é por isso que a causalidade do ICM não
+ * vira uma "origem" declarada, e sim uma MEDIDA separada (`icmDelta`): o motor
+ * decide duas vezes, com e sem os prêmios na conta, e só afirmamos que o ICM
+ * mudou a decisão quando as duas respostas realmente diferem.
  */
 export type OrigemDecisao =
   | "preco"      // pós-flop enfrentando aposta: equity contra a equity exigida
   | "forcaMao"   // pós-flop sem aposta: força da mão contra o range dele
   | "range"      // pré-flop: a mão está dentro ou fora da range da posição
   | "pushFold";  // stack curto: a decisão é empurrar ou desistir
+
+/**
+ * O ICM EM NÚMERO — a diferença medida, não uma suposição.
+ *
+ * O jeito honesto de dizer "foi o ICM" é mandar o motor decidir DUAS VEZES, com
+ * e sem os prêmios do torneio na conta, e comparar. Se as duas respostas são
+ * iguais, o ICM não mudou nada naquele spot e não há nada a dizer. Este objeto
+ * só existe quando elas diferem — então a frase "sem a bolha seria pagar; com a
+ * bolha, fold" é a leitura literal de duas execuções do mesmo motor.
+ */
+export interface IcmDelta {
+  /** Ação que o motor recomenda COM os prêmios na conta (a que está na tela). */
+  comIcm: string;
+  /** Ação que ele recomendaria SEM os prêmios — o mesmo spot em cash. */
+  semIcm: string;
+}
 
 export interface HeroAdvice {
   kind: "preflop" | "postflop";
@@ -58,6 +75,12 @@ export interface HeroAdvice {
   outs?: { outs: number; chance: number };
   /** O que determinou a recomendação (ver OrigemDecisao). */
   origem?: OrigemDecisao;
+  /** Fração do range do vilão (0..1) que forma TRINCA OU MELHOR no board —
+   *  o "range limitado" (capped) que o comentarista narra. Ver topoRange.ts. */
+  topoRangePct?: number;
+  /** O ICM MEDIDO: o que o motor decidiria sem os prêmios na conta, quando
+   *  isso difere do que ele decide com. Ver IcmDelta. */
+  icmDelta?: IcmDelta;
   userSubscriptionLevel?: UserSubscriptionLevel;
   /** Estratégia mista recomendada (frequências), quando disponível. */
   mix?: AdviceFreq[];
@@ -161,6 +184,10 @@ export interface FeedbackItem {
   outs?: { outs: number; chance: number };
   /** O que determinou a recomendação (ver OrigemDecisao). */
   origem?: OrigemDecisao;
+  /** Quanto do range dele forma trinca ou melhor neste board (0..1). */
+  topoRangePct?: number;
+  /** O ICM medido: a decisão sem os prêmios, quando ela difere da com. */
+  icmDelta?: IcmDelta;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -210,6 +237,8 @@ export function gradeDecision(
   if (advice.breakEvenCallBB !== undefined) item.breakEvenCallBB = advice.breakEvenCallBB;
   if (advice.outs !== undefined) item.outs = advice.outs;
   if (advice.origem !== undefined) item.origem = advice.origem;
+  if (advice.topoRangePct !== undefined) item.topoRangePct = advice.topoRangePct;
+  if (advice.icmDelta !== undefined) item.icmDelta = advice.icmDelta;
   // Nota de EV em big blinds — a "ponte" entre o simples (fichas ganhas/perdidas)
   // e o técnico (valor esperado). Só aparece em spots com aposta para pagar.
   if (advice.evBB !== undefined) {
