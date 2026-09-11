@@ -27,6 +27,23 @@ sobe sem aval dele).
 
 ### Correções a este próprio documento
 
+0. **ERRO DE MEDIÇÃO MEU (11/09), o mais grave até agora.** Eu propus ao Allan
+   ampliar o SELO alegando que **"nenhum dos 112 spots testa enfrentar um
+   aumento"**. **Falso.** Eu procurei por um campo `vs:` que não existe — o dado
+   mora em `opts.raiserPosition` / `opts.threeBet`. Medido corretamente:
+
+   | Banco | Spots | Defesa vs open | 3-bet/4-bet | Stacks |
+   |---|---|---|---|---|
+   | `gtoBenchmark` (SELO) | 61 | 7 | 5 | 10, 100 |
+   | `externalBenchmark` | **554** | **86** | **84** | 8 a 45 |
+   | **Total** | **615** | **93** | **89** | — |
+
+   A cobertura de pré-flop é **forte**, inclui sensibilidade a sizing e ante, e
+   documenta divergências conhecidas com justificativa. Eu subestimei um
+   trabalho que já estava feito. **A lacuna real era o pós-flop** — ver 8c.
+
+
+
 1. **Seção 2 estava imprecisa.** Eu escrevi que "o opt-out do Perfil cobre só o
    umami". Na verdade o botão estava dentro do bloco gated por `ruaUnlocked`
    (senha de teste): **o jogador comum não tinha desligar nenhum**, e a nota de
@@ -252,6 +269,24 @@ para 46px de altura, raio dos botões de 8 para 9px.
 > ⚠️ Isto **não** contradiz o experimento das 4 camadas
 > (`2026-09-10-EXPERIMENTO-camadas-css.md`). Aquelas camadas são vivas e
 > continuam necessárias. Este era um build inteiro do passado, coisa diferente.
+
+## 8c. ✅ A lacuna real: o pós-flop não tinha banco de referência
+
+`heroBestAction` — que move o veredito por decisão na tela de Review, o
+diferencial do produto — tinha **5 casos de teste, todos no mesmo flop**
+(A♠8♦6♣). Qualquer regressão em outra textura passaria batido.
+
+Criado `src/train/streets/postflopBenchmark.ts`: **39 spots**, 8 boards
+(seco/conectado/monotone/pareado/baixo/broadway + turn e river), 4 famílias com
+8+ spots cada. Só entra o **indiscutível** — lixo vs aposta de pote folda; mão
+enorme nunca folda; mesa limpa sem mão passa; mesa limpa com mão enorme aposta.
+Fronteira fica fora, mesma disciplina do `gtoBenchmark`.
+
+Determinismo: a equity é Monte Carlo, então o runner recebe `seededRng`. O teste
+confere estabilidade em 4 sementes.
+
+> O banco reprovou 1 spot na primeira execução e a causa era **minha**: T2o num
+> 9-8-7 não é lixo (T-9-8-7 é projeto aberto) e o motor semi-blefou com razão.
 
 ## 9. Ordem recomendada
 
