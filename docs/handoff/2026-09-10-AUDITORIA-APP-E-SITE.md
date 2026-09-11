@@ -9,6 +9,34 @@
 
 ---
 
+## ⚑ ESTADO EM 11/09/2026 — tudo desta lista foi corrigido e publicado
+
+| # | Frente | Estado | Commit |
+|---|---|---|---|
+| 1 | Veredito do site (KQs) contradizia o motor | ✅ corrigido + teste | `9d30cdf` |
+| 2 | Pixel da Meta sem aviso e sem desligar | ✅ declarado e desligável | `41518d6` |
+| 3 | 72 alvos de toque < 44px | ✅ **0** agora | `09656e1` |
+| 4 | Fontes vindas do Google | ✅ self-hosted | `27eb321` |
+| 5 | Texto decisivo < 11px e selo em 3,09:1 | ✅ 11px / ~8:1 | `102206b` |
+| 6 | es/en com 95 textos faltando | ✅ 576/576/576 + teste | `9ff17d6` |
+| — | **CSS fantasma de 17/08 (achado fora da lista)** | ✅ removido, −107 KB | `27eb321` |
+
+**Ainda com o Allan (decisão, não código):** se o pixel da Meta continua
+existindo, e a página pública de política de privacidade (documento legal não
+sobe sem aval dele).
+
+### Correções a este próprio documento
+
+1. **Seção 2 estava imprecisa.** Eu escrevi que "o opt-out do Perfil cobre só o
+   umami". Na verdade o botão estava dentro do bloco gated por `ruaUnlocked`
+   (senha de teste): **o jogador comum não tinha desligar nenhum**, e a nota de
+   privacidade citava um botão que ele não podia ver.
+2. **Faltava o maior achado.** O `index.html` carregava um build de CSS de
+   17/08 (107 KB, 1.252 regras) junto com o atual — duas folhas pintando o app
+   ao mesmo tempo. Ver seção 8b.
+
+---
+
 ## 0. Antes de criticar: o que está certo
 
 | Conferido | Resultado |
@@ -198,6 +226,32 @@ espaço com um bloco de controles, em vez de usar zonas de toque como o Review.
 **Candidata natural ao mesmo tratamento**, se o Allan quiser.
 
 ---
+
+## 8b. 🔴 O achado fora da lista: um CSS de agosto pintando o app junto
+
+Apareceu ao investigar por que as fontes do Google continuavam no CSS publicado
+depois de eu removê-las do fonte.
+
+`index.html` tinha `<link rel="stylesheet" href="/assets/index-RmRA6gsZ.css">`
+apontando para um **build antigo commitado na raiz** — 107 KB minificados,
+1.252 regras, congelados em 17/08. O Vite resolvia o link em build e empacotava
+o arquivo inteiro junto com o CSS atual.
+
+**Efeito:** o app era pintado por duas folhas ao mesmo tempo. É a explicação
+mais provável do padrão "arruma uma coisa e outra desarruma" — regras novas
+sobrescritas por regras que ninguém sabia que existiam.
+
+Medido com `tools/layout-fingerprint/` antes e depois: **19 diferenças, todas o
+desenho atual voltando ao lugar** — `.fine-tune-toggle` de 13px/quadrado/cinza
+para 17px/redondo/dourado (o botão que "não pegava"), `.play-coach-bar` de 23
+para 46px de altura, raio dos botões de 8 para 9px.
+
+- CSS principal: **145,27 KB → 38,13 KB**.
+- `assets/` da raiz removida: 3,8 MB de sobras, sem referência no código.
+
+> ⚠️ Isto **não** contradiz o experimento das 4 camadas
+> (`2026-09-10-EXPERIMENTO-camadas-css.md`). Aquelas camadas são vivas e
+> continuam necessárias. Este era um build inteiro do passado, coisa diferente.
 
 ## 9. Ordem recomendada
 
