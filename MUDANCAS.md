@@ -23,6 +23,45 @@ Regras do registro:
 
 ---
 
+## 2026-09-12 — Claude — A dica da mesa finalmente explica o PORQUÊ
+
+O Allan mandou 4 prints e a crítica certa: *"AJo pede pra dar raise, mas queria
+uma explicação melhor do porquê. Mesma coisa KJs."* E sobre o "tá barato":
+*"essa mensagem é muito superficial, aparece em muitas situações que é meio
+óbvio o fold."* Ele estava certo nos dois pontos, e havia um terceiro escondido.
+
+- **AGORA TODA RECOMENDAÇÃO EXPLICA.** Antes a faixa só dizia algo no fold
+  barato e ficava **muda** no resto — "💡 Raise" e ponto final. Agora ela traz o
+  motivo do motor em toda jogada: *"3-bet por valor contra a abertura de CO"*,
+  *"Mão de valor (equity 69% vs range): aposta 88% do pote"*.
+- **O ▾ VIRA EXPLICAÇÃO, NÃO TABELA.** Tocando no ▾ na mesa você agora lê
+  **Por quê · A leitura · O topo do range dele · A conta · O peso da bolha** —
+  as mesmas camadas que só existiam DEPOIS da mão. Os números crus (posição,
+  stack, pote) continuam, mas embaixo: são apoio, não a resposta.
+- **"TÁ BARATO" SÓ QUANDO É BARATO DE VERDADE.** Num print seu, com 10,7bb e
+  dois all-ins na frente, o app dizia "tá barato" para pagar 10,2bb — **95% do
+  seu stack**, o torneio inteiro. Era barato em relação ao pote e o app só
+  olhava isso. Agora "barato" exige as duas coisas: barato no pote **e** no seu
+  stack.
+
+🐞 **Dois bugs sérios achados no caminho:**
+
+1. **A frase chegava sem os números.** O texto passava por uma "limpeza" que
+   apagava toda porcentagem. *"Paga: equity 52% ≥ preço 38%"* virava literalmente
+   **"Paga: ≥."**, e o caso de ICM do seu print virava *"exige (2 oponentes)"* —
+   sem o número. Era essa a superficialidade que você sentiu: a frase chegava
+   **sem o que a sustentava**. Agora o motivo vai inteiro.
+2. **A dica tremia.** Com o painel aberto dava pra ver a faixa dizendo "equity
+   41%" e o painel, dois centímetros abaixo, "equity 38%" — a mesma decisão,
+   dois números. A dica era recalculada a cada repintura da tela e a conta de
+   equity é por sorteio, então cada repintura dava um número. Agora ela é
+   calculada **uma vez por situação** e só muda quando a situação muda. De
+   quebra, parou de rodar 1500 simulações a cada repintura (o celular agradece).
+
+Onde ver: mesa de jogo — a faixa da dica e o ▾.
+
+---
+
 ## 2026-09-12 — Claude — Resultado ≠ decisão, e onde a mão saiu do caminho
 
 Duas ideias novas da segunda auditoria do ChatGPT, mais uma limpeza. Nenhuma

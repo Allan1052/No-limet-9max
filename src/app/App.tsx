@@ -76,6 +76,7 @@ import { appendHandLog } from "./handHistoryLog";
 import { computeHeroCoachDecision } from "./coachV2Live";
 import { temDadoPara } from "../feedback/coachContract";
 import { actionLabel } from "../feedback/analyzer";
+import { construirCamadas, type FonteCamadas } from "../ui/coachCamadas";
 import { buildCoachV2HintView } from "../ui/coachV2Hint";
 import "../ui/theme.css";
 
@@ -361,7 +362,33 @@ export function App() {
 
   // Dica V2: usa a recomendação estruturada do Motor V2 para o exato instante
   // da decisão, sem recalcular estratégia e sem inventar métricas ausentes.
-  const coachDecision = heroTurn ? computeHeroCoachDecision(controller) : null;
+  //
+  // ⚠️ CONGELADA POR SPOT, e isto é correção de bug, não otimização. A dica era
+  // recalculada a CADA RENDER; no pós-flop a equity vem de simulação, então o
+  // mesmo spot devolvia números diferentes a cada repintura. Deu para ver na
+  // tela: a faixa dizia "equity 41%" e o painel aberto, "equity 38%" — a mesma
+  // decisão, dois números. Agora a dica é calculada uma vez por SITUAÇÃO (mão,
+  // rua, board, pote, valor a pagar, quem age) e só muda quando a situação
+  // muda. De quebra, para de rodar 1500 simulações a cada repintura.
+  const spotKey = heroTurn
+    ? [
+        controller.handLog.length,
+        controller.table.street,
+        controller.table.board.join(","),
+        controller.table.players[controller.heroSeat]?.holeCards.join(","),
+        controller.table.toAct,
+        Math.round(controller.pot),
+        Math.round(controller.legal().callAmount),
+        controller.table.currentBet,
+      ].join("|")
+    : "";
+  const coachDecision = useMemo(
+    () => (heroTurn ? computeHeroCoachDecision(controller) : null),
+    // `controller` é mutável e não serve de dependência; a identidade do spot é
+    // o que decide quando recalcular.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [heroTurn, spotKey],
+  );
   const coachHintView = coachDecision ? buildCoachV2HintView(coachDecision) : null;
   let coachActionLabel = coachHintView?.actionLabel;
   // Quando o vilão já está all-in, "raise/3-bet" significa apenas empurrar por
@@ -416,6 +443,29 @@ export function App() {
     }
     return linhas;
   }, [coachDecision]);
+  // AS CAMADAS DE EXPLICAÇÃO, AO VIVO (12/09). Antes o ▾ abria só uma lista de
+  // números soltos — o Allan mandou os prints: "Raise" e nenhum porquê. As
+  // frases já existiam no pós-mão; agora vêm do mesmo módulo (coachCamadas),
+  // no tempo verbal de quem ainda vai decidir.
+  const coachCamadas = useMemo(() => {
+    const d = coachDecision;
+    if (!d) return undefined;
+    const fonte: FonteCamadas = {
+      equity: d.equity,
+      requiredEquity: d.requiredEquity,
+      villainRangePct: d.villainRangePct,
+      topoRangePct: d.topoRangePct,
+      icmDelta: d.icmDelta,
+    };
+    return construirCamadas(fonte, mode === "tecnico" ? "technical" : "simple", "aoVivo");
+  }, [coachDecision, mode]);
+
+  // O ▾ só faz sentido quando há mesmo algo a abrir.
+  const temAlgoNoCoach =
+    coachContexto.length > 0 ||
+    !!coachDecision?.porQueCompleto ||
+    !!(coachCamadas && Object.values(coachCamadas).some(Boolean));
+
   // Tamanho (bb) que o coach sugere apostar/aumentar — o MESMO que aparece na
   // dica ("Bet ~8.6bb"). Quando existe, a dica vira clicável e preenche esse
   // valor no controle de raise/bet (pedido do Allan).
@@ -640,7 +690,7 @@ export function App() {
               <span className="coach-action">💡 {hint}</span>
               {coachTrapNote ? <span className="coach-why">{coachTrapNote}</span> : null}
               {hintFillable ? <span className="coach-tap">tocar para usar</span> : null}
-              {coachContexto.length > 0 ? (
+              {temAlgoNoCoach ? (
                 <button
                   type="button"
                   className="coach-mais"
@@ -657,14 +707,38 @@ export function App() {
                   {coachAberto ? "▴" : "▾"}
                 </button>
               ) : null}
-              {coachAberto && coachContexto.length > 0 ? (
-                <span className="coach-ctx">
-                  {coachContexto.map((l) => (
-                    <span key={l.k} className="coach-ctx-item">
-                      <b>{l.k}</b>
-                      {l.v}
+              {coachAberto ? (
+                <span className="coach-aberto">
+                  {/* O PORQUÊ primeiro: é o que o Allan pediu ver na hora de
+                      decidir. Depois as camadas, e só então os números crus. */}
+                  {coachDecision?.porQueCompleto ? (
+                    <span className="coach-camada">
+                      <b>Por quê</b>
+                      {coachDecision.porQueCompleto}
                     </span>
-                  ))}
+                  ) : null}
+                  {coachCamadas?.leitura ? (
+                    <span className="coach-camada"><b>A leitura</b>{coachCamadas.leitura}</span>
+                  ) : null}
+                  {coachCamadas?.topoRange ? (
+                    <span className="coach-camada"><b>O topo do range dele</b>{coachCamadas.topoRange}</span>
+                  ) : null}
+                  {coachCamadas?.conta ? (
+                    <span className="coach-camada"><b>A conta</b>{coachCamadas.conta}</span>
+                  ) : null}
+                  {coachCamadas?.pesoDaBolha ? (
+                    <span className="coach-camada"><b>O peso da bolha</b>{coachCamadas.pesoDaBolha}</span>
+                  ) : null}
+                  {coachContexto.length > 0 ? (
+                    <span className="coach-ctx">
+                      {coachContexto.map((l) => (
+                        <span key={l.k} className="coach-ctx-item">
+                          <b>{l.k}</b>
+                          {l.v}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
                 </span>
               ) : null}
             </div>

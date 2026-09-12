@@ -1,4 +1,5 @@
-import { actionLabel, type FeedbackItem } from "../feedback/analyzer";
+import type { FeedbackItem } from "../feedback/analyzer";
+import { construirCamadas, type FonteCamadas } from "./coachCamadas";
 import { temDadoPara } from "../feedback/coachContract";
 
 export type CoachV2PostHandMode = "simple" | "technical";
@@ -107,98 +108,6 @@ function decisionLineFor(item: FeedbackItem): string {
   return `✗ Melhor era ${rec}. Você fez ${hero}${vsAllin}.`;
 }
 
-/**
- * Rótulo da largura do range. Faixas convencionais de torneio, escritas aqui
- * para ficarem à vista em vez de espalhadas: abaixo de 20% é apertado, até 35%
- * é médio, acima disso é largo. O NÚMERO vai junto sempre — o rótulo é só
- * tradução, nunca substitui o dado.
- */
-function larguraLabel(pct: number): string {
-  if (pct < 0.2) return "range apertado";
-  if (pct <= 0.35) return "range médio";
-  return "range largo";
-}
-
-/** "22 de cada 100 vezes" — a mesma porcentagem, sem exigir saber o que é %. */
-function emCada100(value: number): string {
-  return `${Math.round(value * 100)} de cada 100 vezes`;
-}
-
-function buildLeitura(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  // Porta do contrato: sem o campo, a frase não nasce (coachContract.ts).
-  if (!temDadoPara("leituraRange", item as unknown as Record<string, unknown>)) return undefined;
-  const vr = item.villainRangePct;
-  if (vr === undefined || vr <= 0) return undefined;
-  const pct = percent(vr);
-  if (mode === "technical") return `Range do vilão ~${pct} (${larguraLabel(vr)}).`;
-  return `O vilão joga cerca de ${pct} das mãos nesse ponto — ${larguraLabel(vr)}.`;
-}
-
-function buildConta(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  if (!temDadoPara("equityPreco", item as unknown as Record<string, unknown>)) return undefined;
-  const eq = item.equity;
-  const req = item.potOdds; // equity EXIGIDA pelo preço
-  if (eq === undefined) return undefined;
-
-  if (mode === "technical") {
-    if (req === undefined) return `Equity ${percent(eq)}.`;
-    const falta = Math.round((req - eq) * 100);
-    const cauda = falta > 0 ? ` — faltam ${falta} pontos` : ` — sobram ${Math.abs(falta)} pontos`;
-    return `Equity ${percent(eq)} vs preço ${percent(req)}${cauda}.`;
-  }
-
-  if (req === undefined) return `Com essa mão você ganha ${emCada100(eq)}.`;
-  const falta = Math.round((req - eq) * 100);
-  if (falta > 0) {
-    return `Você ganha ${emCada100(eq)}. Pelo preço que estava pagando, precisaria ganhar ${Math.round(req * 100)} — faltam ${falta}.`;
-  }
-  return `Você ganha ${emCada100(eq)} e só precisava de ${Math.round(req * 100)} — o preço estava bom.`;
-}
-
-function buildOQueMudaria(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  if (!temDadoPara("breakEven", item as unknown as Record<string, unknown>)) return undefined;
-  const virada = item.breakEvenCallBB;
-  if (virada === undefined || virada <= 0) return undefined;
-  // Só faz sentido quando o motor mandou FOLDAR: aí a frase responde "e se ele
-  // tivesse apostado menos?". Num call aprovado, dizer o ponto de virada seria
-  // ruído (a decisão já estava certa).
-  if (item.adviceFam !== "fold") return undefined;
-  if (mode === "technical") return `Viraria call com até ${virada}bb para pagar.`;
-  return `Se ele tivesse apostado até ${virada}bb, aí valeria pagar.`;
-}
-
-function buildCartasSalvadoras(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  if (!temDadoPara("outs", item as unknown as Record<string, unknown>)) return undefined;
-  const o = item.outs;
-  if (!o || o.outs <= 0) return undefined;
-  const chance = Math.round(o.chance * 100);
-  const cartas = o.outs === 1 ? "1 carta" : `${o.outs} cartas`;
-  if (mode === "technical") return `${o.outs} outs · ${chance}% na próxima carta.`;
-  return `${cartas} te colocavam na frente — ${chance}% de chance de vir na próxima.`;
-}
-
-function buildTopoRange(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  if (!temDadoPara("topoRange", item as unknown as Record<string, unknown>)) return undefined;
-  const f = item.topoRangePct;
-  if (f === undefined) return undefined;
-  const pct = Math.round(f * 100);
-  if (mode === "technical") return `Topo do range dele: ${pct}% forma trinca ou melhor neste board.`;
-  if (pct === 0) {
-    return "Nenhuma mão do range dele forma trinca ou melhor nesse board.";
-  }
-  return `Do range dele, ${pct} em cada 100 mãos formam trinca ou melhor nesse board.`;
-}
-
-function buildPesoDaBolha(item: FeedbackItem, mode: CoachV2PostHandMode): string | undefined {
-  if (!temDadoPara("icmDelta", item as unknown as Record<string, unknown>)) return undefined;
-  const d = item.icmDelta;
-  if (!d) return undefined;
-  const com = actionLabel(d.comIcm);
-  const sem = actionLabel(d.semIcm);
-  if (mode === "technical") return `Com prêmios na conta: ${com.toUpperCase()}. Sem: ${sem.toUpperCase()}.`;
-  return `Os prêmios do torneio mudaram essa decisão: valendo só fichas o padrão seria ${sem.toUpperCase()}; com o prêmio em jogo, é ${com.toUpperCase()}.`;
-}
-
 export function buildCoachV2PostHandDecision(
   item: FeedbackItem,
   mode: CoachV2PostHandMode,
@@ -213,15 +122,22 @@ export function buildCoachV2PostHandDecision(
     }
   }
 
+  // As camadas vivem em coachCamadas.ts, compartilhadas com a dica AO VIVO —
+  // assim a mesa e o pós-mão nunca explicam a mesma coisa de dois jeitos.
+  const fonte: FonteCamadas = {
+    equity: item.equity,
+    requiredEquity: item.potOdds,
+    villainRangePct: item.villainRangePct,
+    topoRangePct: item.topoRangePct,
+    icmDelta: item.icmDelta,
+    breakEvenCallBB: item.breakEvenCallBB,
+    adviceFam: item.adviceFam,
+    outs: item.outs,
+  };
   return {
     decisionLine: decisionLineFor(item),
     reason: item.text,
     metrics,
-    leitura: buildLeitura(item, mode),
-    conta: buildConta(item, mode),
-    oQueMudaria: buildOQueMudaria(item, mode),
-    cartasSalvadoras: buildCartasSalvadoras(item, mode),
-    topoRange: buildTopoRange(item, mode),
-    pesoDaBolha: buildPesoDaBolha(item, mode),
+    ...construirCamadas(fonte, mode),
   };
 }

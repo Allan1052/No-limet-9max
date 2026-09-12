@@ -94,6 +94,36 @@
     width: min(84%, 306px) !important;
     max-width: min(84%, 306px) !important;
   }
+  /* AS CAMADAS DE EXPLICAÇÃO AO VIVO (12/09). O ▾ deixou de abrir uma tabela de
+     números e passou a abrir o PORQUÊ — a pergunta que o jogador faz na hora de
+     decidir. Os números crus continuam, mas embaixo, onde são apoio e não a
+     resposta. */
+  /* Com o painel aberto, o resumo da faixa vira eco do "Por quê" logo abaixo
+     (ele é literalmente a primeira oração do mesmo motivo). Some. */
+  .app:has(.play) .play > .play-coach-bar.aberta .coach-why { display: none; }
+  .app:has(.play) .play > .play-coach-bar .coach-aberto {
+    display: block;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(236, 208, 122, .28);
+    text-align: left;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-camada {
+    display: block;
+    margin-bottom: 6px;
+    line-height: 1.35;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-camada b {
+    display: block;
+    color: var(--gold-soft, #ecd07a);
+    font-size: var(--fs-min, 10px);
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .app:has(.play) .play > .play-coach-bar .coach-aberto .coach-ctx {
+    margin-top: 8px;
+  }
   .app:has(.play) .play > .play-coach-bar .coach-ctx {
     display: grid;
     grid-template-columns: auto 1fr;
