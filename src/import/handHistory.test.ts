@@ -136,3 +136,54 @@ describe("robustez", () => {
     expect(parseHandBlock("PokerStars Hand #1: nada aqui")).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Vencedor sem showdown: a linha do RESUMO.
+//
+// Achado em 12/09/2026: toda mão ganha SEM showdown ficava sem vencedor —
+// "Seat 5: Hero collected (1760)" não casava com nenhum padrão, porque os dois
+// que existiam exigiam "do pote"/"from pot". A Revisão dizia "pote resolvido" e
+// o app não sabia que o herói tinha levado.
+// ---------------------------------------------------------------------------
+const GANHOU_SEM_SHOWDOWN = `PokerStars Hand #99: Tournament #1, $10+$1 USD Hold'em No Limit - Level V (30/60) - 2024/01/15 20:14:33 ET
+Table '1 5' 9-max Seat #6 is the button
+Seat 1: Alice (6000 in chips)
+Seat 2: Bob (6000 in chips)
+Seat 5: Hero (6000 in chips)
+Seat 6: Frank (6000 in chips)
+Alice: posts small blind 30
+Bob: posts big blind 60
+*** HOLE CARDS ***
+Dealt to Hero [Ah Kd]
+Hero: raises 90 to 150
+Frank: folds
+Alice: folds
+Bob: folds
+*** SUMMARY ***
+Total pot 240 | Rake 0
+Seat 1: Alice (small blind) folded before Flop
+Seat 5: Hero collected (240)`;
+
+describe("vencedor na linha do resumo (mão ganha sem showdown)", () => {
+  it("reconhece 'Seat N: nome collected (x)'", () => {
+    const h = parseHandBlock(GANHOU_SEM_SHOWDOWN)!;
+    expect(h.winners).toContain("Hero");
+  });
+
+  it("reconhece a versão em português", () => {
+    const h = parseHandBlock(GANHOU_SEM_SHOWDOWN.replace("Seat 5: Hero collected (240)", "Lugar 5: Hero recebeu (240)"))!;
+    expect(h.winners).toContain("Hero");
+  });
+
+  it("reconhece com o parêntese de posição no meio", () => {
+    const h = parseHandBlock(GANHOU_SEM_SHOWDOWN.replace("Seat 5: Hero collected (240)", "Seat 5: Hero (button) collected (240)"))!;
+    expect(h.winners).toContain("Hero");
+  });
+
+  it("NÃO confunde quem foldou com quem levou", () => {
+    const h = parseHandBlock(GANHOU_SEM_SHOWDOWN)!;
+    expect(h.winners).not.toContain("Alice");
+    expect(h.winners).not.toContain("Frank");
+    expect(h.winners?.length).toBe(1);
+  });
+});

@@ -242,10 +242,17 @@ export function parseHandBlock(block: string): ParsedHand | null {
       if (/ganhou|won/i.test(sumShowM[3])) winners.add(nm);
       continue;
     }
-    // Vencedor: "nome recebeu 10602 do pote" / "name collected (10602)".
+    // Vencedor: "nome recebeu 10602 do pote" / "name collected (10602) from pot".
+    //
+    // E TAMBÉM a linha do RESUMO, que não traz "do pote"/"from pot" e vem
+    // prefixada pelo assento: "Seat 5: Hero collected (1760)" / "Lugar 5: nome
+    // ganhou (1760)". Sem esse terceiro padrão, toda mão ganha SEM showdown
+    // ficava sem vencedor registrado — a Revisão dizia "pote resolvido" e o app
+    // não sabia que você tinha levado. (Achado em 12/09/2026.)
     const wonM =
       line.match(/^(.+?)\s+(?:recebeu|coletou)\s+[\d.,]+\s+do pote/i) ||
-      line.match(/^(.+?)\s+collected\s+\(?[\d.,]+\)?\s+from/i);
+      line.match(/^(.+?)\s+collected\s+\(?[\d.,]+\)?\s+from/i) ||
+      line.match(/^(?:Seat|Lugar)\s+\d+:\s+(.+?)(?:\s+\([^)]*\))?\s+(?:collected|recebeu|coletou|ganhou|won)\s+\(?[\d.,]+\)?\s*$/i);
     if (wonM) {
       winners.add(wonM[1].trim());
       continue;

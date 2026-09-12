@@ -1,0 +1,139 @@
+/* ---------------------------------------------------------------------------
+   "RESULTADO ≠ DECISÃO" e "ONDE A MÃO SAIU DO CAMINHO".
+   Duas faixas curtas no topo das dicas da mão. Elas vêm ANTES do resumo porque
+   respondem a pergunta que o jogador faz primeiro ("joguei bem ou não?") antes
+   da que ele faz depois ("por quê?").
+   --------------------------------------------------------------------------- */
+
+.rvd {
+  margin: 0 12px 10px;
+  padding: 11px 13px;
+  border: 1px solid rgba(230, 196, 84, 0.26);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(11, 39, 29, 0.95), rgba(6, 24, 17, 0.95));
+  /* A Revisão centraliza o painel de resultado; a faixa é de leitura e fica à
+     esquerda em qualquer tela onde ela apareça. */
+  text-align: left;
+}
+
+/* Os dois casos em que resultado e decisão DISCORDAM são os que ensinam algo —
+   eles ganham a borda de destaque; os concordantes ficam discretos. */
+.rvd-acertouEPerdeu { border-color: rgba(116, 169, 129, 0.55); }
+.rvd-errouEGanhou { border-color: rgba(224, 123, 107, 0.55); }
+
+.rvd-linhas {
+  display: flex;
+  gap: 10px;
+}
+
+.rvd-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rvd-rot {
+  color: #b9ae8b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.rvd-col b {
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rvd-pos { color: #7ec58a; }
+.rvd-neg { color: #e6a79b; }
+
+.rvd-texto {
+  margin: 9px 0 0;
+  color: #d7d1c3;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* --- percurso da mão --- */
+
+.pcm {
+  margin: 0 12px 10px;
+}
+
+.pcm-ruas {
+  display: flex;
+  gap: 6px;
+}
+
+.pcm-rua {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pcm-rua b {
+  color: #d7d1c3;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pcm-rua i {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pcm-boa i,
+.pcm-ok i { color: #7ec58a; }
+.pcm-imprecisa i,
+.pcm-ruim i { color: #e07b6b; }
+
+.pcm-semDecisao {
+  opacity: 0.5;
+}
+
+.pcm-semDecisao i {
+  color: #a89a72;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* A rua onde a mão saiu do caminho: é o ponto da tela que o olho tem que achar. */
+.pcm-aqui {
+  border-color: rgba(224, 123, 107, 0.7);
+  background: rgba(224, 123, 107, 0.12);
+}
+
+.pcm-onde {
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  border-left: 3px solid rgba(224, 123, 107, 0.7);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 255, 255, 0.035);
+  color: #d7d1c3;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.pcm-onde b {
+  display: block;
+  margin-bottom: 3px;
+  color: #e6c454;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}

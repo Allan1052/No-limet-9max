@@ -909,6 +909,33 @@
   }
   .ir-fullscreen .ir-chip:disabled { opacity: .32; }
 
+  /* ---- ONDE A MÃO SAIU DO CAMINHO (12/09/2026) ----
+     Os chips de rua já existiam e já navegavam. Agora eles também CONTAM a mão:
+     de bater o olho dá pra ver onde ela saiu do trilho, e um toque leva até lá.
+     Rua sem decisão sua fica apagada — ausência de decisão não é acerto. */
+  .ir-fullscreen .ir-chip-street {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ir-fullscreen .ir-nota-marca {
+    font-style: normal;
+    font-size: .92em;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .ir-fullscreen .ir-nota-ok { border-color: rgba(116, 169, 129, .6); }
+  .ir-fullscreen .ir-nota-ok .ir-nota-marca { color: #7ec58a; }
+  .ir-fullscreen .ir-nota-err { border-color: rgba(224, 123, 107, .6); }
+  .ir-fullscreen .ir-nota-err .ir-nota-marca { color: #e07b6b; }
+  /* O momento do erro: é o ponto da barra que o olho tem que achar. */
+  .ir-fullscreen .ir-chip.ir-aqui {
+    border-color: rgba(224, 123, 107, .95);
+    background: rgba(224, 123, 107, .18);
+  }
+  /* Com o chip selecionado (fundo dourado), o ✓/✗ precisa de cor escura. */
+  .ir-fullscreen .ir-chip.on .ir-nota-marca { color: #0b0f0d; }
+
   /* ---- menu ⋯ (tudo o que saiu da tela) ---- */
   .ir-fullscreen .ir-menu {
     position: absolute !important;

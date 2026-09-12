@@ -13,6 +13,9 @@ import { UserSubscriptionLevel } from "../app/gameController";
 import { buildCoachV2PostHandDecision } from "./coachV2PostHand";
 import { ExploitPanel } from "./ExploitPanel";
 import { vilaoPrincipalDaMao } from "../bots/vilaoPrincipal";
+import { compararResultadoEDecisao } from "../feedback/resultadoVsDecisao";
+import { percursoDaMao } from "../feedback/percursoDaMao";
+import "./percursoDaMao.css";
 import type { HandHistory } from "../app/replay";
 
 type TipsMode = "free" | "technical";
@@ -30,6 +33,7 @@ export function HandTipsModal({
   icmPhase: _icmPhase,
   actions,
   hand,
+  netBB,
 }: {
   items: FeedbackItem[];
   itemsFree?: FeedbackItem[];
@@ -49,6 +53,8 @@ export function HandTipsModal({
   icmPhase?: "early" | "bubble" | "itm";
   /** A mão que acabou — usada só para descobrir contra QUEM ela foi. */
   hand?: HandHistory | null;
+  /** Ganho líquido do herói na mão, em bb. Para a faixa resultado × decisão. */
+  netBB?: number | null;
 }) {
   const { t } = useT();
   const ratingLabel = (r: string) => t(`rating.${r}` as TransKey);
@@ -79,6 +85,14 @@ export function HandTipsModal({
   // painel corretamente não aparece.
   const vilao = useMemo(() => vilaoPrincipalDaMao(hand), [hand]);
 
+  // RESULTADO ≠ DECISÃO e ONDE A MÃO SAIU DO CAMINHO. Os dois leem os mesmos
+  // FeedbackItems que a lista abaixo já mostra — nada é recalculado aqui.
+  const confronto = useMemo(
+    () => compararResultadoEDecisao(displayItems, { netBB: netBB ?? undefined }),
+    [displayItems, netBB],
+  );
+  const percurso = useMemo(() => percursoDaMao(displayItems), [displayItems]);
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay tips-modal" onClick={(e) => e.stopPropagation()}>
@@ -106,6 +120,50 @@ export function HandTipsModal({
           </button>
         </div>
 
+        {confronto ? (
+          <section className={`rvd rvd-${confronto.veredito}`} aria-label="Resultado e decisão">
+            <div className="rvd-linhas">
+              <div className="rvd-col">
+                <span className="rvd-rot">Resultado</span>
+                <b className={confronto.ganhou ? "rvd-pos" : "rvd-neg"}>{confronto.linhaResultado}</b>
+              </div>
+              <div className="rvd-col">
+                <span className="rvd-rot">Decisão</span>
+                <b className={confronto.decisaoOk ? "rvd-pos" : "rvd-neg"}>
+                  {confronto.decisaoOk ? "No padrão" : "Saiu do padrão"}
+                </b>
+              </div>
+            </div>
+            <p className="rvd-texto">{confronto.texto}</p>
+          </section>
+        ) : null}
+        {percurso ? (
+          <section className="pcm" aria-label="Percurso da mão">
+            <div className="pcm-ruas">
+              {percurso.ruas.map((r, i) => (
+                <span
+                  key={r.rua}
+                  className={`pcm-rua pcm-${r.nota}${percurso.piorIdx === i ? " pcm-aqui" : ""}`}
+                >
+                  <b>{r.label}</b>
+                  <i>
+                    {r.nota === "semDecisao"
+                      ? "sem decisão"
+                      : r.nota === "boa" || r.nota === "ok"
+                        ? "✓"
+                        : "✗"}
+                  </i>
+                </span>
+              ))}
+            </div>
+            {percurso.ondeSaiu ? (
+              <p className="pcm-onde">
+                <b>Onde a mão saiu do caminho</b>
+                {percurso.ondeSaiu}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
         <div className="summary">{summarize(displayItems, summaryLevel)}</div>
         {hasBoard ? (
           <div className="board-read">

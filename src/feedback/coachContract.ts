@@ -33,7 +33,8 @@ export type FamiliaDica =
   | "origem"
   | "topoRange"
   | "icmDelta"
-  | "exploit";
+  | "exploit"
+  | "resultado";
 
 export interface ContratoDica {
   familia: FamiliaDica;
@@ -139,6 +140,16 @@ export const CONTRATO_DICAS: ContratoDica[] = [
       "Deriva o vazamento do vilão dos PARÂMETROS REAIS do perfil que o bot " +
       "usa para jogar. Só existe contra bot conhecido da mesa de treino; em mão " +
       "importada o oponente é humano desconhecido e a frase corretamente some.",
+  },
+  {
+    familia: "resultado",
+    rotulo: "Resultado da mão em bb",
+    exige: ["netBB"],
+    promessa:
+      "Mostra quanto a sua pilha subiu ou desceu NESTA mão, em big blinds. É o " +
+      "ganho LÍQUIDO (não o pote bruto, que inclui as suas próprias fichas). " +
+      "Quando o líquido não é reconstruível — mão importada —, o app diz apenas " +
+      "se você levou o pote, em vez de inventar um número.",
   },
   {
     familia: "origem",

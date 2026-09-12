@@ -285,6 +285,11 @@ export class GameController {
   stats: Record<number, PlayerStats> = {};
   /** Histórico da mão anterior, para o replayer. */
   lastHand: HandHistory | null = null;
+  /** Ganho LÍQUIDO do herói na última mão, em big blinds (negativo = perdeu).
+   *  É o mesmo número da mensagem da mesa — pilha depois menos pilha antes, e
+   *  não o pote bruto (que inclui as fichas do próprio herói). Serve à faixa
+   *  "resultado × decisão" das dicas. */
+  lastHandNetBB: number | null = null;
   /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
   handLog: HandHistory[] = [];
   /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
@@ -426,6 +431,7 @@ export class GameController {
     this.headsUpAnnounced = false;
     this.phase = "handOver";
     this.lastHand = null;
+    this.lastHandNetBB = null;
     this.handLog = [];
     this.feedback = [];
     this.feedbackFree = [];
@@ -1356,6 +1362,7 @@ export class GameController {
     this.tournamentOver = false;
     this.phase = "handOver";
     this.lastHand = null;
+    this.lastHandNetBB = null;
     this.handLog = snap.handLog ?? []; // preserva as mãos para o export
     this.feedback = [];
     this.feedbackFree = [];
@@ -1449,6 +1456,7 @@ export class GameController {
     // início da mão. Nesse ponto a pilha já recebeu o que foi arrecadado.
     const heroStart = this.handStartStacks[this.heroSeat] ?? hero.stack;
     const heroNet = hero.stack - heroStart;
+    this.lastHandNetBB = heroNet / (this.table.bigBlind || 1);
     if (heroWin > 0 && heroNet > 0) {
       this.setMessage("msg.wonHand", { amount: toBB(heroNet, this.table.bigBlind) });
     } else if (heroWin > 0) {

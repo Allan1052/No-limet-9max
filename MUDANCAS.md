@@ -23,6 +23,40 @@ Regras do registro:
 
 ---
 
+## 2026-09-12 — Claude — Resultado ≠ decisão, e onde a mão saiu do caminho
+
+Duas ideias novas da segunda auditoria do ChatGPT, mais uma limpeza. Nenhuma
+delas mexe no motor: as duas só juntam coisas que o app já sabia e nunca
+mostrava junto.
+
+- **"RESULTADO ≠ DECISÃO".** Faixa nova no topo das dicas da mão e na Revisão.
+  De um lado, quanto você ganhou ou perdeu (**−18,3bb**); do outro, se a decisão
+  ficou no padrão. E aí a frase que faltava: *"Você não levou esse pote — e
+  jogou certo"*, ou *"Ganhou a mão, mas a jogada não era essa"*. É o vício nº 1
+  do jogador recreativo — achar que a jogada foi boa porque o river foi bom. O
+  app sabia as duas coisas desde sempre e nunca as tinha colocado na mesma tela.
+- **"ONDE A MÃO SAIU DO CAMINHO".** Agora dá pra bater o olho e ver a mão
+  inteira: **Pré-flop ✓ · Flop ✓ · Turn ✗ · River (sem decisão)** — com o
+  momento do erro destacado e a conta dele por baixo: *"No Turn: você fez CALL;
+  o padrão era FOLD. Você precisava de 45% e tinha 4%."* Na Revisão isso entrou
+  nos botõezinhos de rua que já existiam lá embaixo: eles ficam verdes ou
+  vermelhos, e **um toque te leva direto ao momento do erro**. Rua em que você
+  não decidiu nada fica apagada — não ter decidido não é a mesma coisa que ter
+  acertado.
+- **LIMPEZA: três arquivos mortos saíram do projeto.** Eram telas e textos
+  antigos que nenhuma parte do app usava mais. Um deles estava cheio de
+  porcentagem escrita à mão (número que ninguém calculou) e trazia "vozes" com
+  nome de jogadores reais — aquilo que você já tinha mandado tirar. Foram
+  apagados de vez pra não voltarem por engano.
+
+🐞 **Bug corrigido no caminho (Importar).** Toda mão ganha **sem showdown** ficava
+sem vencedor: o app não reconhecia a linha `Seat 5: Você recebeu (1760)` do
+histórico e dizia só "pote resolvido". Por causa disso a faixa nova chegou a
+dizer que você tinha perdido uma mão que você ganhou. Achei testando, corrigi o
+leitor de histórico e deixei teste pra não voltar.
+
+---
+
 ## 2026-09-11 — Claude — Como bater o vilão, range limitado e o ICM em número
 
 Os três conceitos que o app "não fornecia" e que agora fornece — cada um medido,

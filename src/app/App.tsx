@@ -805,6 +805,7 @@ export function App() {
           onClose={() => setTipsOpen(false)}
           actions={postHandActions}
           hand={controller.lastHand}
+          netBB={controller.lastHandNetBB}
         />
       ) : null}
 
