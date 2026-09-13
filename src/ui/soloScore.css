@@ -1,0 +1,117 @@
+.solo-score {
+  margin: 0 0 14px;
+  padding: 13px 14px;
+  border: 1px solid rgba(140, 220, 175, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(11, 39, 29, 0.95), rgba(6, 24, 17, 0.95));
+}
+
+.solo-score.solo-vazio {
+  border-color: rgba(230, 196, 84, 0.25);
+}
+
+.solo-kicker {
+  color: #e6c454;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.solo-numeros {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.solo-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.solo-col b {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #d7d1c3;
+  font-variant-numeric: tabular-nums;
+}
+
+.solo-destaque b {
+  color: #7ec58a;
+}
+
+.solo-rot {
+  color: #b9ae8b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.solo-amostra {
+  color: #8e8570;
+  font-size: 11px;
+}
+
+.solo-texto {
+  margin: 10px 0 0;
+  color: #d7d1c3;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.solo-texto b {
+  color: #f1ebdd;
+}
+
+.solo-barra {
+  margin-top: 10px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.solo-barra span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5f9e72, #7ec58a);
+}
+
+/* Linha do "Jogar sozinho" no resumo do torneio (fim da sessão). */
+.summary-solo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(140, 220, 175, 0.32);
+  border-radius: 13px;
+  background: rgba(18, 46, 32, 0.5);
+  text-align: left;
+}
+
+.summary-solo-rot {
+  color: #b9ecd0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.summary-solo b {
+  color: #f1ebdd;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.summary-solo-sub {
+  color: #a8a08c;
+  font-size: 11px;
+  line-height: 1.35;
+}

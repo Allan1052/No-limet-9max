@@ -99,6 +99,8 @@ export function PokerTable({
   buyIn,
   readOnly = false,
   replayActorSeat,
+  sozinho,
+  onToggleSozinho,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -113,6 +115,9 @@ export function PokerTable({
   buyIn?: number;
   readOnly?: boolean;
   replayActorSeat?: number;
+  /** "Jogar sozinho" ligado? (sem dica na mão, sem veredito até o fim). */
+  sozinho?: boolean;
+  onToggleSozinho?: () => void;
 }) {
   const { t } = useT();
 
@@ -201,6 +206,18 @@ export function PokerTable({
           onClick={onShowTips}
         >
           💡 {t("tips.button")}
+        </button>
+      ) : null}
+
+      {onToggleSozinho ? (
+        <button
+          type="button"
+          className={`tbl-solo-btn${sozinho ? " on" : ""}`}
+          aria-pressed={sozinho}
+          title={sozinho ? "Jogando sozinho — toque para voltar a receber dicas" : "Jogar sozinho: sem dica nenhuma até o fim da sessão"}
+          onClick={onToggleSozinho}
+        >
+          {sozinho ? "🙈 Sozinho" : "💡 Com dicas"}
         </button>
       ) : null}
 

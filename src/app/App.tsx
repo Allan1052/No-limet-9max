@@ -97,7 +97,7 @@ function DevLockedPlaceholder({ onGo }: { onGo: () => void }) {
 
 export function App() {
   const { t: tr } = useT();
-  const { onboarded, setOnboarded, mode } = useSettings();
+  const { onboarded, setOnboarded, mode, sozinho, setSozinho } = useSettings();
   // TODO: Obter o nível de assinatura real do usuário (do Supabase ou contexto)
   // Mapeia o mode de UI (simples/tecnico) para o nível de feedback (free/technical/ultra)
   // Quando o usuário troca de modo, o level muda junto
@@ -360,6 +360,13 @@ export function App() {
   const selectedSpot =
     mode === "tecnico" && selectedSeat != null ? spots.find((s) => s.seat === selectedSeat) : null;
 
+  // "JOGAR SOZINHO" (13/09): o motor precisa saber se a dica está na tela para
+  // marcar cada decisão. É ele quem aplica a regra dura (espiou na mão, a mão
+  // inteira deixa de contar como às cegas).
+  useEffect(() => {
+    controller.setDicasLigadas(!sozinho);
+  }, [controller, sozinho]);
+
   // Dica V2: usa a recomendação estruturada do Motor V2 para o exato instante
   // da decisão, sem recalcular estratégia e sem inventar métricas ausentes.
   //
@@ -402,8 +409,11 @@ export function App() {
   // Dica curta: SÓ A AÇÃO, em termo padrão de poker (Raise/Call/Fold/3-bet/
   // All-in). Sem pote/preço/equity — o Allan já vê isso na mesa central. Faixa
   // discreta acima da mesa.
+  // Com "Jogar sozinho" ligado NADA de dica aparece — é o ponto do modo.
   const hint =
-    coachActionLabel && coachHintView && !firstContactOverlay ? coachActionLabel : undefined;
+    coachActionLabel && coachHintView && !firstContactOverlay && !sozinho
+      ? coachActionLabel
+      : undefined;
   // "Porquê" curto só nos spots que enganam (ex.: fold com preço barato). Vem do
   // motivo real do motor — não aparece nas jogadas óbvias.
   const coachTrapNote = hint ? coachHintView?.trapNote : undefined;
@@ -748,8 +758,19 @@ export function App() {
             lastActionLabel={controller.lastActionLabel}
             hint={undefined}
             onSelectSeat={setSelectedSeat}
-            onShowTips={() => setTipsOpen(true)}
-            showTips={handOver && controller.feedback.length > 0}
+            // BLACKOUT: jogando sozinho, nem o convite para ver a mão aparece
+            // até o fim da sessão — foi a escolha do Allan (13/09).
+            // ⚠️ Tem de ser o onShowTips: `showTips` só acende o destaque do
+            // botão, quem decide se ele EXISTE é o callback (medido no
+            // navegador — com showTips=false o botão continuava na tela).
+            onShowTips={sozinho ? undefined : () => setTipsOpen(true)}
+            showTips={!sozinho && handOver && controller.feedback.length > 0}
+            sozinho={sozinho}
+            onToggleSozinho={() => {
+              const novo = !sozinho;
+              setSozinho(novo);
+              trackEvent(novo ? "solo_on" : "solo_off");
+            }}
             celebrate={celebrateItm}
             updateReady={updateReady}
             onUpdate={applyUpdate}
@@ -902,6 +923,7 @@ export function App() {
 
       {controller.tournamentOver && controller.tournamentSummary() ? (
         <TournamentSummary
+          sessaoSozinho={controller.sessaoSozinho}
           summary={controller.tournamentSummary()!}
           onClose={() => {
             dismissSummary();
@@ -942,11 +964,20 @@ export function App() {
         />
       ) : null}
 
-      <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
-
-      {isXpUnlocked() ? (
-        <AchievementToastPopup toasts={xpToasts} onDismiss={dismissXpToasts} />
-      ) : null}
+      {/* BLACKOUT DOS AVISOS. Conquistas como "Disciplina de Ferro — 10 decisões
+          'boa' seguidas" e missões como "15 decisões seguidas sem erro grave"
+          apareciam NO MEIO da mão: quem visse uma delas descobria na hora que a
+          última decisão tinha sido julgada boa, e o modo sozinho acabava ali.
+          Jogando sozinho elas ficam GUARDADAS (ninguém perde nada) e aparecem
+          quando o jogador sai da mesa — fim da sessão. */}
+      {sozinho && view === "play" ? null : (
+        <>
+          <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
+          {isXpUnlocked() ? (
+            <AchievementToastPopup toasts={xpToasts} onDismiss={dismissXpToasts} />
+          ) : null}
+        </>
+      )}
 
       {achievementsOpen ? (
         <Suspense fallback={<div className="overlay"><div className="replay progress-modal"><p>Carregando conquistas…</p></div></div>}>

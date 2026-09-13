@@ -74,6 +74,7 @@ import {
 } from "../tournament/field";
 import { recordTournamentWin } from "../tournament/eliteUnlock";
 import { recordProgress } from "../train/progress";
+import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
 import type { PositionalRecord } from "../train/positionTendency";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
@@ -290,6 +291,27 @@ export class GameController {
    *  não o pote bruto (que inclui as fichas do próprio herói). Serve à faixa
    *  "resultado × decisão" das dicas. */
   lastHandNetBB: number | null = null;
+
+  // ---- "JOGAR SOZINHO" (13/09/2026) --------------------------------------
+  /** A UI está mostrando dica para o herói neste momento? */
+  private dicasLigadas = true;
+  /**
+   * A dica apareceu em ALGUM momento desta mão?
+   *
+   * A REGRA DURA do placar: não basta o lance ter sido tomado sem dica — a MÃO
+   * inteira precisa ter corrido sem ela. Espiou uma vez, a mão toda vira "com
+   * dica". Sem isso o número que o Allan quer usar para julgar o próprio jogo
+   * aceitaria uma olhadinha, e aí não mede nada.
+   */
+  private maoTeveDica = false;
+  /** Placar SÓ DESTA SESSÃO, para a linha do fim do torneio. */
+  sessaoSozinho = { total: 0, certas: 0 };
+
+  /** A UI avisa aqui sempre que o estado do botão "Jogar sozinho" muda. */
+  setDicasLigadas(ligadas: boolean): void {
+    this.dicasLigadas = ligadas;
+    if (ligadas) this.maoTeveDica = true; // contaminou a mão em curso
+  }
   /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
   handLog: HandHistory[] = [];
   /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
@@ -612,6 +634,8 @@ export class GameController {
 
   /** Inicia uma nova mão (avança o botão, embaralha, distribui). */
   newHand(): void {
+    // Cada mão começa limpa: a contaminação vale só para a mão em que houve.
+    this.maoTeveDica = this.dicasLigadas;
     // Reposição/equilíbrio de mesas (como no online). heroMovedTo é setado
     // dentro de refillSeats quando o herói é realocado para uma mesa nova.
     this.heroMovedTo = 0;
@@ -941,6 +965,16 @@ export class GameController {
       // Alimenta a base de EVOLUÇÃO ("Seu jogo") — cada decisão avaliada entra
       // nos baldes (rua/faixa de stack/estágio) pra comparar o hoje com antes.
       const decisionCorrect = item.rating === "boa" || item.rating === "ok";
+      // "JOGAR SOZINHO": a decisão só entra como sozinho se a MÃO inteira correu
+      // sem dica (ver maoTeveDica). O placar guarda os dois lados para o app
+      // poder mostrar a distância entre jogar com ajuda e jogar de verdade.
+      const semDica = !this.maoTeveDica;
+      item.semDica = semDica;
+      registrarDecisaoSozinho(semDica, decisionCorrect);
+      if (semDica) {
+        this.sessaoSozinho.total++;
+        if (decisionCorrect) this.sessaoSozinho.certas++;
+      }
       recordProgress({
         kind: item.kind ?? (this.table.street === "preflop" ? "preflop" : "postflop"),
         stage: this.tournament?.stage ?? "inicio",

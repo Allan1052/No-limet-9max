@@ -5,6 +5,7 @@
 // Circuito e o jogador chegou ao dinheiro, os pontos são gravados no banco. Se
 // foi Treino Livre, nada é gravado — mas mostramos quanto o resultado valeria,
 // como convite honesto para o Circuito.
+import "./soloScore.css";
 import { useState, useEffect, useRef } from "react";
 import type { TournamentSummary as Summary } from "../app/gameController";
 import type { Rating } from "../feedback/analyzer";
@@ -17,6 +18,7 @@ import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 import { PositionTendencyList } from "./PositionTendencyList";
 import { reportFromRecords } from "../train/positionTendency";
+import "./soloScore.css";
 
 /**
  * Linha do tempo da mão final do torneio: uma entrada por rua (pré-flop→river),
@@ -48,10 +50,13 @@ export function TournamentSummary({
   summary,
   onClose,
   onNewHand,
+  sessaoSozinho,
 }: {
   summary: Summary;
   onClose: () => void;
   onNewHand?: () => void;
+  /** Decisões desta sessão jogadas SEM dica nenhuma (modo "Jogar sozinho"). */
+  sessaoSozinho?: { total: number; certas: number };
 }) {
   const champ = summary.result === "campeao";
   const virtualValue = (n: number) => `${Math.round(n).toLocaleString("pt-BR")} fichas simuladas`;
@@ -137,6 +142,22 @@ export function TournamentSummary({
             <span className="oom">Fora da faixa pontuável desta vez — bola pra frente!</span>
           )}
         </div>
+
+        {/* "JOGAR SOZINHO" — a linha desta sessão. Aparece só quando houve
+            decisão às cegas; sem isso não há o que dizer. É um NÚMERO CRU da
+            sessão (acertos sobre decisões), sem virar nota nem comparação: o
+            placar acumulado, com amostra mínima, mora no "Minha evolução". */}
+        {sessaoSozinho && sessaoSozinho.total > 0 ? (
+          <div className="summary-solo">
+            <span className="summary-solo-rot">🙈 Jogando sozinho nesta sessão</span>
+            <b>
+              {sessaoSozinho.certas} de {sessaoSozinho.total} decisões no padrão
+            </b>
+            <span className="summary-solo-sub">
+              sem dica nenhuma na tela — é o mais perto do torneio de verdade que o app mede
+            </span>
+          </div>
+        ) : null}
 
         {summary.mode === "circuito" ? (
           <div className="rank-box">

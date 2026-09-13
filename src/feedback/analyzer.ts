@@ -188,6 +188,8 @@ export interface FeedbackItem {
   topoRangePct?: number;
   /** O ICM medido: a decisão sem os prêmios, quando ela difere da com. */
   icmDelta?: IcmDelta;
+  /** A MÃO inteira correu sem dica na tela (modo "Jogar sozinho"). */
+  semDica?: boolean;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";

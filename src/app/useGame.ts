@@ -43,6 +43,7 @@ import {
   processXpEvent,
   type AchievementToast,
 } from "./achievements";
+import { zerarPlacarSozinho } from "../train/soloMode";
 
 /**
  * Salva o torneio ATUAL entre mãos, no slot da sua faixa de buy-in (para
@@ -352,6 +353,9 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     resetProgress: () => {
       progressRef.current = resetProgress();
       saveProgress(progressRef.current);
+      // O placar do "Jogar sozinho" mora no mesmo painel e zera junto: deixar
+      // ele de pé depois de "zerar" seria mentira de tela.
+      zerarPlacarSozinho();
       force();
     },
     missions: () => missionViews(missionRef.current),

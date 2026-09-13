@@ -548,6 +548,35 @@
     white-space: nowrap;
   }
 
+  /* ---- 6b. "JOGAR SOZINHO" (13/09/2026) — o interruptor das dicas.
+     Fica no canto oposto ao "Ver dicas" e à mesma altura: são os dois botões
+     de estudo da mesa. Desligado é discreto; ligado fica evidente, porque o
+     jogador PRECISA saber que está sendo medido sem ajuda. ------------------ */
+  .app:has(.play) .tbl-solo-btn,
+  .app.nav-hidden .tbl-solo-btn {
+    position: absolute !important;
+    bottom: 2% !important;
+    right: 4% !important;
+    left: auto !important;
+    z-index: 12 !important;
+    min-height: var(--tap-sm, 40px) !important;
+    padding: 4px 12px !important;
+    border-radius: var(--r-pill, 999px) !important;
+    border: 1px solid rgba(230, 196, 84, .3) !important;
+    background: rgba(12, 16, 12, .9) !important;
+    color: var(--gold-soft, #e8d79b) !important;
+    font-size: var(--fs-sm, 12px) !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .app:has(.play) .tbl-solo-btn.on,
+  .app.nav-hidden .tbl-solo-btn.on {
+    border-color: rgba(140, 220, 175, .75) !important;
+    background: rgba(18, 46, 32, .95) !important;
+    color: #b9ecd0 !important;
+  }
+
   /* Botão de sair (X): canto superior ESQUERDO, longe do "Ver dicas". */
   .app:has(.play) .play-exit-btn {
     position: absolute !important;

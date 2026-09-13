@@ -23,6 +23,45 @@ Regras do registro:
 
 ---
 
+## 2026-09-13 — Claude — 🙈 JOGAR SOZINHO: o número que mede você, não a dica
+
+Ideia do Allan: *"quando for jogar torneios de verdade não terei essas dicas
+aparecendo"*. Ele pediu um botão para desligar tudo e um jeito de ver como joga
+sem ajuda nenhuma.
+
+**Por que isso é grande.** Todo número de precisão do app até hoje somava
+decisões tomadas **com a dica aberta na tela**. Acertar com a dica não prova que
+você sabe jogar — prova que você sabe ler uma dica. O número novo é o único que
+mede **você**.
+
+- **BOTÃO NA MESA.** No canto de baixo, do lado oposto ao "Ver dicas":
+  **💡 Com dicas** ↔ **🙈 Sozinho**. Um toque troca, e o app lembra da sua
+  escolha.
+- **SOZINHO = BLACKOUT DE VERDADE.** Some a faixa da dica, o ▾, o 💡 do feltro,
+  o chip do tamanho sugerido e até o botão "Ver dicas" depois da mão — você
+  escolheu não ver **nada** até o fim da sessão. Conferi no navegador jogando 45
+  lances seguidos: **zero vazamentos**.
+- **AS CONQUISTAS TAMBÉM CALAM A BOCA.** Esse eu achei conferindo a tela e você
+  não teria como perceber: existem conquistas como *"Disciplina de Ferro — 10
+  decisões 'boa' seguidas"* que pipocavam **no meio da mão**. Quem visse uma
+  descobria na hora que a última decisão foi julgada boa. Agora elas ficam
+  guardadas e aparecem quando você sai da mesa — você não perde nenhuma.
+- **A REGRA DURA.** Se a dica aparecer em **qualquer momento** de uma mão, a mão
+  **inteira** deixa de contar como "sozinho" — não só aquele lance. É severo de
+  propósito: um número que você vai usar para julgar seu próprio jogo não pode
+  aceitar uma espiadinha.
+- **O RELATÓRIO.** No Perfil → Minha evolução, no topo de tudo:
+  **Sozinho 63% · Com dica 89% — "a dica está te levantando 26 pontos"**. E no
+  fim do torneio, a linha da sessão. Com menos de 30 decisões sozinho o app
+  **não mostra porcentagem nenhuma** — mostra quantas faltam, porque com pouca
+  amostra o número falaria mais da sorte do que do seu jogo.
+
+⚠️ **Aviso honesto:** a primeira vez que você vir esse número, ele vai ser mais
+baixo do que o que você está acostumado. É esse o ponto. O que interessa é ele
+subir, e a distância para o "com dica" diminuir.
+
+---
+
 ## 2026-09-12 — Claude — A dica da mesa finalmente explica o PORQUÊ
 
 O Allan mandou 4 prints e a crítica certa: *"AJo pede pra dar raise, mas queria

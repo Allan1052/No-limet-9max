@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 import { useT } from "../i18n";
 import { isoWeekKey, type ProgressSummary } from "../app/progress";
+import { SoloScore } from "./SoloScore";
 
 const EVOLUTION_LEVELS = [
   { level: 1, name: "Passageiro", icon: "🚌", minVpip: 60, desc: "Você entra em tudo — igual ônibus cheio." },
@@ -133,6 +134,11 @@ export function ProgressPanel({
           </button>
         ) : null}
       </div>
+
+      {/* O NÚMERO SOZINHO VEM PRIMEIRO. Todo o resto desta tela soma decisões
+          tomadas com a dica aberta; só este mede o jogador. Aparece mesmo sem
+          amostra — aí explicando o que é, em vez de mostrar porcentagem. */}
+      <SoloScore />
 
       {!has ? (
         <div className="legend pp-empty">
