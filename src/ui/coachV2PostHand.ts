@@ -133,6 +133,9 @@ export function buildCoachV2PostHandDecision(
     breakEvenCallBB: item.breakEvenCallBB,
     adviceFam: item.adviceFam,
     outs: item.outs,
+    // potBB/toCallBB ficam de fora aqui de propósito: o FeedbackItem não os
+    // carrega, e no pós-mão "A conta" já mostra chance × preço exigido. O preço
+    // cru serve na HORA de decidir — é lá que a dúvida existe.
   };
   return {
     decisionLine: decisionLineFor(item),

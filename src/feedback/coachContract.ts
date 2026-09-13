@@ -34,7 +34,8 @@ export type FamiliaDica =
   | "topoRange"
   | "icmDelta"
   | "exploit"
-  | "resultado";
+  | "resultado"
+  | "precoDoPote";
 
 export interface ContratoDica {
   familia: FamiliaDica;
@@ -150,6 +151,15 @@ export const CONTRATO_DICAS: ContratoDica[] = [
       "ganho LÍQUIDO (não o pote bruto, que inclui as suas próprias fichas). " +
       "Quando o líquido não é reconstruível — mão importada —, o app diz apenas " +
       "se você levou o pote, em vez de inventar um número.",
+  },
+  {
+    familia: "precoDoPote",
+    rotulo: "O preço do pote",
+    exige: ["potBB", "toCallBB"],
+    promessa:
+      "Diz quanto você paga para disputar quanto, e que fatia isso representa " +
+      "(toCall ÷ (pote + toCall)). É ARITMÉTICA do pote, não recomendação: o " +
+      "preço sozinho nunca decide a mão, e a frase não pode sugerir que decide.",
   },
   {
     familia: "origem",

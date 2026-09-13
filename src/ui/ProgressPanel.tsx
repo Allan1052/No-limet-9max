@@ -10,6 +10,7 @@
 import { useT } from "../i18n";
 import { isoWeekKey, type ProgressSummary } from "../app/progress";
 import { SoloScore } from "./SoloScore";
+import type { AlvoTreino } from "../train/treinoSozinho";
 
 const EVOLUTION_LEVELS = [
   { level: 1, name: "Passageiro", icon: "🚌", minVpip: 60, desc: "Você entra em tudo — igual ônibus cheio." },
@@ -101,9 +102,15 @@ function strengthsWeaknesses(summary: ProgressSummary): { kind: "good" | "bad"; 
 export function ProgressPanel({
   summary,
   onReset,
+  onTreinarSozinho,
+  drillDisponivel,
 }: {
   summary: ProgressSummary;
   onReset: () => void;
+  /** Abre o treino do ponto fraco medido SEM dica. */
+  onTreinarSozinho?: (alvo: AlvoTreino, rotuloDoBalde: string) => void;
+  /** O drill está destravado neste aparelho? (ver SoloScore) */
+  drillDisponivel?: boolean;
 }) {
   const { t } = useT();
   const has = summary.decisions > 0 || summary.hands > 0;
@@ -138,7 +145,7 @@ export function ProgressPanel({
       {/* O NÚMERO SOZINHO VEM PRIMEIRO. Todo o resto desta tela soma decisões
           tomadas com a dica aberta; só este mede o jogador. Aparece mesmo sem
           amostra — aí explicando o que é, em vez de mostrar porcentagem. */}
-      <SoloScore />
+      <SoloScore onTreinar={onTreinarSozinho} drillDisponivel={drillDisponivel} />
 
       {!has ? (
         <div className="legend pp-empty">

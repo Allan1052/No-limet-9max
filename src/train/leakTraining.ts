@@ -112,6 +112,35 @@ export function createLeakDrillSession(
   return { spot: hands[0].spot, hands, currentIndex: 0, correctCount: 0, done: false };
 }
 
+/**
+ * TREINO DIRIGIDO AO QUE VOCÊ ERRA **SOZINHO** (13/09/2026).
+ *
+ * O treino por vazamento acima olha a FAMÍLIA do erro (folda demais, paga
+ * demais). Este olha outra coisa: a PROFUNDIDADE DE STACK em que o Allan erra
+ * quando joga sem dica nenhuma. É o alvo que o modo "Jogar sozinho" descobriu —
+ * e o que ele descobre pode ser diferente do que o app apontava com a dica na
+ * tela, porque são duas medições diferentes.
+ *
+ * Aqui NÃO filtramos por família: o diagnóstico é "você erra com 10bb", então o
+ * treino é jogar decisões de 10bb. Filtrar família por cima seria inventar um
+ * segundo diagnóstico que ninguém mediu.
+ */
+export function criarTreinoPorProfundidade(
+  effectiveBB: number,
+  handCount = 12,
+  rng: () => number = Math.random,
+): DrillSession | null {
+  if (!Number.isFinite(effectiveBB) || effectiveBB <= 0) return null;
+  const pool = candidateSpots(effectiveBB);
+  const hands: DrillHand[] = [];
+  for (let i = 0; i < handCount; i++) {
+    const spot = pool[Math.floor(rng() * pool.length)];
+    hands.push(generateDrillHand(spot, rng));
+  }
+  if (hands.length === 0) return null;
+  return { spot: hands[0].spot, hands, currentIndex: 0, correctCount: 0, done: false };
+}
+
 // ---------------------------------------------------------------------------
 // EVOLUÇÃO — progresso por vazamento (localStorage). Mede se o treino pegou.
 // ---------------------------------------------------------------------------

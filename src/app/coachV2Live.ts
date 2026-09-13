@@ -1,5 +1,6 @@
 import type { GameController } from "./gameController";
 import { totalPot } from "../game/engine";
+import { inHandSeats } from "../game/state";
 import { buildCoachV2Decision, type CoachV2Decision } from "../feedback/coachV2Decision";
 import { comboToHandType, isPair } from "../ranges/types";
 import { handRank } from "../ranges/handStrength";
@@ -49,5 +50,8 @@ export function computeHeroCoachDecision(controller: GameController): CoachV2Dec
     toCallBB,
     spr,
     heroHandTempting: controller.table.street === "preflop" ? heroHandTempts(controller) : false,
+    // Quantos ainda disputam o pote. O preço do pote precisa deste número: a
+    // chance que ele pede é contra TODOS eles ao mesmo tempo, não contra um.
+    oponentes: Math.max(0, inHandSeats(controller.table).length - 1),
   });
 }

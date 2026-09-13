@@ -17,6 +17,7 @@ import {
   tendenciaSozinho,
   type BucketProgress,
 } from "../train/progress";
+import { treinoParaBalde, type AlvoTreino } from "../train/treinoSozinho";
 import "./soloScore.css";
 
 /** Leitura honesta da distância: o que ela significa, sem prometer mais. */
@@ -27,7 +28,25 @@ function leituraDaDistancia(d: number): string {
   return "Hoje quem está jogando é a dica. Não tem problema nenhum — é exatamente o que este número serve para mudar.";
 }
 
-export function SoloScore({ relatorio = relatorioSozinho() }: { relatorio?: RelatorioSozinho }) {
+export function SoloScore({
+  relatorio = relatorioSozinho(),
+  onTreinar,
+  drillDisponivel = true,
+}: {
+  relatorio?: RelatorioSozinho;
+  /** Abre o treino do ponto fraco. Sem callback, o botão não aparece. */
+  onTreinar?: (alvo: AlvoTreino, rotuloDoBalde: string) => void;
+  /**
+   * O drill pré-flop está destravado neste aparelho?
+   *
+   * Ele fica atrás de uma senha que o próprio Allan controla (feature em
+   * teste). Com o drill travado, o botão levaria a uma tela de "em preparação"
+   * — botão que não leva a lugar nenhum é pior que botão nenhum, então ele
+   * simplesmente não aparece. (Medido no navegador em 13/09: era exatamente
+   * isso que acontecia.)
+   */
+  drillDisponivel?: boolean;
+}) {
   const r = relatorio;
   // ONDE ele vaza jogando sozinho, e se está melhorando. As duas leituras saem
   // do MESMO histórico de decisões, filtrado pelas que correram às cegas — não
@@ -35,6 +54,12 @@ export function SoloScore({ relatorio = relatorioSozinho() }: { relatorio?: Rela
   const vazamento = r.totalSozinho > 0 ? biggestOpportunity({ somenteSozinho: true }) : null;
   const curva = r.totalSozinho > 0 ? tendenciaSozinho() : null;
   const baldes = r.totalSozinho > 0 ? progressReport({ somenteSozinho: true }) : [];
+  // O ciclo só fecha quando o diagnóstico vira treino. Mas só oferecemos o
+  // botão quando o app sabe treinar AQUELE ponto de verdade (treinoSozinho.ts
+  // devolve null para o que seria chute).
+  const alvoBruto = vazamento ? treinoParaBalde(vazamento.id) : null;
+  // O treino de mesa final não tem trava; o drill tem.
+  const alvo = alvoBruto && (alvoBruto.tipo === "mesaFinal" || drillDisponivel) ? alvoBruto : null;
 
   // Nunca jogou sozinho: explica o que é, sem número nenhum.
   if (r.totalSozinho === 0) {
@@ -125,6 +150,15 @@ export function SoloScore({ relatorio = relatorioSozinho() }: { relatorio?: Rela
           <span className="solo-amostra">
             {Math.round(vazamento.accuracy * 100)}% de acerto em {vazamento.total} decisões às cegas
           </span>
+          {alvo && onTreinar ? (
+            <button
+              type="button"
+              className="solo-treinar"
+              onClick={() => onTreinar(alvo, vazamento.label)}
+            >
+              🎯 Treinar isso
+            </button>
+          ) : null}
         </div>
       ) : null}
 

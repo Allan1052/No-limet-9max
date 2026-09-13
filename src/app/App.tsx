@@ -66,7 +66,7 @@ import { SplashScreen } from "../ui/SplashScreen";
 import { readChallengeFromUrl } from "./challenge";
 import { useT } from "../i18n";
 import { useSettings } from "./settings";
-import { createLeakDrillSession, planForLeak } from "../train/leakTraining";
+import { createLeakDrillSession, criarTreinoPorProfundidade, planForLeak } from "../train/leakTraining";
 import { isDevUnlocked } from "../lib/devLock";
 import { trackEvent } from "./analytics";
 import { UserSubscriptionLevel } from "./gameController";
@@ -466,6 +466,9 @@ export function App() {
       villainRangePct: d.villainRangePct,
       topoRangePct: d.topoRangePct,
       icmDelta: d.icmDelta,
+      potBB: d.potBB,
+      toCallBB: d.toCallBB,
+      oponentes: d.oponentes,
     };
     return construirCamadas(fonte, mode === "tecnico" ? "technical" : "simple", "aoVivo");
   }, [coachDecision, mode]);
@@ -727,6 +730,9 @@ export function App() {
                       {coachDecision.porQueCompleto}
                     </span>
                   ) : null}
+                  {coachCamadas?.precoDoPote ? (
+                    <span className="coach-camada"><b>O preço do pote</b>{coachCamadas.precoDoPote}</span>
+                  ) : null}
                   {coachCamadas?.leitura ? (
                     <span className="coach-camada"><b>A leitura</b>{coachCamadas.leitura}</span>
                   ) : null}
@@ -913,7 +919,28 @@ export function App() {
       {progressOpen ? (
         <div className="overlay" onClick={() => setProgressOpen(false)}>
           <div className="replay progress-modal" onClick={(e) => e.stopPropagation()}>
-            <ProgressPanel summary={progress()} onReset={resetProgress} />
+            <ProgressPanel
+              summary={progress()}
+              onReset={resetProgress}
+              drillDisponivel={isDevUnlocked("rua2026")}
+              onTreinarSozinho={(alvo, rotulo) => {
+                // O ciclo fecha aqui: o ponto fraco medido SEM DICA vira treino.
+                setProgressOpen(false);
+                if (alvo.tipo === "mesaFinal") {
+                  setView("ft");
+                  return;
+                }
+                const sess = criarTreinoPorProfundidade(alvo.effectiveBB);
+                if (!sess) return;
+                setLeakTrainingSession({
+                  session: sess,
+                  focus: alvo.foco,
+                  leakId: `sozinho_${alvo.effectiveBB}bb`,
+                  leakTitle: `Sozinho · ${rotulo}`,
+                });
+                setView("drill");
+              }}
+            />
             <button className="btn" style={{ width: "100%" }} onClick={() => setProgressOpen(false)}>
               fechar
             </button>

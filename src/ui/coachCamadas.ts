@@ -47,6 +47,12 @@ export interface FonteCamadas {
   adviceFam?: Family;
   /** Cartas que colocavam o herói na frente. */
   outs?: { outs: number; chance: number };
+  /** Pote atual (bb) — para o preço do pote. */
+  potBB?: number;
+  /** Quanto falta pagar (bb) — para o preço do pote. */
+  toCallBB?: number;
+  /** Quantos oponentes ainda disputam o pote (sem o herói). */
+  oponentes?: number;
 }
 
 export interface CamadasView {
@@ -62,6 +68,12 @@ export interface CamadasView {
   oQueMudaria?: string;
   /** Cartas que te salvavam. */
   cartasSalvadoras?: string;
+  /**
+   * O PREÇO DO POTE: quanto você paga para disputar quanto, e a fatia que isso
+   * representa. Aritmética pura — aparece inclusive no pré-flop, onde o motor
+   * não estima equity e por isso "A conta" não nasce.
+   */
+  precoDoPote?: string;
 }
 
 function percent(value: number): string {
@@ -161,6 +173,41 @@ function buildCartasSalvadoras(f: FonteCamadas, mode: CoachModo, momento: CoachM
   return `${cartas} ${colocam} na frente — ${chance}% de chance de vir na próxima.`;
 }
 
+/**
+ * O PREÇO DO POTE — o pedaço que valeu a pena de um prompt de fora (13/09/2026).
+ *
+ * Responde a pergunta que o jogador faz olhando o pote: "estou pagando 1bb para
+ * disputar 11,5bb, isso é bom?". A fatia exigida é toCall ÷ (pote + toCall) —
+ * conta de uma linha, sem modelo nenhum por trás.
+ *
+ * ⚠️ E POR ISSO MESMO ELA NÃO DECIDE A MÃO. O prompt que trouxe a ideia
+ * concluía que a 11,5 para 1 dá para pagar com qualquer duas cartas. Medimos:
+ * 72o tem 8,6% de chance contra 5 oponentes e o preço pede 8% — 0,6 ponto de
+ * margem em chance CRUA, que você nem realiza jogando fora de posição. Ou seja:
+ * o preço é um DOS lados da conta.
+ *
+ * A frase carrega o antídoto junto: em pote multiway ela diz contra quantos a
+ * chance precisa valer. É o erro exato que derruba a conclusão "paga qualquer
+ * mão" — mais gente barateia o preço E tira a sua chance ao mesmo tempo.
+ */
+function buildPrecoDoPote(f: FonteCamadas, mode: CoachModo): string | undefined {
+  if (!temDadoPara("precoDoPote", f as unknown as Record<string, unknown>)) return undefined;
+  const pote = f.potBB!;
+  const pagar = f.toCallBB!;
+  if (pagar <= 0 || pote <= 0) return undefined; // sem nada a pagar não há preço
+  const bb = (x: number) => `${Math.round(x * 10) / 10}bb`;
+  const pede = Math.round((pagar / (pote + pagar)) * 100);
+  const opp = f.oponentes;
+  const contra =
+    opp && opp >= 2
+      ? ` — e contra ${opp} oponentes de uma vez, não contra um`
+      : "";
+  if (mode === "technical") {
+    return `${bb(pagar)} para disputar ${bb(pote)} · pot odds pedem ${pede}%${contra}.`;
+  }
+  return `Você paga ${bb(pagar)} para disputar ${bb(pote)}: o preço pede ${pede}% de chance${contra}.`;
+}
+
 export function construirCamadas(
   f: FonteCamadas,
   mode: CoachModo,
@@ -173,6 +220,7 @@ export function construirCamadas(
     pesoDaBolha: buildPesoDaBolha(f, mode),
     oQueMudaria: buildOQueMudaria(f, mode),
     cartasSalvadoras: buildCartasSalvadoras(f, mode, momento),
+    precoDoPote: buildPrecoDoPote(f, mode),
   };
 }
 

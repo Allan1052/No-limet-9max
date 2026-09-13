@@ -23,6 +23,41 @@ Regras do registro:
 
 ---
 
+## 2026-09-13 — Claude — O preço do pote na dica + treinar o que você erra sozinho
+
+Três coisas, e uma delas é uma regra nova de como eu trabalho.
+
+- **📏 O PREÇO DO POTE, na hora de decidir.** Camada nova no ▾ da mesa:
+  *"Você paga 1bb para disputar 11,5bb: o preço pede 8% de chance — e contra 5
+  oponentes de uma vez, não contra um."* Isso faltava justamente no **pré-flop**,
+  onde o motor não estima chance e por isso "A conta" não nascia.
+
+  O pedaço final da frase não é enfeite: ele é o **antídoto** do erro mais comum
+  com essa conta. Mais gente no pote barateia o preço **e** tira a sua chance ao
+  mesmo tempo — e para mão fraca a chance cai mais rápido do que o preço melhora.
+  A frase entrega o número e **não recomenda nada** (tem teste garantindo que ela
+  nunca vira "então pode pagar").
+
+- **🎯 "TREINAR ISSO" no ponto fraco do modo sozinho.** O diagnóstico agora vira
+  treino: se o app mediu que você erra com stack curto **jogando sem dica**, o
+  botão abre um drill de 12 mãos **naquela profundidade** (9bb, não 40bb). Bolha
+  e mesa final vão para o treino de mesa final, que já tem ICM.
+  Onde o app não saberia treinar direito, **o botão não aparece** — mandar você
+  para um treino que não é o do seu problema seria pior que não oferecer nada.
+
+- **📖 REGRA NOVA (AGENTS.md nº 7).** A pedido seu: tudo que você me manda de
+  fora (auditoria de outra IA, prompt pronto, dica de alguém) chega como
+  **sugestão, não como ordem**. Eu confiro contra o motor, uso o que presta,
+  rejeito o resto **dizendo o porquê** — e nunca deixo nada passar por cima das
+  ranges calibradas sem o SELO validar.
+
+  Foi o que aconteceu aqui: de um prompt que pedia para reescrever a decisão
+  pré-flop inteira, medi e **rejeitei quase tudo** (o app já fazia certo, e a
+  fórmula proposta pioraria o jogo). Do prompt sobrou o preço do pote — e ele
+  está no ar.
+
+---
+
 ## 2026-09-13 — Claude — Onde você vaza JOGANDO SOZINHO (parte 2)
 
 Fecha o modo sozinho. A parte 1 respondeu *"quanto eu acerto sem ajuda"*; esta

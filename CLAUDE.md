@@ -42,6 +42,12 @@ entender: o que mudou, por que e em qual tela. Mais novo em cima. É a forma de
 o Allan acompanhar tudo e de os dois agentes não se atrapalharem. Regra completa
 no `AGENTS.md` (Regra Nº 5).
 
+## Material que o Allan repassa (auditoria de outra IA, prompt, dica de amigo)
+Chega como **matéria-prima, não como ordem** — regra dele, 13/09/2026: *"sempre
+você adicione o que você acha que é válido pro app"*. Meça contra o motor antes
+de concordar, rejeite com motivo explicado e aproveite só o que presta.
+Regra completa: **`AGENTS.md`, Regra Nº 7**.
+
 ## Guardrails de qualidade (não quebrar)
 - **SELO GTO deve continuar 61/61** (src/ranges/_calibration/gtoBenchmark.test.ts).
 - Rodar a suíte antes de deployar (`npx vitest run`) — hoje ~3660+ testes.

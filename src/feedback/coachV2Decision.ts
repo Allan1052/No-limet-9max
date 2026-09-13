@@ -11,6 +11,8 @@ export interface CoachV2Context {
   /** A mão do herói é forte o bastante pra "tentar" a pagar barato? Só quando
    *  true mostramos o "porquê" do fold-barato — pra lixo óbvio (82o) fica off. */
   heroHandTempting?: boolean;
+  /** Quantos oponentes ainda estão na mão (sem contar o herói). */
+  oponentes?: number;
 }
 
 export interface CoachV2Decision {
@@ -33,6 +35,8 @@ export interface CoachV2Decision {
   icmDelta?: IcmDelta;
   /** O motivo REAL do motor, inteiro — para o painel que abre no ▾. */
   porQueCompleto?: string;
+  /** Oponentes ainda na mão — o preço do pote precisa dizer contra quantos. */
+  oponentes?: number;
   betSizePct?: number;
   betSizeBB?: number;
   nBet?: string;
@@ -151,6 +155,7 @@ export function buildCoachV2Decision(advice: HeroAdvice, context: CoachV2Context
     topoRangePct: advice.topoRangePct,
     icmDelta: advice.icmDelta,
     porQueCompleto: porQue(advice.reason),
+    oponentes: context.oponentes,
     betSizePct: advice.betSizePct,
     betSizeBB: advice.betSizeBB,
     nBet: advice.nBet,
