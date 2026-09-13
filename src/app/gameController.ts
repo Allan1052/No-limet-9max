@@ -980,6 +980,7 @@ export class GameController {
         stage: this.tournament?.stage ?? "inicio",
         effectiveBB: heroBB,
         correct: decisionCorrect,
+        semDica,
       });
       // Tendência por posição: guarda no torneio (revisão) e no acumulado (Perfil).
       const heroPos = posMap.get(this.heroSeat);

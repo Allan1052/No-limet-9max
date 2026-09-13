@@ -23,6 +23,31 @@ Regras do registro:
 
 ---
 
+## 2026-09-13 — Claude — Onde você vaza JOGANDO SOZINHO (parte 2)
+
+Fecha o modo sozinho. A parte 1 respondeu *"quanto eu acerto sem ajuda"*; esta
+responde **"onde eu erro sem ajuda"** — que é o que vira treino.
+
+No Perfil → Minha evolução, dentro do bloco "Como você joga sozinho", agora tem:
+
+- **ONDE VOCÊ MAIS VAZA SOZINHO** — o ponto mais fraco das suas decisões às
+  cegas, com o número: *"Stack curto (≤12bb) — 33% de acerto em 24 decisões"*.
+- **A CURVA** — se o seu jogo sozinho está subindo ou caindo: *"↑ subiu 9 pontos
+  jogando sozinho: 61% antes · 70% agora"*. Verde quando sobe, vermelho quando
+  cai (na primeira versão eu tinha deixado a queda pintada de verde — corrigido).
+- **"VER TUDO QUE MEDI SOZINHO"** — a lista completa por rua, faixa de stack e
+  estágio do torneio, contando **só** o que você jogou sem dica.
+
+⚠️ **Uma coisa importante:** o ponto fraco que o app aponta **com** dica pode ser
+diferente do que ele aponta **sem**. E é justamente esse segundo que interessa,
+porque é o que você leva pro torneio de verdade.
+
+Tudo isso sai do mesmo histórico de decisões que já existia — não há contagem
+paralela nenhuma. O que é de antes de ontem continua contando como jogado **com**
+dica disponível, porque era.
+
+---
+
 ## 2026-09-13 — Claude — 🙈 JOGAR SOZINHO: o número que mede você, não a dica
 
 Ideia do Allan: *"quando for jogar torneios de verdade não terei essas dicas

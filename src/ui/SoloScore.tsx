@@ -11,6 +11,12 @@
 // faltam. É a regra da casa, e aqui ela vale dobrado.
 // ---------------------------------------------------------------------------
 import { AMOSTRA_MINIMA, relatorioSozinho, type RelatorioSozinho } from "../train/soloMode";
+import {
+  biggestOpportunity,
+  progressReport,
+  tendenciaSozinho,
+  type BucketProgress,
+} from "../train/progress";
 import "./soloScore.css";
 
 /** Leitura honesta da distância: o que ela significa, sem prometer mais. */
@@ -23,6 +29,12 @@ function leituraDaDistancia(d: number): string {
 
 export function SoloScore({ relatorio = relatorioSozinho() }: { relatorio?: RelatorioSozinho }) {
   const r = relatorio;
+  // ONDE ele vaza jogando sozinho, e se está melhorando. As duas leituras saem
+  // do MESMO histórico de decisões, filtrado pelas que correram às cegas — não
+  // há contagem paralela. Vêm null enquanto não houver amostra.
+  const vazamento = r.totalSozinho > 0 ? biggestOpportunity({ somenteSozinho: true }) : null;
+  const curva = r.totalSozinho > 0 ? tendenciaSozinho() : null;
+  const baldes = r.totalSozinho > 0 ? progressReport({ somenteSozinho: true }) : [];
 
   // Nunca jogou sozinho: explica o que é, sem número nenhum.
   if (r.totalSozinho === 0) {
@@ -90,6 +102,48 @@ export function SoloScore({ relatorio = relatorioSozinho() }: { relatorio?: Rela
           </p>
         </div>
       )}
+
+      {curva ? (
+        <p className="solo-curva">
+          {/* A cor segue a DIREÇÃO. Pintar uma queda de verde é mentir com
+              estilo — foi assim que saiu na primeira versão. */}
+          <b className={curva.delta > 0 ? "solo-sobe" : curva.delta < 0 ? "solo-cai" : ""}>
+            {curva.delta > 0
+              ? `↑ subiu ${curva.delta} pontos`
+              : curva.delta < 0
+                ? `↓ caiu ${Math.abs(curva.delta)} pontos`
+                : "→ estável"}
+          </b>{" "}
+          jogando sozinho: {curva.anterior}% antes · {curva.recente}% agora.
+        </p>
+      ) : null}
+
+      {vazamento ? (
+        <div className="solo-vazamento">
+          <span className="solo-rot">Onde você mais vaza sozinho</span>
+          <b>{vazamento.label}</b>
+          <span className="solo-amostra">
+            {Math.round(vazamento.accuracy * 100)}% de acerto em {vazamento.total} decisões às cegas
+          </span>
+        </div>
+      ) : null}
+
+      {baldes.length > 0 ? (
+        <details className="solo-detalhe">
+          <summary>Ver tudo que medi sozinho</summary>
+          <ul className="solo-lista">
+            {baldes.map((b: BucketProgress) => (
+              <li key={b.id}>
+                <span className="solo-lista-nome">{b.label}</span>
+                <span className="solo-lista-num">
+                  {Math.round(b.accuracy * 100)}%
+                  <i>{b.total}</i>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </section>
   );
 }

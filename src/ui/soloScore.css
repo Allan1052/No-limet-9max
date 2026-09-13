@@ -115,3 +115,89 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+/* --- Etapa 3: onde ele vaza sozinho, e a curva --- */
+
+.solo-curva {
+  margin: 9px 0 0;
+  color: #b9ae8b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.solo-curva b {
+  color: #d7d1c3;
+}
+
+.solo-curva b.solo-sobe { color: #7ec58a; }
+.solo-curva b.solo-cai { color: #e07b6b; }
+
+.solo-vazamento {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-left: 3px solid rgba(224, 123, 107, 0.7);
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.solo-vazamento b {
+  color: #f1ebdd;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.solo-detalhe {
+  margin-top: 10px;
+}
+
+.solo-detalhe summary {
+  color: #b9ae8b;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  min-height: 28px;
+}
+
+.solo-lista {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.solo-lista li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.solo-lista li:last-child {
+  border-bottom: 0;
+}
+
+.solo-lista-nome {
+  color: #d7d1c3;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.solo-lista-num {
+  color: #f1ebdd;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.solo-lista-num i {
+  margin-left: 6px;
+  color: #8e8570;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}

@@ -31,6 +31,17 @@ export interface ProgressContext {
   effectiveBB: number;
   /** A decisão foi boa? (rating "boa" ou "ok" = true). */
   correct: boolean;
+  /**
+   * A MÃO inteira correu sem dica na tela ("Jogar sozinho").
+   *
+   * 13/09/2026 — Etapa 3 do modo sozinho. Sem esta marca dava para saber que o
+   * Allan acerta menos sem ajuda, mas não ONDE. Agora cada balde (rua, faixa de
+   * stack, estágio) sabe separar o que ele fez às cegas.
+   *
+   * ⚠️ Registro ANTIGO não tem a marca — e está certo assim: tudo que foi
+   * jogado antes deste dia tinha a dica disponível na tela.
+   */
+  semDica?: boolean;
 }
 
 /** Um registro cru: dia (nº de dias desde a época), balde e acerto (0/1). */
@@ -38,6 +49,8 @@ interface RawRecord {
   d: number;
   b: string;
   c: 0 | 1;
+  /** 1 quando a mão correu sem dica. Ausente = jogado com a dica disponível. */
+  s?: 1;
 }
 
 export interface BucketProgress {
@@ -122,7 +135,11 @@ export function recordProgress(ctx: ProgressContext): void {
   const records = load();
   const d = today();
   const c: 0 | 1 = ctx.correct ? 1 : 0;
-  for (const b of bucketsFor(ctx)) records.push({ d, b: b.id, c });
+  for (const b of bucketsFor(ctx)) {
+    const r: RawRecord = { d, b: b.id, c };
+    if (ctx.semDica) r.s = 1;
+    records.push(r);
+  }
   save(records);
 }
 
@@ -157,8 +174,17 @@ function acc(records: RawRecord[]): number {
  * Só entram baldes com pelo menos MIN_SHOW decisões. Ordenado do maior total
  * pro menor (os que o jogador mais praticou aparecem primeiro).
  */
-export function progressReport(): BucketProgress[] {
-  const records = load();
+export interface OpcoesRelatorio {
+  /**
+   * Contar SÓ o que foi jogado sem dica na tela. É este relatório que responde
+   * "onde eu vazo quando ninguém me sopra" — a pergunta que o número global do
+   * app nunca respondeu.
+   */
+  somenteSozinho?: boolean;
+}
+
+export function progressReport(opts: OpcoesRelatorio = {}): BucketProgress[] {
+  const records = opts.somenteSozinho ? load().filter((r) => r.s === 1) : load();
   const byBucket = new Map<string, RawRecord[]>();
   for (const r of records) {
     const arr = byBucket.get(r.b) ?? [];
@@ -193,14 +219,35 @@ export function progressReport(): BucketProgress[] {
  * sugere treinar ("Treinar 3 mãos"). Prioriza faixa de stack e estágio (mais
  * acionáveis que "pré/pós"). Devolve null se ainda não há dados suficientes.
  */
-export function biggestOpportunity(): BucketProgress | null {
-  const report = progressReport().filter(
+export function biggestOpportunity(opts: OpcoesRelatorio = {}): BucketProgress | null {
+  const report = progressReport(opts).filter(
     (b) => b.total >= MIN_DELTA && b.family !== "rua" && b.accuracy < 0.85,
   );
   if (report.length === 0) return null;
   // O mais fraco primeiro; empate → o mais praticado (mais confiável).
   report.sort((a, b) => a.accuracy - b.accuracy || b.total - a.total);
   return report[0];
+}
+
+/**
+ * A CURVA DO "JOGAR SOZINHO" — estou chegando perto do que o app orienta?
+ *
+ * Compara a janela recente de decisões às cegas com a janela anterior. Usa só
+ * os baldes de RUA porque toda decisão cai em exatamente um deles: contar os
+ * três baldes triplicaria a amostra e daria uma confiança que não existe.
+ *
+ * Devolve null enquanto não houver as duas janelas — sem os dois lados não há
+ * comparação, e meia comparação é pior que nenhuma.
+ */
+export function tendenciaSozinho(): { recente: number; anterior: number; delta: number } | null {
+  const recs = load().filter((r) => r.s === 1 && r.b.startsWith("rua_"));
+  if (recs.length < 2 * MIN_DELTA) return null;
+  const recent = recs.slice(Math.max(0, recs.length - WINDOW));
+  const prior = recs.slice(Math.max(0, recs.length - 2 * WINDOW), Math.max(0, recs.length - WINDOW));
+  if (recent.length < MIN_DELTA || prior.length < MIN_DELTA) return null;
+  const recente = Math.round(acc(recent) * 100);
+  const anterior = Math.round(acc(prior) * 100);
+  return { recente, anterior, delta: recente - anterior };
 }
 
 /** Limpa o histórico de evolução (usado no reset de progresso). */
