@@ -85,11 +85,40 @@
   .app:has(.play) .controls-v2.fine-tune-open .raise-slider-popover { pointer-events:auto; }
 }
 
-@media (orientation: landscape) and (max-height:520px) {
+@media (orientation: landscape) and (max-height:560px) {
   .app.nav-hidden .controls-v2 .action-row-primary,
   .app:has(.play) .controls-v2 .action-row-primary { left:15%; right:15%; }
   .action-choice { min-height:43px; }
-  .app.nav-hidden .controls-v2 .raise-side-tools,
-  .app:has(.play) .controls-v2 .raise-side-tools { bottom:64px; }
   .raise-slider-popover { width:min(42vw,220px); }
+
+  /* ATALHOS DE RAISE NA HORIZONTAL (14/09/2026).
+     Em pé eles são uma COLUNA no canto direito, que ali não atrapalha ninguém.
+     Deitado, essa coluna cai bem em cima do assento da direita — medido: 76x55px
+     de sobreposição, e no print dá para ver o pod do CO por cima do "Pote".
+     Deitado existe uma faixa vazia entre o feltro e os botões de ação: os
+     atalhos viram uma FILEIRA ali, onde não disputam espaço com ninguém. */
+  .app.nav-hidden .controls-v2 .raise-side-tools,
+  .app:has(.play) .controls-v2 .raise-side-tools {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 58px;
+    width: auto;
+    max-width: 94vw;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .app.nav-hidden .controls-v2 .raise-size-stack,
+  .app:has(.play) .controls-v2 .raise-size-stack {
+    flex-direction: row;
+    gap: 6px;
+  }
+  .app.nav-hidden .controls-v2 .raise-side-tools .btn,
+  .app:has(.play) .controls-v2 .raise-side-tools .btn {
+    min-height: 32px;
+    padding: 3px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
 }

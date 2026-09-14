@@ -18,7 +18,12 @@
          └── .controls         (barra de ações embaixo)
    ============================================================================= */
 
-@media (max-width: 860px) {
+/* O layout de TELA CHEIA vale para celular em pé E para celular DEITADO.
+   Até 14/09/2026 a condição era só `max-width: 860px`: num aparelho mais largo
+   que isso na horizontal (ex.: 915px) a folha inteira parava de valer e a tela
+   caía no layout antigo — os controles ficavam 108px ABAIXO do fim da tela.
+   Medido no navegador; é parte do "nunca funcionou deitado". */
+@media (max-width: 860px), (orientation: landscape) and (max-height: 560px) {
   /* ---- 1. Tela de jogo: tela cheia SEMPRE que a mesa estiver aberta ---- */
   .app:has(.play) .play,
   .app.nav-hidden .play {
@@ -192,6 +197,10 @@
      — 4 fileiras + herói — deixando a faixa do meio (≈43%-56%) LIVRE pro pote e
      pras cartas comunitárias. Antes havia assento em top:50%, na mesma altura do
      board, e as 5 cartas cobriam os pods da esquerda e da direita.
+     ⚠️ EM PÉ sobra um encosto de 11px entre os assentos de 59% e os de 72% — a
+     régua (tools/audit-ui/deitado.mjs) acusa. NÃO mexa: testei subir para 56% e
+     aí eles batem NO BOARD (43x22px), que é bem pior. 11px de canto de pod é o
+     menor dos males nesta altura de tela.
      Mantenha em sincronia com SEAT_POS em Table.tsx. */
   .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 89% !important; left: 50% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 72% !important; left: 24% !important; }
@@ -202,6 +211,82 @@
   .app:has(.play) .play .table-modern .seat:nth-of-type(9)  { top: 31% !important; left: 86% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 59% !important; left: 86% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 72% !important; left: 76% !important; }
+
+  /* ---- 3c. CELULAR DEITADO: OUTRO ANEL DE ASSENTOS ----------------------
+     14/09/2026. O anel acima foi desenhado para uma mesa ALTA (4 fileiras). Na
+     horizontal a mesa vira larga e baixa (ex.: 800x264), e aquelas mesmas
+     porcentagens empilham os pods uns sobre os outros — medido: 8 sobreposições
+     e 2 assentos fora da tela. Aqui vai um anel LARGO E BAIXO: duas fileiras
+     no alto, um assento em cada ponta, dois embaixo e o herói no centro.
+     O canto de baixo à esquerda fica livre de propósito: é onde moram os
+     botões "Ver dicas" e "Jogar sozinho". */
+  @media (orientation: landscape) and (max-height: 560px) {
+    .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 80% !important; left: 50% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 72% !important; left: 28% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(5)  { top: 44% !important; left: 10% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(6)  { top: 23% !important; left: 21% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(7)  { top: 16% !important; left: 41% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(8)  { top: 16% !important; left: 59% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(9)  { top: 23% !important; left: 79% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(10) { top: 44% !important; left: 90% !important; }
+    .app:has(.play) .play .table-modern .seat:nth-of-type(11) { top: 72% !important; left: 72% !important; }
+
+    /* Pods COMPACTOS. Medido em 14/09: o pod ficava com 106px de altura, e três
+       fileiras de 106px não cabem numa mesa de 264px — era por isso que quatro
+       assentos saíam PARA FORA da tela. Aqui o pod perde o que é redundante na
+       horizontal (a bolinha do avatar e a etiqueta da última ação) e as cartas
+       viradas encolhem. Nome, stack e posição continuam. */
+    .app:has(.play) .play .table-modern .seat:not(.hero) {
+      width: 76px !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .pod {
+      padding: 3px 4px !important;
+      gap: 0 !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .ava { display: none !important; }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .badge,
+    .app:has(.play) .play .table-modern .seat:not(.hero) .last-action { display: none !important; }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .name {
+      font-size: 9px !important;
+      line-height: 1.1 !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .stack {
+      font-size: 10px !important;
+      line-height: 1.1 !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .hole .card,
+    .app:has(.play) .play .table-modern .seat:not(.hero) .hole > * {
+      width: 17px !important;
+      height: 22px !important;
+      font-size: 7px !important;
+    }
+    /* As cartas TRANSBORDAM a própria caixa (é assim que elas ficam "saindo" do
+       pod). Com o pod encolhido, esse transbordo caía em cima do NOME do vilão
+       e ele sumia da tela — medido: cartas até y205, nome em y195. Uma folga
+       embaixo das cartas devolve o nome. */
+    .app:has(.play) .play .table-modern .seat:not(.hero) .hole {
+      margin-bottom: 8px !important;
+    }
+    /* O pod do herói também encolhe: numa tela de 340px de altura ele encostava
+       nas cartas comunitárias. Continua sendo o maior da mesa. */
+    .app:has(.play) .play .table-modern .seat.hero { width: 88px !important; }
+    .app:has(.play) .play .table-modern .seat.hero .hole .card,
+    .app:has(.play) .play .table-modern .seat.hero .hole > * {
+      width: 38px !important;
+      height: 53px !important;
+    }
+    .app:has(.play) .play .table-modern .seat.hero .stack { font-size: 12px !important; }
+
+    /* Os dois botões de estudo encolhem para caber no canto sem invadir o anel. */
+    .app:has(.play) .tbl-solo-btn,
+    .app:has(.play) .tbl-tips-btn {
+      min-height: 32px !important;
+      padding: 3px 9px !important;
+      font-size: 10px !important;
+    }
+    .app:has(.play) .tbl-tips-btn { bottom: calc(2% + 38px) !important; }
+
+  }
 
   /* ---- 4. Status do torneio: NO MIOLO DA MESA, embaixo -------------------
      O Allan reclamou que ficar olhando lá em cima, num feltro comprido, cansa.
@@ -534,7 +619,9 @@
   .app.nav-hidden .tbl-tips-btn {
     position: absolute !important;
     top: auto !important;
-    bottom: 2% !important;
+    /* Empilhado ACIMA do "Jogar sozinho", que passou a morar no canto de baixo
+       à esquerda. Os dois são os botões de estudo da mesa e ficam juntos. */
+    bottom: calc(2% + var(--tap-sm, 40px) + 6px) !important;
     left: 4% !important;
     right: auto !important;
     transform: none !important;
@@ -556,8 +643,11 @@
   .app.nav-hidden .tbl-solo-btn {
     position: absolute !important;
     bottom: 2% !important;
-    right: 4% !important;
-    left: auto !important;
+    /* ESQUERDA (14/09/2026, pedido do Allan). No canto direito ele caía em cima
+       da coluna de atalhos de raise (Pote / 4BB / 3BB) — dá para ver no print
+       que ele mandou: o botão cobria o "4BB". */
+    left: 4% !important;
+    right: auto !important;
     z-index: 12 !important;
     min-height: var(--tap-sm, 40px) !important;
     padding: 4px 12px !important;
@@ -847,6 +937,9 @@
     padding: 0 !important;
     border: 0 !important;
     gap: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
   }
   .ir-fullscreen .ir-head .btn.tiny { padding: 5px 9px !important; font-size: 13px !important; }
   .ir-fullscreen .ir-brand {
@@ -891,10 +984,13 @@
     text-shadow: 0 1px 5px rgba(0, 0, 0, .9);
   }
 
-  /* Contador da mão: desceu do topo para cá (11/09). Fica antes das setas,
-     na altura do polegar, e libera o topo da tela. */
-  .ir-fullscreen .ir-bar .ir-bar-hand {
-    flex: 0 0 auto;
+  /* Contador da mão ("MÃO 1/182"). Desceu para a barra em 11/09 e VOLTOU para o
+     topo em 14/09: na barra ele disputava espaço com as setas e os 4 chips de
+     rua, e o "River" saía cortado como "Rive" (dá para ver no print do Allan).
+     No topo, entre o ✕ e o ⋯, existe faixa vazia e ele não empurra ninguém. */
+  .ir-fullscreen .ir-head .ir-bar-hand {
+    flex: 1 1 auto;
+    text-align: center;
     font-size: var(--fs-min, 11px);
     font-weight: 800;
     letter-spacing: .06em;
@@ -903,7 +999,7 @@
     opacity: .9;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
-    padding-right: 2px;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, .9);
   }
 
   /* ---- barra única de baixo ---- */
@@ -947,7 +1043,10 @@
     display: flex;
     justify-content: center;
     gap: 4px;
-    overflow-x: auto;
+    /* Sem o contador disputando a linha, os quatro chips cabem inteiros — o
+       "River" saía como "Rive" antes (14/09). */
+    overflow-x: visible;
+    min-width: 0;
   }
   .ir-fullscreen .ir-chip {
     min-height: var(--tap-sm);
@@ -1295,5 +1394,72 @@
   .app:has(.play) .play > .ft-actions .btn {
     min-height: var(--tap-sm, 40px) !important;
     font-size: var(--fs-sm, 12px) !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   CELULAR DEITADO — ajustes que precisam vir DEPOIS das seções acima.
+   Estes têm a MESMA especificidade das regras de retrato, então dependem da
+   ordem do arquivo para valer. Ficam aqui embaixo de propósito; foi assim que
+   descobri que a versão anterior não pegava (medida no navegador, 14/09).
+   --------------------------------------------------------------------------- */
+@media (orientation: landscape) and (max-height: 560px) {
+  /* Em pé, o status do torneio mora na faixa vazia entre o board e o herói.
+     Deitado essa faixa some e ele caía EM CIMA do pod do herói. Sobe e encolhe. */
+  /* Vai para o canto de BAIXO À DIREITA — o oposto dos botões de estudo, e o
+     único retângulo que sobra livre no anel deitado. No meio ele batia no
+     herói (54%) ou nas cartas comunitárias (40%); os dois medidos. */
+  /* O miolo (pote + cartas comunitárias) sobe e encolhe: deitado, a mesa tem
+     menos da metade da altura, e o board de pé encostava nos pods de baixo
+     (medido: 76x11px em tela de 340px). */
+  .app:has(.play) .table-modern .tbl-center-col {
+    top: 41% !important;
+    /* ESTREITO também: com a largura de pé, as cartas comunitárias chegavam nos
+       pods das pontas (esquerda 10%/21% e direita 79%/90%). */
+    width: min(44%, 330px) !important;
+    max-width: min(44%, 330px) !important;
+  }
+  .app:has(.play) .table-modern .tbl-center-col .card {
+    width: 26px !important;
+    height: 36px !important;
+    font-size: 11px !important;
+  }
+
+  /* ATALHOS DE RAISE VIRAM FILEIRA. Em pé eles são uma coluna no canto direito
+     do feltro, que está livre. Deitado, aquele canto é assento — medido: 76x55px
+     de pod em cima do "Pote". Deitado existe uma faixa vazia entre o feltro e os
+     botões de ação; a coluna vira FILEIRA ali. */
+  .app:has(.play) .play > .controls .raise-size-stack {
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 56px !important;
+    width: auto !important;
+    max-width: 92vw !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+  .app:has(.play) .play > .controls .raise-size-stack .btn,
+  .app:has(.play) .play > .controls .raise-size-option {
+    min-height: 32px !important;
+    padding: 3px 12px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+
+  .app:has(.play) .play > .play-tstatus {
+    top: auto !important;
+    /* Em px, não em %: este elemento é filho da TELA, não do feltro. Com 3% ele
+       caía dentro do botão RAISE (o "25/50" aparecia dentro do botão no print
+       da verificação). 58px o coloca na faixa livre entre feltro e botões. */
+    bottom: 58px !important;
+    left: auto !important;
+    right: 8px !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: 40% !important;
+    font-size: 10px !important;
+    padding: 3px 9px !important;
+    text-align: right !important;
   }
 }

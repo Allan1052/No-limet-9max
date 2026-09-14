@@ -23,6 +23,50 @@ Regras do registro:
 
 ---
 
+## 2026-09-14 — Claude — Botão à esquerda, contador da mão no topo e CELULAR DEITADO
+
+Três pedidos seus, e o terceiro era o antigo que nunca tinha funcionado.
+
+- **BOTÃO "COM DICAS / SOZINHO" FOI PARA A ESQUERDA.** No canto direito ele caía
+  em cima da coluna de atalhos de raise — dá para ver no seu print, cobrindo o
+  "4BB". Agora os dois botões de estudo ficam juntos no canto de baixo à
+  esquerda: **🙈 Sozinho** embaixo e **💡 Ver dicas** logo acima.
+- **"MÃO 1 / 182" VOLTOU PARA O TOPO, na Revisão.** Lá embaixo ele disputava a
+  linha com as setas e os quatro botões de rua, e o **"River" saía cortado como
+  "Rive"** (no seu print). No topo, entre o ✕ e o ⋯, existe faixa vazia — e
+  agora os quatro botões de rua cabem inteiros.
+
+### 📱 CELULAR DEITADO — agora funciona de verdade
+
+Você disse: *"foi mexido bastante, mas até hoje não funcionou"*. Fui medir no
+navegador em cinco tamanhos de tela deitada, e o motivo apareceu: eram **três
+problemas ao mesmo tempo**, e nenhum dava para ver lendo o código.
+
+1. **Em celular mais largo que 860px, o layout de tela cheia simplesmente
+   parava de valer** — os botões de ação ficavam **108px ABAIXO do fim da tela**.
+   Fora de alcance.
+2. **Os assentos são desenhados para uma mesa em pé.** Deitado, a mesa vira
+   larga e baixa, e os pods empilhavam uns nos outros: **8 sobreposições e 2
+   assentos fora da tela**.
+3. **A coluna de atalhos de raise** (Pote / 4BB / 3BB), que em pé fica num canto
+   livre, deitado caía **em cima do assento da direita**.
+
+O que mudou: anel de assentos próprio para a horizontal (largo e baixo), pods
+compactos, atalhos de raise viram **fileira** na faixa livre entre o feltro e os
+botões, e o status do torneio sai do meio da mesa. Resultado medido: **zero
+sobreposições e nada fora da tela** em 667×375, 740×340, 800×360, 915×412 e
+1024×500.
+
+🔧 Guardei a régua como ferramenta (`tools/audit-ui/deitado.mjs`): qualquer um de
+nós roda e vê na hora se voltou a quebrar.
+
+⚠️ **Uma coisa que eu NÃO consertei, de propósito:** em pé sobra um encosto de
+11px entre dois pares de assentos. Tentei corrigir e ficou pior — eles passam a
+bater no board, que é bem mais feio. Deixei como estava e anotei no código para
+ninguém tentar de novo achando que é descuido.
+
+---
+
 ## 2026-09-13 — Claude — O preço do pote na dica + treinar o que você erra sozinho
 
 Três coisas, e uma delas é uma regra nova de como eu trabalho.
