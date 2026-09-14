@@ -215,3 +215,161 @@
   font-weight: 800;
   cursor: pointer;
 }
+
+/* --- "Às cegas × com a dica": os dois lados do Jogar sozinho ------------- */
+.solo-vs {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.solo-vs-lado {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 7px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.solo-vs-lado i {
+  color: #9fd9bb;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.solo-vs-lado b {
+  color: #f1ebdd;
+  font-size: 19px !important;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.solo-vs-lado small {
+
+  color: #8d8877;
+  font-size: 10px;
+}
+.solo-vs-sep {
+  align-self: center;
+  color: #6f6a5c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* --- VOCÊ × O PADRÃO DO APP (fim de torneio) ----------------------------
+   Pedido do Allan, 14/09/2026: ver lado a lado, em porcentagem, o que ele fez
+   e o que o app pedia NAS MESMAS mãos. */
+.vsbox {
+  margin: 0 0 14px;
+  padding: 12px 13px;
+  border: 1px solid rgba(230, 196, 84, 0.3);
+  border-radius: 13px;
+  background: rgba(24, 22, 12, 0.55);
+  text-align: left;
+}
+.vsbox-title {
+  color: var(--gold, #e6c454);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.vsbox-sub {
+  margin: 3px 0 10px;
+  color: #a8a08c;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.vs-head,
+.vs-row {
+  display: grid;
+  grid-template-columns: 62px 1fr 1fr 40px;
+  align-items: center;
+  gap: 8px;
+}
+.vs-head {
+  margin-bottom: 4px;
+  color: #8d8877;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.vs-head .vs-col-voce,
+.vs-head .vs-col-padrao,
+.vs-head .vs-col-dif {
+  text-align: left;
+}
+.vs-head .vs-col-dif { text-align: right; }
+.vs-row {
+  padding: 5px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.vs-row.destaque {
+  background: rgba(230, 196, 84, 0.07);
+  border-radius: 8px;
+}
+.vs-lbl {
+  color: #ece7d5;
+  font-size: 12px;
+  font-weight: 700;
+}
+.vs-col-voce,
+.vs-col-padrao {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 18px;
+}
+.vs-col-voce b,
+.vs-col-padrao b {
+  flex: 0 0 auto;
+  min-width: 30px;
+  color: #f1ebdd;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vs-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.vs-bar {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+.vs-bar.voce { background: linear-gradient(90deg, #e6c454, #b9922f); }
+.vs-bar.padrao { background: linear-gradient(90deg, #6f8f7d, #46614f); }
+.vs-col-dif {
+  color: #8d8877;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.vs-col-dif.mais { color: #e8b04a; }
+.vs-col-dif.menos { color: #7fb8e0; }
+.vsbox-note {
+  margin-top: 9px;
+  color: #ece7d5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.vsbox-fine {
+  margin-top: 7px;
+  color: #7d7868;
+  font-size: 10px;
+  line-height: 1.35;
+}

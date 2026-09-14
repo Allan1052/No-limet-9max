@@ -17,6 +17,7 @@ import { STAGES } from "../tournament/structure";
 import { HandShareButton } from "./HandShareButton";
 import type { HandShareData } from "../app/handShareCard";
 import { PositionTendencyList } from "./PositionTendencyList";
+import { compararComOPadrao, compararComESemDica } from "../tournament/comparativo";
 import { reportFromRecords } from "../train/positionTendency";
 import "./soloScore.css";
 
@@ -123,13 +124,28 @@ export function TournamentSummary({
   };
 
   const [filter, setFilter] = useState<Rating | null>(null);
+  // VOCÊ × O PADRÃO, nas mesmas mãos. Quando a maior parte do torneio correu às
+  // cegas, o recorte "sem dica" é o que interessa — é o jogo dele de verdade.
+  const decisoes = summary.comparativo ?? [];
+  const semDicaN = decisoes.filter((x) => x.semDica).length;
+  const soCegas = semDicaN >= Math.max(20, decisoes.length * 0.6);
+  const comp = compararComOPadrao(decisoes, soCegas ? { semDica: true } : undefined);
+  const dicas = compararComESemDica(
+    summary.semDica?.total ?? sessaoSozinho?.total ?? 0,
+    summary.semDica?.certas ?? sessaoSozinho?.certas ?? 0,
+    summary.comDica?.total ?? 0,
+    summary.comDica?.certas ?? 0,
+  );
   const shown = filter ? summary.review.filter((r) => r.rating === filter) : summary.mistakes;
   const toggle = (r: Rating) => setFilter((cur) => (cur === r ? null : r));
 
   return (
     <div className="overlay" onClick={onClose}>
       <div className="replay summary-modal" onClick={(e) => e.stopPropagation()}>
-        <div className={`summary-banner ${champ ? "champ" : "out"}`}>
+        {/* 🐞 14/09/2026: "4º de 100" — com prêmio — vinha no vermelho de
+            eliminação. Terminar na faixa premiada não é derrota; a cor tem de
+            dizer a mesma coisa que o número logo abaixo. */}
+        <div className={`summary-banner ${champ ? "champ" : summary.inMoney ? "itm" : "out"}`}>
           {champ
             ? "🏆 Você venceu o torneio!"
             : `Você terminou em ${summary.finishPlace}º de ${num(summary.entrants)}`}
@@ -143,19 +159,34 @@ export function TournamentSummary({
           )}
         </div>
 
-        {/* "JOGAR SOZINHO" — a linha desta sessão. Aparece só quando houve
-            decisão às cegas; sem isso não há o que dizer. É um NÚMERO CRU da
-            sessão (acertos sobre decisões), sem virar nota nem comparação: o
-            placar acumulado, com amostra mínima, mora no "Minha evolução". */}
+        {/* "JOGAR SOZINHO" — agora com os DOIS lados. Mostrar só "81 de 99"
+            não dizia se o jogador vai melhor ou pior quando a dica some, que é
+            a única pergunta que esse modo existe para responder (pedido do
+            Allan, 14/09/2026). Quando falta amostra de um dos lados, o texto
+            diz isso em vez de inventar uma comparação. */}
         {sessaoSozinho && sessaoSozinho.total > 0 ? (
           <div className="summary-solo">
             <span className="summary-solo-rot">🙈 Jogando sozinho nesta sessão</span>
             <b>
               {sessaoSozinho.certas} de {sessaoSozinho.total} decisões no padrão
+              {dicas.semDica.total > 0 ? ` (${dicas.semDica.pct}%)` : ""}
             </b>
-            <span className="summary-solo-sub">
-              sem dica nenhuma na tela — é o mais perto do torneio de verdade que o app mede
-            </span>
+            {dicas.confiavel ? (
+              <div className="solo-vs">
+                <span className="solo-vs-lado">
+                  <i>Às cegas</i>
+                  <b>{dicas.semDica.pct}%</b>
+                  <small>{dicas.semDica.total} decisões</small>
+                </span>
+                <span className="solo-vs-sep">×</span>
+                <span className="solo-vs-lado">
+                  <i>Com a dica</i>
+                  <b>{dicas.comDica.pct}%</b>
+                  <small>{dicas.comDica.total} decisões</small>
+                </span>
+              </div>
+            ) : null}
+            <span className="summary-solo-sub">{dicas.leitura}</span>
           </div>
         ) : null}
 
@@ -280,6 +311,67 @@ export function TournamentSummary({
           <div className="anatomy-fine">{anatomy.finePrint}</div>
         </div>
 
+        {/* ===== VOCÊ × O PADRÃO ==================================================
+            Pedido do Allan em 14/09/2026: "tinha que ter um comparativo da forma
+            que eu joguei às cegas e da forma que o aplicativo pede. Colocar
+            porcentagem." A anatomia acima diz o que ELE fez; sem o outro lado,
+            "82% de fold" não responde se é muito ou pouco.
+            ⚠️ O padrão aqui é a recomendação que o próprio motor deu, decisão a
+            decisão, NAS MESMAS mãos — não uma tabela de fora. */}
+        {comp.amostra > 0 ? (
+          <div className="vsbox">
+            <div className="vsbox-title">⚖️ Você × o padrão do app</div>
+            <div className="vsbox-sub">
+              {soCegas
+                ? `Nas ${comp.amostra} decisões que você tomou ÀS CEGAS, lado a lado com o que o padrão pedia nas mesmas mãos:`
+                : `Nas ${comp.amostra} decisões avaliadas, lado a lado com o que o padrão pedia nas mesmas mãos:`}
+            </div>
+
+            <div className="vs-head">
+              <span className="vs-lbl" />
+              <span className="vs-col-voce">Você</span>
+              <span className="vs-col-padrao">Padrão</span>
+              <span className="vs-col-dif">Dif.</span>
+            </div>
+
+            {comp.linhas.map((l) => (
+              <div
+                key={l.rotulo}
+                className={`vs-row${comp.maiorGap?.rotulo === l.rotulo ? " destaque" : ""}`}
+              >
+                <span className="vs-lbl">{l.rotulo}</span>
+                {/* ⚠️ Número primeiro, barra depois, dentro de um trilho de
+                    largura fixa. Na primeira versão a barra tinha max-width e
+                    81% e 94% saíam do MESMO tamanho — uma barra que mente é
+                    pior do que barra nenhuma. */}
+                <span className="vs-col-voce">
+                  <b>{l.voce}%</b>
+                  <span className="vs-track">
+                    <span className="vs-bar voce" style={{ width: `${Math.max(l.voce, 2)}%` }} />
+                  </span>
+                </span>
+                <span className="vs-col-padrao">
+                  <b>{l.padrao}%</b>
+                  <span className="vs-track">
+                    <span className="vs-bar padrao" style={{ width: `${Math.max(l.padrao, 2)}%` }} />
+                  </span>
+                </span>
+                <span className={`vs-col-dif ${l.diferenca > 0 ? "mais" : l.diferenca < 0 ? "menos" : ""}`}>
+                  {l.diferenca > 0 ? "+" : ""}
+                  {l.diferenca}
+                </span>
+              </div>
+            ))}
+
+            <div className="vsbox-note">{comp.leitura}</div>
+            <div className="vsbox-fine">
+              * "Padrão" é o que o motor do Call ou Fold recomendou em cada uma dessas
+              mesmas mãos — mesmas cartas, mesma posição, mesmo stack. Não é uma tabela
+              de fora nem promessa de solver.
+            </div>
+          </div>
+        ) : null}
+
         <PositionTendencyList
           report={reportFromRecords(summary.positional ?? [])}
           title="📍 Sua tendência por posição neste torneio"
@@ -323,7 +415,9 @@ export function TournamentSummary({
             <h4>
               {filter
                 ? `Decisões "${RATING_LABEL[filter]}" (${shown.length})`
-                : `Mãos para rever (${shown.length})`}
+                : summary.ratings.imprecisa + summary.ratings.ruim > shown.length
+                  ? `Mãos para rever — as ${shown.length} mais graves de ${summary.ratings.imprecisa + summary.ratings.ruim}`
+                  : `Mãos para rever (${shown.length})`}
             </h4>
             {shown.map((it, i) => (
               <div key={i} className={`fb-item ${it.rating}`}>

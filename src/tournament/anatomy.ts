@@ -69,7 +69,12 @@ export function anatomyFromDecisions(
   }
   const n = counts.total;
   const pct = (v: number) => (n > 0 ? Math.round((v / n) * 100) : 0);
-  const ref = { fold: 11, call: 7, raise: 82 };
+  // 🐞 14/09/2026: estava `{ fold: 11, call: 7, raise: 82 }` — fold e raise
+  // trocados. Uma referência de MTT com 82% de RAISE e 11% de FOLD não existe;
+  // a distribuição real é o contrário (o Allan jogou 82/7/11, que É a
+  // referência). Só `ref.call` era lido, então a frase na tela não saiu errada
+  // — mas qualquer uso dos outros dois campos sairia invertido.
+  const ref = { fold: 82, call: 7, raise: 11 };
   return {
     counts,
     foldPct: pct(counts.folds),

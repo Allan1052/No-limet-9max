@@ -77,6 +77,7 @@ import { recordProgress } from "../train/progress";
 import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
 import type { PositionalRecord } from "../train/positionTendency";
+import type { DecisaoComparavel } from "../tournament/comparativo";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
 import type { HeroRead } from "../bots/adapt";
 import type { Archetype } from "../bots/profiles";
@@ -217,6 +218,12 @@ export interface TournamentSummary {
   decisionsDetail?: Array<{ hand: string; action: string; position: string }>;
   /** Tendência por posição deste torneio — "onde você perde mais ficha". */
   positional?: PositionalRecord[];
+  /** Decisão a decisão: o que você fez × o que o padrão pedia. */
+  comparativo?: DecisaoComparavel[];
+  /** Placar das decisões tomadas às cegas nesta sessão. */
+  semDica?: { total: number; certas: number };
+  /** Placar das decisões tomadas com a dica na tela. */
+  comDica?: { total: number; certas: number };
 }
 
 /** Estado serializável para salvar/retomar um torneio (entre mãos). */
@@ -348,6 +355,14 @@ export class GameController {
   // Tendência por posição DESTE torneio (posição, acerto, família da ação e da
   // recomendada) — alimenta a revisão de fim de torneio "onde você perde mais".
   private sessionPositional: PositionalRecord[] = [];
+  /** Cada decisão avaliada com o que VOCÊ fez e o que o PADRÃO pedia — é a
+   *  matéria-prima do comparativo de fim de torneio (pedido do Allan em
+   *  14/09/2026: "um comparativo da forma que eu joguei às cegas e da forma que
+   *  o aplicativo pede"). Guarda também se a mão correu sem dica. */
+  private sessionComparativo: DecisaoComparavel[] = [];
+  /** O outro lado do "Jogar sozinho": as decisões tomadas COM dica na tela.
+   *  Sem ele, "81 de 99" não diz se o jogador vai melhor ou pior com ajuda. */
+  sessaoComDica = { total: 0, certas: 0 };
   private tournamentResult: "eliminado" | "campeao" | null = null;
   private tournamentFinishPlace: number | null = null;
   private history: ReplayEvent[] = [];
@@ -487,6 +502,8 @@ export class GameController {
     this.sessionMistakes = [];
     this.sessionReview = [];
     this.sessionDecisions = [];
+    this.sessionComparativo = [];
+    this.sessaoComDica = { total: 0, certas: 0 };
     this.sessionDecisionDetails = [];
     this.sessionPositional = [];
     this.tournamentResult = null;
@@ -1013,6 +1030,9 @@ export class GameController {
       if (semDica) {
         this.sessaoSozinho.total++;
         if (decisionCorrect) this.sessaoSozinho.certas++;
+      } else {
+        this.sessaoComDica.total++;
+        if (decisionCorrect) this.sessaoComDica.certas++;
       }
       recordProgress({
         kind: item.kind ?? (this.table.street === "preflop" ? "preflop" : "postflop"),
@@ -1033,6 +1053,12 @@ export class GameController {
         this.sessionPositional.push(posRecord);
         recordPositionResult(posRecord);
       }
+      this.sessionComparativo.push({
+        heroFam: item.heroFam,
+        adviceFam: item.adviceFam,
+        kind: item.kind ?? (this.table.street === "preflop" ? "preflop" : "postflop"),
+        semDica,
+      });
       const facingAllin = this.table.players.some(
         (p) => p.seat !== this.heroSeat && p.status === "allin",
       );
@@ -1250,9 +1276,24 @@ export class GameController {
 
     // Leitura do estilo a partir do VPIP/PFR (referências clássicas de MTT).
     const gap = row.vpip - row.pfr;
+    // 🐞 14/09/2026 — o conselho brigava com a própria medição do app. O Allan
+    // fechou um torneio com VPIP 14% e a tela disse "dá para roubar mais blinds
+    // abrindo um pouco a range em posição". Só que as mãos para rever daquele
+    // mesmo torneio eram QUATRO aberturas fora do range (LJ, BTN, UTG+1, LJ), e
+    // o gráfico por posição marcava LJ e SB como "agressivo demais". O app
+    // estava empurrando o jogador exatamente para o erro que acabara de medir.
+    // O VPIP sozinho não sabe disso: ele conta quantas mãos você jogou, não
+    // QUAIS. Agora o conselho olha as aberturas fora de range antes de falar.
+    const aberturasForaDoRange = this.sessionComparativo.filter(
+      (x) => x.kind === "preflop" && x.heroFam === "aggro" && x.adviceFam === "fold",
+    ).length;
     let styleNote: string;
     if (row.hands < 8) {
       styleNote = "Amostra curta — jogue mais mãos para uma leitura confiável do seu estilo.";
+    } else if (row.vpip <= 15 && aberturasForaDoRange >= 2) {
+      styleNote =
+        `Você jogou apertado no geral (VPIP ${row.vpip}%), mas ${aberturasForaDoRange} das mãos em que você abriu estavam FORA do range da posição. ` +
+        `Antes de abrir mais, abra melhor: troque essas aberturas por mãos que o padrão já mandava abrir — é aí que está o ganho, não no volume.`;
     } else if (row.vpip >= 40) {
       styleNote = `Você jogou muito solto (VPIP ${row.vpip}%): entrou em mãos demais. Em MTT, apertar a seleção pré-flop costuma render mais.`;
     } else if (row.vpip <= 15) {
@@ -1309,6 +1350,9 @@ export class GameController {
       decisions: [...this.sessionDecisions],
       decisionsDetail: [...this.sessionDecisionDetails],
       positional: [...this.sessionPositional],
+      comparativo: [...this.sessionComparativo],
+      semDica: { ...this.sessaoSozinho },
+      comDica: { ...this.sessaoComDica },
     };
   }
 

@@ -23,6 +23,66 @@ Regras do registro:
 
 ---
 
+## 2026-09-14 — Claude — ⚖️ "Você × o padrão do app" na tela de fim de torneio
+
+Do seu pedido depois do 4º lugar em 100 jogado quase todo às cegas: *"tinha que
+ter um comparativo da forma que eu joguei às cegas e da forma que o aplicativo
+pede. Colocar porcentagem."*
+
+Você tinha razão. A tela mostrava o que VOCÊ fez (Fold 82% · Call 7% ·
+Raise 11%) e nunca dizia o que o app teria feito. Sem o outro lado, "82% de
+fold" não responde nada: é muito? é pouco?
+
+### O que entrou
+
+**⚖️ Você × o padrão do app** — um quadro novo, com as três ações lado a lado,
+em porcentagem, e a diferença em pontos:
+
+```
+              VOCÊ     PADRÃO    DIF.
+Largou        82%       76%       +6
+Pagou          7%        9%       -2
+Agrediu       11%       15%       -4
+```
+
+⚠️ **Esse "padrão" não é tabela de fora nem número de propaganda.** É a
+recomendação que o próprio motor deu, decisão por decisão, **nas mesmas mãos
+que você jogou** — mesmas cartas, mesma posição, mesmo stack. Por isso a
+comparação é justa: os dois lados vêm do mesmo torneio.
+
+Quando a maior parte do torneio correu às cegas (foi o seu caso), o quadro
+mostra o recorte **só das mãos sem dica** — o seu jogo de verdade.
+
+**🙈 Às cegas × com a dica** — o "Jogar sozinho" mostrava só metade da conta
+("81 de 99"). Agora mostra os dois lados em porcentagem, que é a única pergunta
+que esse modo existe para responder: você joga pior quando a dica some? Quando
+falta amostra de um dos lados, o app diz isso em vez de inventar comparação.
+
+### Três erros que achei olhando os seus prints
+
+1. **O conselho brigava com a medição.** A tela disse *"você jogou bem apertado
+   (VPIP 14%): dá para roubar mais blinds abrindo um pouco a range em posição"*.
+   Na MESMA tela, as mãos para rever eram **quatro aberturas fora do range**
+   (LJ, BTN, UTG+1, LJ) e o gráfico marcava LJ e SB como "agressivo demais". O
+   app mandou você abrir mais justo onde tinha acabado de medir que você já
+   abria demais. O VPIP conta QUANTAS mãos você jogou, não QUAIS.
+   Agora, quando há aberturas fora do range, o conselho é outro:
+   **antes de abrir mais, abrir melhor.**
+
+2. **"4º de 100" vinha no vermelho de eliminação.** Você foi premiado. A cor
+   passou a dizer a mesma coisa que o número.
+
+3. **"Mãos para rever (5)"** parecia que eram só 5 problemas — eram 21. Agora
+   diz "as 5 mais graves de 21".
+
+E uma correção interna: a referência da anatomia estava com Fold e Raise
+trocados (dizia que a referência de MTT é 82% de raise e 11% de fold — é o
+contrário). Não aparecia na tela, mas era uma bomba-relógio.
+
+**Onde está:** aba Torneio → tela do fim do torneio.
+
+---
+
 ## 2026-09-14 — Claude — 🪑 Cadeira vazia, nomes que não repetem e mesa arrumada
 
 ### 1) "Ele tinha vinte e poucas fichas e na mão seguinte apareceu sem ficha"
