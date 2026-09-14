@@ -19,10 +19,14 @@ export function Replayer({
   hand,
   onClose,
   feedback = [],
+  semVeredito = false,
 }: {
   hand: HandHistory;
   onClose: () => void;
   feedback?: FeedbackItem[];
+  /** Mostra só o FATO da mão (ações, fichas, cartas), sem a nota do coach.
+   *  Jogando sozinho, conferir a mesa não pode custar o blackout. */
+  semVeredito?: boolean;
 }) {
   const frames = handHistoryToReplay(hand);
   const total = frames.length;
@@ -72,7 +76,7 @@ export function Replayer({
             <>
               <div className="rs-action">
                 Jogou: <b>{ev.actionLabel}</b>
-                {ev.advice ? (
+                {ev.advice && !semVeredito ? (
                   optimalMatches(ev.actionType, ev.advice.action) ? (
                     <span className="ok-tag"> ✓ alinhado com o ótimo</span>
                   ) : (
@@ -80,7 +84,7 @@ export function Replayer({
                   )
                 ) : null}
               </div>
-              {ev.advice ? (
+              {ev.advice && !semVeredito ? (
                 <div className="rs-advice">
                   <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
                   {ev.advice.equity !== undefined
@@ -118,7 +122,9 @@ export function Replayer({
           className="replay-actions"
           style={{ marginTop: 14, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}
         >
-          <HandActions hand={hand} feedback={feedback} />
+          {/* Sem veredito, o card compartilhável também não pode carregar a
+              nota da jogada — ele é montado a partir do feedback. */}
+          <HandActions hand={hand} feedback={semVeredito ? [] : feedback} />
         </div>
       </div>
     </div>

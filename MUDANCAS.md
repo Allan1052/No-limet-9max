@@ -23,6 +23,64 @@ Regras do registro:
 
 ---
 
+## 2026-09-14 — Claude — 🐞 O jogador que "subiu as fichas do nada" + histórico de volta na mesa
+
+### 1) O erro que você viu: um jogador aparecendo com mais ficha do que tinha
+
+Você desconfiou e estava certo — mas não era ficha nascendo do nada. Era o
+**nome voltando**.
+
+Quando alguém quebra, a cadeira é preenchida por um jogador novo (é assim que
+torneio funciona: mesa quebrada, gente sendo remanejada). Só que o app montava
+a lista de "nomes já usados" olhando apenas quem **ainda tinha ficha na mesa**.
+Quem tinha acabado de quebrar saía dessa lista na hora — e o nome dele ficava
+livre para ser sorteado de novo, numa cadeira nova, com um stack novo.
+
+Resultado na sua tela: o "Muralha" que você acabou de eliminar reaparecia duas
+mãos depois com 200bb. Parece ficha do nada; era gente diferente com o mesmo
+nome.
+
+**Medido antes de corrigir** (40 torneios simulados): o nome de quem quebrou
+voltava em **15 dos 40 casos**, e em **8 deles com mais ficha do que ele tinha**.
+
+**Corrigido:** a mesa agora guarda todo nome que já sentou nela — inclusive o de
+quem quebrou. Nome usado não volta mais no mesmo torneio. Começou torneio novo,
+a lista zera.
+
+**E as fichas?** Conferi separado, porque a sua desconfiança merecia resposta
+com número: escrevi um teste que soma TODAS as fichas da mesa antes e depois de
+cada mão, inclusive nas mãos de all-in de vários jogadores com stacks diferentes
+(side pot). **A soma bate sempre.** O motor não cria e não some com ficha. O
+problema era só o nome.
+
+### 2) O histórico das mãos voltou para a mesa (botão 🕘)
+
+Você foi procurar a mão anterior justamente por causa disso e não achou — porque
+no **modo "Jogar sozinho"** o histórico tinha sumido junto com as dicas. Era erro
+meu de escopo: conferir **o que aconteceu** na mesa não é receber dica.
+
+Agora tem um botão **🕘** no canto de baixo à direita da mesa, a partir da
+segunda mão, **sempre** — inclusive jogando sozinho. Jogando sozinho ele mostra
+o **fato** (cartas, ações, fichas, quem levou) e **esconde a nota** (boa/ruim,
+"o ótimo era..."). O blackout continua valendo até o fim da sessão; o que você
+ganha é o direito de conferir a mesa quando desconfiar de alguma coisa.
+
+### 3) O status do torneio não tapa mais a aposta
+
+No seu print o "0.5bb" do small blind estava escondido atrás da linha de status
+(posição/blinds). Ela ficava exatamente na faixa por onde as fichas apostadas
+viajam para o centro. Subiu para logo abaixo das cartas comunitárias, onde a
+faixa é vazia. **Medido depois: zero sobreposição.**
+
+### 4) A borda dourada da mesa está mais dourada
+
+Pedido seu. O aro era um fio de ouro apagado; virou um aro cheio, com luz por
+cima, ouro sólido no meio, sombra por baixo e um brilho suave para fora.
+
+**Onde está tudo:** aba Torneio (a mesa).
+
+---
+
 ## 2026-09-14 — Claude — 🥷 ROUBO TARDIO: o treino dos seus dois vazamentos
 
 Nasceu das suas estatísticas REAIS do GGPoker (45.027 mãos). Dois números

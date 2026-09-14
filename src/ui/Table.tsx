@@ -101,6 +101,7 @@ export function PokerTable({
   replayActorSeat,
   sozinho,
   onToggleSozinho,
+  onShowHistory,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -118,6 +119,9 @@ export function PokerTable({
   /** "Jogar sozinho" ligado? (sem dica na mão, sem veredito até o fim). */
   sozinho?: boolean;
   onToggleSozinho?: () => void;
+  /** Abre o histórico das mãos da sessão. Existe SEMPRE — inclusive jogando
+   *  sozinho: conferir o que aconteceu na mesa não é receber dica. */
+  onShowHistory?: () => void;
 }) {
   const { t } = useT();
 
@@ -206,6 +210,18 @@ export function PokerTable({
           onClick={onShowTips}
         >
           💡 {t("tips.button")}
+        </button>
+      ) : null}
+
+      {onShowHistory ? (
+        <button
+          type="button"
+          className="tbl-hist-btn"
+          title="Mãos desta sessão — conferir o que aconteceu na mesa"
+          aria-label="Mãos desta sessão"
+          onClick={onShowHistory}
+        >
+          🕘
         </button>
       ) : null}
 

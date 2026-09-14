@@ -770,6 +770,12 @@ export function App() {
             // botão, quem decide se ele EXISTE é o callback (medido no
             // navegador — com showTips=false o botão continuava na tela).
             onShowTips={sozinho ? undefined : () => setTipsOpen(true)}
+            // 🕘 HISTÓRICO DA SESSÃO, sempre disponível — inclusive jogando
+            // sozinho. Em 14/09 o Allan desconfiou de uma mão, foi procurar o
+            // histórico e não achou: no modo sozinho ele tinha sumido junto com
+            // as dicas. Era erro meu de escopo. Conferir O QUE ACONTECEU na
+            // mesa não é receber dica; o que o blackout esconde é a NOTA.
+            onShowHistory={controller.handLog.length > 0 ? () => setHistoryOpen(true) : undefined}
             showTips={!sozinho && handOver && controller.feedback.length > 0}
             sozinho={sozinho}
             onToggleSozinho={() => {
@@ -817,6 +823,7 @@ export function App() {
         <Replayer
           hand={controller.lastHand}
           feedback={controller.feedback}
+          semVeredito={sozinho}
           onClose={() => setReplayOpen(false)}
         />
       ) : null}
@@ -825,6 +832,7 @@ export function App() {
         <Replayer
           hand={controller.handLog[historyReplayIdx]}
           feedback={controller.handLog[historyReplayIdx].handFeedback ?? []}
+          semVeredito={sozinho}
           onClose={() => setHistoryReplayIdx(null)}
         />
       ) : null}
@@ -834,6 +842,7 @@ export function App() {
           <div className="replay progress-modal hh-modal" onClick={(e) => e.stopPropagation()}>
             <SessionHistoryPanel
               hands={controller.handLog}
+              semVeredito={sozinho}
               onClose={() => setHistoryOpen(false)}
               onSelectHand={(idx) => {
                 setHistoryOpen(false);

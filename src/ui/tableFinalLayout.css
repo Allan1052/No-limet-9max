@@ -292,9 +292,13 @@
      O Allan reclamou que ficar olhando lá em cima, num feltro comprido, cansa.
      A mesa tem uma faixa central vazia entre o board e o herói (as fileiras de
      assentos ficam nas laterais), e é ali que a informação entra. */
+  /* ⚠️ 14/09: em 54% esta linha ficava exatamente na faixa em que as fichas
+     apostadas viajam para o centro, e tapava o valor (o print do Allan mostra o
+     "0.5bb" do small blind escondido). Subiu para logo abaixo do board, onde a
+     faixa é vazia, e ficou mais estreita para não cruzar com ninguém. */
   .app:has(.play) .play > .play-tstatus {
     position: absolute !important;
-    top: 54% !important;
+    top: 50% !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
@@ -665,6 +669,29 @@
     border-color: rgba(140, 220, 175, .75) !important;
     background: rgba(18, 46, 32, .95) !important;
     color: #b9ecd0 !important;
+  }
+
+  /* 🕘 HISTÓRICO DA SESSÃO — canto de baixo à direita, que ficou livre quando o
+     "Jogar sozinho" mudou para a esquerda (14/09). Botão pequeno, só ícone:
+     ele existe para o momento em que você desconfia de alguma coisa na mesa. */
+  .app:has(.play) .tbl-hist-btn,
+  .app.nav-hidden .tbl-hist-btn {
+    position: absolute !important;
+    bottom: 2% !important;
+    right: 4% !important;
+    left: auto !important;
+    top: auto !important;
+    z-index: 12 !important;
+    min-width: var(--tap-sm, 40px);
+    min-height: var(--tap-sm, 40px);
+    padding: 0 !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(230, 196, 84, .3) !important;
+    background: rgba(12, 16, 12, .9) !important;
+    color: var(--gold-soft, #e8d79b) !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    cursor: pointer;
   }
 
   /* Botão de sair (X): canto superior ESQUERDO, longe do "Ver dicas". */

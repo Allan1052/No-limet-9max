@@ -229,6 +229,9 @@ export interface GameSnapshot {
   tournament: TournamentState;
   payouts?: number[];
   heroRatings: Record<Rating, number>;
+  /** Nomes que já sentaram nesta mesa (inclusive de quem quebrou). Opcional
+   *  para não invalidar torneios salvos antes de 14/09/2026. */
+  nomesJaUsados?: string[];
   sessionMistakes: FeedbackItem[];
   /** Todas as decisões não-"boa" (ok/imprecisa/ruim) do torneio, p/ o painel de
    *  revisão bater com os contadores após retomar um torneio salvo. */
@@ -314,6 +317,22 @@ export class GameController {
   }
   /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
   handLog: HandHistory[] = [];
+
+  /**
+   * TODO nome que já sentou nesta mesa — inclusive os de quem já quebrou.
+   *
+   * 🐞 14/09/2026. O Allan viu "um jogador que subiu as fichas dele do nada" e,
+   * na mão seguinte a um all-in, um vilão aparecendo sem fichas. Não era ficha
+   * surgindo: era o NOME sendo reciclado. A cadeira de quem quebra é ocupada
+   * por um jogador novo (isso é de propósito — num MTT chega gente de outra
+   * mesa), mas a lista de nomes em uso só continha quem TINHA fichas. Quem
+   * acabara de quebrar saía da lista e o nome dele voltava na hora, agora com
+   * stack novo. Medido antes da correção: o nome voltava em 15 de 40 casos, e
+   * em 8 deles com MAIS fichas do que ele tinha.
+   *
+   * Este conjunto nunca esquece. Um nome que já jogou aqui não volta.
+   */
+  private nomesJaUsados = new Set<string>();
   /** Estado do torneio, se estivermos em modo torneio (senão, sessão cash). */
   tournament: TournamentState | null = null;
   /** Verdadeiro quando o torneio terminou para o herói (mostra a análise). */
@@ -403,6 +422,10 @@ export class GameController {
     const pool = prizePool(cfg.buyIn, cfg.entrants);
     const ladder = payoutLadder(cfg.entrants, pool);
     this.payouts = tablePayouts(stageInfo.icm, ladder);
+
+    // Torneio novo é mesa nova: a memória de nomes recomeça, senão o campo
+    // ficaria sem nomes depois de algumas partidas.
+    this.nomesJaUsados = new Set<string>();
 
     // Monta o CAMPO conforme o buy-in: micro = mais peixe, alto = mais regular.
     this.seatDefs = [
@@ -514,7 +537,10 @@ export class GameController {
     const avgRaw =
       avgOverride ?? withChips.reduce((s, p) => s + p.stack, 0) / Math.max(1, withChips.length);
     const avg = Math.max(bb * 5, Math.round(avgRaw / bb) * bb);
-    const usedNames = new Set(players.filter((x) => x.stack > 0 || x.isHero).map((x) => x.name));
+    // Quem está na mesa AGORA, mais todo mundo que já passou por aqui: um
+    // jogador eliminado não pode voltar com o mesmo nome (ver nomesJaUsados).
+    for (const x of players) if (x.name) this.nomesJaUsados.add(x.name);
+    const usedNames = new Set(this.nomesJaUsados);
     let active = withChips.length;
     let count = 0;
     for (const p of players) {
@@ -522,6 +548,7 @@ export class GameController {
       if (p.isHero || p.stack > 0) continue;
       const rep = pickReplacement(this.tournament?.buyIn, usedNames, this.rng);
       usedNames.add(rep.name);
+      this.nomesJaUsados.add(rep.name);
       p.profileId = rep.profileId;
       p.name = rep.name;
       p.personalitySeed = 1 + Math.floor(this.rng() * 2_000_000_000); // estilo próprio (Camada 1)
@@ -1335,6 +1362,9 @@ export class GameController {
       tournament: this.tournament,
       payouts: this.payouts,
       heroRatings: { ...this.heroRatings },
+      // Sem isto, retomar um torneio salvo devolveria os nomes de quem já
+      // quebrou — o mesmo bug, só que depois de fechar e abrir o app.
+      nomesJaUsados: [...this.nomesJaUsados],
       sessionMistakes: this.sessionMistakes,
       sessionReview: this.sessionReview,
       sessionDecisions: this.sessionDecisions,
@@ -1385,6 +1415,9 @@ export class GameController {
     this.tournament = snap.tournament;
     this.payouts = snap.payouts;
     this.heroRatings = snap.heroRatings;
+    // Torneio antigo (salvo antes de 14/09) não traz a lista: aí começamos com
+    // quem está na mesa, que já evita a reciclagem daí pra frente.
+    this.nomesJaUsados = new Set(snap.nomesJaUsados ?? snap.seats.map((x) => x.name));
     this.sessionMistakes = snap.sessionMistakes;
     this.sessionReview = snap.sessionReview ?? [];
     this.sessionDecisions = snap.sessionDecisions ?? [];

@@ -54,6 +54,7 @@ const MEDIR = () => {
   add(".table-modern .seat", "assento");
   add(".table-modern .seat .name", "nome");
   add(".tbl-solo-btn", "botaoSozinho");
+  add(".tbl-hist-btn", "botaoHistorico");
   add(".tbl-tips-btn", "verDicas");
   add(".raise-size-stack", "atalhosRaise");
   add(".play-tstatus", "statusTorneio");
@@ -70,7 +71,7 @@ const MEDIR = () => {
       if (A.el.contains(B.el) || B.el.contains(A.el)) continue;
       const ix = Math.min(A.r, B.r) - Math.max(A.x, B.x);
       const iy = Math.min(A.bo, B.bo) - Math.max(A.y, B.y);
-      if (ix > 6 && iy > 6) over.push(`${A.rot} × ${B.rot} (${Math.round(ix)}x${Math.round(iy)}px)`);
+      if (ix > 6 && iy > 6) over.push(`${A.rot} × ${B.rot} (${Math.round(ix)}x${Math.round(iy)}px) [${Math.round(A.x)},${Math.round(A.y)},${Math.round(A.r)},${Math.round(A.bo)}] [${Math.round(B.x)},${Math.round(B.y)},${Math.round(B.r)},${Math.round(B.bo)}]`);
     }
   }
   const fora = alvos
@@ -116,6 +117,14 @@ for (const [nome, w, h] of TELAS) {
   await tap("Jogar", 2400);
   await clica("^Nova mão");
   await p.waitForTimeout(1200);
+  // Joga algumas mãos: o botão 🕘 só existe depois da primeira mão concluída,
+  // e precisamos medi-lo junto com o resto.
+  for (let i = 0; i < 10; i++) {
+    await clica("^(Fold|Check|Nova mão|Próxima mão)");
+    await p.waitForTimeout(650);
+    if (await p.$(".tbl-hist-btn")) break;
+  }
+  await p.waitForTimeout(600);
 
   const m = await p.evaluate(MEDIR);
   const ok = m.over.length === 0 && m.fora.length === 0 && (m.passaDoFim ?? 0) <= 0 && !m.rolaLado;

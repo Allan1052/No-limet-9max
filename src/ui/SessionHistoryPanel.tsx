@@ -18,10 +18,21 @@ export function SessionHistoryPanel({
   hands,
   onClose,
   onSelectHand,
+  semVeredito = false,
 }: {
   hands: HandHistory[];
   onClose: () => void;
   onSelectHand: (idx: number) => void;
+  /**
+   * Esconde a AVALIAÇÃO do coach, mantendo o FATO da mão.
+   *
+   * 14/09/2026 — o Allan desconfiou de uma mão e foi procurar o histórico para
+   * conferir. Não achou: jogando sozinho, o histórico tinha sumido junto com as
+   * dicas. Era erro meu de escopo. Rever O QUE ACONTECEU (quem apostou quanto,
+   * quem tinha quantas fichas) não é receber dica — é o direito básico de
+   * conferir a mesa. O que o blackout esconde é o JULGAMENTO, não o fato.
+   */
+  semVeredito?: boolean;
 }) {
   const [decisionFilter, setDecisionFilter] = useState<HistoryFilter>("todos");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("todos");
@@ -88,7 +99,9 @@ export function SessionHistoryPanel({
           ))}
         </div>
 
-        {/* Filtros de rating */}
+        {/* Filtros de rating — escondidos jogando sozinho: filtrar por "ruim"
+            entregaria a nota das mãos antes da hora. */}
+        {semVeredito ? null : (
         <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
           {(["todos", "boa", "ok", "imprecisa", "ruim"] as RatingFilter[]).map((r) => {
             const icons: Record<string, string> = { todos: "📊", boa: "✓", ok: "○", imprecisa: "⚠", ruim: "✗" };
@@ -110,6 +123,7 @@ export function SessionHistoryPanel({
             );
           })}
         </div>
+        )}
 
         {/* Lista de mãos */}
         {filtered.length === 0 ? (
@@ -119,7 +133,12 @@ export function SessionHistoryPanel({
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {filtered.map(({ h, idx }) => (
-              <HandRow key={`${idx}-${h.events.length}`} h={h} onClick={() => onSelectHand(idx)} />
+              <HandRow
+                key={`${idx}-${h.events.length}`}
+                h={h}
+                semVeredito={semVeredito}
+                onClick={() => onSelectHand(idx)}
+              />
             ))}
           </div>
         )}
@@ -135,7 +154,15 @@ function matchesHeroDecision(f: FeedbackItem, filter: HistoryFilter): boolean {
   return true;
 }
 
-function HandRow({ h, onClick }: { h: HandHistory; onClick: () => void }) {
+function HandRow({
+  h,
+  onClick,
+  semVeredito = false,
+}: {
+  h: HandHistory;
+  onClick: () => void;
+  semVeredito?: boolean;
+}) {
   const heroCards = h.holeCards[h.heroSeat] ?? [];
   const heroWin = h.result?.winningsBySeat[h.heroSeat] ?? 0;
   const lastHeroDecision = (h.handFeedback ?? [])
@@ -195,20 +222,22 @@ function HandRow({ h, onClick }: { h: HandHistory; onClick: () => void }) {
             <span style={{ fontSize: 13, fontWeight: 600, color: "#ece7d5" }}>
               {lastHeroDecision.heroAction}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "1px 6px",
-                borderRadius: 8,
-                border: `1px solid ${ratingColor[lastHeroDecision.rating] ?? "#8a8a7a"}`,
-                color: ratingColor[lastHeroDecision.rating] ?? "#8a8a7a",
-                background: "transparent",
-                lineHeight: "14px",
-              }}
-            >
-              {ratingIcon[lastHeroDecision.rating]} {capitalize(lastHeroDecision.rating)}
-            </span>
+            {semVeredito ? null : (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "1px 6px",
+                  borderRadius: 8,
+                  border: `1px solid ${ratingColor[lastHeroDecision.rating] ?? "#8a8a7a"}`,
+                  color: ratingColor[lastHeroDecision.rating] ?? "#8a8a7a",
+                  background: "transparent",
+                  lineHeight: "14px",
+                }}
+              >
+                {ratingIcon[lastHeroDecision.rating]} {capitalize(lastHeroDecision.rating)}
+              </span>
+            )}
           </div>
         ) : (
           <span style={{ fontSize: 12, color: "#8a8a7a" }}>Sem decisão</span>
