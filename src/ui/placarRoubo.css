@@ -1,0 +1,74 @@
+/* Placar do módulo "Roubo Tardio": a sua frequência de abertura contra a do
+   motor, nas MESMAS mãos. A barra mostra a sua; o risco vertical marca a do
+   motor — de bater o olho dá para ver se você está aquém ou além. */
+.placar-roubo {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(230, 196, 84, 0.28);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(11, 39, 29, 0.9), rgba(6, 24, 17, 0.9));
+}
+
+.pr-linha {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pr-rot {
+  color: #b9ae8b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pr-num {
+  color: #7ec58a;
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pr-num.pr-motor { color: #ecd07a; }
+
+.pr-vs {
+  color: #8e8570;
+  font-size: 13px;
+}
+
+.pr-barra {
+  position: relative;
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: visible;
+}
+
+.pr-voce {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5f9e72, #7ec58a);
+}
+
+/* O risco do motor: a referência fica À VISTA, não escondida num texto. */
+.pr-marca {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  background: #ecd07a;
+  transform: translateX(-1px);
+}
+
+.pr-frase {
+  margin: 8px 0 0;
+  color: #d7d1c3;
+  font-size: 12px;
+  line-height: 1.45;
+}

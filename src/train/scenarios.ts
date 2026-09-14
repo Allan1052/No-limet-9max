@@ -96,6 +96,25 @@ export const MODULES: TrainModule[] = [
     }),
   },
   {
+    // ROUBO TARDIO (14/09/2026). O "Sniper do Botão" treina só o BTN; o
+    // vazamento que as estatísticas reais do Allan mostraram é das TRÊS
+    // cadeiras que fecham a ação antes dos blinds — CO, BTN e SB — e aparece
+    // em dois números ao mesmo tempo: ATS baixo e a distância entre VPIP e PFR.
+    // Aqui o pote nunca vem aberto, então a resposta é SEMPRE aumentar ou
+    // soltar: o módulo não oferece a opção de pagar, que é justamente o limp.
+    id: "roubo_tardio",
+    icon: "🥷",
+    titleKey: "train.roubo_tardio.title",
+    descKey: "train.roubo_tardio.desc",
+    gen: (rng) => ({
+      heroPosition: pick<Position>(["CO", "BTN", "SB"], rng),
+      // Faixa em que roubar decide torneio: abaixo de ~20bb a decisão vira
+      // push/fold (já tem módulo) e acima de ~55bb o ante pesa menos.
+      effectiveBB: pick([22, 28, 35, 45, 55], rng),
+      variant: "holdem",
+    }),
+  },
+  {
     id: "push_fold",
     icon: "🚀",
     titleKey: "train.push_fold.title",

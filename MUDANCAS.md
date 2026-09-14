@@ -23,6 +23,40 @@ Regras do registro:
 
 ---
 
+## 2026-09-14 — Claude — 🥷 ROUBO TARDIO: o treino dos seus dois vazamentos
+
+Nasceu das suas estatísticas REAIS do GGPoker (45.027 mãos). Dois números
+apontavam para o mesmo lugar:
+
+- **VPIP 27% × PFR 16%** — onze pontos de diferença. Você entra em onze mãos a
+  cada cem **sem aumentar** (limp e call).
+- **ATS 29%** — sua tentativa de roubo está abaixo da faixa de MTT.
+
+Os dois se encontram no mesmo spot: a ação chega em você no **CO, BTN ou SB** e
+ninguém entrou.
+
+**Onde está:** Treinar → Treino → **🥷 Roubo Tardio (CO/BTN/SB)**. Sem senha,
+sem trava.
+
+- **Só existe AUMENTAR ou SOLTAR.** O módulo nem oferece o botão de pagar — em
+  pote não aberto, pagar é limp, e limp não está no padrão em nenhuma das três
+  cadeiras. A disciplina vira regra da tela, não conselho.
+- **PLACAR AO VIVO:** *"Você abriu 14% · o motor abriria 36% nestas mesmas
+  mãos — você está roubando de MENOS."* A barra mostra a sua frequência e o
+  risquinho dourado marca a do motor.
+- **Stacks de 22 a 55bb**, que é a faixa em que roubar decide torneio.
+
+⚠️ **A régua é o nosso próprio motor, nas mesmas mãos que você acabou de
+jogar** — não é "35 a 45%, que é o que dizem por aí". Medi separadamente em
+3.600 mãos: o motor abre **37,4%** nesses spots (CO 26,8% · BTN 44,3% ·
+SB 41,0%). Bate com a faixa que o pessoal de torneio usa, mas quem manda na tela
+é a contagem da sua sessão.
+
+E com menos de 10 mãos respondidas o placar **não mostra porcentagem** — diz
+quantas faltam. Com pouca mão, aquilo mediria sorteio, não o seu jogo.
+
+---
+
 ## 2026-09-14 — Claude — Botão à esquerda, contador da mão no topo e CELULAR DEITADO
 
 Três pedidos seus, e o terceiro era o antigo que nunca tinha funcionado.

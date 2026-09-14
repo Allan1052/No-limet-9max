@@ -30,6 +30,8 @@ import { DailyHand } from "./DailyHand";
 import { StreakBanner } from "./StreakBanner";
 import type { FeedbackItem } from "../feedback/analyzer";
 import { trackEvent } from "../app/analytics";
+import { lerPlacarDeRoubo, placarDeRoubo } from "../train/treinoRoubo";
+import "./placarRoubo.css";
 
 export function TrainView() {
   const { t } = useT();
@@ -59,6 +61,10 @@ export function TrainView() {
   };
   const [result, setResult] = useState<FeedbackItem | null>(null);
   const [session, setSession] = useState({ correct: 0, total: 0 });
+  // PLACAR DE ROUBO (só no módulo de roubo tardio): quantas VOCÊ abriu contra
+  // quantas o MOTOR abriria — nas mesmas mãos. É a régua honesta, porque não
+  // depende de nenhuma tabela de fora; ver src/train/treinoRoubo.ts.
+  const [roubo, setRoubo] = useState({ voce: 0, motor: 0 });
 
   const persist = (next: MasteryState) => {
     saveMastery(next);
@@ -69,6 +75,7 @@ export function TrainView() {
     trackEvent("training_module_started", { module: m.id });
     setModuleId(m.id);
     setSession({ correct: 0, total: 0 });
+    setRoubo({ voce: 0, motor: 0 });
     setResult(null);
     setScenario(buildScenario(m, Math.random));
   };
@@ -106,6 +113,12 @@ export function TrainView() {
     markActiveToday();
     recordDecision(key);
     setSession((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
+    // Pote NÃO aberto = spot de roubo. Conta os dois lados do placar.
+    if (!scenario.spec.raiserPosition) {
+      const abriuVoce = key === "raise" || key === "allin";
+      const abriuMotor = item.adviceFam === "aggro";
+      setRoubo((r) => ({ voce: r.voce + (abriuVoce ? 1 : 0), motor: r.motor + (abriuMotor ? 1 : 0) }));
+    }
     persist(recordResult(mastery, moduleId, ok));
   };
 
@@ -175,6 +188,29 @@ export function TrainView() {
             })}
           </span>
         </div>
+
+        {moduleId === "roubo_tardio" ? (() => {
+          const p = placarDeRoubo(session.total, roubo.voce, roubo.motor);
+          const frase = lerPlacarDeRoubo(p);
+          return (
+            <div className="placar-roubo">
+              <div className="pr-linha">
+                <span className="pr-rot">{t("train.roubo.placar")}</span>
+                <b className="pr-num">{p.pctVoce}%</b>
+                <span className="pr-vs">×</span>
+                <b className="pr-num pr-motor">{p.pctMotor}%</b>
+                <span className="pr-rot">motor</span>
+              </div>
+              <div className="pr-barra" aria-hidden="true">
+                <span className="pr-voce" style={{ width: `${Math.min(100, p.pctVoce)}%` }} />
+                <i className="pr-marca" style={{ left: `${Math.min(100, p.pctMotor)}%` }} />
+              </div>
+              <p className="pr-frase">
+                {frase ?? `Responda ${Math.max(0, 10 - session.total)} mãos para o placar aparecer.`}
+              </p>
+            </div>
+          );
+        })() : null}
 
         <div className="train-spot">
           <div className="train-prompt">{t("train.spot", { pos: posLabel, stack: spec.effectiveBB })}</div>
