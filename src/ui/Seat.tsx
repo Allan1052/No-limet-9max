@@ -36,6 +36,13 @@ export function Seat({
 }: SeatProps) {
   const { unit } = useSettings();
   if (player.status === "out") {
+    // Cadeira VAZIA: ninguém sentado. Acontece quando o jogador mudou de mesa
+    // no balanceamento (segue vivo no torneio) ou quando já quebrou em alguma
+    // mão anterior. Escrever "— sem fichas —" nesses casos é mentira: o Allan
+    // viu um vilão com 29bb virar "sem fichas" na mão seguinte sem agir (bug
+    // 14/09/2026). Só quem quebrou na mão que você acabou de jogar mostra o
+    // aviso — e só durante aquela mão.
+    if (player.cadeiraVazia) return <div className="seat seat-vazia" style={style} />;
     return (
       <div className="seat" style={style}>
         <div className="pod" style={{ opacity: 0.35 }}>

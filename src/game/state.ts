@@ -30,6 +30,21 @@ export interface PlayerState {
   /** Já agiu desde a última aposta/aumento desta rua? */
   acted: boolean;
   status: PlayerStatus;
+  /**
+   * A cadeira está VAZIA — ninguém sentado.
+   *
+   * 🐞 14/09/2026. `status: "out"` era usado para duas coisas muito diferentes,
+   * e a mesa mostrava "— sem fichas —" nas duas:
+   *   1. o jogador QUEBROU aqui, você viu acontecer (informação boa);
+   *   2. o jogador MUDOU DE MESA no balanceamento — continua vivo no torneio,
+   *      só não está mais nesta mesa (a mesa mentia: "sem fichas").
+   * O Allan viu o caso 2 e estranhou, com razão: "ele estava com vinte e poucos
+   * e na mão seguinte, sem ação nenhuma, apareceu sem ficha".
+   *
+   * Com este campo a mesa passa a desenhar CADEIRA VAZIA. "— sem fichas —" só
+   * sobra para quem quebrou na mão que você acabou de jogar.
+   */
+  cadeiraVazia?: boolean;
   holeCards: Card[];
 }
 

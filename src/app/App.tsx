@@ -776,6 +776,9 @@ export function App() {
             // as dicas. Era erro meu de escopo. Conferir O QUE ACONTECEU na
             // mesa não é receber dica; o que o blackout esconde é a NOTA.
             onShowHistory={controller.handLog.length > 0 ? () => setHistoryOpen(true) : undefined}
+            // O status do torneio entra DENTRO da mesa (ver Table.tsx): fora
+            // dela ele só sabia ficar por cima das cartas e das fichas.
+            infoTorneio={playInfo}
             showTips={!sozinho && handOver && controller.feedback.length > 0}
             sozinho={sozinho}
             onToggleSozinho={() => {
@@ -790,10 +793,9 @@ export function App() {
             buyIn={controller.tournament?.buyIn}
           />
 
-          {/* HUD do torneio (posição/faixa/blinds) EMBAIXO, junto dos controles —
-              pedido do Allan: no topo estava escondendo a mesa. Aqui fica logo
-              acima do botão de raise, sem cobrir nada. */}
-          {playInfo ? <div className="play-tstatus">{playInfo}</div> : null}
+          {/* O HUD do torneio (posição/faixa/blinds) agora é desenhado DENTRO da
+              mesa, na camada mais baixa — ver a prop `infoTorneio` acima. Aqui
+              fora ele não tinha como ficar atrás de ficha nenhuma. */}
 
           {/* Nada de dicas/ações duplicadas embaixo da mesa: o feedback e TODAS
               as ações de fim de mão vivem só no modal (botão "Ver dicas"). Aqui

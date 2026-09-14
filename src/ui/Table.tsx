@@ -1,7 +1,7 @@
 // Mesa 9-max: assentos ao redor do oval, board, botão do dealer e uma camada
 // de informação SOBRE a mesa (posição no torneio, blinds, dica e atalhos) —
 // tudo concentrado aqui para caber na tela sem rolagem.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Seat } from "./Seat";
 import { OmahaSeat } from "./OmahaSeat";
 import { Board } from "./Board";
@@ -102,6 +102,7 @@ export function PokerTable({
   sozinho,
   onToggleSozinho,
   onShowHistory,
+  infoTorneio,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -122,6 +123,18 @@ export function PokerTable({
   /** Abre o histórico das mãos da sessão. Existe SEMPRE — inclusive jogando
    *  sozinho: conferir o que aconteceu na mesa não é receber dica. */
   onShowHistory?: () => void;
+  /**
+   * Linha de status do torneio (posição, faixa premiada, blinds).
+   *
+   * 🐞 14/09/2026. Ela vivia FORA da mesa, como irmã dela, e por isso só
+   * conseguia ficar por cima de tudo: das cartas comunitárias, das fichas
+   * apostadas, do pod do jogador de cima. Mudar de altura só trocava quem ela
+   * cobria ("o pouquinho que você subiu pegou agora foi no jogador de cima").
+   * Entrando DENTRO da mesa ela passa a disputar camada com os outros elementos
+   * — e fica embaixo de todos eles. A informação continua legível no feltro
+   * vazio e some atrás de qualquer ficha ou carta que passe por cima.
+   */
+  infoTorneio?: ReactNode;
 }) {
   const { t } = useT();
 
@@ -190,6 +203,18 @@ export function PokerTable({
           <img src={`${getBasePath()}brand-logo-splash.png`} alt="" aria-hidden="true" />
           <span className="brand-word" aria-hidden="true">Call ou Fold</span>
         </div>
+        {/* ⚠️ O status do torneio mora DENTRO do feltro por dois motivos.
+            1) Camada: aqui ele fica embaixo das cartas, dos assentos e das
+               fichas — era o pedido do Allan ("tinha que colocar pra ficha
+               sobrepor essas informação").
+            2) NÃO PODE virar um <div> irmão direto de .table-modern. O anel de
+               assentos é fixado no CSS por `nth-of-type(3..11)`, contando os
+               filhos diretos desta mesa. Na primeira tentativa eu o pus como
+               irmão e empurrei todo mundo uma casa: dois assentos foram parar
+               no MESMO ponto (medido: HJ e CO em 246,531 numa tela de 390).
+               Qualquer <div> novo aqui em cima quebra a mesa de novo — ver
+               tableFinalLayout.css por volta da linha 205. */}
+        {infoTorneio ? <div className="tbl-tinfo">{infoTorneio}</div> : null}
       </div>
 
       <div className="tbl-center-col">

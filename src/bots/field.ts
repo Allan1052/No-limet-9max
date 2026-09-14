@@ -7,15 +7,64 @@
 
 import { buyInToughness, fieldEliteness, type Archetype } from "./profiles";
 
+/**
+ * Apelidos de mesa, por arquétipo. O nome é dica do estilo — faz parte do
+ * estudo saber que "Muralha" abre pouco e "Furacão" abre muito.
+ *
+ * 🐞 14/09/2026. Eram 4 por arquétipo (32 no total) e o Allan viu "O Certinho",
+ * "O Certinho 2" e "O Certinho 3" sentados na MESMA mesa, num torneio de 100.
+ * Dezesseis por arquétipo (128 no total) cobrem um torneio inteiro sem precisar
+ * do apelido numerado — que continua existindo, mas como último recurso.
+ */
 const NAME_POOL: Record<Archetype, string[]> = {
-  recreativo: ["O Casual", "Zé do Flop", "Turista", "Domingão"],
-  station: ["Paga-Tudo", "Grude", "Xerife da Call", "Não Solto"],
-  spewy: ["O Doidão", "Estouro", "Fominha", "Maluco Beleza"],
-  abc: ["O Cartilha", "Manual", "Sem Susto", "Bê-á-bá"],
-  nit: ["Muralha", "Cadeado", "Tartaruga", "Seu Cauteloso"],
-  tag: ["O Certinho", "Regularzão", "Livro Aberto", "Metódico"],
-  lag: ["Furacão", "Vendaval", "Tromba", "Pressão"],
-  shover: ["Tudo ou Nada", "All-in Fácil", "Zero ou Cem", "Roleta"],
+  recreativo: [
+    "O Casual", "Zé do Flop", "Turista", "Domingão",
+    "Fim de Semana", "Só Diversão", "Passatempo", "Vim Jogar",
+    "Sem Pressa", "Curioso", "Boa Praça", "Tô Nessa",
+    "Joga Fácil", "Primeira Vez", "Sorte Grande", "De Boa",
+  ],
+  station: [
+    "Paga-Tudo", "Grude", "Xerife da Call", "Não Solto",
+    "Quero Ver", "Pago pra Ver", "Chiclete", "Carrapato",
+    "Sem Fold", "Cola Forte", "Só Call", "Duvido",
+    "Teimoso", "Tô Dentro", "Caramujo", "Vou Até o Fim",
+  ],
+  spewy: [
+    "O Doidão", "Estouro", "Fominha", "Maluco Beleza",
+    "Pé na Tábua", "Sem Freio", "Descontrolado", "Vale-Tudo",
+    "Chuva de Ficha", "Turbilhão", "Dedo Leve", "Solta Tudo",
+    "Jogo Aberto", "Sem Noção", "Perdeu a Linha", "Rodo Solto",
+  ],
+  abc: [
+    "O Cartilha", "Manual", "Sem Susto", "Bê-á-bá",
+    "Livro-Texto", "Passo a Passo", "Receita Pronta", "Faz o Básico",
+    "Sem Invenção", "Arroz com Feijão", "Segue a Linha", "Padrãozinho",
+    "Certo e Simples", "Pé no Chão", "Pela Regra", "Do Começo",
+  ],
+  nit: [
+    "Muralha", "Cadeado", "Tartaruga", "Seu Cauteloso",
+    "Trincheira", "Cofre", "Blindado", "Pedra",
+    "Só Premium", "Espera o Ás", "Concreto", "Fechadura",
+    "Casca Grossa", "Paciência", "Fortaleza", "Pé Atrás",
+  ],
+  tag: [
+    "O Certinho", "Regularzão", "Livro Aberto", "Metódico",
+    "Afiado", "Relojoeiro", "Bisturi", "Cabeça Fria",
+    "Preciso", "Linha Dura", "Calculista", "Engrenagem",
+    "Bússola", "Régua", "Fio de Navalha", "No Ponto",
+  ],
+  lag: [
+    "Furacão", "Vendaval", "Tromba", "Pressão",
+    "Tempestade", "Ventania", "Raio", "Avalanche",
+    "Enxurrada", "Correnteza", "Redemoinho", "Trovoada",
+    "Maremoto", "Rajada", "Tufão", "Ciclone",
+  ],
+  shover: [
+    "Tudo ou Nada", "All-in Fácil", "Zero ou Cem", "Roleta",
+    "Oito ou Oitenta", "Vai ou Racha", "Tudo Dentro", "Sem Meio-Termo",
+    "Cara ou Coroa", "Empurra Tudo", "Agora ou Nunca", "Aposta Tudo",
+    "Dobro ou Nada", "Só Jam", "Bota Tudo", "Última Ficha",
+  ],
 };
 
 const MICRO_HIGH: Record<Archetype, [number, number]> = {
@@ -30,7 +79,10 @@ const MICRO_HIGH: Record<Archetype, [number, number]> = {
 };
 
 const ARCHETYPES = Object.keys(MICRO_HIGH) as Archetype[];
-const MAX_PER_ARCHETYPE = 4;
+/** Teto por arquétipo no campo inicial — acompanha o tamanho do pool de nomes
+ *  (16 cada). Com 4, um campo de 100 esgotava os oito arquétipos em 32 e o
+ *  sorteio ficava sem nenhum perfil disponível. */
+const MAX_PER_ARCHETYPE = 16;
 
 export function fieldWeights(buyIn?: number): Record<Archetype, number> {
   const t = buyInToughness(buyIn);
@@ -69,11 +121,27 @@ function weightedPick(weights: Record<Archetype, number>, rng: () => number): Ar
   return pool[pool.length - 1];
 }
 
-function pickName(arch: Archetype, used: Set<string>): string {
-  for (const n of NAME_POOL[arch]) if (!used.has(n)) return n;
+/**
+ * Um apelido livre para este arquétipo.
+ *
+ * 🐞 14/09/2026 — a causa real do "O Certinho 2" na mesa do Allan. A função só
+ * olhava a lista DO ARQUÉTIPO sorteado: esgotados os nomes de "tag", ela caía
+ * no apelido numerado mesmo com dezenas de nomes livres nos outros arquétipos.
+ * Agora, se o arquétipo sorteado esgotou, ela procura em TODOS os outros antes
+ * de numerar. O numerado virou último recurso de verdade.
+ *
+ * Devolve também o arquétipo de onde o nome saiu, porque nome e estilo andam
+ * juntos: quem se chama "Muralha" tem de jogar como nit.
+ */
+function pickName(arch: Archetype, used: Set<string>): { name: string; arch: Archetype } {
+  for (const n of NAME_POOL[arch]) if (!used.has(n)) return { name: n, arch };
+  for (const outro of ARCHETYPES) {
+    if (outro === arch) continue;
+    for (const n of NAME_POOL[outro]) if (!used.has(n)) return { name: n, arch: outro };
+  }
   let k = 2;
   while (used.has(`${NAME_POOL[arch][0]} ${k}`)) k++;
-  return `${NAME_POOL[arch][0]} ${k}`;
+  return { name: `${NAME_POOL[arch][0]} ${k}`, arch };
 }
 
 export function buildFieldSeats(
@@ -88,9 +156,9 @@ export function buildFieldSeats(
   for (let i = 0; i < count; i++) {
     const w = { ...weights };
     for (const a of ARCHETYPES) if ((counts[a] ?? 0) >= MAX_PER_ARCHETYPE) w[a] = 0;
-    const arch = weightedPick(w, rng);
+    const sorteado = weightedPick(w, rng);
+    const { name, arch } = pickName(sorteado, used);
     counts[arch] = (counts[arch] ?? 0) + 1;
-    const name = pickName(arch, used);
     used.add(name);
     out.push({ name, profileId: arch, personalitySeed: 1 + Math.floor(rng() * 2_000_000_000) });
   }
@@ -102,7 +170,7 @@ export function pickReplacement(
   usedNames: Set<string>,
   rng: () => number,
 ): { name: string; profileId: string } {
-  const arch = weightedPick(fieldWeights(buyIn), rng);
-  const name = pickName(arch, usedNames);
+  const sorteado = weightedPick(fieldWeights(buyIn), rng);
+  const { name, arch } = pickName(sorteado, usedNames);
   return { name, profileId: arch };
 }

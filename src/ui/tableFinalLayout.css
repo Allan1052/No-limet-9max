@@ -202,6 +202,11 @@
      aí eles batem NO BOARD (43x22px), que é bem pior. 11px de canto de pod é o
      menor dos males nesta altura de tela.
      Mantenha em sincronia com SEAT_POS em Table.tsx. */
+  /* ⚠️⚠️ ARMADILHA: isto conta os FILHOS DIRETOS de .table-modern. Um <div>
+     novo antes dos assentos empurra o anel inteiro uma casa e joga dois
+     jogadores no mesmo ponto da mesa — aconteceu em 14/09/2026 ao pôr o status
+     do torneio aqui (medido: HJ e CO no mesmo x,y). Se precisar de um elemento
+     novo na mesa, ponha-o DENTRO do .felt, nunca como irmão. */
   .app:has(.play) .play .table-modern .seat:nth-of-type(3)  { top: 89% !important; left: 50% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(4)  { top: 72% !important; left: 24% !important; }
   .app:has(.play) .play .table-modern .seat:nth-of-type(5)  { top: 59% !important; left: 14% !important; }
@@ -288,53 +293,37 @@
 
   }
 
+  /* ---- 3d. CELULAR ESTREITO (≤380px) -------------------------------------
+     Medido em 14/09/2026 numa tela de 360x760: os pods de 100px encostavam uns
+     nos outros nas laterais (assento 1 × assento 2, 64x9px) e invadiam a faixa
+     das cartas comunitárias (44x26px). O anel NÃO se mexe — já tentei mover os
+     assentos antes e piorei; o que encolhe é o pod. */
+  @media (max-width: 380px) {
+    .app:has(.play) .play .table-modern .seat:not(.hero) {
+      width: 84px !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .pod {
+      padding: 3px 5px !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .name {
+      font-size: 9px !important;
+      line-height: 1.15 !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .stack {
+      font-size: 10px !important;
+      line-height: 1.15 !important;
+    }
+    .app:has(.play) .play .table-modern .seat:not(.hero) .hole .card,
+    .app:has(.play) .play .table-modern .seat:not(.hero) .hole > * {
+      width: 19px !important;
+      height: 26px !important;
+    }
+  }
+
   /* ---- 4. Status do torneio: NO MIOLO DA MESA, embaixo -------------------
      O Allan reclamou que ficar olhando lá em cima, num feltro comprido, cansa.
      A mesa tem uma faixa central vazia entre o board e o herói (as fileiras de
      assentos ficam nas laterais), e é ali que a informação entra. */
-  /* ⚠️ 14/09: em 54% esta linha ficava exatamente na faixa em que as fichas
-     apostadas viajam para o centro, e tapava o valor (o print do Allan mostra o
-     "0.5bb" do small blind escondido). Subiu para logo abaixo do board, onde a
-     faixa é vazia, e ficou mais estreita para não cruzar com ninguém. */
-  .app:has(.play) .play > .play-tstatus {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: translate(-50%, -50%) !important;
-    width: auto !important;
-    max-width: 168px !important;
-    margin: 0 !important;
-    z-index: 11 !important;
-    padding: 0 !important;
-    background: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center;
-    justify-content: center;
-    gap: 2px !important;
-    text-align: center;
-    line-height: 1.3 !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    letter-spacing: .2px;
-    color: rgba(255, 255, 255, .70) !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
-    pointer-events: none;
-  }
-  .app:has(.play) .play > .play-tstatus * {
-    background: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    color: inherit !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    font-size: 10px !important;
-  }
-
   /* ---- 5. Barra de ações: em FLUXO no rodapé (não flutua, não cobre nada) --
      Grade de 3 colunas, igual à do GG — compacta, ocupa o mínimo de tela:
 
@@ -671,15 +660,19 @@
     color: #b9ecd0 !important;
   }
 
-  /* 🕘 HISTÓRICO DA SESSÃO — canto de baixo à direita, que ficou livre quando o
-     "Jogar sozinho" mudou para a esquerda (14/09). Botão pequeno, só ícone:
-     ele existe para o momento em que você desconfia de alguma coisa na mesa. */
+  /* 🕘 HISTÓRICO DA SESSÃO — coluna de estudo da ESQUERDA, empilhado acima do
+     "Ver dicas".
+     ⚠️ 14/09/2026, segunda tentativa. Ele nasceu no canto de baixo à DIREITA e
+     durou uma tarde: os atalhos de aposta (Pote / 4BB / 3BB) moram ali e
+     passavam por cima dele — dá para ver no print do Allan, o relógio aparece
+     por trás do "4BB". A direita é território dos controles; a esquerda é a
+     coluna de estudo (sozinho + dicas + histórico). Ele fica aqui. */
   .app:has(.play) .tbl-hist-btn,
   .app.nav-hidden .tbl-hist-btn {
     position: absolute !important;
-    bottom: 2% !important;
-    right: 4% !important;
-    left: auto !important;
+    bottom: calc(2% + 2 * (var(--tap-sm, 40px) + 6px)) !important;
+    left: 4% !important;
+    right: auto !important;
     top: auto !important;
     z-index: 12 !important;
     min-width: var(--tap-sm, 40px);
@@ -692,6 +685,12 @@
     font-size: 16px !important;
     line-height: 1 !important;
     cursor: pointer;
+  }
+
+  /* Jogando sozinho não existe "Ver dicas": o 🕘 desce um degrau para não
+     ficar um buraco no meio da coluna. */
+  .app:has(.play):not(:has(.tbl-tips-btn)) .tbl-hist-btn {
+    bottom: calc(2% + var(--tap-sm, 40px) + 6px) !important;
   }
 
   /* Botão de sair (X): canto superior ESQUERDO, longe do "Ver dicas". */
@@ -716,10 +715,27 @@
     display: none !important;
   }
 
-  /* Pote + cartas comunitárias no centro da faixa livre entre os assentos. */
+  /* Pote + cartas comunitárias no centro da faixa livre entre os assentos.
+     ⚠️ ESTREITO de propósito. Com as 5 cartas do river a caixa central crescia
+     até tocar os pods das laterais — é o que se vê nos prints do Allan de
+     14/09/2026 (o board de 5 cartas por cima do pod do vilão da direita).
+     Medido a 360x760 e 390x844 com o board cheio: 36 a 43px de pod coberto.
+     A faixa livre entre os pods laterais é ~46% da largura da tela; a caixa
+     central não pode passar disso. Deitado há um limite próprio (seção 8). */
   .app:has(.play) .table-modern .tbl-center-col {
     top: 46% !important;
     left: 50% !important;
+    width: min(46%, 212px) !important;
+    max-width: min(46%, 212px) !important;
+  }
+  .app:has(.play) .table-modern .tbl-center-col .board {
+    justify-content: center;
+    flex-wrap: nowrap !important;
+  }
+  .app:has(.play) .table-modern .tbl-center-col .card {
+    width: 36px !important;
+    height: 50px !important;
+    font-size: 14px !important;
   }
   /* "🏆 X fichas simuladas" saía por cima da dica e do Pote — a linha de status
      no topo do feltro já identifica o torneio. */
@@ -1474,19 +1490,84 @@
     white-space: nowrap !important;
   }
 
-  .app:has(.play) .play > .play-tstatus {
-    top: auto !important;
-    /* Em px, não em %: este elemento é filho da TELA, não do feltro. Com 3% ele
-       caía dentro do botão RAISE (o "25/50" aparecia dentro do botão no print
-       da verificação). 58px o coloca na faixa livre entre feltro e botões. */
-    bottom: 58px !important;
-    left: auto !important;
-    right: 8px !important;
-    transform: none !important;
-    width: auto !important;
-    max-width: 40% !important;
-    font-size: 10px !important;
-    padding: 3px 9px !important;
-    text-align: right !important;
-  }
+  /* (a linha de status do torneio saiu daqui em 14/09/2026 — ela virou
+     `.tbl-tinfo`, desenhada DENTRO do feltro, na camada de baixo. Ver
+     Table.tsx e a seção 6d.) */
+}
+
+/* ---- 6d. STATUS DO TORNEIO, agora DENTRO da mesa -----------------------
+   Posição/faixa premiada/blinds. Ele é desenhado como filho do feltro (ver
+   `infoTorneio` em Table.tsx) justamente para poder ficar EMBAIXO de tudo:
+   z-index 2 passa na frente do feltro e do brilho (1) e some atrás das
+   cartas comunitárias (4), dos assentos (6) e das fichas apostadas (7).
+   Foi o pedido do Allan depois de duas tentativas de "achar uma altura
+   livre": "tinha que colocar pra ficha sobrepor essas informação". */
+.tbl-tinfo {
+  position: absolute;
+  /* Logo ABAIXO das cartas comunitárias, na faixa central vazia entre o board
+     e os assentos de baixo. Em 50% ela nascia exatamente atrás das 5 cartas do
+     river e sumia; em 62% caía na fileira dos pods laterais. Ficar ATRÁS é o
+     pedido do Allan — sumir não é. */
+  top: 56%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: auto;
+  max-width: 168px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  line-height: 1.3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: rgba(255, 255, 255, .62);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+  pointer-events: none;
+}
+/* O conteúdo vem da mesma linha de status de antes, que era horizontal e larga.
+   Aqui ela empilha em coluna e cabe na faixa estreita do meio do feltro. */
+.tbl-tinfo > * {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  flex-wrap: nowrap !important;
+}
+.tbl-tinfo * {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 10px !important;
+}
+
+/* ---- 6e. Barra de ações só na VEZ do herói (igual ao GG) ---------------
+   O espaço continua reservado (visibility, não display): escondendo com
+   display a mesa mudava de altura a cada ação dos bots. */
+.controls.controls-idle .action-row-primary,
+.controls.controls-idle .raise-side-tools {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Cadeira VAZIA: não desenha nada e não intercepta o toque. Existe só para o
+   React manter a contagem de irmãos da mesa (o anel de assentos é fixado por
+   nth-of-type — ver o aviso na seção 3b). */
+.seat.seat-vazia {
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
 }

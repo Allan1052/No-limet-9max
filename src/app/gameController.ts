@@ -555,6 +555,7 @@ export class GameController {
       this.tilt[p.seat] = freshTilt(); // adversário novo entra calmo (Camada 2)
       p.stack = this.variedStack(avg);
       p.status = "active";
+      p.cadeiraVazia = false; // sentou alguém: a cadeira deixa de estar vazia
       this.stats[p.seat] = emptyStats(); // jogador novo → estatísticas zeradas
       active++;
       count++;
@@ -577,6 +578,9 @@ export class GameController {
         if (active <= target) break;
         p.stack = 0;
         p.status = "out"; // "moveu de mesa" — o campo global já o conta como vivo
+        // Ele NÃO quebrou: foi realocado e segue vivo no torneio. A cadeira
+        // fica vazia; escrever "— sem fichas —" aqui é mentira (bug 14/09).
+        p.cadeiraVazia = true;
         active--;
       }
     }
@@ -595,6 +599,8 @@ export class GameController {
       if (p.isHero) continue;
       p.stack = 0;
       p.status = "out";
+      // A mesa do herói quebrou: estes adversários ficaram para trás, vivos.
+      p.cadeiraVazia = true;
     }
     const added = this.fillEmptySeats(target, avg);
     // Novo número de mesa, diferente do atual.
@@ -666,6 +672,12 @@ export class GameController {
     // Reposição/equilíbrio de mesas (como no online). heroMovedTo é setado
     // dentro de refillSeats quando o herói é realocado para uma mesa nova.
     this.heroMovedTo = 0;
+    // Quem quebrou na mão que ACABOU já foi visto quebrando ("— sem fichas —"
+    // apareceu na mesa durante aquela mão). Da próxima mão em diante ele vira
+    // cadeira vazia — ninguém fica sentado sem fichas por mãos a fio.
+    for (const p of this.table.players) {
+      if (!p.isHero && p.stack <= 0) p.cadeiraVazia = true;
+    }
     const refilled = this.refillSeats();
     const hero = this.table.players[this.heroSeat];
     if (hero.stack <= 0) {

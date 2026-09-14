@@ -23,6 +23,84 @@ Regras do registro:
 
 ---
 
+## 2026-09-14 — Claude — 🪑 Cadeira vazia, nomes que não repetem e mesa arrumada
+
+### 1) "Ele tinha vinte e poucas fichas e na mão seguinte apareceu sem ficha"
+
+Você estava certo de novo — e desta vez achei a outra metade do problema.
+
+Num torneio de verdade, quando sobra gente demais numa mesa, a sala **move
+jogadores** para outra. O app já fazia isso. Só que ele marcava quem saiu com o
+MESMO estado de quem quebrou: fichas zeradas. A mesa então escrevia
+**"— sem fichas —"** embaixo do nome de alguém que continua vivo no torneio,
+jogando em outra mesa. Daí a sua conta não fechar: "ele está na minha mesa, não
+pode ficar sem ficha".
+
+**Corrigido:** agora a mesa sabe a diferença. Quem muda de mesa deixa
+**cadeira vazia** — sem pod, sem nome, sem nada. "— sem fichas —" só aparece
+para quem quebrou na mão que você acabou de jogar, e some na mão seguinte
+(a cadeira fica vazia até alguém sentar).
+
+### 2) "O Certinho, O Certinho 2, O Certinho 3 na mesma mesa"
+
+O app tinha 4 apelidos por tipo de jogador — 32 no total. Num torneio de 100,
+acabavam rápido e ele começava a numerar.
+
+Pior: o sorteio só olhava a lista **do tipo que tinha sorteado**. Esgotados os
+quatro apelidos de "jogador certinho", ele numerava — mesmo com dezenas de
+apelidos livres nos outros tipos. Era esse o "O Certinho 2".
+
+**Corrigido:** o app passou a ter **128 apelidos** (16 por tipo), e quando um
+tipo esgota ele pega emprestado de outro — levando o estilo junto, para
+"Muralha" continuar jogando apertado. Medido: 128 reposições seguidas sem
+repetir e sem numerar nenhuma.
+
+### 3) As informações do torneio pararam de comer a mesa
+
+Elas ficavam **fora** da mesa, e por isso só sabiam ficar POR CIMA de tudo. Eu
+tinha subido a linha e ela só trocou de vítima — foi cobrir o jogador de cima,
+como você viu.
+
+Agora ela é desenhada **dentro do feltro, na camada de baixo**: carta, ficha e
+pod passam por cima dela, como você pediu. E ela mudou de lugar, para a faixa
+vazia logo abaixo das cartas comunitárias, em três linhas curtas.
+
+### 4) As cartas comunitárias não cobrem mais os jogadores das laterais
+
+Achei isso medindo, e dá para ver nos seus prints: com as **5 cartas** do river
+a fileira crescia até entrar por cima do pod do vilão da direita e da esquerda
+(medido: 36 a 43 pixels de jogador coberto). A fileira ficou mais estreita e
+agora para antes de encostar em qualquer um.
+
+### 5) O relógio 🕘 saiu de baixo dos botões de aposta
+
+Ele tinha nascido no canto de baixo à direita — que é exatamente onde moram os
+atalhos Pote / 4BB / 3BB, e eles passavam por cima. Mudou para a coluna da
+esquerda, junto do "Jogar sozinho" e do "Ver dicas".
+
+### 6) Os botões de aposta só aparecem na SUA vez (igual ao GG)
+
+Fora da sua vez, Fold / Call / Raise e os atalhos de tamanho somem. O espaço
+continua reservado de propósito: se eles sumissem de vez, a mesa mudaria de
+tamanho a cada jogada dos bots e ficaria pulando na sua frente.
+
+### 7) O replay da mão agora é tela cheia, igual ao torneio
+
+Era um cartãozinho com moldura no meio de uma tela preta. Agora a mesa ocupa a
+tela toda, com o mesmo desenho do torneio, e o rodapé da revisão (o passo, o
+Anterior/Próximo) fica embaixo.
+
+**Onde está tudo:** aba Torneio (a mesa e o replay).
+
+---
+
+**O que ficou faltando, para você saber:** com o celular DEITADO, o replay
+ainda aperta — os jogadores de cima encostam nas cartas comunitárias, porque
+sobra pouca altura. Em pé está limpo nos tamanhos que medi. Se você usar muito
+o replay deitado, me avise que eu ataco só isso.
+
+---
+
 ## 2026-09-14 — Claude — 🐞 O jogador que "subiu as fichas do nada" + histórico de volta na mesa
 
 ### 1) O erro que você viu: um jogador aparecendo com mais ficha do que tinha

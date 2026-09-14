@@ -51,80 +51,89 @@ export function Replayer({
   return (
     <div className="overlay overlay-full" onClick={onClose}>
       <div className="replay replay-full" onClick={(e) => e.stopPropagation()}>
-        <div className="replay-head">
-          <h3>Replay da mão</h3>
-          <button className="btn tiny" onClick={onClose}>
-            fechar ✕
-          </button>
-        </div>
-
-        {frame ? (
-          <PokerTable
-            table={frame.state}
-            readOnly
-            replayActorSeat={frame.actorSeat}
-            lastActionLabel={frame.actorSeat >= 0 ? { [frame.actorSeat]: frame.label } : {}}
-          />
-        ) : null}
-
-        <div className="replay-step">
-          <div className="rs-line">
-            <span className="rs-street">{frame?.label ?? "Replay"}</span>
+        {/* ⚠️ TUDO dentro de um `.play`, igual à mesa de jogo — inclusive o
+            rodapé da revisão. Não é enfeite e não é preguiça: o layout de tela
+            cheia do celular (mesa ocupando o que sobra, controles embaixo, anel
+            de assentos, tamanho dos pods) está escrito em tableFinalLayout.css
+            com o prefixo `.app:has(.play) .play`, e aquelas regras são
+            `!important`. A tela de Mesa Final já usa esse mesmo caminho pelo
+            mesmo motivo (ver o comentário da seção 9 do CSS).
+            Tentei antes montar um layout próprio para o replay: o `.play` de
+            fora vencia por !important, o rodapé ia parar no alto e comia os
+            assentos — medido em 14/09/2026, 8 sobreposições a 740x340. */}
+        <div className="play replay-play">
+          <div className="replay-head">
+            <h3>Replay da mão</h3>
+            <button className="btn tiny" onClick={onClose}>
+              fechar ✕
+            </button>
           </div>
 
-          {ev ? (
-            <>
-              <div className="rs-action">
-                Jogou: <b>{ev.actionLabel}</b>
-                {ev.advice && !semVeredito ? (
-                  optimalMatches(ev.actionType, ev.advice.action) ? (
-                    <span className="ok-tag"> ✓ alinhado com o ótimo</span>
-                  ) : (
-                    <span className="bad-tag"> ✗ ótimo era {ev.advice.nBet ?? actionLabel(ev.advice.action)}</span>
-                  )
-                ) : null}
-              </div>
-              {ev.advice && !semVeredito ? (
-                <div className="rs-advice">
-                  <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
-                  {ev.advice.equity !== undefined
-                    ? ` (equity ${Math.round(ev.advice.equity * 100)}%${
-                        ev.advice.potOdds !== undefined
-                          ? `, preço ${Math.round(ev.advice.potOdds * 100)}%`
-                          : ""
-                      })`
-                    : ""}
-                </div>
-              ) : null}
-            </>
-          ) : atResult ? (
-            <div className="rs-advice">{describeResult(hand)}</div>
+          {frame ? (
+            <PokerTable
+              table={frame.state}
+              readOnly
+              replayActorSeat={frame.actorSeat}
+              lastActionLabel={frame.actorSeat >= 0 ? { [frame.actorSeat]: frame.label } : {}}
+            />
           ) : null}
-        </div>
 
-        <div className="replay-nav">
-          <button className="btn" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-            ◀ Anterior
-          </button>
-          <span className="rs-counter">
-            {atResult ? "Fim" : `Passo ${step + 1} / ${total}`}
-          </span>
-          <button
-            className="btn"
-            disabled={step >= total - 1}
-            onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
-          >
-            Próximo ▶
-          </button>
-        </div>
+          <div className="replay-step">
+            <div className="rs-line">
+              <span className="rs-street">{frame?.label ?? "Replay"}</span>
+            </div>
 
-        <div
-          className="replay-actions"
-          style={{ marginTop: 14, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}
-        >
-          {/* Sem veredito, o card compartilhável também não pode carregar a
-              nota da jogada — ele é montado a partir do feedback. */}
-          <HandActions hand={hand} feedback={semVeredito ? [] : feedback} />
+            {ev ? (
+              <>
+                <div className="rs-action">
+                  Jogou: <b>{ev.actionLabel}</b>
+                  {ev.advice && !semVeredito ? (
+                    optimalMatches(ev.actionType, ev.advice.action) ? (
+                      <span className="ok-tag"> ✓ alinhado com o ótimo</span>
+                    ) : (
+                      <span className="bad-tag"> ✗ ótimo era {ev.advice.nBet ?? actionLabel(ev.advice.action)}</span>
+                    )
+                  ) : null}
+                </div>
+                {ev.advice && !semVeredito ? (
+                  <div className="rs-advice">
+                    <b>Decisão ótima:</b> {ev.advice.nBet ?? actionLabel(ev.advice.action)} — {ev.advice.reason}
+                    {ev.advice.equity !== undefined
+                      ? ` (equity ${Math.round(ev.advice.equity * 100)}%${
+                          ev.advice.potOdds !== undefined
+                            ? `, preço ${Math.round(ev.advice.potOdds * 100)}%`
+                            : ""
+                        })`
+                      : ""}
+                  </div>
+                ) : null}
+              </>
+            ) : atResult ? (
+              <div className="rs-advice">{describeResult(hand)}</div>
+            ) : null}
+          </div>
+
+          <div className="replay-nav">
+            <button className="btn" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
+              ◀ Anterior
+            </button>
+            <span className="rs-counter">
+              {atResult ? "Fim" : `Passo ${step + 1} / ${total}`}
+            </span>
+            <button
+              className="btn"
+              disabled={step >= total - 1}
+              onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
+            >
+              Próximo ▶
+            </button>
+          </div>
+
+          <div className="replay-actions">
+            {/* Sem veredito, o card compartilhável também não pode carregar a
+                nota da jogada — ele é montado a partir do feedback. */}
+            <HandActions hand={hand} feedback={semVeredito ? [] : feedback} />
+          </div>
         </div>
       </div>
     </div>

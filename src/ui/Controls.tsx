@@ -68,7 +68,12 @@ export function Controls({ legal, active, pot, bigBlind, onAction, defaultRaiseT
   ];
 
   return (
-    <div className={`controls controls-v2${fineTuneOpen ? " fine-tune-open" : ""}`}>
+    // 14/09/2026, pedido do Allan: "esses botão de aposta eu só quero que eles
+    // apareça quando eu tiver na ação" — é assim no GG. Fora da vez dele, a
+    // barra de ações e os atalhos de aumento somem. O ESPAÇO fica reservado de
+    // propósito (visibility, não display): senão a mesa pularia de tamanho a
+    // cada ação dos bots.
+    <div className={`controls controls-v2${fineTuneOpen ? " fine-tune-open" : ""}${active ? "" : " controls-idle"}`}>
       <div className="action-row action-row-primary bottom-action-bar">
         <button className="btn danger action-choice action-choice-fold" disabled={!active || !legal.canFold} onClick={() => { haptic(); onAction({ type: "fold" }); }}>
           <span className="action-choice-label">{t("ctrl.fold")}</span>
