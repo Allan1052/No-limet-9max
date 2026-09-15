@@ -167,5 +167,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Réguas pesadas que NÃO são teste de guarda: jogam torneios inteiros e
+    // levam minutos. Ficam no repo para serem rodadas sob demanda
+    // (`npx vitest run --exclude "" src/sim/_pressaoRun.test.ts`), mas não
+    // podem entrar na suíte que roda antes de todo deploy.
+    exclude: ["**/node_modules/**", "**/dist/**", "src/**/_*.test.ts"],
   },
 });
