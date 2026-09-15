@@ -23,6 +23,33 @@ Regras do registro:
 
 ---
 
+## 2026-09-15 — Claude — 🐞 Dois bugs meus na "memória da mesa" (peguei jogando)
+
+Você pediu para eu jogar de novo e comparar. Joguei 70 torneios — e a simulação
+me entregou dois erros que eu tinha acabado de criar. Corrigidos.
+
+**1. O contador de mãos estourava.** A mesa dizia que tinha **180.583 mãos**
+suas no arquivo depois de 24 torneios. O limite é 600. Eu somava o total de
+novo a cada mão, e a conta explodia.
+
+**2. Pior: a memória não chegava nos bots.** Ela alimentava só a FRASE ("o
+Furacão reparou que você larga 78% dos flops"). A adaptação dos vilões continuava
+olhando apenas a sessão em curso. Ou seja: **a mesa dizia que te conhecia e
+jogava exatamente igual.** Promessa que o app não cumpria — não podia ficar de
+pé, e agora tem teste guardando.
+
+Agora a leitura acumulada chega mesmo nos bots: na terceira noite eles te
+exploram desde a primeira mão, em vez de precisar de ~30 mãos para te ler de
+novo do zero.
+
+**Também corrigi um texto que mentia:** onde estava escrito "sessões" eram na
+verdade torneios (cada vez que você senta conta um). A frase do Perfil agora diz
+"torneios", que é o que o app realmente conta.
+
+**Onde está:** ☰ Perfil → "👁 O que a mesa sabe de você".
+
+---
+
 ## 2026-09-15 — Claude — 🧬 Evolução dos bots: o que funciona e o que eu provei que não
 
 Sua ideia: *"teria como deixar os bots com evolução automática? Cada bot usaria

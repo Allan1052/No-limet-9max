@@ -74,6 +74,12 @@ export interface PressaoResultado {
   posicoes: number[];
   /** Quantos terminaram na faixa premiada. */
   itm: number;
+  /** Títulos (1º lugar). */
+  vitorias: number;
+  /** Mesas finais alcançadas (9 ou menos restando). */
+  mesasFinais: number;
+  /** Pódios (top 3). */
+  podios: number;
 }
 
 export interface PressaoTaxas {
@@ -96,6 +102,10 @@ export interface PressaoTaxas {
   apostaComMaoPct: number;
   /** % de torneios terminados na faixa premiada. */
   itmPct: number;
+  /** % com título, pódio e mesa final. */
+  vitoriaPct: number;
+  podioPct: number;
+  mesaFinalPct: number;
   /** Posição média. */
   posicaoMedia: number;
 }
@@ -167,6 +177,7 @@ export function medirPressao(opts: {
     checkRaisesSofridos: 0, ruasEmQuePassou: 0, allinsEnfrentados: 0,
     spotsApertados: 0, ruasDeGraca: 0, ruasPosFlop: 0,
     apostasDeVilao: 0, apostasComMaoFeita: 0, posicoes: [], itm: 0,
+    vitorias: 0, mesasFinais: 0, podios: 0,
   };
 
   for (let t = 0; t < torneios; t++) {
@@ -294,6 +305,9 @@ export function medirPressao(opts: {
     if (sum) {
       r.posicoes.push(sum.finishPlace);
       if (sum.inMoney) r.itm++;
+      if (sum.finishPlace === 1) r.vitorias++;
+      if (sum.finishPlace <= 3) r.podios++;
+      if (sum.finishPlace <= 9) r.mesasFinais++;
     }
   }
 
@@ -314,6 +328,9 @@ export function taxas(r: PressaoResultado): PressaoTaxas {
     cartaDeGracaPct: p(r.ruasDeGraca, r.ruasPosFlop),
     apostaComMaoPct: p(r.apostasComMaoFeita, r.apostasDeVilao),
     itmPct: p(r.itm, r.torneios),
+    vitoriaPct: p(r.vitorias, r.torneios),
+    podioPct: p(r.podios, r.torneios),
+    mesaFinalPct: p(r.mesasFinais, r.torneios),
     posicaoMedia: r.posicoes.length
       ? Math.round((r.posicoes.reduce((s, x) => s + x, 0) / r.posicoes.length) * 10) / 10
       : 0,

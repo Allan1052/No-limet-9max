@@ -31,7 +31,7 @@ const TETO_DE_MAOS = 600;
 
 export interface MemoriaDaMesa {
   dossie: DossieDoHeroi;
-  /** Sessões em que este jogador já sentou. */
+  /** Torneios em que este jogador já sentou (cada torneio é um "sentar"). */
   sessoes: number;
   /** Última gravação (ms) — para o dossiê envelhecer se ele sumir por meses. */
   quando: number;
@@ -114,8 +114,9 @@ export function oQuantoTeConhece(d: DossieDoHeroi): number {
 /** Frase curta sobre o estágio da leitura, para a tela. */
 export function comoAMesaTeVe(m: MemoriaDaMesa): string {
   const c = oQuantoTeConhece(m.dossie);
+  const t = m.sessoes === 1 ? "1 torneio" : `${m.sessoes} torneios`;
   if (m.dossie.maos < 30) return "A mesa ainda não te conhece.";
   if (c < 0.4) return `A mesa começou a te ler (${m.dossie.maos} mãos observadas).`;
-  if (c < 0.8) return `A mesa já tem leitura sua (${m.dossie.maos} mãos, ${m.sessoes} sessões).`;
-  return `A mesa te conhece bem — ${m.dossie.maos} mãos em ${m.sessoes} sessões. Eles vão jogar em cima do seu padrão.`;
+  if (c < 0.8) return `A mesa já tem leitura sua (${m.dossie.maos} mãos em ${t}).`;
+  return `A mesa te conhece bem — ${m.dossie.maos} mãos em ${t}. Eles vão jogar em cima do seu padrão.`;
 }

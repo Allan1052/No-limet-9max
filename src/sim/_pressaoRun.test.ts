@@ -14,7 +14,7 @@ describe("pressão do campo por faixa de buy-in", () => {
   it("joga torneios completos e mede o que o campo faz com o jogador", () => {
     const linhas: string[] = [];
     linhas.push(
-      "buyIn torneios  maos  dec. 3betVsOpen cbetVsEle apostas/100(F/T/R)  ckR/100 ckRsofr% allin/100 apertados% degraca% comMao% ITM% posMed",
+      "buyIn torneios  maos  dec. 3betVsOpen cbetVsEle apostas/100(F/T/R)  ckR/100 ckRsofr% allin/100 apertados% degraca% |  MF%  pódio% título%  ITM% posMed",
     );
     for (const buyIn of FAIXAS) {
       const t0 = Date.now();
@@ -34,12 +34,15 @@ describe("pressão do campo por faixa de buy-in", () => {
           String(x.allinPor100).padStart(10),
           `${x.spotsApertadosPct}%`.padStart(11),
           `${x.cartaDeGracaPct}%`.padStart(9),
-          `${x.apostaComMaoPct}%`.padStart(7),
+          "|",
+          `${x.mesaFinalPct}%`.padStart(5),
+          `${x.podioPct}%`.padStart(6),
+          `${x.vitoriaPct}%`.padStart(7),
           `${x.itmPct}%`.padStart(5),
           String(x.posicaoMedia).padStart(7),
         ].join(" "),
       );
-      linhas.push(`   (${((Date.now() - t0) / 1000).toFixed(0)}s · ${r.flopsDisputados} flops disputados · ${r.spotsApertados} spots apertados · ${r.aberturas} aberturas · ${r.apostasDeVilao} apostas de vilão · posições ${r.posicoes.join("/")})`);
+      linhas.push(`   (${((Date.now() - t0) / 1000).toFixed(0)}s · ${r.vitorias} título(s) · ${r.mesasFinais} mesa(s) final(is) · ${r.flopsDisputados} flops · posições: ${[...r.posicoes].sort((a, b) => a - b).join(", ")})`);
     }
     console.log("\n" + linhas.join("\n") + "\n");
   }, 3_600_000);

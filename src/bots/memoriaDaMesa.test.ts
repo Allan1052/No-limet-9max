@@ -116,8 +116,9 @@ describe("o quanto a mesa te conhece", () => {
   it("a frase acompanha o estágio e nunca mente sobre a amostra", () => {
     expect(comoAMesaTeVe({ dossie: d({ maos: 5 }), sessoes: 1, quando: 0 })).toMatch(/ainda não te conhece/i);
     expect(comoAMesaTeVe({ dossie: d({ maos: 80 }), sessoes: 2, quando: 0 })).toContain("80 mãos");
+    expect(comoAMesaTeVe({ dossie: d({ maos: 200 }), sessoes: 1, quando: 0 })).toContain("1 torneio");
     const cheia = comoAMesaTeVe({ dossie: d({ maos: 400 }), sessoes: 6, quando: 0 });
     expect(cheia).toMatch(/te conhece bem/i);
-    expect(cheia).toContain("6 sessões");
+    expect(cheia).toContain("6 torneios");
   });
 });

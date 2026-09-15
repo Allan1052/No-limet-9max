@@ -334,9 +334,11 @@ export class GameController {
   private calcularLeituraDoVilao(): LeituraFalada | null {
     const hero = this.table.players[this.heroSeat];
     // A mesa soma o que viu HOJE ao que já sabia das sessões anteriores.
+    // ⚠️ Nada de mexer em `.maos` depois: o teto de 600 mora dentro do
+    // `juntar`, e sobrescrever o campo aqui fazia a conta crescer a cada mão.
+    // Medido em 15/09: o dossiê chegou a 180.583 mãos em 24 torneios.
+    this.dossieDaSessao.maos = this.stats[this.heroSeat]?.handsDealt ?? 0;
     this.dossieHeroi = juntarMemoria(this.memoriaDaMesa.dossie, this.dossieDaSessao);
-    this.dossieHeroi.maos =
-      this.memoriaDaMesa.dossie.maos + (this.stats[this.heroSeat]?.handsDealt ?? 0);
     const st = this.stats[this.heroSeat];
     if (st && st.handsDealt > 0) {
       this.dossieHeroi.vpip = st.vpip / st.handsDealt;
@@ -585,7 +587,10 @@ export class GameController {
     this.leituraDoVilao = null;
     // Torneio novo conta como sessão nova para a memória da mesa — mas a
     // memória em si NÃO zera: é justamente ela que faz a mesa te conhecer.
-    this.memoriaDaMesa = { ...carregarMemoria(), sessoes: carregarMemoria().sessoes + 1 };
+    // Cada torneio é um "sentar na mesa". A memória em si NÃO zera — é ela que
+    // faz o campo te conhecer amanhã.
+    const anterior = carregarMemoria();
+    this.memoriaDaMesa = { ...anterior, sessoes: anterior.sessoes + 1 };
     this.sessionDecisionDetails = [];
     this.sessionPositional = [];
     this.tournamentResult = null;
@@ -1010,15 +1015,35 @@ export class GameController {
   }
 
   /** Leitura do herói para os bots adaptarem (Camada 3). Precisa de amostra. */
+  /**
+   * A leitura que os bots usam para se adaptar a você.
+   *
+   * 🐞 15/09/2026 — bug que eu mesmo criei e peguei medindo. A memória entre
+   * sessões (bots/memoriaDaMesa.ts) alimentava só a FRASE do vilão; a
+   * adaptação continuava olhando apenas as estatísticas da sessão atual. Ou
+   * seja: a mesa dizia que te conhecia e jogava igual. Promessa que o app não
+   * cumpria — e isso não pode ficar de pé.
+   *
+   * Agora a leitura soma o que a mesa aprendeu nas sessões anteriores. Na
+   * terceira noite os bots já te exploram desde a primeira mão.
+   */
   private heroReadForBots(): HeroRead | undefined {
     const s = this.stats[this.heroSeat];
-    if (!s || s.handsDealt < 6) return undefined;
-    return {
-      hands: s.handsDealt,
-      vpip: s.vpip / s.handsDealt,
-      pfr: s.pfr / s.handsDealt,
-      threeBet: s.threeBetOpp > 0 ? s.threeBet / s.threeBetOpp : 0,
-    };
+    const daSessao = s?.handsDealt ?? 0;
+    const memoria = this.memoriaDaMesa.dossie;
+    const total = daSessao + memoria.maos;
+    // Precisa de amostra em algum lugar: nem sessão curta nem memória vazia.
+    if (total < 6) return undefined;
+
+    // As frequências da sessão de hoje mandam quando há mãos hoje; senão, vale
+    // o que a mesa lembra (é o caso da primeira mão de uma sessão nova).
+    const fonte = daSessao >= 12 ? "hoje" : "memoria";
+    const vpip = fonte === "hoje" ? s!.vpip / daSessao : memoria.vpip;
+    const pfr = fonte === "hoje" ? s!.pfr / daSessao : memoria.pfr;
+    const threeBet =
+      fonte === "hoje" && s!.threeBetOpp > 0 ? s!.threeBet / s!.threeBetOpp : memoria.threeBet;
+
+    return { hands: total, vpip, pfr, threeBet };
   }
 
   /** Atualiza o tilt de cada bot pelo resultado da mão anterior (Camada 2). */
