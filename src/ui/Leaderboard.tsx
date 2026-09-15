@@ -17,6 +17,7 @@ import { runCalibration } from "../ranges/_calibration/gtoBenchmark";
 import { runExternalBenchmark } from "../ranges/_calibration/externalBenchmark";
 import { useT } from "../i18n";
 import {
+  reenviarRankingPendente,
   fetchTournamentLeaderboard,
   fetchMissionLeaderboard,
   fetchPlayerTitles,
@@ -111,6 +112,11 @@ export function Leaderboard() {
       }
     }
 
+    // Antes de ler o placar, sobe o que ficou guardado no aparelho — senão o
+    // jogador abre o ranking e não se vê nele, mesmo tendo pontuado (15/09).
+    void reenviarRankingPendente().then((r) => {
+      if (!cancelled && r.enviados > 0) fetchData();
+    });
     fetchData();
     return () => {
       cancelled = true;

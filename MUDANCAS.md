@@ -23,6 +23,39 @@ Regras do registro:
 
 ---
 
+## 2026-09-15 — Claude — 🛟 Seus pontos do ranking não se perdem mais
+
+Do seu relato: *"num desses prints mostra que não conseguiu falar com o servidor
+do ranking e os pontos não foram salvos. E não é a primeira vez."*
+
+Era uma tentativa **única**. Se o Wi-Fi caiu, se o 4G oscilou, se o servidor
+demorou a responder — os pontos de um torneio inteiro morriam ali. E a tela
+ainda sugeria "dá pra repetir a etapa", ou seja: jogar tudo de novo. Para quem
+joga no celular, com sinal instável, isso ia acontecer de novo, e de novo.
+
+**Agora o resultado que não subiu fica guardado no seu aparelho** e o app tenta
+enviar sozinho:
+
+- quando você abre o app;
+- quando você abre o Placar.
+
+A mensagem também mudou. Antes dizia que os pontos "não foram gravados"; agora
+diz a verdade: **"seus X pontos estão guardados no aparelho — não precisa
+repetir a etapa, eu envio sozinho assim que a conexão voltar"**.
+
+Detalhes de segurança que valem a pena saber:
+
+- **O mesmo resultado nunca é enviado duas vezes** (cada um tem uma assinatura
+  própria). Você não vai pontuar em dobro por acidente.
+- Resultado com mais de 30 dias sai da fila sozinho — a temporada já virou.
+- Se o armazenamento do celular estiver cheio ou bloqueado, o app continua
+  funcionando normalmente; só a fila não grava.
+
+**Onde está:** aba Torneio → tela do fim do torneio (a caixa do Circuito), e
+aba Placar.
+
+---
+
 ## 2026-09-14 — Claude — ⚖️ "Você × o padrão do app" na tela de fim de torneio
 
 Do seu pedido depois do 4º lugar em 100 jogado quase todo às cegas: *"tinha que

@@ -14,6 +14,7 @@ import {
   MIN_RESULTS_TO_QUALIFY,
 } from "../tournament/poyPoints";
 import { trackEvent } from "../app/analytics";
+import { enfileirar, reenviarPendentes, pontosGuardados } from "./rankingFila";
 import {
   currentSeason,
   currentSeasonYear,
@@ -216,10 +217,16 @@ export interface TournamentSubmitResult {
   /** Posições pagas (ITM) do campo deste torneio, p/ mensagem de encorajamento. */
   paidPlaces?: number;
   error?: string;
+  /** O envio falhou mas o resultado ficou GUARDADO no aparelho para reenvio.
+   *  Sem isto a tela dizia "não foram gravados" e o jogador perdia o torneio. */
+  guardadoParaReenvio?: boolean;
 }
 
 export async function submitTournamentResult(
   params: TournamentResultParams,
+  /** `semFila` evita que o próprio reenvio volte a enfileirar o que já está na
+   *  fila — quem cuida de manter ou remover o item é o reenviarPendentes. */
+  opts?: { semFila?: boolean },
 ): Promise<TournamentSubmitResult> {
   const poy = computePoyPoints({
     stage: params.stage,
@@ -315,12 +322,17 @@ export async function submitTournamentResult(
       });
 
     if (error) {
+      // O banco recusou agora — pode ser rede, pode ser servidor fora do ar.
+      // O resultado é legítimo e não pode morrer aqui: vai para a fila e o app
+      // reenvia sozinho depois (ver rankingFila.ts).
+      if (!opts?.semFila) guardarParaDepois(scoreHash, poy.points, params);
       return {
         success: false,
         eligible: true,
         points: poy.points,
         wouldBeWorth,
         error: error.message,
+        guardadoParaReenvio: true,
       };
     }
 
@@ -377,14 +389,43 @@ export async function submitTournamentResult(
       circuitComplete,
     };
   } catch {
+    if (!opts?.semFila) guardarParaDepois(scoreHash, poy.points, params);
     return {
       success: false,
       eligible: true,
       points: poy.points,
       wouldBeWorth,
       error: "Erro de conexão",
+      guardadoParaReenvio: true,
     };
   }
+}
+
+/** Guarda o resultado no aparelho para o app tentar de novo mais tarde. */
+function guardarParaDepois(scoreHash: string, pontos: number, params: TournamentResultParams): void {
+  enfileirar(scoreHash, pontos, params);
+  trackEvent("ranking_enfileirado", { pontos });
+}
+
+/**
+ * Reenvia os resultados que ficaram guardados no aparelho.
+ *
+ * Chamado quando o app abre e quando o jogador abre o placar. É "melhor
+ * esforço": se continuar sem rede, fica tudo onde está e tenta de novo depois.
+ * Devolve quantos subiram — a tela pode avisar o jogador.
+ */
+export async function reenviarRankingPendente(): Promise<{ enviados: number; aindaNaFila: number }> {
+  const r = await reenviarPendentes<TournamentResultParams>(async (params) => {
+    const res = await submitTournamentResult(params, { semFila: true });
+    return res.success === true;
+  });
+  if (r.enviados > 0) trackEvent("ranking_reenviado", { enviados: r.enviados });
+  return { enviados: r.enviados, aindaNaFila: r.aindaNaFila };
+}
+
+/** Quantos pontos estão esperando para subir, somados. */
+export function pontosEsperandoEnvio(): number {
+  return pontosGuardados();
 }
 
 /**

@@ -235,10 +235,27 @@ export function TournamentSummary({
                 </div>
               </div>
             ) : ranking && !ranking.success ? (
+              /* 🐞 15/09/2026 — antes esta caixa dizia que os pontos "não foram
+                 gravados" e mandava repetir a etapa: o jogador perdia um torneio
+                 inteiro porque o 4G oscilou. Agora o resultado fica guardado no
+                 aparelho e o app reenvia sozinho. */
               <div className="rank-none">
-                Não consegui falar com o servidor do ranking. Seus{" "}
-                {pts(ranking.points)} pontos não foram gravados — dá pra repetir a
-                etapa.
+                {ranking.guardadoParaReenvio ? (
+                  <>
+                    <b>Seus {pts(ranking.points)} pontos estão guardados no aparelho.</b>
+                    <div className="rank-none-sub">
+                      Não consegui falar com o servidor do ranking agora. Não precisa
+                      repetir a etapa: eu envio sozinho assim que a conexão voltar —
+                      basta abrir o app ou o placar de novo.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    Não consegui falar com o servidor do ranking. Seus{" "}
+                    {pts(ranking.points)} pontos não foram gravados — dá pra repetir a
+                    etapa.
+                  </>
+                )}
               </div>
             ) : null}
           </div>

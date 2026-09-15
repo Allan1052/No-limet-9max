@@ -9,6 +9,7 @@ import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./Lazy
 import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
+import { reenviarRankingPendente } from "../lib/ranking";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
 import { HandActions } from "../ui/HandActions";
@@ -145,6 +146,13 @@ export function App() {
   // Liga/desliga o gerador de cards escondido a partir da URL secreta (uma vez).
   useEffect(() => {
     syncGenFlagFromUrl();
+  }, []);
+
+  // 🐞 15/09/2026 — pontos de torneio que não subiram (rede caiu, servidor fora)
+  // ficam guardados no aparelho. Assim que o app abre, tentamos de novo. É
+  // "melhor esforço": sem rede, fica tudo onde está e tenta na próxima abertura.
+  useEffect(() => {
+    void reenviarRankingPendente();
   }, []);
 
   useEffect(() => {
