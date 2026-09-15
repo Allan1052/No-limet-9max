@@ -23,6 +23,46 @@ Regras do registro:
 
 ---
 
+## 2026-09-15 — Claude — ▶️ Tocar no erro abre a MÃO · e as cartas do flop desembaraçaram
+
+### 🐞 Primeiro: as cartas embaraçadas — foi eu
+
+Você viu certo. Eu tinha estreitado a faixa das cartas comunitárias para elas
+pararem de cobrir os jogadores das laterais, mas deixei a carta com **tamanho
+fixo**. Cinco cartas não cabiam no espaço que sobrou e se amassavam umas nas
+outras.
+
+Agora a carta é **calculada a partir do espaço que existe**: ela encolhe sozinha
+quando a tela é estreita, sempre com folga entre uma e outra. Cinco cartas
+cabem por construção, em qualquer celular. Medido: **zero sobreposição**.
+
+### ▶️ Agora o principal: tocar no erro te leva de volta à mão
+
+Era o que você pediu: *"se eu clicar nas mãos ruins, abria só as mãos ruins pra
+me ver elas... essas informações que vem escrita aí, eu queria ter um jeito de
+ter ela lá na tela"*.
+
+No fim do torneio, toque em **Ok / Imprecisas / Ruins** como você já fazia. O
+que mudou:
+
+- **Toque em qualquer decisão da lista** → a mesa abre naquela mão, em tela
+  cheia, no replay passo a passo.
+- **A explicação vai junto e fica fixa na tela** enquanto você anda pela mão.
+  Não precisa mais decorar a frase antes de voltar.
+- **Você navega só entre as mãos daquele filtro:** "◀ mão · mão 3 de 9 · mão ▶".
+  Clicou em Ruins? Só as ruins. Nada de procurar no meio das outras.
+- Tem também um **"▶ Rever estas N mãos na mesa"** no topo, para começar pela
+  primeira e ir passando.
+
+### 🥊 E sobre os bots
+
+Fico contente que já deu pra sentir. Os números da simulação diziam a mesma
+coisa, mas o que vale é você notando na mesa.
+
+**Onde está:** fim do torneio → toque numa decisão da lista.
+
+---
+
 ## 2026-09-15 — Claude — 🐞 Dois bugs meus na "memória da mesa" (peguei jogando)
 
 Você pediu para eu jogar de novo e comparar. Joguei 70 torneios — e a simulação

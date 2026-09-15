@@ -1221,6 +1221,9 @@ export class GameController {
       }
       // Guarda os erros claros (ruim/imprecisa) para revisar depois — limita a
       // uma lista enxuta com os mais graves primeiro.
+      // Âncora para o review: em qual mão da sessão esta decisão aconteceu.
+      // `handLog.length` é o índice que a mão VAI ocupar quando terminar.
+      item.maoIdx = this.handLog.length;
       if (item.rating === "ruim" || item.rating === "imprecisa") {
         this.sessionMistakes.push(item);
       }

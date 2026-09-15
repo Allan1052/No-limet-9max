@@ -9,6 +9,7 @@ import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./Lazy
 import { MissionToast } from "../ui/MissionToast";
 import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
+import type { FeedbackItem } from "../feedback/analyzer";
 import { reenviarRankingPendente } from "../lib/ranking";
 import { HandHistoryPanel } from "../ui/HandHistoryPanel";
 import { LeaksPanel } from "../ui/LeaksPanel";
@@ -209,6 +210,11 @@ export function App() {
   // Treino dirigido: sessão montada pelo painel de leaks para o DrillView.
   const [leakTrainingSession, setLeakTrainingSession] = useState<{ session: any; focus: string; leakId: string; leakTitle: string } | null>(null);
   const [historyReplayIdx, setHistoryReplayIdx] = useState<number | null>(null);
+  /** Review só das mãos de um filtro (Ruins / Imprecisas / Ok) — ver
+   *  `onReverMaos` no TournamentSummary. */
+  const [reviewFiltrado, setReviewFiltrado] = useState<
+    { itens: FeedbackItem[]; rotulo: string; pos: number } | null
+  >(null);
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [view, setView] = useState<AppView>("hoje");
   const [, startNavigationTransition] = useTransition();
@@ -840,6 +846,39 @@ export function App() {
         />
       ) : null}
 
+      {/* ✨ REVIEW FILTRADO: só as mãos do rating escolhido, com a nota fixa. */}
+      {(() => {
+        if (!reviewFiltrado) return null;
+        const item = reviewFiltrado.itens[reviewFiltrado.pos];
+        const mao = item?.maoIdx !== undefined ? controller.handLog[item.maoIdx] : undefined;
+        if (!item || !mao) return null;
+        const ir = (d: number) =>
+          setReviewFiltrado((r) =>
+            r ? { ...r, pos: Math.max(0, Math.min(r.itens.length - 1, r.pos + d)) } : r,
+          );
+        return (
+          <Replayer
+            hand={mao}
+            feedback={mao.handFeedback ?? []}
+            semVeredito={false}
+            notaFixada={{
+              rating: item.rating,
+              titulo: `${item.street}: ${item.heroAction} (padrão: ${item.advice})`,
+              texto: item.text,
+            }}
+            navegacaoDeMaos={{
+              rotulo: reviewFiltrado.rotulo,
+              atual: reviewFiltrado.pos + 1,
+              total: reviewFiltrado.itens.length,
+              onAnterior: reviewFiltrado.pos > 0 ? () => ir(-1) : undefined,
+              onProxima:
+                reviewFiltrado.pos < reviewFiltrado.itens.length - 1 ? () => ir(1) : undefined,
+            }}
+            onClose={() => setReviewFiltrado(null)}
+          />
+        );
+      })()}
+
       {historyReplayIdx !== null && controller.handLog[historyReplayIdx] ? (
         <Replayer
           hand={controller.handLog[historyReplayIdx]}
@@ -972,6 +1011,13 @@ export function App() {
       {controller.tournamentOver && controller.tournamentSummary() ? (
         <TournamentSummary
           sessaoSozinho={controller.sessaoSozinho}
+          /* ✨ 15/09/2026 — tocar numa decisão abre o REPLAY daquela mão, com a
+             explicação fixa na tela, e deixa navegar só entre as mãos daquele
+             filtro. Pedido do Allan: "se eu clicar nas mãos ruins, abria só as
+             mãos ruins para me ver elas". */
+          onReverMaos={(itens, rotulo, comecarEm) =>
+            setReviewFiltrado({ itens, rotulo, pos: Math.max(0, comecarEm) })
+          }
           summary={controller.tournamentSummary()!}
           onClose={() => {
             dismissSummary();

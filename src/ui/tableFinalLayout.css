@@ -725,16 +725,27 @@
   .app:has(.play) .table-modern .tbl-center-col {
     top: 46% !important;
     left: 50% !important;
-    width: min(46%, 212px) !important;
-    max-width: min(46%, 212px) !important;
+    width: min(48%, 220px) !important;
+    max-width: min(48%, 220px) !important;
   }
+  /* 🐞 15/09/2026 — "as cartas quando caem no flop estão ficando tudo
+     embaraçadas uma na outra" (Allan). Foi eu: estreitei a caixa central para
+     46% e deixei a carta em 36px FIXOS. Cinco cartas de 36 com gap de 6 pedem
+     204px; a caixa tinha 179 numa tela de 390. Não cabia, e elas se
+     amassavam umas nas outras.
+     A carta agora é CALCULADA a partir do espaço que existe: ela nunca passa
+     de 38px, mas encolhe sozinha quando a tela é estreita, com o gap sempre
+     reservado. Cinco cartas cabem por construção, em qualquer largura. */
   .app:has(.play) .table-modern .tbl-center-col .board {
     justify-content: center;
     flex-wrap: nowrap !important;
+    gap: 3px !important;
   }
   .app:has(.play) .table-modern .tbl-center-col .card {
-    width: 36px !important;
-    height: 50px !important;
+    flex: 0 0 auto !important;
+    width: min(38px, calc((100% - 12px) / 5)) !important;
+    height: auto !important;
+    aspect-ratio: 36 / 50;
     font-size: 14px !important;
   }
   /* "🏆 X fichas simuladas" saía por cima da dica e do Pote — a linha de status

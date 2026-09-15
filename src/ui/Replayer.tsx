@@ -20,10 +20,29 @@ export function Replayer({
   onClose,
   feedback = [],
   semVeredito = false,
+  notaFixada,
+  navegacaoDeMaos,
 }: {
   hand: HandHistory;
   onClose: () => void;
   feedback?: FeedbackItem[];
+  /**
+   * ✨ A explicação da decisão, fixada na tela durante o replay inteiro.
+   *
+   * Pedido do Allan (15/09/2026): *"essas informações que vem escrita aí, eu
+   * queria ter um jeito de ter ela lá na tela"*. Antes o texto do erro morava
+   * só na lista do fim de torneio: para rever a mão ele tinha que decorar a
+   * frase, fechar e procurar. Agora a frase vem junto.
+   */
+  notaFixada?: { rating: string; titulo: string; texto: string };
+  /** Navegação ENTRE as mãos filtradas (só as ruins, só as imprecisas...). */
+  navegacaoDeMaos?: {
+    rotulo: string;
+    atual: number;
+    total: number;
+    onAnterior?: () => void;
+    onProxima?: () => void;
+  };
   /** Mostra só o FATO da mão (ações, fichas, cartas), sem a nota do coach.
    *  Jogando sozinho, conferir a mesa não pode custar o blackout. */
   semVeredito?: boolean;
@@ -63,7 +82,7 @@ export function Replayer({
             assentos — medido em 14/09/2026, 8 sobreposições a 740x340. */}
         <div className="play replay-play">
           <div className="replay-head">
-            <h3>Replay da mão</h3>
+            <h3>{navegacaoDeMaos ? navegacaoDeMaos.rotulo : "Replay da mão"}</h3>
             <button className="btn tiny" onClick={onClose}>
               fechar ✕
             </button>
@@ -76,6 +95,39 @@ export function Replayer({
               replayActorSeat={frame.actorSeat}
               lastActionLabel={frame.actorSeat >= 0 ? { [frame.actorSeat]: frame.label } : {}}
             />
+          ) : null}
+
+          {/* A nota da decisão fica FIXA: é o motivo de ter voltado à mão. */}
+          {notaFixada ? (
+            <div className={`replay-nota ${notaFixada.rating}`}>
+              <div className="replay-nota-top">
+                <b>{notaFixada.titulo}</b>
+                <span className={`tag ${notaFixada.rating}`}>{notaFixada.rating}</span>
+              </div>
+              <div className="replay-nota-txt">{notaFixada.texto}</div>
+            </div>
+          ) : null}
+
+          {navegacaoDeMaos && navegacaoDeMaos.total > 1 ? (
+            <div className="replay-maos">
+              <button
+                className="btn tiny"
+                disabled={!navegacaoDeMaos.onAnterior}
+                onClick={navegacaoDeMaos.onAnterior}
+              >
+                ◀ mão
+              </button>
+              <span>
+                mão {navegacaoDeMaos.atual} de {navegacaoDeMaos.total}
+              </span>
+              <button
+                className="btn tiny"
+                disabled={!navegacaoDeMaos.onProxima}
+                onClick={navegacaoDeMaos.onProxima}
+              >
+                mão ▶
+              </button>
+            </div>
           ) : null}
 
           <div className="replay-step">

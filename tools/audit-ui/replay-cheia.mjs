@@ -51,6 +51,9 @@ const MEDIR = (raiz) => {
   add(".raise-size-stack", "atalhosRaise");
   add(".action-row-primary", "barraAcao");
   add(".play-exit-btn", "sair");
+  // 🐞 15/09: as cartas comunitárias se amassavam umas nas outras. Cada uma
+  // entra como alvo próprio para a régua pegar sobreposição ENTRE elas.
+  add(".tbl-center-col .board .card", "carta");
 
   const over = [];
   for (let i = 0; i < alvos.length; i++) {

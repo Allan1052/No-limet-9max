@@ -152,6 +152,15 @@ export interface FeedbackItem {
   potOdds?: number;
   /** Estratégia mista recomendada no spot (frequências), para exibição. */
   mix?: AdviceFreq[];
+  /**
+   * Índice desta mão no `handLog` da sessão.
+   *
+   * ✨ 15/09/2026, pedido do Allan: *"quando eu clicasse nas mãos ruins,
+   * abrisse a tela de review e mostrasse só essas mãos"*. Sem esta âncora a
+   * lista de decisões e o histórico de mãos eram duas coisas soltas: dava para
+   * LER o que aconteceu, não para VOLTAR à mão. Preenchido pelo controller.
+   */
+  maoIdx?: number;
   /** EV (em bb) de pagar neste spot — foldar vale 0. */
   evBB?: number;
   /** Pré ou pós-flop — para agrupar vazamentos por fase. */

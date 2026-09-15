@@ -8,7 +8,7 @@
 import "./soloScore.css";
 import { useState, useEffect, useRef } from "react";
 import type { TournamentSummary as Summary } from "../app/gameController";
-import type { Rating } from "../feedback/analyzer";
+import type { FeedbackItem, Rating } from "../feedback/analyzer";
 import { submitTournamentResult, type TournamentSubmitResult } from "../lib/ranking";
 import { getNickname } from "../lib/nickname";
 import { circuitStage } from "../tournament/circuit";
@@ -52,10 +52,17 @@ export function TournamentSummary({
   onClose,
   onNewHand,
   sessaoSozinho,
+  onReverMaos,
 }: {
   summary: Summary;
   onClose: () => void;
   onNewHand?: () => void;
+  /**
+   * ✨ Abre o REVIEW só das mãos desta lista (pedido do Allan, 15/09/2026):
+   * "se eu clicar nas mãos ruins, abria só as mãos ruins para me ver elas".
+   * Recebe as decisões filtradas, já na ordem em que estão na tela.
+   */
+  onReverMaos?: (itens: FeedbackItem[], rotulo: string, comecarEm: number) => void;
   /** Decisões desta sessão jogadas SEM dica nenhuma (modo "Jogar sozinho"). */
   sessaoSozinho?: { total: number; certas: number };
 }) {
@@ -436,17 +443,50 @@ export function TournamentSummary({
                   ? `Mãos para rever — as ${shown.length} mais graves de ${summary.ratings.imprecisa + summary.ratings.ruim}`
                   : `Mãos para rever (${shown.length})`}
             </h4>
-            {shown.map((it, i) => (
-              <div key={i} className={`fb-item ${it.rating}`}>
-                <div className="fb-head">
-                  <span>
-                    {it.street}: {it.heroAction} (padrão: {it.advice})
-                  </span>
-                  <span className="tag">{RATING_LABEL[it.rating]}</span>
+            {/* "Rever todas" abre o replay da primeira e deixa navegar entre
+                elas sem voltar aqui. */}
+            {onReverMaos && shown.some((x) => x.maoIdx !== undefined) ? (
+              <button
+                className="btn rever-todas"
+                onClick={() =>
+                  onReverMaos(
+                    shown.filter((x) => x.maoIdx !== undefined),
+                    filter ? `Mãos "${RATING_LABEL[filter]}"` : "Mãos para rever",
+                    0,
+                  )
+                }
+              >
+                ▶ Rever estas {shown.filter((x) => x.maoIdx !== undefined).length} mãos na mesa
+              </button>
+            ) : null}
+            {shown.map((it, i) => {
+              const podeRever = onReverMaos && it.maoIdx !== undefined;
+              return (
+                <div
+                  key={i}
+                  className={`fb-item ${it.rating}${podeRever ? " clicavel" : ""}`}
+                  onClick={
+                    podeRever
+                      ? () =>
+                          onReverMaos!(
+                            shown.filter((x) => x.maoIdx !== undefined),
+                            filter ? `Mãos "${RATING_LABEL[filter]}"` : "Mãos para rever",
+                            shown.filter((x) => x.maoIdx !== undefined).indexOf(it),
+                          )
+                      : undefined
+                  }
+                >
+                  <div className="fb-head">
+                    <span>
+                      {it.street}: {it.heroAction} (padrão: {it.advice})
+                    </span>
+                    <span className="tag">{RATING_LABEL[it.rating]}</span>
+                  </div>
+                  <div className="fb-text">{it.text}</div>
+                  {podeRever ? <div className="fb-rever">▶ tocar para rever esta mão na mesa</div> : null}
                 </div>
-                <div className="fb-text">{it.text}</div>
-              </div>
-            ))}
+              );
+            })}
           </>
         ) : (
           <div className="summary-note">
