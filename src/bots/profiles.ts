@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Position } from "../ranges/types";
+import { fatoresPosFlop } from "./escadaDeBuyIn";
 
 export type Archetype =
   | "recreativo"
@@ -111,12 +112,30 @@ export function adjustProfileForBuyIn(p: BotProfile, buyIn?: number): BotProfile
   const baseSkill = Math.min(1, p.skill * (1 + 0.1 * t));
   const elitePressure = 0.55 * elite;
 
+  // ✨ 15/09/2026 — A AGRESSÃO PÓS-FLOP ENTRA NA ESCADA. Até aqui esta função
+  // não tocava em cbetFactor, barrelTurn nem barrelRiver: o campo de $5 e o de
+  // $10.300 apostavam o pós-flop exatamente igual. Medido em 70 torneios, era a
+  // razão de a "carta de graça" mal cair entre as faixas. Ver escadaDeBuyIn.ts
+  // para os alvos e as fontes.
+  const f = fatoresPosFlop(buyIn);
+
   return {
     ...p,
     positional,
+    cbetFactor: p.cbetFactor * f.cbet,
+    barrelTurn: Math.min(0.95, p.barrelTurn * f.barrelTurn),
+    barrelRiver: Math.min(0.9, p.barrelRiver * f.barrelRiver),
     limpFactor: p.limpFactor * (1 - 0.75 * t),
     coldCallFactor: p.coldCallFactor * (1 - 0.5 * t),
-    threeBetFactor: p.threeBetFactor * (1 + 0.5 * t) * (1 + 0.12 * elite),
+    // ✨ 15/09/2026 — O ELITE PASSA A DEFENDER. Medido em 20 torneios de
+    // $10.300: o herói abria 352 vezes, terminava 75% ITM e com 11,7 de posição
+    // média. Um campo de regulares APERTADOS (tag/nit/abc) sem defesa é presa
+    // fácil: você rouba os blinds e ninguém devolve. Regular de faixa alta faz o
+    // contrário — 3-beta, defende o BB largo e re-rouba. Sem isso, "difícil"
+    // virava só "aperta a seleção e deixa o outro jogar".
+    // Referência: 3-bet padrão de full ring 3%-5%; regular sólido ~10,6%.
+    threeBetFactor: p.threeBetFactor * (1 + 0.5 * t) * (1 + 0.55 * elite),
+    defendFactor: p.defendFactor * (1 + 0.22 * t) * (1 + 0.38 * elite),
     bluffFactor: p.bluffFactor * (1 + 0.25 * t) * (1 + 0.04 * elite),
     aggression: baseAggression + (1 - baseAggression) * elitePressure,
     stickiness: p.stickiness * (1 - 0.15 * t) * (1 - 0.04 * elite),

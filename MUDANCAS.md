@@ -23,6 +23,104 @@ Regras do registro:
 
 ---
 
+## 2026-09-15 — Claude — 🥊 SACUDIMOS OS BOTS: check-raise, plano de mão e "ele te leu"
+
+Do seu pedido: sentir cada faixa como a mesa que ela imita, o **10,3K bem
+difícil**, e algo novo nos bots.
+
+### O que estava errado (medido, não achismo)
+
+Rodei 70 torneios antes de mexer em qualquer coisa. Três buracos:
+
+1. **A palavra "check-raise" não existia no código dos bots.** Eles só sabiam
+   "estou enfrentando aposta" e "a ação chegou limpa". Passar COM A INTENÇÃO de
+   aumentar — a jogada que mais tira o chão — nunca acontecia.
+2. **Eles apostavam o flop e sumiam no turn.** Cada rua era decidida do zero,
+   contra uma frequência fixa. Daí a carta de graça em 3 de cada 4 ruas.
+3. **O pós-flop do $5 e o do $10.300 eram IDÊNTICOS.** A escada de dificuldade
+   existia, mas só mexia no pré-flop: o barrel e a c-bet nunca eram ajustados
+   pela faixa.
+
+### ✨ O que entrou
+
+**1. Check-raise de verdade.** Com range de valor E de blefe, e frequência
+própria de cada perfil. Um "Paga-Tudo" quase não check-raisa; um "Furacão" de
+faixa alta check-raisa bastante.
+
+**2. Plano de mão — a carta que veio manda no jogo.** Antes o bot sorteava
+"sigo ou não" contra um número fixo. Agora ele faz a pergunta que um jogador de
+verdade faz: *"essa carta ajuda a história que eu estou contando?"*
+- Veio um Ás no turn? Ele segue com mais força (o Ás combina com quem abriu).
+- Completou o naipe? Ele blefa mais e vai por valor menos.
+- Pareou o board? Ele ataca — sabe que assustou você.
+
+E a segunda barrelada agora é **maior** que a aposta do flop, como se joga em
+torneio.
+
+**3. Eles aumentam sem ter mão.** Antes, contra uma aposta, o bot só pagava ou
+largava. Você nunca era aumentado por quem não tinha nada — por isso sua decisão
+era sempre fácil.
+
+**4. Probe bet.** Quem não tinha a iniciativa quase nunca apostava. Nas faixas
+altas, o vilão agora toma a aposta quando você desiste do flop.
+
+**5. O campo do 10,3K passou a DEFENDER.** Este foi o achado mais importante: o
+campo de elite era apertado, mas não reagia — você roubava os blinds e ninguém
+devolvia. Terminando 75% na faixa premiada, com posição média 11,7 de 100. Não
+era difícil, era só "todo mundo folda". Agora ele 3-beta e defende o big blind.
+
+### 👁 A novidade: "ELE TE LEU"
+
+Os bots já se adaptavam ao seu jogo — e você nunca ficava sabendo. Agora, entre
+as mãos, o vilão **fala**:
+
+> 👁 **O Furacão reparou que você larga 78% dos flops em que leva aposta.**
+> *Ele vai apostar mais em você — inclusive sem mão.*
+
+A leitura só sai com amostra, só de quem tem cabeça para ler (peixe não estuda
+ninguém), e cada frase aparece **uma vez** por sessão. E ela olha só o seu
+HISTÓRICO de jogadas — nenhum bot espia carta fechada, isso continua valendo.
+
+### 📏 O resultado, medido
+
+**O campo, por faixa (2.500 mãos em cada):**
+
+| Faixa | Check-raise | C-bet | Segue no turn |
+|---|---|---|---|
+| $5 | 7,3% | 46% | 69% |
+| $55 | 6,4% | 61% | 68% |
+| $109 | 11,3% | 70% | 78% |
+| **$10.300** | **13,3%** | **68%** | **78%** |
+
+O micro caiu em 7,3%, que é exatamente onde a literatura põe os micros. O
+10,3K ficou em 13,3%, dentro da faixa de MTT (10% a 18,5%).
+
+**E o que VOCÊ sente (20 torneios em cada):**
+
+| | $11 | $10,3K |
+|---|---|---|
+| Carta de graça | 72% | **55%** |
+| Levou 3-bet ao abrir | 38% | **42%** |
+| Levou aposta no flop | 35% | **46%** |
+| Passou e levou aumento | 20% | **34%** |
+| Terminou premiado | 50% | **65%** ← e caiu de 75% |
+| Posição média | 29º | **20º** ← e piorou de 11,7º |
+
+No $10.300 você passa a ser aumentado em **um terço** das vezes em que passa, e
+quase metade das ruas vem com alguém pedindo fichas.
+
+### ⚠️ Honestidade
+
+Isto **não é uma cópia estatística** da população do GGPoker ou do PokerStars —
+esse dado ninguém publica. É uma escada construída para CABER nas faixas que
+são publicadas (check-raise de micro e de MTT, c-bet moderno, 3-bet de reg,
+composição de campo), ancorada nos dois extremos e **medida** depois. As fontes
+estão escritas no código, em `src/bots/escadaDeBuyIn.ts`.
+
+**Onde está:** aba Torneio, em todas as faixas — e principalmente no 10,3K.
+
+---
+
 ## 2026-09-15 — Claude — 🛟 Seus pontos do ranking não se perdem mais
 
 Do seu relato: *"num desses prints mostra que não conseguiu falar com o servidor

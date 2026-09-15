@@ -27,6 +27,8 @@ import {
 } from "../engine/equity";
 import { detectDraw } from "../engine/draws";
 import type { BotProfile } from "./profiles";
+import { decidirCheckRaise } from "./checkRaise";
+import { lerCartaNova, tamanhoDeContinuacao } from "./planoDeMao";
 import { buildTopRange } from "../ranges/build";
 import { omahaPreflopScore } from "../ranges/omahaPreflop";
 import { rangeCombos } from "../ranges/types";
@@ -44,6 +46,13 @@ export interface ActionFreq {
 }
 
 export interface PostflopContext {
+  /**
+   * O bot PASSOU nesta rua e agora enfrenta uma aposta — é um spot de
+   * check-raise (ver bots/checkRaise.ts). Sem este sinal ele não tinha como
+   * distinguir "passei para aumentar" de "estou enfrentando aposta na minha
+   * primeira ação", e a jogada nunca acontecia.
+   */
+  spotDeCheckRaise?: boolean;
   hand: Card[];
   board: Card[];
   potSize: number;
@@ -227,6 +236,39 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       });
     }
 
+    // ----- CHECK-RAISE: passei nesta rua e levei aposta --------------------
+    // A jogada que faltava (15/09/2026). Fica ANTES da estratégia mista porque
+    // é uma decisão própria: não é "tenho preço para pagar?", é "quero devolver
+    // a pressão?". Ver bots/checkRaise.ts para as frequências e as fontes.
+    if (ctx.spotDeCheckRaise && !isAllInCall && streetIdx <= 2) {
+      const drawCR = streetIdx < 2 && ctx.variant !== "omaha"
+        ? detectDraw(ctx.hand, ctx.board)
+        : { strength: 0 };
+      const plano = decidirCheckRaise(
+        ctx.profile,
+        {
+          equity,
+          required,
+          wetness: texture.wetness,
+          drawStrength: drawCR.strength,
+          numOpponents: numOpp,
+          streetIdx,
+        },
+        rng,
+      );
+      if (plano.aumentar) {
+        const mixCR = cleanMix([
+          { action: "raise", freq: plano.prob },
+          { action: "call", freq: (1 - plano.prob) * 0.6 },
+          { action: "fold", freq: (1 - plano.prob) * 0.4 },
+        ]);
+        const comoDiz = plano.tipo === "valor"
+          ? `Check-raise por valor (equity ${pct(equity)} vs range).`
+          : `Check-raise: passou para aumentar${drawCR.strength > 0.5 ? " com projeto" : ""} em board ${texture.wetness > 0.5 ? "molhado" : "seco"}.`;
+        return decision("raise", size, equity, required, texture, villainPct, mixCR, comoDiz);
+      }
+    }
+
     // ----- Estratégia mista quando enfrentamos aposta -----
     // "Continuar" (call+raise) cresce suavemente com a margem equity×preço.
     const margin = effEquity - required;
@@ -236,8 +278,13 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
       raiseShare = 0.85; // valor claro: quase sempre aumenta
     } else if (equity >= 0.62 && !isAllInCall) {
       raiseShare = 0.2 + 0.4 * ctx.profile.aggression; // valor/proteção
-    } else if (!isAllInCall && texture.wetness > 0.45 && effEquity >= required * 0.7) {
-      raiseShare = 0.1 + 0.25 * ctx.profile.bluffFactor * texture.wetness; // semi-blefe
+    } else if (!isAllInCall && texture.wetness > 0.30 && effEquity >= required * 0.62) {
+      // ✨ 15/09/2026 — a exigência era wetness > 0.45 e equity >= 70% do preço.
+      // Medido em 70 torneios: contra uma aposta, o bot praticamente só pagava
+      // ou largava, e o jogador nunca era aumentado sem mão. Um campo que só
+      // aumenta com mão feita é um campo em que basta largar. Afrouxado — o
+      // bluffFactor do perfil continua mandando (peixe segue sem blefar).
+      raiseShare = 0.14 + 0.34 * ctx.profile.bluffFactor * texture.wetness; // semi-blefe
     } else {
       raiseShare = 0;
     }
@@ -275,9 +322,11 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     const drawForBluff = streetIdx < 2 && ctx.variant !== "omaha"
       ? detectDraw(ctx.hand, ctx.board)
       : { strength: 0 };
-    const hasRealDraw = drawForBluff.strength > 0.5;
-    const semibluffProb = ctx.profile.bluffFactor * 0.18 * texture.wetness;
-    if (!isAllInCall && hasRealDraw && effEquity >= required * 0.7 && rng() < semibluffProb) {
+    // Projeto "de verdade" era strength > 0.5 (só os muito fortes). Um gutshot
+    // com overcard também blefa — é o que deixa o adversário sem saber.
+    const hasRealDraw = drawForBluff.strength > 0.35;
+    const semibluffProb = ctx.profile.bluffFactor * 0.32 * texture.wetness;
+    if (!isAllInCall && hasRealDraw && effEquity >= required * 0.6 && rng() < semibluffProb) {
       return decision("raise", size, equity, required, texture, villainPct, mix,
         `Semi-blefe: equity ${pct(equity)} com projeto em board molhado (perfil ${ctx.profile.archetype}).`);
     }
@@ -297,8 +346,24 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     if (initiative) base += 0.14;
   } else {
     base = streetIdx === 1 ? ctx.profile.barrelTurn : ctx.profile.barrelRiver;
-    if (initiative) base += 0.05;
-    else base *= 0.5;
+    // ✨ PLANO DE MÃO (15/09/2026): a carta que veio manda no barrel. Antes a
+    // frequência era fixa, o bot apostava o flop e sumia no turn — o jogador
+    // via carta de graça em ~75% das ruas. Um reg pergunta "essa carta ajuda a
+    // história que eu estou contando?". Ver bots/planoDeMao.ts.
+    const leitura = lerCartaNova(ctx.board);
+    base *= equity >= 0.55 ? leitura.valor : leitura.blefe;
+    // Quem apostou a rua anterior tem uma HISTÓRIA em curso; desistir dela é
+    // que deveria ser a exceção. O +0.05 de antes quase não movia a agulha.
+    // ⚠️ Proporcional à agressão do perfil: um bônus fixo fazia o recreativo do
+    // micro seguir no turn tanto quanto o reg do elite (medido: 70% nos dois).
+    if (initiative) base += 0.06 + 0.16 * ctx.profile.aggression;
+    // ✨ PROBE BET (15/09/2026). Quem NÃO tinha a iniciativa levava um corte
+    // fixo pela metade e praticamente nunca apostava — era a maior fonte da
+    // "carta de graça" que o Allan sentia. Um regular de faixa alta não deixa o
+    // turn passar de graça só porque o outro desistiu do flop: ele toma a
+    // aposta. O corte agora acompanha a agressão do perfil, que já sobe com o
+    // buy-in — no micro segue quase como era, no 10,3K quase não corta.
+    else base *= 0.35 + 0.45 * ctx.profile.aggression;
   }
   if (!ctx.inPosition) base -= 0.05;
   const equityWeight = initiative ? 0.6 + equity : 1;
@@ -328,8 +393,10 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
   ]);
   if (bluffable && rng() < cbetProb) {
     const verb = initiative && streetIdx > 0 ? "barrel" : "c-bet";
-    return decision("bet", size, equity, 0, texture, villainPct, mix,
-      `Blefe/semi-blefe (${verb} ${Math.round(size * 100)}%) em board ${texture.wetness < 0.4 ? "seco" : "molhado"} (perfil ${ctx.profile.archetype}).`);
+    // Seguir no turn/river pede aposta MAIOR que a do flop (alavancagem).
+    const sizeCont = tamanhoDeContinuacao(streetIdx, size, true);
+    return decision("bet", sizeCont, equity, 0, texture, villainPct, mix,
+      `Blefe/semi-blefe (${verb} ${Math.round(sizeCont * 100)}%) em board ${texture.wetness < 0.4 ? "seco" : "molhado"} (perfil ${ctx.profile.archetype}).`);
   }
 
   return decision("check", undefined, equity, 0, texture, villainPct, mix,

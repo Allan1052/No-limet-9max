@@ -103,6 +103,7 @@ export function PokerTable({
   onToggleSozinho,
   onShowHistory,
   infoTorneio,
+  leituraDoVilao,
 }: {
   table: TableState;
   lastActionLabel?: Record<number, string>;
@@ -135,6 +136,14 @@ export function PokerTable({
    * vazio e some atrás de qualquer ficha ou carta que passe por cima.
    */
   infoTorneio?: ReactNode;
+  /**
+   * ✨ "Ele te leu" — o vilão diz o que percebeu no seu jogo.
+   *
+   * A adaptação dos bots já existia (bots/adapt.ts), mas era invisível: o
+   * jogador era estudado e explorado sem nunca saber. Dito em voz alta, o campo
+   * deixa de ser cenário e vira gente. Ver bots/leituraDoHeroi.ts.
+   */
+  leituraDoVilao?: { texto: string; consequencia: string } | null;
 }) {
   const { t } = useT();
 
@@ -228,6 +237,16 @@ export function PokerTable({
           buyIn={buyIn}
         />
       </div>
+
+      {leituraDoVilao ? (
+        <div className="tbl-leitura" role="status">
+          <span className="tbl-leitura-olho" aria-hidden="true">👁</span>
+          <span className="tbl-leitura-txt">
+            <b>{leituraDoVilao.texto}</b>
+            <i>{leituraDoVilao.consequencia}</i>
+          </span>
+        </div>
+      ) : null}
 
       {onShowTips ? (
         <button

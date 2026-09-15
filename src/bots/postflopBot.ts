@@ -96,6 +96,8 @@ export function postflopContextFor(
     icmSpot: buildPostflopIcmSpot(t, seat, payouts),
     // Fichas já investidas nesta mão (custo afundado) — ICM incremental num all-in.
     heroCommittedBB: p.totalCommitted / (t.bigBlind || 1),
+    // Passou nesta rua e agora tem aposta para pagar: é spot de check-raise.
+    spotDeCheckRaise: !!p.passouNestaRua && la.callAmount > 0 && t.street !== "preflop",
     rng,
     equityIterations,
     variant: t.variant,

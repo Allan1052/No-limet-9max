@@ -57,6 +57,7 @@ export function createTable(
     committed: 0,
     totalCommitted: 0,
     acted: false,
+    passouNestaRua: false,
     status: s.stack > 0 ? "active" : "out",
     holeCards: [],
   }));
@@ -113,6 +114,7 @@ export function startHand(t: TableState, deck: Card[]): TableState {
     p.committed = 0;
     p.totalCommitted = 0;
     p.acted = false;
+    p.passouNestaRua = false;
     p.holeCards = [];
     p.status = p.stack > 0 ? "active" : "out";
   }
@@ -204,6 +206,7 @@ export function applyAction(t: TableState, action: Action): TableState {
     case "check": {
       if (toCall > 0) throw new Error("Não pode dar check: há aposta para pagar.");
       p.acted = true;
+      p.passouNestaRua = true; // marca o spot de check-raise (ver state.ts)
       t.log.push(`${p.name} passa (check).`);
       break;
     }
@@ -304,6 +307,7 @@ function advance(t: TableState): void {
 function resetForNewStreet(t: TableState): void {
   for (const p of t.players) {
     p.committed = 0;
+    p.passouNestaRua = false;
     if (p.status === "active") p.acted = false;
   }
   t.currentBet = 0;

@@ -787,6 +787,8 @@ export function App() {
             // O status do torneio entra DENTRO da mesa (ver Table.tsx): fora
             // dela ele só sabia ficar por cima das cartas e das fichas.
             infoTorneio={playInfo}
+            // ✨ "Ele te leu": só entre as mãos, para não atrapalhar a decisão.
+            leituraDoVilao={handOver ? controller.leituraDoVilao : null}
             showTips={!sozinho && handOver && controller.feedback.length > 0}
             sozinho={sozinho}
             onToggleSozinho={() => {

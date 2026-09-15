@@ -67,10 +67,19 @@ const NAME_POOL: Record<Archetype, string[]> = {
   ],
 };
 
+// Peso de cada arquétipo no campo: [micro, alta]. A interpolação é pelo
+// buy-in (buyInToughness).
+//
+// ⚠️ 15/09/2026 — o micro tinha peso 2.5 de "spewy" (O Doidão), e a medição
+// mostrou o resultado disso: o campo de $5 check-raisava MAIS (8,5%) que o de
+// $11 a $55 (6,4%-6,6%), quebrando a escada que o Allan quer sentir. E era
+// retrato errado: a literatura descreve o micro como **passivo demais**
+// (VPIP > 35, PFR < 10, 3-bet < 4 — calling station), não como maluco agressivo.
+// O peso do spewy caiu e o do station subiu.
 const MICRO_HIGH: Record<Archetype, [number, number]> = {
   recreativo: [5.0, 0.8],
-  station: [4.0, 0.5],
-  spewy: [2.5, 1.0],
+  station: [4.8, 0.5],
+  spewy: [1.5, 1.0],
   abc: [2.0, 2.2],
   nit: [1.2, 2.2],
   tag: [1.3, 3.3],

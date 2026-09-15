@@ -47,6 +47,8 @@ export interface PressaoResultado {
   apostasRiver: number;
   /** Jogadas que tiram o chão. */
   checkRaisesSofridos: number;
+  /** Ruas em que o herói PASSOU — denominador certo do check-raise. */
+  ruasEmQuePassou: number;
   allinsEnfrentados: number;
 
   /** Decisões apertadas de verdade (o "pensar por muito tempo"). */
@@ -83,6 +85,8 @@ export interface PressaoTaxas {
   apostasPor100: { flop: number; turn: number; river: number };
   /** Check-raises e all-ins a cada 100 mãos. */
   checkRaisePor100: number;
+  /** % das vezes que ele passou e levou aumento — a métrica de verdade. */
+  checkRaiseSofridoPct: number;
   allinPor100: number;
   /** % das decisões que foram apertadas de verdade. */
   spotsApertadosPct: number;
@@ -160,7 +164,7 @@ export function medirPressao(opts: {
     aberturas: 0, tresBetSofridos: 0,
     flopsDisputados: 0, cbetsSofridos: 0,
     apostasFlop: 0, apostasTurn: 0, apostasRiver: 0,
-    checkRaisesSofridos: 0, allinsEnfrentados: 0,
+    checkRaisesSofridos: 0, ruasEmQuePassou: 0, allinsEnfrentados: 0,
     spotsApertados: 0, ruasDeGraca: 0, ruasPosFlop: 0,
     apostasDeVilao: 0, apostasComMaoFeita: 0, posicoes: [], itm: 0,
   };
@@ -277,7 +281,10 @@ export function medirPressao(opts: {
         abriuNestaMao = true;
         r.aberturas++;
       }
-      if (acao.type === "check") heroDeuCheckNestaRua = true;
+      if (acao.type === "check" && !heroDeuCheckNestaRua && rua !== "preflop") {
+        heroDeuCheckNestaRua = true;
+        r.ruasEmQuePassou++;
+      }
       g.heroAct(acao);
     }
 
@@ -301,6 +308,7 @@ export function taxas(r: PressaoResultado): PressaoTaxas {
     cbetContraEle: p(r.cbetsSofridos, r.flopsDisputados),
     apostasPor100: { flop: por100(r.apostasFlop), turn: por100(r.apostasTurn), river: por100(r.apostasRiver) },
     checkRaisePor100: por100(r.checkRaisesSofridos),
+    checkRaiseSofridoPct: p(r.checkRaisesSofridos, r.ruasEmQuePassou),
     allinPor100: por100(r.allinsEnfrentados),
     spotsApertadosPct: p(r.spotsApertados, r.decisoes),
     cartaDeGracaPct: p(r.ruasDeGraca, r.ruasPosFlop),

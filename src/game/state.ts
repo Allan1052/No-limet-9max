@@ -29,6 +29,17 @@ export interface PlayerState {
   totalCommitted: number;
   /** Já agiu desde a última aposta/aumento desta rua? */
   acted: boolean;
+  /**
+   * Passou (check) nesta rua.
+   *
+   * Existe para o CHECK-RAISE (15/09/2026). `acted` não serve: ele é zerado
+   * assim que alguém aposta, justamente para o jogador poder agir de novo — e é
+   * aí que precisamos saber que ele tinha passado. Sem esta marca, o bot não
+   * tem como reconhecer que está num spot de check-raise, e a jogada que mais
+   * tira o chão do adversário nunca acontecia.
+   * Zerado a cada rua nova. Não muda regra nenhuma do jogo.
+   */
+  passouNestaRua?: boolean;
   status: PlayerStatus;
   /**
    * A cadeira está VAZIA — ninguém sentado.

@@ -168,9 +168,16 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.test.ts"],
     // Réguas pesadas que NÃO são teste de guarda: jogam torneios inteiros e
-    // levam minutos. Ficam no repo para serem rodadas sob demanda
-    // (`npx vitest run --exclude "" src/sim/_pressaoRun.test.ts`), mas não
-    // podem entrar na suíte que roda antes de todo deploy.
-    exclude: ["**/node_modules/**", "**/dist/**", "src/**/_*.test.ts"],
+    // levam minutos. Ficam no repo para uso sob demanda, mas não podem entrar
+    // na suíte que roda antes de todo deploy.
+    //   normal:  npx vitest run
+    //   régua:   CF_REGUA=1 npx vitest run src/sim/_pressaoRun.test.ts
+    // (o --exclude da linha de comando SOMA ao daqui em vez de substituir, por
+    //  isso a chave é a variável de ambiente e não uma flag.)
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      ...(process.env.CF_REGUA ? [] : ["src/**/_*.test.ts"]),
+    ],
   },
 });

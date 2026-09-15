@@ -28,7 +28,7 @@ import type { TableState } from "../game/state";
 import { seatPositions } from "../bots/seatPosition";
 import { botPreflopAction, preflopContextFor } from "../bots/preflopBot";
 import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
-import { BASELINE_PROFILE, PROFILES, profileById } from "../bots/profiles";
+import { BASELINE_PROFILE, PROFILES, profileById, adjustProfileForBuyIn, type BotProfile } from "../bots/profiles";
 import { buildFieldSeats, pickReplacement } from "../bots/field";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
@@ -78,6 +78,7 @@ import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
 import type { PositionalRecord } from "../train/positionTendency";
 import type { DecisaoComparavel } from "../tournament/comparativo";
+import { anotar, dossieVazio, lerOHeroi, type DossieDoHeroi, type LeituraFalada } from "../bots/leituraDoHeroi";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
 import type { HeroRead } from "../bots/adapt";
 import type { Archetype } from "../bots/profiles";
@@ -322,6 +323,38 @@ export class GameController {
     this.dicasLigadas = ligadas;
     if (ligadas) this.maoTeveDica = true; // contaminou a mão em curso
   }
+  /**
+   * O vilão mais qualificado da mesa diz o que leu em você (ou null).
+   *
+   * Escolhe quem tem mais skill entre os que estão com fichas — é o jogador de
+   * quem essa observação soa crível. A leitura alimenta o dossiê do PRÓPRIO
+   * jogador; nenhum bot olha carta fechada.
+   */
+  private calcularLeituraDoVilao(): LeituraFalada | null {
+    const hero = this.table.players[this.heroSeat];
+    this.dossieHeroi.maos = this.stats[this.heroSeat]?.handsDealt ?? 0;
+    const st = this.stats[this.heroSeat];
+    if (st && st.handsDealt > 0) {
+      this.dossieHeroi.vpip = st.vpip / st.handsDealt;
+      this.dossieHeroi.pfr = st.pfr / st.handsDealt;
+      this.dossieHeroi.threeBet = st.threeBetOpp > 0 ? st.threeBet / st.threeBetOpp : 0;
+    }
+    if (!hero) return null;
+
+    let melhor: { p: BotProfile; nome: string } | null = null;
+    for (const v of this.table.players) {
+      if (v.isHero || v.stack <= 0 || !v.profileId) continue;
+      const prof = adjustProfileForBuyIn(profileById(v.profileId), this.tournament?.buyIn);
+      if (!melhor || prof.skill > melhor.p.skill) melhor = { p: prof, nome: v.name };
+    }
+    if (!melhor) return null;
+
+    const leitura = lerOHeroi(melhor.p, this.dossieHeroi, melhor.nome);
+    if (!leitura || this.leiturasJaDitas.has(leitura.id)) return null;
+    this.leiturasJaDitas.add(leitura.id);
+    return leitura;
+  }
+
   /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
   handLog: HandHistory[] = [];
 
@@ -360,6 +393,19 @@ export class GameController {
    *  14/09/2026: "um comparativo da forma que eu joguei às cegas e da forma que
    *  o aplicativo pede"). Guarda também se a mão correu sem dica. */
   private sessionComparativo: DecisaoComparavel[] = [];
+  /**
+   * ✨ O QUE A MESA SABE SOBRE VOCÊ (15/09/2026).
+   *
+   * Os bots já se adaptavam ao herói, mas de forma invisível. Agora o app junta
+   * o dossiê pós-flop (larga flop? nunca check-raisa?) e, no fim da mão, deixa
+   * um dos vilões DIZER o que percebeu. Ver bots/leituraDoHeroi.ts.
+   * ⚠️ Só histórico de ações — nenhum bot olha carta fechada.
+   */
+  private dossieHeroi: DossieDoHeroi = dossieVazio();
+  /** A leitura falada mais recente (a UI mostra ao fim da mão). */
+  leituraDoVilao: LeituraFalada | null = null;
+  /** Leituras já ditas nesta sessão — ninguém repete a mesma frase. */
+  private leiturasJaDitas = new Set<string>();
   /** O outro lado do "Jogar sozinho": as decisões tomadas COM dica na tela.
    *  Sem ele, "81 de 99" não diz se o jogador vai melhor ou pior com ajuda. */
   sessaoComDica = { total: 0, certas: 0 };
@@ -504,6 +550,9 @@ export class GameController {
     this.sessionDecisions = [];
     this.sessionComparativo = [];
     this.sessaoComDica = { total: 0, certas: 0 };
+    this.dossieHeroi = dossieVazio();
+    this.leiturasJaDitas = new Set<string>();
+    this.leituraDoVilao = null;
     this.sessionDecisionDetails = [];
     this.sessionPositional = [];
     this.tournamentResult = null;
@@ -983,6 +1032,26 @@ export class GameController {
   }
 
   private applyHeroAction(action: Action): void {
+    // Dossiê: o que este jogador faz quando a pressão chega. Anotado ANTES de a
+    // ação ser aplicada, porque depois a mesa já mudou de estado.
+    if (this.table.street !== "preflop") {
+      const heroP = this.table.players[this.heroSeat];
+      const enfrentandoAposta = legalActions(this.table).callAmount > 0;
+      if (enfrentandoAposta) {
+        if (this.table.street === "flop") {
+          this.dossieHeroi = anotar(this.dossieHeroi, {
+            tipo: "flopComAposta",
+            largou: action.type === "fold",
+          });
+        }
+        if (heroP.passouNestaRua) {
+          this.dossieHeroi = anotar(this.dossieHeroi, {
+            tipo: "passouEEnfrentou",
+            aumentou: action.type === "raise" || action.type === "allin",
+          });
+        }
+      }
+    }
     const advice = this.adviceForSeat(this.heroSeat);
     if (advice) {
       const streetLabel = STREET_LABEL[this.table.street] ?? this.table.street;
@@ -1567,6 +1636,11 @@ export class GameController {
         }
       })(),
     };
+    // ✨ "Ele te leu": no fim da mão, um vilão com cabeça para ler diz o que
+    // percebeu em você. Só sai com amostra, só de quem tem skill para isso, e
+    // cada leitura é dita UMA vez na sessão — repetir vira ruído.
+    this.leituraDoVilao = this.calcularLeituraDoVilao();
+
     // Guarda no log da sessão (limita para não crescer sem fim).
     this.handLog.push(this.lastHand);
     if (this.handLog.length > 300) this.handLog.shift();
