@@ -79,6 +79,7 @@ import { recordPositionResult } from "../train/positionStats";
 import type { PositionalRecord } from "../train/positionTendency";
 import type { DecisaoComparavel } from "../tournament/comparativo";
 import { anotar, dossieVazio, lerOHeroi, type DossieDoHeroi, type LeituraFalada } from "../bots/leituraDoHeroi";
+import { carregar as carregarMemoria, gravar as gravarMemoria, juntar as juntarMemoria, comoAMesaTeVe, type MemoriaDaMesa } from "../bots/memoriaDaMesa";
 import { freshTilt, updateTilt, decayTilt, type TiltState } from "../bots/tilt";
 import type { HeroRead } from "../bots/adapt";
 import type { Archetype } from "../bots/profiles";
@@ -332,7 +333,10 @@ export class GameController {
    */
   private calcularLeituraDoVilao(): LeituraFalada | null {
     const hero = this.table.players[this.heroSeat];
-    this.dossieHeroi.maos = this.stats[this.heroSeat]?.handsDealt ?? 0;
+    // A mesa soma o que viu HOJE ao que já sabia das sessões anteriores.
+    this.dossieHeroi = juntarMemoria(this.memoriaDaMesa.dossie, this.dossieDaSessao);
+    this.dossieHeroi.maos =
+      this.memoriaDaMesa.dossie.maos + (this.stats[this.heroSeat]?.handsDealt ?? 0);
     const st = this.stats[this.heroSeat];
     if (st && st.handsDealt > 0) {
       this.dossieHeroi.vpip = st.vpip / st.handsDealt;
@@ -353,6 +357,22 @@ export class GameController {
     if (!leitura || this.leiturasJaDitas.has(leitura.id)) return null;
     this.leiturasJaDitas.add(leitura.id);
     return leitura;
+  }
+
+  /** Guarda o que a mesa aprendeu — é o que faz ela te conhecer amanhã. */
+  private salvarMemoriaDaMesa(): void {
+    this.memoriaDaMesa = {
+      ...this.memoriaDaMesa,
+      dossie: this.dossieHeroi,
+      sessoes: Math.max(1, this.memoriaDaMesa.sessoes),
+      quando: Date.now(),
+    };
+    gravarMemoria(this.memoriaDaMesa);
+  }
+
+  /** O quanto a mesa te conhece, em uma frase (para o Perfil). */
+  oQueAMesaSabeDeVoce(): string {
+    return comoAMesaTeVe(this.memoriaDaMesa);
   }
 
   /** Log da sessão (mãos jogadas), para exportar e revisar depois. */
@@ -402,6 +422,15 @@ export class GameController {
    * ⚠️ Só histórico de ações — nenhum bot olha carta fechada.
    */
   private dossieHeroi: DossieDoHeroi = dossieVazio();
+  /**
+   * ✨ A MESA NÃO TE ESQUECE (15/09/2026). O que a mesa aprendeu em sessões
+   * ANTERIORES. Na terceira noite, os vilões já te leem desde a primeira mão —
+   * é a "evolução automática" que o Allan pediu, na versão que funciona sem
+   * simular milhões de mãos. Ver bots/memoriaDaMesa.ts.
+   */
+  private memoriaDaMesa: MemoriaDaMesa = carregarMemoria();
+  /** Dossiê só desta sessão (o que vai ser somado à memória ao fim dela). */
+  private dossieDaSessao: DossieDoHeroi = dossieVazio();
   /** A leitura falada mais recente (a UI mostra ao fim da mão). */
   leituraDoVilao: LeituraFalada | null = null;
   /** Leituras já ditas nesta sessão — ninguém repete a mesma frase. */
@@ -551,8 +580,12 @@ export class GameController {
     this.sessionComparativo = [];
     this.sessaoComDica = { total: 0, certas: 0 };
     this.dossieHeroi = dossieVazio();
+    this.dossieDaSessao = dossieVazio();
     this.leiturasJaDitas = new Set<string>();
     this.leituraDoVilao = null;
+    // Torneio novo conta como sessão nova para a memória da mesa — mas a
+    // memória em si NÃO zera: é justamente ela que faz a mesa te conhecer.
+    this.memoriaDaMesa = { ...carregarMemoria(), sessoes: carregarMemoria().sessoes + 1 };
     this.sessionDecisionDetails = [];
     this.sessionPositional = [];
     this.tournamentResult = null;
@@ -1039,16 +1072,17 @@ export class GameController {
       const enfrentandoAposta = legalActions(this.table).callAmount > 0;
       if (enfrentandoAposta) {
         if (this.table.street === "flop") {
-          this.dossieHeroi = anotar(this.dossieHeroi, {
-            tipo: "flopComAposta",
-            largou: action.type === "fold",
-          });
+          const ev = { tipo: "flopComAposta" as const, largou: action.type === "fold" };
+          this.dossieHeroi = anotar(this.dossieHeroi, ev);
+          this.dossieDaSessao = anotar(this.dossieDaSessao, ev);
         }
         if (heroP.passouNestaRua) {
-          this.dossieHeroi = anotar(this.dossieHeroi, {
-            tipo: "passouEEnfrentou",
+          const ev = {
+            tipo: "passouEEnfrentou" as const,
             aumentou: action.type === "raise" || action.type === "allin",
-          });
+          };
+          this.dossieHeroi = anotar(this.dossieHeroi, ev);
+          this.dossieDaSessao = anotar(this.dossieDaSessao, ev);
         }
       }
     }
@@ -1640,6 +1674,7 @@ export class GameController {
     // percebeu em você. Só sai com amostra, só de quem tem skill para isso, e
     // cada leitura é dita UMA vez na sessão — repetir vira ruído.
     this.leituraDoVilao = this.calcularLeituraDoVilao();
+    this.salvarMemoriaDaMesa();
 
     // Guarda no log da sessão (limita para não crescer sem fim).
     this.handLog.push(this.lastHand);

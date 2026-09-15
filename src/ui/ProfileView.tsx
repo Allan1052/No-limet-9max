@@ -4,6 +4,7 @@
 // a evolução num lugar só. Deixa o topo do app só com a logo.
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from "react";
+import { carregar as carregarMemoria, comoAMesaTeVe, oQuantoTeConhece } from "../bots/memoriaDaMesa";
 import { useT } from "../i18n";
 import type { TransKey } from "../i18n/translations";
 import { ModeToggle } from "../ui/ModeToggle";
@@ -19,6 +20,12 @@ import { syncEliteWins, loadAllEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
 import { trackEvent } from "../app/analytics";
 import type { VersionStatus } from "../app/pwaUpdate";
+
+/** A frase do estágio da leitura — lida do armazenamento, sem depender do
+ *  controller (o Perfil abre fora da mesa). */
+function oQueAMesaSabeDeVoce(): string {
+  return comoAMesaTeVe(carregarMemoria());
+}
 
 export function ProfileView({
   gameVariant,
@@ -196,6 +203,21 @@ export function ProfileView({
 
         {/* Mural de troféus: os 10 maiores prêmios do jogador */}
         <TopPrizesPanel />
+
+        {/* ✨ A MESA NÃO TE ESQUECE — o que os bots aprenderam sobre você entre
+            as sessões. É a "evolução automática" na versão que funciona: eles
+            não ficam melhores no vácuo, ficam melhores CONTRA VOCÊ. */}
+        <div className="profile-section-title">👁 O que a mesa sabe de você</div>
+        <div className="mesa-sabe">
+          <div className="mesa-sabe-txt">{oQueAMesaSabeDeVoce()}</div>
+          <div className="mesa-sabe-barra" aria-hidden="true">
+            <span style={{ width: `${Math.round(oQuantoTeConhece(carregarMemoria().dossie) * 100)}%` }} />
+          </div>
+          <div className="mesa-sabe-nota">
+            Eles leem só o seu histórico de jogadas — nunca as suas cartas.
+            Quanto mais você joga, mais eles jogam em cima do seu padrão.
+          </div>
+        </div>
 
         {/* Diário de decisões: histórico de mãos com filtro por tipo de erro */}
         <div className="profile-section-title">📜 Histórico de Mãos</div>

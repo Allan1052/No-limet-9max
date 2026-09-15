@@ -113,11 +113,13 @@ export function botPostflopAction(
   buyIn?: number,
   tilt?: TiltState,
   heroRead?: HeroRead,
+  /** Só a arena de evolução usa — ver BotContext.perfilForcado. */
+  perfilForcado?: BotProfile,
 ): Action {
   const p = t.players[seat];
   const base: BotProfile = p.profileId ? profileById(p.profileId) : BASELINE_PROFILE;
   // Camadas 1-3: personalidade + tilt + adaptação (mesmo motor do pré-flop).
-  const profile = effectiveProfile(base, seat, p, { buyIn, tilt, heroRead });
+  const profile = effectiveProfile(base, seat, p, { buyIn, tilt, heroRead, perfilForcado });
   const la = legalActions(t);
   const decision = postflopDecision(
     postflopContextFor(t, seat, profile, rng, equityIterations, payouts),

@@ -23,6 +23,71 @@ Regras do registro:
 
 ---
 
+## 2026-09-15 — Claude — 🧬 Evolução dos bots: o que funciona e o que eu provei que não
+
+Sua ideia: *"teria como deixar os bots com evolução automática? Cada bot usaria
+o outro pra evoluir. Assim cada vez mais ficaria difícil enfrentar eles."*
+
+**Dá.** Construí o motor inteiro, rodei — e descobri uma coisa importante no
+caminho. Vou te contar as duas partes.
+
+### ❌ A parte que NÃO fecha a conta (e os números)
+
+Fiz o algoritmo: cada bot vira um "genoma" (os números que mandam no jogo dele),
+eles disputam milhares de mãos, quem lucra mais deixa descendentes com pequenas
+mudanças. Rodei três gerações no campo de $10.300.
+
+O resultado veio assim:
+
+> "O Cartilha": de −1 para **+149,9 bb/100**.
+> "Paga-Tudo": de +167 para **+15,9 bb/100**.
+
+**Ninguém ganha 150 big blinds a cada 100 mãos de ninguém.** Um jogador muito
+bom ganha 5 a 20. Aquilo não era evolução — era **sorte sendo premiada como
+habilidade**. Com poucas mãos por disputa, quem recebeu carta boa "vence" e
+passa os genes adiante. Uma evolução dessas **piora** os bots com cara de
+melhorar.
+
+Tentei a técnica padrão contra isso (jogar as mesmas mãos duas vezes, como no
+bridge duplicado). Cortou só 10% do ruído. Fiz a conta: para separar dois
+genomas que diferem de verdade, seriam necessárias **~2,7 milhões de mãos por
+candidato, por geração**. Não tem máquina aqui para isso.
+
+**O motor ficou pronto no repositório**, com quatro travas escritas e testadas
+(o juiz não é a própria população; cada bot só evolui dentro do seu tipo — o
+"Paga-Tudo" nunca vira agressivo; o micro NÃO evolui, tem que continuar
+micro; e nada roda no seu celular). Se um dia houver máquina, é só rodar.
+
+### ✅ A parte que FUNCIONA — e é o que você queria sentir
+
+Olhando de novo o seu pedido, o que você quer é **a mesa ficando mais difícil a
+cada sessão**. Para isso os bots não precisam evoluir uns contra os outros.
+Precisam evoluir **contra você** — e aí o sinal é o seu próprio jogo, sem sorte
+nenhuma no meio.
+
+**👁 A MESA NÃO TE ESQUECE.** O que os vilões aprenderam sobre você agora
+sobrevive de uma sessão para a outra. Na terceira noite, eles já te leem desde a
+primeira mão — como acontece quando você vira regular de uma sala.
+
+No Perfil tem uma faixa nova: **"O que a mesa sabe de você"**, com uma barra que
+mostra o quanto eles já te conhecem:
+
+> *A mesa te conhece bem — 420 mãos em 6 sessões. Eles vão jogar em cima do seu
+> padrão.*
+
+Detalhes que importam:
+
+- **O passado perde peso.** Se você largava todo flop e corrigiu isso, a mesa
+  te relê dentro de algumas centenas de mãos. Ninguém fica marcado para sempre.
+- **Sumiu 3 meses? A memória zera.** Você já não é o mesmo jogador.
+- **Eles leem só o seu histórico de jogadas — nunca as suas cartas.** Isso
+  continua valendo e está testado.
+
+**Onde está:** ☰ Perfil → "👁 O que a mesa sabe de você" · e na mesa, entre as
+mãos, quando um vilão resolve falar.
+
+---
+
 ## 2026-09-15 — Claude — 🥊 SACUDIMOS OS BOTS: check-raise, plano de mão e "ele te leu"
 
 Do seu pedido: sentir cada faixa como a mesa que ela imita, o **10,3K bem

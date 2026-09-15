@@ -20,6 +20,14 @@ export interface BotContext {
   buyIn?: number;
   tilt?: TiltState;
   heroRead?: HeroRead;
+  /**
+   * Perfil injetado, usado EXCLUSIVAMENTE pela arena de evolução
+   * (sim/arena.ts): lá os candidatos são genomas que ainda não existem no app,
+   * então não há profileId para procurar. Fora da arena nunca é passado — o
+   * caminho normal continua sendo `profileById` + as camadas de personalidade,
+   * tilt e adaptação.
+   */
+  perfilForcado?: BotProfile;
 }
 
 export function effectiveProfile(
@@ -28,6 +36,7 @@ export function effectiveProfile(
   p: { profileId?: string; name: string; personalitySeed?: number },
   ctx: BotContext,
 ): BotProfile {
+  if (ctx.perfilForcado) return ctx.perfilForcado;
   const adjusted = adjustProfileForBuyIn(base, ctx.buyIn);
   if (!p.profileId) return adjusted;
   let prof = personalize(adjusted, p.personalitySeed ?? seedFromName(p.name, seat), buyInToughness(ctx.buyIn));
