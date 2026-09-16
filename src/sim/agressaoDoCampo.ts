@@ -43,6 +43,13 @@ export interface AgressaoResultado {
   /** Aumentos contra aposta (o "não dá pra apostar sossegado"). */
   raisesContraAposta: number;
   apostasEnfrentadas: number;
+  /** Aberturas no pré-flop e quantas levaram 3-bet / 4-bet. */
+  aberturas: number;
+  tresBets: number;
+  quatroBets: number;
+  /** Mãos em que alguém apostou nas TRÊS ruas pós-flop (flop+turn+river). */
+  maosComTresBarris: number;
+  maosComFlopEturnEriver: number;
 }
 
 export interface AgressaoTaxas {
@@ -50,6 +57,11 @@ export interface AgressaoTaxas {
   cbetPct: number;
   barrelTurnPct: number;
   raiseContraApostaPct: number;
+  /** % das aberturas que levaram 3-bet, e dos 3-bets que levaram 4-bet. */
+  tresBetPct: number;
+  quatroBetPct: number;
+  /** % das mãos em que alguém apostou nas três ruas pós-flop. */
+  tresBarrisPct: number;
 }
 
 /**
@@ -77,6 +89,8 @@ export function medirAgressao(maos: number, buyIn?: number, semente = 777): Agre
     spotsDeCbet: 0, cbets: 0,
     spotsDeBarrelTurn: 0, barrelsTurn: 0,
     raisesContraAposta: 0, apostasEnfrentadas: 0,
+    aberturas: 0, tresBets: 0, quatroBets: 0,
+    maosComTresBarris: 0, maosComFlopEturnEriver: 0,
   };
 
   for (let h = 0; h < maos; h++) {
@@ -86,6 +100,11 @@ export function medirAgressao(maos: number, buyIn?: number, semente = 777): Agre
 
     // Quem apostou o flop (para medir a segunda barrelada no turn).
     const apostouNoFlop = new Set<number>();
+    // Quantos aumentos o pré-flop já teve nesta mão (0 = ninguém abriu).
+    let nivelPre = 0;
+    // Ruas em que alguém apostou, e quem barrelou as três.
+    const ruasComAposta = new Set<string>();
+    const barrisPorAssento = new Map<number, Set<string>>();
     let guard = 0;
     while (!t.handOver) {
       if (guard++ > 3000) break;
@@ -111,6 +130,21 @@ export function medirAgressao(maos: number, buyIn?: number, semente = 777): Agre
           : botPostflopAction(t, seat, rng, 200, undefined, buyIn);
 
       const agrediu = action.type === "raise" || action.type === "allin";
+
+      // Escada de aumentos no pré-flop: 1 = open, 2 = 3-bet, 3 = 4-bet.
+      if (antesRua === "preflop" && agrediu) {
+        nivelPre++;
+        if (nivelPre === 1) r.aberturas++;
+        else if (nivelPre === 2) r.tresBets++;
+        else if (nivelPre === 3) r.quatroBets++;
+      }
+      // Apostas por rua e "três barris" (apostou flop, turn E river).
+      if (antesRua !== "preflop" && agrediu) {
+        ruasComAposta.add(antesRua);
+        const m = barrisPorAssento.get(seat) ?? new Set<string>();
+        m.add(antesRua);
+        barrisPorAssento.set(seat, m);
+      }
       if (ehSpotCR && agrediu) r.checkRaises++;
       if (ehSpotCbet && agrediu) r.cbets++;
       if (ehSpotBarrel && agrediu) r.barrelsTurn++;
@@ -118,6 +152,10 @@ export function medirAgressao(maos: number, buyIn?: number, semente = 777): Agre
       if (antesRua === "flop" && acaoLimpa && agrediu) apostouNoFlop.add(seat);
 
       applyAction(t, action);
+    }
+    if (["flop", "turn", "river"].every((x) => ruasComAposta.has(x))) r.maosComFlopEturnEriver++;
+    for (const [, ruas] of barrisPorAssento) {
+      if (ruas.size >= 3) { r.maosComTresBarris++; break; }
     }
     moveButton(t);
     r.maos++;
@@ -132,5 +170,8 @@ export function taxasDeAgressao(r: AgressaoResultado): AgressaoTaxas {
     cbetPct: p(r.cbets, r.spotsDeCbet),
     barrelTurnPct: p(r.barrelsTurn, r.spotsDeBarrelTurn),
     raiseContraApostaPct: p(r.raisesContraAposta, r.apostasEnfrentadas),
+    tresBetPct: p(r.tresBets, r.aberturas),
+    quatroBetPct: p(r.quatroBets, r.tresBets),
+    tresBarrisPct: p(r.maosComTresBarris, r.maos),
   };
 }

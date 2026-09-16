@@ -38,7 +38,28 @@ export interface PositionReport {
 export const POSITION_ORDER = ["UTG", "UTG1", "MP", "LJ", "HJ", "CO", "BTN", "SB", "BB"];
 
 const MIN_HANDS = 4; // pra mostrar a % da posição (honestidade)
-const MIN_ERRORS = 3; // pra afirmar uma tendência
+
+/**
+ * ⚠️ 15/09/2026 — ERA 3, e 3 é MOEDA, não diagnóstico.
+ *
+ * O Allan abriu o Perfil e viu 🔥 "agressivo demais" em OITO das nove posições,
+ * com acerto de 80% a 94% em todas elas. Impossível — e o motivo é aritmético:
+ * com 3 erros, bastam 2 do mesmo lado para bater os 60% e carimbar a tendência.
+ * Calculado: com 3 erros, a chance de carimbar um rótulo POR PURO ACASO (um
+ * jogador que erra igual para os dois lados) é de 50%. Com nove posições na
+ * tela, quase todas ganhavam carimbo.
+ *
+ * Agora são necessários mais erros, uma proporção maior e uma margem absoluta.
+ * E, principalmente: posição que já vai bem NÃO recebe rótulo — o gráfico existe
+ * para dizer onde melhorar, e 94% de acerto não é lugar de melhorar.
+ */
+const MIN_ERRORS = 8;
+/** Proporção mínima de um lado para chamar de tendência. */
+const SHARE_MINIMO = 0.7;
+/** Margem absoluta: 7×3 passa na proporção, mas 4 de diferença é pouco. */
+const MARGEM_MINIMA = 4;
+/** Acima deste acerto não há vazamento a apontar — o rótulo some. */
+export const ACERTO_SEM_VAZAMENTO = 0.85;
 
 function famRank(f?: Fam): number {
   switch (f) {
@@ -50,13 +71,28 @@ function famRank(f?: Fam): number {
   }
 }
 
-export function tendencyFromCounts(aggressive: number, passive: number): { tendency: Tendency; leakLabel: string } {
+export function tendencyFromCounts(
+  aggressive: number,
+  passive: number,
+  /** Acerto da posição (0..1). Acima de ACERTO_SEM_VAZAMENTO não se rotula. */
+  accuracy?: number,
+): { tendency: Tendency; leakLabel: string } {
   const errors = aggressive + passive;
   if (errors < MIN_ERRORS) return { tendency: null, leakLabel: "" };
+  // Quem acerta quase tudo numa posição não tem vazamento ali. Apontar a
+  // direção dos pouquíssimos erros que sobraram é inventar defeito.
+  if (accuracy !== undefined && accuracy >= ACERTO_SEM_VAZAMENTO) {
+    return { tendency: null, leakLabel: "" };
+  }
+  const margem = Math.abs(aggressive - passive);
   const aggShare = aggressive / errors;
   const pasShare = passive / errors;
-  if (aggShare >= 0.6) return { tendency: "agressivo", leakLabel: "seus erros são por dar call/raise demais" };
-  if (pasShare >= 0.6) return { tendency: "passivo", leakLabel: "seus erros são por foldar/passar demais" };
+  if (aggShare >= SHARE_MINIMO && margem >= MARGEM_MINIMA) {
+    return { tendency: "agressivo", leakLabel: "seus erros são por dar call/raise demais" };
+  }
+  if (pasShare >= SHARE_MINIMO && margem >= MARGEM_MINIMA) {
+    return { tendency: "passivo", leakLabel: "seus erros são por foldar/passar demais" };
+  }
   return { tendency: "equilibrado", leakLabel: "erros divididos entre agressivo e passivo" };
 }
 
@@ -86,11 +122,12 @@ export function reportFromRecords(records: PositionalRecord[]): PositionReport[]
       if (h > a) aggressive++;
       else passive++;
     }
-    const { tendency, leakLabel } = tendencyFromCounts(aggressive, passive);
+    const accuracy = correct / hands;
+    const { tendency, leakLabel } = tendencyFromCounts(aggressive, passive, accuracy);
     out.push({
       position,
       hands,
-      accuracy: correct / hands,
+      accuracy,
       aggressiveErrors: aggressive,
       passiveErrors: passive,
       tendency,
@@ -114,11 +151,12 @@ export function reportFromCounts(byPosition: Record<string, PositionCounts>): Po
   const out: PositionReport[] = [];
   for (const [position, c] of Object.entries(byPosition)) {
     if (c.hands < MIN_HANDS) continue;
-    const { tendency, leakLabel } = tendencyFromCounts(c.aggressive, c.passive);
+    const accuracy = c.correct / c.hands;
+    const { tendency, leakLabel } = tendencyFromCounts(c.aggressive, c.passive, accuracy);
     out.push({
       position,
       hands: c.hands,
-      accuracy: c.correct / c.hands,
+      accuracy,
       aggressiveErrors: c.aggressive,
       passiveErrors: c.passive,
       tendency,

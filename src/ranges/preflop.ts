@@ -190,6 +190,26 @@ function reRaiseWarFactor(betLevelFaced?: number): number {
   return 1; // abertura / shove simples: sem aperto extra
 }
 
+/**
+ * Quanto o leque de RE-RAISE fecha a cada degrau da guerra.
+ *
+ * `reRaiseWarFactor` acima aperta o que se PAGA; este aperta o que se AUMENTA.
+ * Sem ele, o mesmo `threeBetFactor` que dá um 3-bet de regular dava também um
+ * 4-bet de regular — e 4-betar na mesma frequência com que se 3-beta é o
+ * "4-bet light" que o Allan viu no $10.300 (medido: 24,3% dos 3-bets levavam
+ * 4-bet; num MTT real fica em torno de 5%-10%).
+ *
+ * betLevelFaced: 1 = abertura (3-bet normal), 2 = 3-bet (o meu seria 4-bet),
+ * 3 = 4-bet (5-bet), 4+ = guerra aberta.
+ */
+function reRaiseFreqFactor(betLevelFaced?: number): number {
+  const bl = Math.max(0, Math.floor(betLevelFaced ?? 1));
+  if (bl >= 4) return 0.12;
+  if (bl === 3) return 0.20;
+  if (bl === 2) return 0.34;
+  return 1;
+}
+
 // Único range que PAGA uma guerra de re-raises (5-bet+ all-in): só o topo
 // premium. O ranking de força bruta ranqueia 99/JJ ACIMA de AKo, então um aperto
 // por porcentagem sozinho não consegue foldar o 99 sem foldar tudo — por isso
@@ -688,8 +708,18 @@ export function preflopDecision(ctx: PreflopContext): PreflopDecision {
     const baseDefend = p.defendPct * ctx.profile.defendFactor * icmFlat * sizeFactor;
     const coldCallPct = Math.min(0.9, p.defendPct * ctx.profile.coldCallFactor * icmFlat) * sizeFactor;
     let defendPct = Math.max(baseDefend, coldCallPct);
-    let value3betPct = p.value3betPct * ctx.profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25);
-    const bluffPct = sizeFactor < 0.6 ? 0 : p.bluffExtraPct * ctx.profile.bluffFactor * ctx.profile.threeBetFactor * icmFactor;
+    // ⚠️ 15/09/2026 — O MESMO FATOR GOVERNAVA 3-BET E 4-BET, e isso produzia
+    // "4-bet light" (relato do Allan jogando o $10.300). Medido: 24,3% dos
+    // 3-bets levavam 4-bet. Um regular de MTT 4-beta muito menos do que
+    // 3-beta — a guerra encarece a cada degrau e o range de re-raise fecha.
+    // `reRaiseFreqFactor` fecha esse leque por nível de aposta enfrentado.
+    const guerra = reRaiseFreqFactor(ctx.betLevelFaced);
+    let value3betPct =
+      p.value3betPct * ctx.profile.threeBetFactor * icmFactor * Math.max(sizeFactor, 0.25) * guerra;
+    const bluffPct =
+      sizeFactor < 0.6
+        ? 0
+        : p.bluffExtraPct * ctx.profile.bluffFactor * ctx.profile.threeBetFactor * icmFactor * guerra;
     value3betPct = Math.min(value3betPct, defendPct);
     defendPct = Math.max(defendPct, value3betPct);
 

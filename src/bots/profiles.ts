@@ -134,8 +134,13 @@ export function adjustProfileForBuyIn(p: BotProfile, buyIn?: number): BotProfile
     // contrário — 3-beta, defende o BB largo e re-rouba. Sem isso, "difícil"
     // virava só "aperta a seleção e deixa o outro jogar".
     // Referência: 3-bet padrão de full ring 3%-5%; regular sólido ~10,6%.
-    threeBetFactor: p.threeBetFactor * (1 + 0.5 * t) * (1 + 0.55 * elite),
-    defendFactor: p.defendFactor * (1 + 0.22 * t) * (1 + 0.38 * elite),
+    // 15/09/2026 — eu tinha passado da conta. Medido no $10.300: 55,2% das
+    // aberturas levavam 3-bet. Numa mesa de 9 isso é ~9,5% por jogador (taxa
+    // de regular), mas o efeito somado de OITO regs atrás torna o jogo
+    // insustentável — o Allan resumiu: "nem parece que e um torneio de 10,3k".
+    // Puxado para uma taxa agregada de ~30%-35% no topo.
+    threeBetFactor: p.threeBetFactor * (1 + 0.3 * t) * (1 + 0.18 * elite),
+    defendFactor: p.defendFactor * (1 + 0.22 * t) * (1 + 0.3 * elite),
     bluffFactor: p.bluffFactor * (1 + 0.25 * t) * (1 + 0.04 * elite),
     aggression: baseAggression + (1 - baseAggression) * elitePressure,
     stickiness: p.stickiness * (1 - 0.15 * t) * (1 - 0.04 * elite),

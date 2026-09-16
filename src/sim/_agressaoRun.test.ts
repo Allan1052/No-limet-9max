@@ -7,7 +7,7 @@ const MAOS = Number(process.env.CF_MAOS || 1200);
 
 describe("agressão do campo por faixa", () => {
   it("mede check-raise, c-bet e barrel do turn", () => {
-    console.log("\nbuyIn   mãos  ckRaise%  cbet%  barrelTurn%  raiseVsAposta%   (amostras)");
+    console.log("\nbuyIn   mãos  ckRaise%  cbet%  barrelTurn%  raiseVsAposta%  3bet%  4bet%  3barris%");
     for (const buyIn of FAIXAS) {
       const r = medirAgressao(MAOS, buyIn);
       const x = taxasDeAgressao(r);
@@ -19,7 +19,9 @@ describe("agressão do campo por faixa", () => {
           `${x.cbetPct}%`.padStart(6),
           `${x.barrelTurnPct}%`.padStart(12),
           `${x.raiseContraApostaPct}%`.padStart(15),
-          `   (cr ${r.spotsDeCheckRaise} · cb ${r.spotsDeCbet} · bt ${r.spotsDeBarrelTurn})`,
+          `${x.tresBetPct}%`.padStart(6),
+          `${x.quatroBetPct}%`.padStart(6),
+          `${x.tresBarrisPct}%`.padStart(9),
         ].join(" "),
       );
     }

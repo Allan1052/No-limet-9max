@@ -25,13 +25,23 @@ describe("escada de dificuldade por buy-in", () => {
     }
   });
 
-  it("o campo do 10,3K barrela o turn bem mais que o do micro", () => {
+  it("o campo do 10,3K aperta mais que o do micro em todas as frentes", () => {
+    // ⚠️ 16/09/2026 — a escada foi PUXADA PARA BAIXO depois do relato do Allan
+    // jogando o $10.300 ("apostando em todas as streets", "4-bet light", "nem
+    // parece um torneio de 10,3k"). Medido antes: o campo seguia no turn em
+    // 84,4% das vezes e 55,2% das aberturas levavam 3-bet. Um campo caricato
+    // não é um campo difícil — é um campo que não existe.
+    // O que este teste guarda é a ORDEM (o topo é sempre o mais duro), não o
+    // tamanho do salto: o tamanho é calibragem e vai mudar com a medição.
     for (const p of PROFILES) {
       const micro = adjustProfileForBuyIn(p, 5);
       const elite = adjustProfileForBuyIn(p, 10300);
-      expect(elite.barrelTurn, `${p.name}`).toBeGreaterThan(micro.barrelTurn * 1.5);
-      expect(elite.cbetFactor, `${p.name}`).toBeGreaterThan(micro.cbetFactor);
-      expect(elite.aggression, `${p.name}`).toBeGreaterThan(micro.aggression);
+      expect(elite.barrelTurn, `${p.name} barrelTurn`).toBeGreaterThan(micro.barrelTurn);
+      expect(elite.barrelRiver, `${p.name} barrelRiver`).toBeGreaterThan(micro.barrelRiver);
+      expect(elite.cbetFactor, `${p.name} cbet`).toBeGreaterThan(micro.cbetFactor);
+      expect(elite.aggression, `${p.name} agressão`).toBeGreaterThan(micro.aggression);
+      expect(elite.threeBetFactor, `${p.name} 3bet`).toBeGreaterThan(micro.threeBetFactor);
+      expect(elite.defendFactor, `${p.name} defesa`).toBeGreaterThan(micro.defendFactor);
     }
   });
 

@@ -4,6 +4,7 @@
 // avaliação do coach (rating) e resultado da mão.
 // ---------------------------------------------------------------------------
 import { useMemo, useState } from "react";
+import { rotuloDoSaldo } from "../app/saldoDaMao";
 import { rankOf, suitOf, RANKS, type Card } from "../engine/cards";
 import type { HandHistory } from "../app/replay";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -164,7 +165,9 @@ function HandRow({
   semVeredito?: boolean;
 }) {
   const heroCards = h.holeCards[h.heroSeat] ?? [];
-  const heroWin = h.result?.winningsBySeat[h.heroSeat] ?? 0;
+  // Saldo real da mão (ver app/saldoDaMao.ts): o que ele LEVOU menos o que
+  // PÔS. Foldar sem investir não é derrota, e pagar 10 para levar 10 é empate.
+  const saldo = rotuloDoSaldo(h);
   const lastHeroDecision = (h.handFeedback ?? [])
     .filter((f) => f.heroAction.toLowerCase() !== "check")
     .pop();
@@ -244,8 +247,15 @@ function HandRow({
         )}
         <div style={{ fontSize: 11, color: "#8a8a7a", marginTop: 1 }}>
           Board: {boardStr} · {h.bigBlind}bb
-          {heroWin > 0 && <span style={{ color: "#4ade80" }}> · Ganhou!</span>}
-          {heroWin <= 0 && h.result && <span style={{ color: "#8a8a7a" }}> · Perdeu</span>}
+          {/* 🐞 15/09/2026 — o Allan viu "Perdeu" em mão que ele FOLDOU no
+              pré-flop sem pôr uma ficha. Foldar não é perder: é não disputar.
+              Agora mostramos o SALDO real da mão em bb, e quando ele é zero não
+              escrevemos resultado nenhum — porque não houve. */}
+          {saldo ? (
+            <span style={{ color: saldo.ganhou ? "#4ade80" : "#a89a86" }}>
+              {" "}· {saldo.texto}
+            </span>
+          ) : null}
         </div>
       </div>
 

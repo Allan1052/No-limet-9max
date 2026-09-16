@@ -115,8 +115,11 @@ export function fatoresPosFlop(buyIn?: number): {
     cbet: (1 + 0.12 * t) * (1 + 0.07 * e),
     // O turn é onde a diferença aparece de verdade. É o "seguir a história",
     // e é o que separa quem joga de quem só aposta o flop e desiste.
-    barrelTurn: (1 + 0.42 * t) * (1 + 0.32 * e),
-    barrelRiver: (1 + 0.38 * t) * (1 + 0.36 * e),
+    // ⚠️ 15/09/2026 — reduzido. Medido no $10.300: quem apostava o flop seguia
+    // no turn em 84,4% das vezes, e o Allan sentiu isso como "apostando em
+    // todas as streets". Um regular segue em torno de 50%-65%.
+    barrelTurn: (1 + 0.16 * t) * (1 + 0.10 * e),
+    barrelRiver: (1 + 0.15 * t) * (1 + 0.12 * e),
   };
 }
 

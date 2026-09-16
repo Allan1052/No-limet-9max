@@ -356,7 +356,10 @@ export function postflopDecision(ctx: PostflopContext): PostflopDecision {
     // que deveria ser a exceção. O +0.05 de antes quase não movia a agulha.
     // ⚠️ Proporcional à agressão do perfil: um bônus fixo fazia o recreativo do
     // micro seguir no turn tanto quanto o reg do elite (medido: 70% nos dois).
-    if (initiative) base += 0.06 + 0.16 * ctx.profile.aggression;
+    // 15/09: era +0.06 + 0.16·agr, e somado à escada levava o barrel do turn a
+    // 84% no campo de elite. Mantém a ideia (quem apostou tem uma história em
+    // curso) sem transformar todo flop apostado em barrel automático.
+    if (initiative) base += 0.02 + 0.07 * ctx.profile.aggression;
     // ✨ PROBE BET (15/09/2026). Quem NÃO tinha a iniciativa levava um corte
     // fixo pela metade e praticamente nunca apostava — era a maior fonte da
     // "carta de graça" que o Allan sentia. Um regular de faixa alta não deixa o

@@ -23,6 +23,60 @@ Regras do registro:
 
 ---
 
+## 2026-09-16 — Claude — 🔧 Os bots passaram do ponto · e duas telas que mentiam
+
+Você jogou o $10.300 e trouxe três coisas. Todas confirmadas, todas corrigidas.
+
+### 1. "Nem parece que é um torneio de 10,3k"
+
+Você estava certo — eu passei da conta. Medi 2.500 mãos por faixa e olhei o
+que tinha feito:
+
+| No $10.300 | Antes de você reclamar | Referência real | Agora |
+|---|---|---|---|
+| Abriu e levou 3-bet | **55%** | ~30% | **42%** |
+| Seguiu apostando no turn | **84%** | 50–65% | **65%** |
+| 4-bet | com meio range | só premium | **AA · KK · QQ · JJ · AK · AQs** |
+
+**O 4-bet light tinha uma causa boba:** o mesmo número governava o 3-bet e o
+4-bet. Então um bot que 3-betava como regular também 4-betava como regular — e
+4-betar na mesma frequência com que se 3-beta é exatamente jogar light. Agora o
+leque fecha a cada degrau da guerra, como acontece de verdade: 4-bet é AA, KK,
+QQ, JJ, AK e AQs. Só isso.
+
+O campo continua sendo o mais duro de todos (check-raise 15% contra 8% do
+micro), mas parou de ser caricato.
+
+### 2. 🐞 "Agressivo demais" em quase todas as posições
+
+Você viu 🔥 em **oito das nove posições** — acertando de 80% a 94% em todas.
+Impossível, e a causa é aritmética: bastavam **3 erros**, sendo 2 do mesmo lado,
+para o app carimbar a tendência.
+
+Fiz a conta: **com 3 erros, a chance de carimbar um rótulo por puro acaso é de
+50%.** É cara-ou-coroa, não diagnóstico. Com nove posições na tela, quase todas
+ganhavam carimbo.
+
+Agora são precisos **8 erros**, uma proporção de 70% e uma margem clara. E,
+principalmente: **posição que já vai bem não recebe rótulo** — acertar 94% não é
+lugar de melhorar, e apontar a direção dos pouquíssimos erros que sobraram é
+inventar defeito.
+
+### 3. 🐞 "Fold" aparecendo como "Perdeu"
+
+Foldar no pré-flop sem pôr uma ficha **não é perder** — é não disputar. A tela
+olhava só o que você levou; se foi zero, escrevia "Perdeu".
+
+Agora o histórico mostra o **saldo real da mão**: `+6bb`, `−1bb`, ou
+**"não disputou"** quando você largou sem investir nada. E consertei também o
+outro lado: quem pagava 10 e levava 10 aparecia como vitória — empate agora não
+mostra resultado nenhum, porque não houve.
+
+**Onde está:** Perfil (acerto por posição) · Histórico de Mãos · e a mesa, em
+todas as faixas.
+
+---
+
 ## 2026-09-15 — Claude — ▶️ Tocar no erro abre a MÃO · e as cartas do flop desembaraçaram
 
 ### 🐞 Primeiro: as cartas embaraçadas — foi eu
