@@ -14,6 +14,29 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-09-17 — Claude — A dica do Review saiu do esconderijo
+
+- **A dica não depende mais de você terminar a mão.** Antes, para ler a
+  explicação você tinha que ir clicando passo a passo até o fim da jogada — e
+  numa mão que você só foldou isso era pior ainda: precisava avançar a ação de
+  todo mundo só para a dica aparecer no painel do fim. Agora a explicação abre
+  **em qualquer momento da mão**, direto na faixa de cima.
+- **Aquele ▾ minúsculo virou um botão escrito.** Na faixa
+  *"PRÉ-FLOP · Coach recomendava FOLD · você fez CALL"* agora tem uma pílula
+  dourada **"VER A DICA ▾"** (e **"FECHAR ▴"** quando está aberta). Quem quiser
+  a análise detalhada clica; quem não quiser, ignora e segue a mão.
+- **Por que estava escondida:** o botão de abrir só nascia quando a mão tinha
+  *leitura*, *conta*, *topo do range* ou *peso da bolha*. Num fold pré-flop
+  nenhuma dessas existe — então a faixa simplesmente não abria. Agora basta
+  haver **qualquer coisa** que o motor tenha provado, e o "por quê" sempre
+  existe.
+- **O Review passou a mostrar tudo que o motor prova.** Esta tela ainda listava
+  as camadas escritas à mão, uma por uma: as frases novas (mapa da mesa, stacks
+  curtos, preço do pote) nasciam invisíveis aqui. Agora ela percorre a mesma
+  lista ordenada das outras telas — e também marca **"Essa mão merece um
+  review"** quando a mão tinha muito a ensinar.
+- **Onde:** aba de Review (mãos importadas), na faixa do coach em cima da mesa.
+
 ## 2026-09-17 — Claude — As dicas novas chegaram na tela (torneio curto, review detalhado)
 
 - **Agora dá para VER a diferença jogando.** O passo anterior fez o motor; este

@@ -1189,10 +1189,33 @@
     max-height: 62dvh !important;
     overflow-y: auto !important;
   }
+  /* O BOTÃO DE ABRIR A DICA PRECISA SER LIDO, NÃO ADIVINHADO (17/09).
+     Era um "▾" a 0.75 de opacidade: o Allan revisou a aba inteira sem perceber
+     que a faixa abria. Pedido dele: *"fica uma coisa escrita lá, o jogador
+     quando ele quer ver uma análise melhor da dica, ele clica lá"*. Agora é
+     uma pílula dourada com texto. */
   .ir-fullscreen .ir-coach .ir-coach-mais {
-    margin-left: 6px;
-    opacity: .75;
-    font-size: .9em;
+    margin-left: 8px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: var(--fs-label, 10px);
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #0b0f0d;
+    background: linear-gradient(180deg, #ecd07a, #c9a227);
+  }
+  .ir-fullscreen .ir-merece-review {
+    align-self: flex-start;
+    margin-bottom: 2px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: var(--fs-label, 10px);
+    font-weight: 800;
+    letter-spacing: .06em;
+    color: #92400e;
+    background: #fef3c7;
   }
   /* A faixa é uma LINHA flex (selo + texto). Sem isto, o bloco aberto virava
      uma terceira coluna e a explicação aparecia ao LADO do veredito, espremida.
