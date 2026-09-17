@@ -1,5 +1,6 @@
 import type { FeedbackItem } from "../feedback/analyzer";
-import { construirCamadas, type FonteCamadas } from "./coachCamadas";
+import { camadasEmOrdem, construirCamadas, type CamadaNaTela, type FonteCamadas } from "./coachCamadas";
+import type { LeituraDaMao } from "../feedback/importanciaDaMao";
 import { temDadoPara } from "../feedback/coachContract";
 
 export type CoachV2PostHandMode = "simple" | "technical";
@@ -14,6 +15,14 @@ export interface CoachV2PostHandDecisionView {
   reason: string;
   /** A MATEMÁTICA por último — só no modo técnico. */
   metrics: string[];
+  /**
+   * TODAS as camadas que o motor provou, já ordenadas do que mais decide para
+   * o detalhe fino. É o que a tela de review deve percorrer: na mesa o coach
+   * mostra duas, aqui ele abre tudo.
+   */
+  camadasCompletas?: CamadaNaTela[];
+  /** Quanto esta mão tinha a ensinar (obvia/interessante/excepcional). */
+  importancia?: LeituraDaMao;
   /**
    * A LEITURA: quão largo é o range do vilão naquele momento.
    * É a primeira frase de qualquer comentarista de poker ("ele abriu de UTG,
@@ -137,10 +146,19 @@ export function buildCoachV2PostHandDecision(
     // carrega, e no pós-mão "A conta" já mostra chance × preço exigido. O preço
     // cru serve na HORA de decidir — é lá que a dúvida existe.
   };
+  const camadas = construirCamadas(fonte, mode);
   return {
     decisionLine: decisionLineFor(item),
     reason: item.text,
     metrics,
-    ...construirCamadas(fonte, mode),
+    ...camadas,
+    // NO REVIEW O COACH ABRE TUDO (17/09). O tempo da decisão já passou, então
+    // aqui não se corta nada: todas as camadas que o motor provou, na ordem de
+    // quem comenta uma mão. É o oposto da mesa, onde entram só as duas
+    // primeiras. Pedido do Allan: *"no review eu queria ver a explicação mais
+    // detalhada da mão, como os comentaristas fazem."*
+    camadasCompletas: camadasEmOrdem(camadas, "completa"),
+    /** Quanto esta mão tinha a ensinar — para destacar as que merecem review. */
+    importancia: item.importancia,
   };
 }

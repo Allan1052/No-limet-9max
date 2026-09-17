@@ -78,7 +78,7 @@ import { appendHandLog } from "./handHistoryLog";
 import { computeHeroCoachDecision } from "./coachV2Live";
 import { temDadoPara } from "../feedback/coachContract";
 import { actionLabel } from "../feedback/analyzer";
-import { construirCamadas, type FonteCamadas } from "../ui/coachCamadas";
+import { camadasEmOrdem, construirCamadas, type FonteCamadas } from "../ui/coachCamadas";
 import { buildCoachV2HintView } from "../ui/coachV2Hint";
 import "../ui/theme.css";
 
@@ -483,9 +483,25 @@ export function App() {
       potBB: d.potBB,
       toCallBB: d.toCallBB,
       oponentes: d.oponentes,
+      // 17/09: o mapa de stacks da mesa. O motor já lia esses stacks para o
+      // ICM e os jogava fora — agora eles viram "quem cobre quem".
+      mapa: controller.mapaDaMesa(),
     };
     return construirCamadas(fonte, mode === "tecnico" ? "technical" : "simple", "aoVivo");
-  }, [coachDecision, mode]);
+  }, [coachDecision, mode, controller]);
+
+  /**
+   * O QUE O COACH DIZ NA MESA — curto, no meio da decisão.
+   *
+   * 17/09/2026, pedido do Allan: *"no torneio deixa uma coisa mais básica,
+   * explicando um pouco menor; no review eu queria ver a explicação mais
+   * detalhada."* Aqui entram no máximo duas camadas, na ordem de um
+   * comentarista. O review (HandTipsModal) continua abrindo tudo.
+   */
+  const camadasDaMesa = useMemo(
+    () => (coachCamadas ? camadasEmOrdem(coachCamadas, "curta") : []),
+    [coachCamadas],
+  );
 
   // O ▾ só faz sentido quando há mesmo algo a abrir.
   const temAlgoNoCoach =
@@ -744,21 +760,18 @@ export function App() {
                       {coachDecision.porQueCompleto}
                     </span>
                   ) : null}
-                  {coachCamadas?.precoDoPote ? (
-                    <span className="coach-camada"><b>O preço do pote</b>{coachCamadas.precoDoPote}</span>
-                  ) : null}
-                  {coachCamadas?.leitura ? (
-                    <span className="coach-camada"><b>A leitura</b>{coachCamadas.leitura}</span>
-                  ) : null}
-                  {coachCamadas?.topoRange ? (
-                    <span className="coach-camada"><b>O topo do range dele</b>{coachCamadas.topoRange}</span>
-                  ) : null}
-                  {coachCamadas?.conta ? (
-                    <span className="coach-camada"><b>A conta</b>{coachCamadas.conta}</span>
-                  ) : null}
-                  {coachCamadas?.pesoDaBolha ? (
-                    <span className="coach-camada"><b>O peso da bolha</b>{coachCamadas.pesoDaBolha}</span>
-                  ) : null}
+                  {/* AS CAMADAS, NA ORDEM DE UM COMENTARISTA E NA MEDIDA DA
+                      MESA (17/09). Antes era uma lista fixa, escrita à mão: as
+                      frases novas (mapa da mesa, stacks curtos) não apareciam e
+                      a ordem não tinha critério. Agora vem de `camadasEmOrdem`,
+                      que ordena pelo que mais decide e corta no que cabe na
+                      hora de decidir — o review abre o resto. */}
+                  {camadasDaMesa.map((c) => (
+                    <span key={c.chave} className="coach-camada">
+                      <b>{c.rotulo}</b>
+                      {c.texto}
+                    </span>
+                  ))}
                   {coachContexto.length > 0 ? (
                     <span className="coach-ctx">
                       {coachContexto.map((l) => (

@@ -30,18 +30,19 @@ describe("torneio curto, review completo", () => {
     const v = construirCamadas(MAO_RICA, "simple", "posMao");
     const curta = camadasEmOrdem(v, "curta");
     const completa = camadasEmOrdem(v, "completa");
-    for (const frase of curta) expect(completa).toContain(frase);
+    const chavesCompletas = completa.map((c) => c.chave);
+    for (const c of curta) expect(chavesCompletas).toContain(c.chave);
   });
 
   it("o ICM que virou a decisão vem primeiro — é o que mais importa", () => {
     const v = construirCamadas(MAO_RICA, "simple", "aoVivo");
-    expect(camadasEmOrdem(v, "curta")[0]).toBe(v.pesoDaBolha);
+    expect(camadasEmOrdem(v, "curta")[0].texto).toBe(v.pesoDaBolha);
   });
 
   it("sem ICM, o mapa da mesa assume a frente", () => {
     const semIcm = { ...MAO_RICA, icmDelta: undefined };
     const v = construirCamadas(semIcm, "simple", "aoVivo");
-    expect(camadasEmOrdem(v, "curta")[0]).toBe(v.mapaDaMesa);
+    expect(camadasEmOrdem(v, "curta")[0].texto).toBe(v.mapaDaMesa);
   });
 });
 
@@ -50,6 +51,13 @@ describe("a profundidade não inventa nada", () => {
     const v = construirCamadas({} as FonteCamadas, "simple", "posMao");
     expect(camadasEmOrdem(v, "completa")).toEqual([]);
     expect(camadasEmOrdem(v, "curta")).toEqual([]);
+  });
+
+  it("toda camada tem rótulo", () => {
+    const v = construirCamadas(MAO_RICA, "simple", "posMao");
+    for (const c of camadasEmOrdem(v, "completa")) {
+      expect(c.rotulo.length).toBeGreaterThan(0);
+    }
   });
 
   it("toda camada da view está na ordem — nenhuma frase fica órfã", () => {

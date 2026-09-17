@@ -7610,6 +7610,22 @@ body {
   line-height: 1.5;
   color: var(--text-dim, #b8b29a);
 }
+
+/* A MARCA DA MÃO QUE ENSINA (17/09). Só aparece nas mãos que a régua de
+   importância classificou como excepcionais — ICM que virou a decisão, all-in
+   na mesa, guerra de 3-bet. É o "destaque para review" do plano de evolução. */
+.fb-merece-review {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .fb-camada b {
   display: block;
   margin-bottom: 2px;

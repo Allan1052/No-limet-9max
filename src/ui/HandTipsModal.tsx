@@ -196,45 +196,28 @@ export function HandTipsModal({
                       passaram a existir nos DOIS modos em 11/09 — antes o
                       recreativo (modo simples, que é o padrão) não via nenhuma
                       delas, e era justamente a parte que o Allan sentia falta. */}
+                  {view.importancia?.nivel === "excepcional" ? (
+                    <div className="fb-merece-review">Essa mão merece um review</div>
+                  ) : null}
                   <div className="fb-decision">{view.decisionLine}</div>
                   <div>{view.reason}</div>
                 </div>
-                {view.leitura ? (
-                  <div className="fb-camada">
-                    <b>A leitura</b>
-                    {view.leitura}
+                {/* NO REVIEW O COACH ABRE TUDO (17/09, pedido do Allan:
+                    *"no review eu queria ver a explicação mais detalhada da
+                    mão, como os comentaristas fazem"*).
+
+                    Antes esta lista era escrita à mão, camada por camada — e
+                    por isso as frases novas (o mapa da mesa, os stacks curtos)
+                    não apareceriam aqui, e a ordem era a de quem escreveu o
+                    JSX. Agora percorre `camadasCompletas`, que já vem ordenada
+                    do que mais decide para o detalhe fino. Na mesa entram só as
+                    duas primeiras; aqui, todas. */}
+                {(view.camadasCompletas ?? []).map((c) => (
+                  <div key={c.chave} className="fb-camada">
+                    <b>{c.rotulo}</b>
+                    {c.texto}
                   </div>
-                ) : null}
-                {view.topoRange ? (
-                  <div className="fb-camada">
-                    <b>O topo do range dele</b>
-                    {view.topoRange}
-                  </div>
-                ) : null}
-                {view.conta ? (
-                  <div className="fb-camada">
-                    <b>A conta</b>
-                    {view.conta}
-                  </div>
-                ) : null}
-                {view.pesoDaBolha ? (
-                  <div className="fb-camada">
-                    <b>O peso da bolha</b>
-                    {view.pesoDaBolha}
-                  </div>
-                ) : null}
-                {view.oQueMudaria ? (
-                  <div className="fb-camada">
-                    <b>O que mudaria</b>
-                    {view.oQueMudaria}
-                  </div>
-                ) : null}
-                {view.cartasSalvadoras ? (
-                  <div className="fb-camada">
-                    <b>Cartas que te salvavam</b>
-                    {view.cartasSalvadoras}
-                  </div>
-                ) : null}
+                ))}
                 {view.metrics.length > 0 ? (
                   <div className="fb-mix">{view.metrics.join(" · ")}</div>
                 ) : null}

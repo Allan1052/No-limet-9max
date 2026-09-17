@@ -14,6 +14,28 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-09-17 — Claude — As dicas novas chegaram na tela (torneio curto, review detalhado)
+
+- **Agora dá para VER a diferença jogando.** O passo anterior fez o motor; este
+  ligou na tela. No torneio, ao abrir o ▾ da dica, o coach mostra **no máximo 2
+  camadas** — o essencial para decidir. No review, ele **abre tudo** que o motor
+  provou.
+- **Na ordem de um comentarista.** Primeiro o que virou a decisão (ICM), depois
+  o mapa da mesa (quem cobre quem), depois a leitura do vilão, a conta, o preço,
+  os stacks curtos, e por último os detalhes finos. Antes a ordem era a de quem
+  escreveu a tela.
+- **As frases do mapa da mesa entraram nas duas telas.** Você vai começar a ler
+  coisas como *"Você cobre 5 jogadores, mas existe 1 jogador que cobre você"* e
+  *"Tem um stack de 7bb nesta mesa lutando para sobreviver"*.
+- **A mão que ensina ganhou marca.** Quando o ICM virou a decisão, quando teve
+  all-in ou guerra de 3-bet, aparece **"Essa mão merece um review"** em cima da
+  decisão, no histórico de mãos.
+- **Consertei uma fragilidade no caminho:** as duas telas montavam a lista de
+  camadas **escrita à mão**, uma por uma. Qualquer frase nova nascia invisível —
+  foi o que ia acontecer com as do mapa da mesa. Agora as duas percorrem a mesma
+  lista ordenada, então frase nova aparece sozinha nos dois lugares.
+- **Onde:** dica do Torneio (o ▾) e Histórico de mãos / Review.
+
 ## 2026-09-17 — Claude — O coach passa a saber quando calar a boca (e a ver a mesa inteira)
 
 - **Agora ele mede a importância da mão antes de falar.** Você pediu: *"8 e 2 é

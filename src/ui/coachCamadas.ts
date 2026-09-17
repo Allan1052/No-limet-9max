@@ -69,6 +69,26 @@ export const ORDEM_DAS_CAMADAS: (keyof CamadasView)[] = [
 /** Quantas camadas cabem na mesa, no meio da decisão. */
 export const CAMADAS_NA_MESA = 2;
 
+/** O rótulo de cada camada, do jeito que aparece na tela. */
+export const ROTULO_DA_CAMADA: Record<keyof CamadasView, string> = {
+  pesoDaBolha: "O peso da bolha",
+  mapaDaMesa: "O mapa da mesa",
+  leitura: "A leitura",
+  conta: "A conta",
+  precoDoPote: "O preço do pote",
+  pressaoDaMesa: "Os stacks curtos",
+  topoRange: "O topo do range dele",
+  cartasSalvadoras: "Cartas que te salvavam",
+  oQueMudaria: "O que mudaria",
+};
+
+/** Uma camada pronta para a tela. */
+export interface CamadaNaTela {
+  chave: keyof CamadasView;
+  rotulo: string;
+  texto: string;
+}
+
 /** Os dados de que as camadas precisam, com nomes únicos para as duas telas. */
 export interface FonteCamadas {
   /** Sua chance de ganhar (0..1). */
@@ -326,10 +346,13 @@ function buildPressaoDaMesa(f: FonteCamadas, mode: CoachModo): string | undefine
 export function camadasEmOrdem(
   view: CamadasView,
   profundidade: CoachProfundidade,
-): string[] {
-  const todas = ORDEM_DAS_CAMADAS
-    .map((k) => view[k])
-    .filter((x): x is string => typeof x === "string" && x.length > 0);
+): CamadaNaTela[] {
+  const todas: CamadaNaTela[] = [];
+  for (const chave of ORDEM_DAS_CAMADAS) {
+    const texto = view[chave];
+    if (typeof texto !== "string" || texto.length === 0) continue;
+    todas.push({ chave, rotulo: ROTULO_DA_CAMADA[chave], texto });
+  }
   return profundidade === "completa" ? todas : todas.slice(0, CAMADAS_NA_MESA);
 }
 
