@@ -24,6 +24,8 @@ function pc(x: number): string {
 }
 
 import { UserSubscriptionLevel } from "../app/gameController";
+import type { LeituraDaMao } from "./importanciaDaMao";
+import { lerImportancia } from "./importanciaDaMao";
 
 /**
  * DE ONDE VEIO A RECOMENDAÇÃO.
@@ -120,6 +122,12 @@ export interface FeedbackContext {
   /** No momento da decisão, um vilão já está ALL-IN à frente do herói (a aposta
    *  a pagar é um all-in). Serve pra narração deixar o fold/call óbvio. */
   facingAllin?: boolean;
+  /** Quanto falta pagar, em big blinds. Usado pela régua de importância para
+   *  saber se a aposta está colada no ponto de virada. */
+  toCallBB?: number;
+  /** Stack efetivo dividido pelo pote. Abaixo de ~1,5 qualquer aposta já
+   *  compromete o stack — é sinal de spot que ensina. */
+  spr?: number;
 }
 
 /** Texto curto de uma estratégia mista: "Call 70% · Fold 30%". */
@@ -199,6 +207,15 @@ export interface FeedbackItem {
   icmDelta?: IcmDelta;
   /** A MÃO inteira correu sem dica na tela (modo "Jogar sozinho"). */
   semDica?: boolean;
+  /**
+   * QUANTO O COACH DEVE FALAR NESTA MÃO — "obvia" | "interessante" |
+   * "excepcional", com os sinais que acenderam.
+   *
+   * ✨ 17/09/2026, pedido do Allan: *"82o é fold, pronto, acabou. Mas quando eu
+   * dou um raise, quero saber o porquê, a importância, o que a mão representa."*
+   * Calculado em `importanciaDaMao.ts` a partir de dados que o motor já tinha.
+   */
+  importancia?: LeituraDaMao;
 }
 
 export type Family = "fold" | "check" | "call" | "aggro";
@@ -266,6 +283,23 @@ export function gradeDecision(
       if (note) item.text += ` ${note}`;
     }
   }
+  // QUANTO FALAR nesta mão. Só lê o que já foi preenchido acima — se o motor
+  // não entregou o dado, o sinal não acende (mesma disciplina do contrato).
+  item.importancia = lerImportancia({
+    mix: item.mix,
+    adviceFam: item.adviceFam,
+    heroFam: item.heroFam,
+    equity: item.equity,
+    // `potOdds` É a equity exigida pelo preço — é assim que o resto do app o
+    // lê (coachV2Decision e coachV2PostHand mapeiam `requiredEquity: potOdds`).
+    requiredEquity: item.potOdds,
+    icmDelta: item.icmDelta,
+    facingAllin: item.facingAllin,
+    betLevelFaced: item.betLevelFaced,
+    spr: ctx?.spr,
+    breakEvenCallBB: item.breakEvenCallBB,
+    toCallBB: ctx?.toCallBB,
+  });
   return item;
 }
 

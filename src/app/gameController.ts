@@ -25,6 +25,7 @@ import {
 } from "../game/engine";
 import { legalActions, type LegalActions } from "../game/betting";
 import type { TableState } from "../game/state";
+import { actingSeats, inHandSeats } from "../game/state";
 import { seatPositions } from "../bots/seatPosition";
 import { botPreflopAction, preflopContextFor } from "../bots/preflopBot";
 import { botPostflopAction, postflopContextFor } from "../bots/postflopBot";
@@ -32,6 +33,7 @@ import { BASELINE_PROFILE, PROFILES, profileById, adjustProfileForBuyIn, type Bo
 import { buildFieldSeats, pickReplacement } from "../bots/field";
 import { preflopDecision } from "../ranges/preflop";
 import { postflopDecision } from "../bots/decision";
+import { lerMapaDaMesa, type MapaDaMesa } from "../bots/mapaDaMesa";
 import { gradeDecision, type FeedbackContext, type FeedbackItem, type HeroAdvice, type IcmDelta, type Rating } from "../feedback/analyzer";
 
 /** Agrupa a ação em família — comparar "raise" com "3bet" não é diferença de
@@ -1128,11 +1130,21 @@ export class GameController {
           p.committed >= this.table.currentBet - 1e-9 &&
           this.table.currentBet > this.table.bigBlind,
       );
+      // Pote, preço e SPR em big blinds — a régua de importância da mão precisa
+      // deles para saber se o spot é apertado. Lidos do estado da mesa no
+      // instante da decisão, não recalculados por fórmula.
+      const bbUnit = this.table.bigBlind || 1;
+      const heroCommitted = this.table.players[this.heroSeat].committed;
+      const toCallBB = Math.max(0, (this.table.currentBet - heroCommitted) / bbUnit);
+      const potBB = totalPot(this.table) / bbUnit;
+      const heroStackBB = this.table.players[this.heroSeat].stack / bbUnit;
       const feedbackCtx: FeedbackContext = {
         heroPosition: posMap.get(this.heroSeat),
-        heroBB: (this.table.players[this.heroSeat].stack + this.table.players[this.heroSeat].committed) / (this.table.bigBlind || 1),
+        heroBB: (this.table.players[this.heroSeat].stack + this.table.players[this.heroSeat].committed) / bbUnit,
         stage: this.tournament?.stage,
         facingAllin: heroFacingAllinBet,
+        toCallBB,
+        spr: potBB > 0 ? heroStackBB / potBB : undefined,
       };
       const item = gradeDecision(streetLabel, this.userSubscriptionLevel, heroType, advice, feedbackCtx);
       this.feedback.push(item);
@@ -1319,6 +1331,35 @@ export class GameController {
   }
 
   /** Recomendação da linha de base (quase-GTO) para o assento que vai agir. */
+  /**
+   * O MAPA DE STACKS DA MESA no instante atual.
+   *
+   * 17/09/2026. O motor já lia todos os stacks — `preflopBot.ts` monta a lista
+   * para o cálculo de ICM — mas ela morria lá dentro. Aqui a mesma leitura vira
+   * fato narrável: quem cobre quem, quantos estão curtos, quantos ainda falam.
+   * Não decide nada; só descreve o que está na tela.
+   */
+  mapaDaMesa(): MapaDaMesa | undefined {
+    const bb = this.table.bigBlind || 1;
+    // "Ainda fala" = assento que ainda pode agir nesta rodada e vem DEPOIS do
+    // herói na ordem de ação. Lido da ordem real da mesa, não estimado.
+    const podemAgir = new Set(actingSeats(this.table));
+    const ordem = inHandSeats(this.table);
+    const posHeroi = ordem.indexOf(this.heroSeat);
+    const depoisDoHeroi = new Set(
+      posHeroi < 0 ? [] : ordem.slice(posHeroi + 1).filter((x) => podemAgir.has(x)),
+    );
+    return lerMapaDaMesa(
+      this.table.players
+        .filter((p) => p.status === "active" || p.status === "allin")
+        .map((p) => ({
+          bb: (p.stack + p.committed) / bb,
+          heroi: p.seat === this.heroSeat,
+          aindaFala: depoisDoHeroi.has(p.seat),
+        })),
+    );
+  }
+
   private adviceForSeat(seat: number): HeroAdvice | null {
     if (this.table.toAct !== seat || this.table.handOver) return null;
     if (this.table.street === "preflop") {

@@ -14,6 +14,35 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-09-17 — Claude — O coach passa a saber quando calar a boca (e a ver a mesa inteira)
+
+- **Agora ele mede a importância da mão antes de falar.** Você pediu: *"8 e 2 é
+  fold, pronto, acabou. Mas quando eu dou um raise, quero saber o porquê, a
+  importância, o que a mão representa."* A régua não é "decisão apertada" — é
+  **você estar colocando ficha no pote**. Mão que você joga ganha explicação;
+  lixo que você joga fora, não.
+- **Medi antes de mexer.** Rodei 18 torneios em três buy-ins para saber quanto o
+  coach fala hoje (ele comenta 100% das decisões). Com a régua nova, **53% a 63%
+  das decisões ficariam em silêncio** — sobrando atenção para as que ensinam.
+  Régua: `CF_REGUA=1 npx vitest run src/sim/_vozRun.test.ts`.
+- **O mapa da mesa saiu do escuro.** O motor SEMPRE soube quem cobre quem e que
+  tem um short de 5bb na mesa — a lista de stacks já era montada para a conta de
+  ICM e morria ali dentro. Agora ela vira frase: *"Você cobre 5 jogadores, mas
+  existe 1 que cobre você"*, *"Tem um stack de 7bb nesta mesa lutando para
+  sobreviver"*.
+- **Torneio curto, review detalhado.** Na mesa, no meio da decisão, o coach
+  mostra no máximo 2 camadas — o essencial. No review ele abre tudo que o motor
+  provou, na ordem de um comentarista: primeiro a mesa, depois o vilão, depois a
+  conta. O review é superconjunto da mesa: nada some quando você aprofunda.
+- **O que NÃO mudou: a estratégia.** Nenhuma decisão do motor foi alterada.
+  SELO GTO segue 61/61. O que mudou é o quanto e o quando o coach fala.
+- **A trava continua.** As frases novas do mapa mostram a MESA, nunca a CAUSA:
+  o app diz que existe um short de 7bb, e nunca que foi ele que te fez foldar —
+  isso só o cálculo de ICM pode afirmar. Tem teste proibindo as palavras
+  "por isso", "fez você", "obriga".
+- **Onde:** dica na mesa (Torneio) e tela de Review.
+
+
 Regras do registro:
 - **Mais novo em cima** (a entrada mais recente sempre no topo da lista abaixo).
 - **Uma entrada por push** que muda o app (UI, motor, site ou textos).

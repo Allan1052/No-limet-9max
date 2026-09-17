@@ -35,7 +35,9 @@ export type FamiliaDica =
   | "icmDelta"
   | "exploit"
   | "resultado"
-  | "precoDoPote";
+  | "precoDoPote"
+  | "mapaDaMesa"
+  | "pressaoDaMesa";
 
 export interface ContratoDica {
   familia: FamiliaDica;
@@ -48,6 +50,24 @@ export interface ContratoDica {
 }
 
 export const CONTRATO_DICAS: ContratoDica[] = [
+  {
+    familia: "mapaDaMesa",
+    rotulo: "O mapa da mesa (quem cobre quem)",
+    exige: ["mapa"],
+    promessa:
+      "Diz quantos jogadores o herói cobre e quantos cobrem ele. É aritmética " +
+      "sobre os stacks que o motor já lia para o ICM e jogava fora — cada " +
+      "número é conferível olhando a mesa.",
+  },
+  {
+    familia: "pressaoDaMesa",
+    rotulo: "Os stacks curtos da mesa",
+    exige: ["mapa"],
+    promessa:
+      "Aponta os stacks críticos que estão na mesa, mesmo fora desta mão. Não " +
+      "afirma que ELES mudaram a decisão — só mostra que existem, porque é o " +
+      "que o motor pode provar. A causalidade do ICM continua sendo do icmDelta.",
+  },
   {
     familia: "leituraRange",
     rotulo: "A leitura (range do vilão)",

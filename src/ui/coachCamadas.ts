@@ -19,6 +19,8 @@
 import type { Family, IcmDelta } from "../feedback/analyzer";
 import { actionLabel } from "../feedback/analyzer";
 import { temDadoPara } from "../feedback/coachContract";
+import type { MapaDaMesa } from "../bots/mapaDaMesa";
+import { SHORT_CRITICO_BB } from "../bots/mapaDaMesa";
 
 export type CoachModo = "simple" | "technical";
 
@@ -28,6 +30,44 @@ export type CoachModo = "simple" | "technical";
  * foi ("o preço estava bom"). Sem isto, uma das duas telas fica escrita errado.
  */
 export type CoachMomento = "aoVivo" | "posMao";
+
+/**
+ * QUANTO o coach abre. Nasceu do pedido do Allan em 17/09/2026: *"no torneio
+ * deixa uma coisa mais básica, explicando um pouco menor. No review eu queria
+ * ver a explicação mais detalhada da mão, como os comentaristas fazem."*
+ *
+ *   · "curta"    — na mesa, decidindo: o essencial em uma ou duas frases.
+ *   · "completa" — no review, sem pressa: tudo que o motor provou.
+ *
+ * A profundidade NÃO muda o conteúdo: as frases são as mesmas, saem dos mesmos
+ * dados e passam pelo mesmo contrato. O que muda é QUANTAS chegam à tela — e a
+ * ordem é a de quem comenta uma mão: primeiro a mesa, depois a leitura, depois
+ * a conta. Nenhuma frase nova é inventada para o review.
+ */
+export type CoachProfundidade = "curta" | "completa";
+
+/**
+ * A ORDEM EM QUE O COACH FALA — do mais decisivo para o mais fino.
+ *
+ * É a ordem que um comentarista usa: primeiro o que está em jogo na mesa
+ * (stacks), depois quem é o vilão (range), depois a conta, e por último os
+ * detalhes que só interessam a quem quer se aprofundar. Na profundidade curta
+ * o coach mostra só as primeiras; no review mostra todas.
+ */
+export const ORDEM_DAS_CAMADAS: (keyof CamadasView)[] = [
+  "pesoDaBolha",      // o torneio virou a decisão: nada é mais importante
+  "mapaDaMesa",       // quem cobre quem
+  "leitura",          // quão largo é o range dele
+  "conta",            // sua chance contra a chance exigida
+  "precoDoPote",      // o que você paga para disputar o quê
+  "pressaoDaMesa",    // os shorts que estão na mesa
+  "topoRange",        // quanto do range dele é trinca ou melhor
+  "cartasSalvadoras", // os outs
+  "oQueMudaria",      // o ponto de virada
+];
+
+/** Quantas camadas cabem na mesa, no meio da decisão. */
+export const CAMADAS_NA_MESA = 2;
 
 /** Os dados de que as camadas precisam, com nomes únicos para as duas telas. */
 export interface FonteCamadas {
@@ -53,6 +93,8 @@ export interface FonteCamadas {
   toCallBB?: number;
   /** Quantos oponentes ainda disputam o pote (sem o herói). */
   oponentes?: number;
+  /** O mapa de stacks da mesa — quem cobre quem, quem está curto. */
+  mapa?: MapaDaMesa;
 }
 
 export interface CamadasView {
@@ -74,6 +116,10 @@ export interface CamadasView {
    * não estima equity e por isso "A conta" não nasce.
    */
   precoDoPote?: string;
+  /** Quem cobre quem: a relação de stacks do herói com a mesa. */
+  mapaDaMesa?: string;
+  /** Os stacks curtos que estão na mesa, mesmo fora desta mão. */
+  pressaoDaMesa?: string;
 }
 
 function percent(value: number): string {
@@ -221,7 +267,70 @@ export function construirCamadas(
     oQueMudaria: buildOQueMudaria(f, mode),
     cartasSalvadoras: buildCartasSalvadoras(f, mode, momento),
     precoDoPote: buildPrecoDoPote(f, mode),
+    mapaDaMesa: buildMapaDaMesa(f, mode),
+    pressaoDaMesa: buildPressaoDaMesa(f, mode),
   };
+}
+
+// ---------------------------------------------------------------------------
+// AS FRASES DO MAPA DA MESA.
+//
+// ⚠️ O limite aqui é fino e proposital. O motor SABE quem cobre quem e sabe que
+// existe um short de 5bb. O que ele NÃO sabe é se aquele short mudou esta
+// decisão — isso só o `icmDelta` pode afirmar, porque ele roda o motor duas
+// vezes. Então estas frases mostram a MESA, nunca a CAUSA. A diferença entre
+// "existe um short de 5bb" (fato) e "esse short fez você foldar" (invenção) é
+// exatamente a trava que o contrato protege.
+// ---------------------------------------------------------------------------
+
+function buildMapaDaMesa(f: FonteCamadas, mode: CoachModo): string | undefined {
+  if (!temDadoPara("mapaDaMesa", f as unknown as Record<string, unknown>)) return undefined;
+  const m = f.mapa;
+  if (!m) return undefined;
+  const bb = Math.round(m.heroBB);
+  if (m.cobre === 0 && m.cobertoPor === 0) return undefined;
+  if (mode === "technical") {
+    return `Mesa: ${bb}bb · cobre ${m.cobre}, coberto por ${m.cobertoPor} de ${m.vivos - 1}.`;
+  }
+  if (m.cobertoPor === 0) {
+    return `Com ${bb}bb você é o maior da mesa: cobre os ${m.cobre} adversários.`;
+  }
+  if (m.cobre === 0) {
+    return `Com ${bb}bb você é o menor: os ${m.cobertoPor} adversários cobrem você.`;
+  }
+  const plural = m.cobertoPor === 1 ? "existe 1 jogador que cobre" : `existem ${m.cobertoPor} que cobrem`;
+  return `Você cobre ${m.cobre} ${m.cobre === 1 ? "jogador" : "jogadores"}, mas ${plural} você.`;
+}
+
+function buildPressaoDaMesa(f: FonteCamadas, mode: CoachModo): string | undefined {
+  if (!temDadoPara("pressaoDaMesa", f as unknown as Record<string, unknown>)) return undefined;
+  const m = f.mapa;
+  if (!m || m.shorts === 0 || m.menorBB === undefined) return undefined;
+  const menor = Math.round(m.menorBB);
+  if (mode === "technical") {
+    return `${m.shorts} stack(s) ≤ ${SHORT_CRITICO_BB}bb na mesa; menor: ${menor}bb.`;
+  }
+  if (m.shorts === 1) {
+    return `Tem um stack de ${menor}bb nesta mesa lutando para sobreviver.`;
+  }
+  return `Tem ${m.shorts} stacks curtos nesta mesa — o menor com ${menor}bb.`;
+}
+
+/**
+ * Devolve as camadas na ordem do comentarista, já cortadas pela profundidade.
+ *
+ * Na mesa entram no máximo `CAMADAS_NA_MESA` — o jogador está decidindo, não
+ * lendo. No review entra tudo que o motor provou, porque ali o tempo da decisão
+ * já passou e o objetivo é entender.
+ */
+export function camadasEmOrdem(
+  view: CamadasView,
+  profundidade: CoachProfundidade,
+): string[] {
+  const todas = ORDEM_DAS_CAMADAS
+    .map((k) => view[k])
+    .filter((x): x is string => typeof x === "string" && x.length > 0);
+  return profundidade === "completa" ? todas : todas.slice(0, CAMADAS_NA_MESA);
 }
 
 // ---------------------------------------------------------------------------
