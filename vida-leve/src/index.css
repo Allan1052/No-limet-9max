@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    overscroll-behavior-y: none;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .cartao {
+    @apply rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70;
+  }
+  .rotulo {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+  .campo {
+    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition
+      placeholder:text-slate-400 focus:border-marca-500 focus:ring-4 focus:ring-marca-100;
+  }
+  .botao {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-base font-semibold transition
+      active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .botao-primario {
+    @apply botao bg-marca-600 text-white shadow-sm shadow-marca-600/30 hover:bg-marca-700;
+  }
+  .botao-secundario {
+    @apply botao bg-slate-100 text-slate-800 hover:bg-slate-200;
+  }
+  .pt-seguro {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  .pb-seguro {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
