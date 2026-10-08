@@ -25,7 +25,9 @@ export function Conquistas() {
             <div key={s.rotulo} className="cartao p-3">
               <p className="text-2xl">{s.emoji}</p>
               <p className="text-2xl font-bold tabular-nums">{s.atual}</p>
-              <p className="text-xs text-slate-500">dias de {s.rotulo.toLowerCase()}</p>
+              <p className="text-xs text-slate-500">
+                {s.atual === 1 ? "dia" : "dias"} de {s.rotulo.toLowerCase()}
+              </p>
               <p className="mt-1 text-[10px] text-slate-400">recorde: {s.melhor}</p>
             </div>
           ))}

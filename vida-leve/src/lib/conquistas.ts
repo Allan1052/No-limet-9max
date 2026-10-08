@@ -127,7 +127,7 @@ export function calcularConquistas(d: DadosConquistas, hoje: string): Conquista[
     { id: "checkin_1", emoji: "⚖️", titulo: "Primeira pesagem", descricao: "Fez o primeiro check-in", ok: d.pesos.length >= 1 },
     {
       id: "checkin_4",
-      emoji: "📅",
+      emoji: "📈",
       titulo: "Constância",
       descricao: "4 check-ins de peso",
       ok: d.pesos.length >= 4,

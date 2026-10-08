@@ -23,6 +23,7 @@ export const CONCLUSOES_POR_NIVEL = 5;
 
 const por = <T>(nivel: number, valores: readonly [T, T, T, T]): T => valores[Math.min(NIVEL_MAX, Math.max(1, nivel)) - 1]!;
 const sempre = () => true;
+const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
 export const CATALOGO: readonly Missao[] = [
   // ── transporte ──
@@ -59,7 +60,7 @@ export const CATALOGO: readonly Missao[] = [
     vaga: "transporte",
     tipo: "transporte",
     serve: (r) => r.transporte === "home_office" || r.transporte === "carro",
-    texto: (n) => `Dar ${por(n, [1, 2, 2, 3])} volta(s) no quarteirão ao chegar em casa`,
+    texto: (n) => `Dar ${plural(por(n, [1, 2, 2, 3]), "volta", "voltas")} no quarteirão ao chegar em casa`,
   },
   // ── movimento ──
   {
@@ -84,7 +85,7 @@ export const CATALOGO: readonly Missao[] = [
     texto: (n, r) =>
       r.sobe_escadas
         ? `Subir as escadas em ritmo acelerado ${por(n, [2, 3, 4, 5])} vezes`
-        : `Trocar o elevador pela escada em ${por(n, [1, 2, 3, 4])} andar(es)`,
+        : `Trocar o elevador pela escada em ${plural(por(n, [1, 2, 3, 4]), "andar", "andares")}`,
   },
   {
     id: "agachamentos",

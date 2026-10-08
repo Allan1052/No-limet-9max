@@ -69,7 +69,7 @@ describe("decidirAjuste", () => {
   it("espera 14 dias entre ajustes", () => {
     const d = decidirAjuste(lento, -100, "2026-10-22", HOJE, false);
     expect(d).toMatchObject({ novo_ajuste_kcal: -100, aplicado: false });
-    expect(d.motivo).toMatch(/7 dia/);
+    expect(d.motivo).toMatch(/7 dias/);
   });
 
   it("respeita o limite de ±300 kcal", () => {

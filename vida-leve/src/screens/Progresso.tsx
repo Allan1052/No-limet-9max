@@ -28,7 +28,7 @@ export function Progresso() {
             role="tab"
             aria-selected={secao === s.id}
             onClick={() => setSecao(s.id)}
-            className={`rounded-xl py-2 text-sm font-medium transition ${
+            className={`min-w-0 truncate rounded-xl px-1 py-2 text-[13px] font-medium ${
               secao === s.id ? "bg-superficie text-slate-900 shadow-sm" : "text-slate-500"
             }`}
           >

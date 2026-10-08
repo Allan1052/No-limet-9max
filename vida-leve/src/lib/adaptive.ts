@@ -146,7 +146,7 @@ export function decidirAjuste(
     return {
       novo_ajuste_kcal: ajusteAtual,
       aplicado: false,
-      motivo: `${analise.mensagem} (Próximo ajuste possível em ${faltam} dia(s), para dar tempo de o corpo responder.)`,
+      motivo: `${analise.mensagem} (Próximo ajuste possível em ${faltam} ${faltam === 1 ? "dia" : "dias"}, para dar tempo de o corpo responder.)`,
     };
   }
   const novo = Math.max(-AJUSTE_MAX_KCAL, Math.min(AJUSTE_MAX_KCAL, ajusteAtual + analise.sugestao_kcal));

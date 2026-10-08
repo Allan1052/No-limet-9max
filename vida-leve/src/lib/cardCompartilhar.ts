@@ -12,8 +12,12 @@ export interface DadosCard {
   emojisConquistas: string[];
 }
 
-function textoCentro(ctx: CanvasRenderingContext2D, texto: string, y: number, fonte: string, cor: string) {
+/** Escreve centralizado; se não couber na largura, diminui a fonte. */
+function textoCentro(ctx: CanvasRenderingContext2D, texto: string, y: number, fonte: string, cor: string, larguraMax = 960) {
   ctx.font = fonte;
+  const px = Number(/(\d+)px/.exec(fonte)?.[1] ?? 40);
+  const largura = ctx.measureText(texto).width;
+  if (largura > larguraMax) ctx.font = fonte.replace(`${px}px`, `${Math.floor((px * larguraMax) / largura)}px`);
   ctx.fillStyle = cor;
   ctx.textAlign = "center";
   ctx.fillText(texto, 540, y);
@@ -61,7 +65,14 @@ export async function gerarCard(d: DadosCard): Promise<Blob> {
   ctx.beginPath();
   ctx.roundRect(140, 820, 800, 200, 40);
   ctx.fill();
-  textoCentro(ctx, `🔥 ${d.sequenciaMissoes} dias de missões   ·   🏅 ${d.conquistas} conquistas`, 905, fonte(600, 40), "#ffffff");
+  textoCentro(
+    ctx,
+    `🔥 ${d.sequenciaMissoes} ${d.sequenciaMissoes === 1 ? "dia" : "dias"} de missões   ·   🏅 ${d.conquistas} ${d.conquistas === 1 ? "conquista" : "conquistas"}`,
+    905,
+    fonte(600, 40),
+    "#ffffff",
+    740,
+  );
   textoCentro(ctx, d.emojisConquistas.slice(0, 8).join("  "), 980, fonte(400, 50), "#ffffff");
 
   textoCentro(ctx, "Uma semana por vez. 💚", 1180, fonte(600, 46), "#ffffff");

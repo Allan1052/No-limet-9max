@@ -108,7 +108,8 @@ export function Dashboard() {
           <p className="text-xl font-bold tabular-nums">{profile.peso_atual.toString().replace(".", ",")} kg</p>
           {perdido !== 0 && (
             <p className={`text-xs font-semibold ${perdido > 0 ? "text-marca-600" : "text-amber-600"}`}>
-              {perdido > 0 ? `−${perdido}` : `+${Math.abs(perdido)}`} kg desde o início
+              {perdido > 0 ? "−" : "+"}
+              {Math.abs(perdido).toString().replace(".", ",")} kg desde o início
             </p>
           )}
         </button>

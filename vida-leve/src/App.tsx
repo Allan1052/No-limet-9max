@@ -1,5 +1,5 @@
-import { Leaf, Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { BottomNav } from "./components/BottomNav";
 import { Comemoracao } from "./components/Comemoracao";
 import { ToastErro } from "./components/Toast";
@@ -14,7 +14,10 @@ import { Dashboard } from "./screens/Dashboard";
 import { Onboarding } from "./screens/Onboarding";
 import { Profile } from "./screens/Profile";
 import { Progresso } from "./screens/Progresso";
-import { useAppStore } from "./store/useAppStore";
+import { useAppStore, type Aba } from "./store/useAppStore";
+import { usePreferencias } from "./store/usePreferencias";
+
+const ABAS: readonly Aba[] = ["inicio", "comida", "progresso", "perfil"];
 
 export default function App() {
   const status = useAppStore((s) => s.status);
@@ -48,14 +51,30 @@ export default function App() {
     window.scrollTo({ top: 0 });
   }, [aba]);
 
+  // Atalhos do ícone do app (manifest "shortcuts"): ?aba=progresso, ?acao=agua
+  const atalhoFeito = useRef(false);
+  useEffect(() => {
+    if (status !== "pronto" || atalhoFeito.current) return;
+    atalhoFeito.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const alvo = q.get("aba") as Aba | null;
+    if (alvo && ABAS.includes(alvo)) useAppStore.getState().irPara(alvo);
+    if (q.get("acao") === "agua") {
+      const copos = usePreferencias.getState().copos;
+      void useAppStore.getState().adicionarAgua(copos[1] ?? copos[0] ?? 250);
+    }
+    if (q.toString()) window.history.replaceState(null, "", window.location.pathname);
+  }, [status]);
+
   return (
     <>
       <ToastErro />
       <Comemoracao />
       {status === "carregando" && (
-        <div className="flex min-h-dvh flex-col items-center justify-center gap-3 text-marca-600">
-          <Leaf className="h-10 w-10" />
-          <Loader2 className="h-6 w-6 animate-spin" />
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-gradient-to-br from-marca-600 to-sky-600 text-white">
+          <img src="/icon-maskable-512.png" alt="" className="h-24 w-24 rounded-[28px] shadow-xl" />
+          <p className="text-2xl font-bold">Vida Leve</p>
+          <Loader2 className="h-6 w-6 animate-spin opacity-80" />
         </div>
       )}
       {status === "login" && <AuthScreen />}
