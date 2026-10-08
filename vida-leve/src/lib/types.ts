@@ -22,8 +22,16 @@ export interface Rotina {
   pratica_atividade: boolean;
 }
 
+/** Perguntas de segurança: mudam o plano para manutenção ou geram alertas. */
+export interface Saude {
+  /** Gestante ou amamentando → sem déficit calórico. */
+  gestante_lactante: boolean;
+  /** Diabetes, doença renal, cardíaca, uso de remédio contínuo etc. → alerta forte. */
+  condicao_saude: boolean;
+}
+
 /** O que o usuário preenche no onboarding / edição de perfil. */
-export interface ProfileInput extends Rotina {
+export interface ProfileInput extends Rotina, Saude {
   nome: string;
   idade: number;
   sexo: Sexo;
@@ -31,6 +39,8 @@ export interface ProfileInput extends Rotina {
   peso_inicial: number;
   nivel_atividade: NivelAtividade;
 }
+
+export type ModoPlano = "deficit" | "manutencao";
 
 /** Metas calculadas — sempre derivadas do peso atual. */
 export interface PlanoMetas {
@@ -41,6 +51,7 @@ export interface PlanoMetas {
   meta_agua_ml: number;
   meta_proteina_g: number;
   imc: number;
+  modo: ModoPlano;
 }
 
 export interface Profile extends ProfileInput {
@@ -50,6 +61,9 @@ export interface Profile extends ProfileInput {
   meta_agua_ml: number;
   meta_proteina_g: number;
   calorias_meta: number;
+  /** Ajuste automático (kcal) feito pelo recálculo adaptativo, de −300 a +300. */
+  ajuste_kcal: number;
+  ultimo_ajuste_em: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,14 +85,65 @@ export interface WaterLog {
   created_at: string;
 }
 
+export interface TotalDia {
+  data: string;
+  total: number;
+}
+
+/** Missão de um dia específico. As missões mudam a cada dia. */
 export interface RoutineHabit {
   id: string;
   user_id: string;
+  data: string;
+  missao_id: string;
+  nivel: number;
   descricao_habito: string;
   tipo: TipoHabito;
   concluido_hoje: boolean;
-  /** Dia da última conclusão — usado para "zerar" as missões a cada novo dia. */
-  data_conclusao: string | null;
 }
 
-export type NovoHabito = Pick<RoutineHabit, "descricao_habito" | "tipo">;
+export type NovoHabito = Pick<RoutineHabit, "missao_id" | "nivel" | "descricao_habito" | "tipo">;
+
+export interface FoodLog {
+  id: string;
+  user_id: string;
+  data: string;
+  nome: string;
+  proteina_g: number;
+  calorias: number;
+  created_at: string;
+}
+
+export type NovoAlimento = Pick<FoodLog, "nome" | "proteina_g" | "calorias">;
+
+export interface FoodTotalDia {
+  data: string;
+  proteina_g: number;
+  calorias: number;
+}
+
+export interface Measurement {
+  id: string;
+  user_id: string;
+  data: string;
+  cintura_cm: number;
+  quadril_cm: number | null;
+  created_at: string;
+}
+
+/** O que um parceiro enxerga (só o que a pessoa escolheu compartilhar). */
+export interface ResumoPublico {
+  atualizado_em: string;
+  pct_dia: number;
+  sequencia_agua: number;
+  sequencia_missoes: number;
+  missoes_hoje: number;
+  missoes_total_hoje: number;
+  kg_perdidos: number | null;
+}
+
+export interface Parceiro {
+  id: string;
+  nome: string;
+  resumo: ResumoPublico | null;
+}

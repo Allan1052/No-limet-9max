@@ -53,8 +53,25 @@ describe("calorias com déficit seguro", () => {
   });
 
   it("limita o déficit à faixa 400–500 kcal", () => {
-    expect(calcularCaloriasMeta(2500, "masculino", 900).deficit_aplicado).toBe(500);
-    expect(calcularCaloriasMeta(2500, "masculino", 100).deficit_aplicado).toBe(400);
+    expect(calcularCaloriasMeta(2500, "masculino", { deficit: 900 }).deficit_aplicado).toBe(500);
+    expect(calcularCaloriasMeta(2500, "masculino", { deficit: 100 }).deficit_aplicado).toBe(400);
+  });
+
+  it("aplica o ajuste adaptativo, limitado a ±300 kcal", () => {
+    expect(calcularCaloriasMeta(2500, "masculino", { ajuste_kcal: -100 }).calorias_meta).toBe(1950);
+    expect(calcularCaloriasMeta(2500, "masculino", { ajuste_kcal: 200 }).calorias_meta).toBe(2250);
+    expect(calcularCaloriasMeta(2500, "masculino", { ajuste_kcal: -900 }).calorias_meta).toBe(1750);
+  });
+
+  it("o ajuste nunca fura o piso calórico", () => {
+    expect(calcularCaloriasMeta(1700, "feminino", { ajuste_kcal: -300 }).calorias_meta).toBe(1200);
+  });
+
+  it("manutenção: sem déficit e sem ajuste", () => {
+    expect(calcularCaloriasMeta(2200, "feminino", { modo: "manutencao", ajuste_kcal: -300 })).toEqual({
+      calorias_meta: 2200,
+      deficit_aplicado: 0,
+    });
   });
 
   it("nunca desce do piso por sexo (1200 F / 1500 M) — o déficit encolhe", () => {
@@ -98,7 +115,25 @@ describe("recalcularPlano (recálculo adaptativo)", () => {
       meta_agua_ml: 3150,
       meta_proteina_g: 162,
       imc: 29.4,
+      modo: "deficit",
     });
+  });
+
+  it("gestante/amamentando → manutenção (sem déficit)", () => {
+    const p = recalcularPlano({ ...pessoa, peso_kg: 90, sexo: "feminino" }, "leve", { gestante_lactante: true });
+    expect(p.modo).toBe("manutencao");
+    expect(p.calorias_meta).toBe(p.gasto_total);
+  });
+
+  it("IMC abaixo de 18,5 → manutenção", () => {
+    const p = recalcularPlano({ ...pessoa, peso_kg: 55 }, "leve");
+    expect(p.imc).toBeLessThan(18.5);
+    expect(p.modo).toBe("manutencao");
+    expect(p.deficit_aplicado).toBe(0);
+  });
+
+  it("menor de 18 anos é recusado", () => {
+    expect(() => recalcularPlano({ ...pessoa, peso_kg: 70, idade: 17 }, "leve")).toThrow(ErroDadosInvalidos);
   });
 
   it("perder peso reduz TMB, água, proteína e calorias", () => {

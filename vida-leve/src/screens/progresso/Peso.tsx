@@ -1,13 +1,16 @@
-import { ArrowDown, ArrowRight, ArrowUp, Loader2, RefreshCw, Scale, Trash2 } from "lucide-react";
+import { Activity, ArrowDown, ArrowRight, ArrowUp, Loader2, RefreshCw, Scale, Share2, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { paraNumero } from "../components/useProfileForm";
-import { WeightChart } from "../components/WeightChart";
-import { LIMITES } from "../lib/calculations";
-import { formatarDataLonga, hojeISO } from "../lib/dates";
-import type { PlanoMetas } from "../lib/types";
-import { useAppStore } from "../store/useAppStore";
+import { Aviso } from "../../components/Aviso";
+import { paraNumero } from "../../components/useProfileForm";
+import { WeightChart } from "../../components/WeightChart";
+import { LIMITES } from "../../lib/calculations";
+import { formatarDataLonga, hojeISO } from "../../lib/dates";
+import type { PlanoMetas } from "../../lib/types";
+import { useRitmoAtual } from "../../store/derivados";
+import { useAppStore } from "../../store/useAppStore";
+import { CompartilharCard } from "./CompartilharCard";
 
-const LINHAS: { chave: keyof PlanoMetas; rotulo: string; sufixo: string }[] = [
+const LINHAS: { chave: Exclude<keyof PlanoMetas, "modo">; rotulo: string; sufixo: string }[] = [
   { chave: "tmb", rotulo: "Metabolismo basal", sufixo: "kcal" },
   { chave: "calorias_meta", rotulo: "Calorias/dia", sufixo: "kcal" },
   { chave: "meta_agua_ml", rotulo: "Água/dia", sufixo: "ml" },
@@ -17,12 +20,14 @@ const LINHAS: { chave: keyof PlanoMetas; rotulo: string; sufixo: string }[] = [
 
 const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 
-export function CheckIn() {
+export function Peso() {
   const profile = useAppStore((s) => s.profile);
   const pesos = useAppStore((s) => s.pesos);
   const resumo = useAppStore((s) => s.ultimoRecalculo);
   const registrarPeso = useAppStore((s) => s.registrarPeso);
   const apagarPeso = useAppStore((s) => s.apagarPeso);
+  const ritmo = useRitmoAtual();
+  const [compartilhar, setCompartilhar] = useState(false);
 
   const [peso, setPeso] = useState("");
   const [data, setData] = useState(hojeISO());
@@ -58,7 +63,7 @@ export function CheckIn() {
   return (
     <div className="space-y-4">
       <header className="mb-2">
-        <h1 className="text-2xl font-bold">Check-in de peso</h1>
+        <h2 className="text-lg font-bold">Check-in de peso</h2>
         <p className="text-sm text-slate-500">
           {diasDesdeUltimo === null
             ? "Registre sua primeira pesagem."
@@ -137,13 +142,60 @@ export function CheckIn() {
               })}
             </tbody>
           </table>
+          <div className="mt-3">
+            <Aviso tipo={resumo.decisao.aplicado ? "sucesso" : "info"} icone={<Activity className="h-5 w-5" />}>
+              {resumo.decisao.aplicado && (
+                <b className="mb-0.5 block">
+                  Ajuste automático aplicado: agora {resumo.decisao.novo_ajuste_kcal > 0 ? "+" : ""}
+                  {resumo.decisao.novo_ajuste_kcal} kcal/dia no seu plano.
+                </b>
+              )}
+              {resumo.decisao.motivo}
+            </Aviso>
+          </div>
+        </section>
+      )}
+
+      {ritmo && !resumo && (
+        <section className="cartao">
+          <h2 className="mb-2 flex items-center gap-2 font-semibold">
+            <Activity className="h-5 w-5 text-marca-600" /> Seu ritmo
+          </h2>
+          {ritmo.ritmo_kg_semana !== null && (
+            <div className="mb-3 grid grid-cols-2 gap-3 text-center">
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Real</p>
+                <p className="text-lg font-bold tabular-nums">{fmt(ritmo.ritmo_kg_semana)} kg/sem</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Previsto</p>
+                <p className="text-lg font-bold tabular-nums">{fmt(ritmo.esperado_kg_semana)} kg/sem</p>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-slate-600">{ritmo.mensagem}</p>
+          {profile.ajuste_kcal !== 0 && (
+            <p className="mt-2 text-xs text-slate-500">
+              Ajuste automático em vigor: {profile.ajuste_kcal > 0 ? "+" : ""}
+              {profile.ajuste_kcal} kcal/dia.
+            </p>
+          )}
         </section>
       )}
 
       <section className="cartao">
-        <h2 className="mb-2 font-semibold">Evolução</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-semibold">Evolução</h2>
+          <button type="button" className="flex items-center gap-1 text-sm font-semibold text-marca-700" onClick={() => setCompartilhar(true)}>
+            <Share2 className="h-4 w-4" /> Compartilhar
+          </button>
+        </div>
         <WeightChart logs={pesos} pesoInicial={profile.peso_inicial} />
+        <p className="mt-2 text-xs text-slate-500">
+          O peso do dia varia 1–2 kg por água e sal. Olhe a linha de tendência — ela mostra a direção real.
+        </p>
       </section>
+      {compartilhar && <CompartilharCard onFechar={() => setCompartilhar(false)} />}
 
       {pesos.length > 0 && (
         <section className="cartao">

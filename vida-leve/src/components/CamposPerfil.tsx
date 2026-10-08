@@ -131,3 +131,24 @@ export function CamposRotina({ form, erros, set }: Props) {
     </div>
   );
 }
+
+export function CamposSaude({ form, set }: Props) {
+  return (
+    <div className="space-y-6">
+      {form.sexo === "feminino" && (
+        <div>
+          <span className="rotulo">Está grávida ou amamentando?</span>
+          <SimNao nome="Gestante ou amamentando" valor={form.gestante_lactante} onChange={(v) => set("gestante_lactante", v)} />
+          <p className="mt-1.5 text-xs text-slate-500">Se sim, o app não propõe déficit calórico — só hábitos e hidratação.</p>
+        </div>
+      )}
+      <div>
+        <span className="rotulo">Tem alguma condição de saúde ou usa remédio contínuo?</span>
+        <SimNao nome="Condição de saúde" valor={form.condicao_saude} onChange={(v) => set("condicao_saude", v)} />
+        <p className="mt-1.5 text-xs text-slate-500">
+          Ex.: diabetes, pressão alta, doença nos rins, no coração ou na tireoide, transtorno alimentar.
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -29,7 +29,7 @@ export function Opcoes<T extends string>({ nome, opcoes, valor, onChange, coluna
             className={`rounded-2xl border px-3 py-3 text-left text-sm transition ${
               ativo
                 ? "border-marca-500 bg-marca-50 font-semibold text-marca-700 ring-2 ring-marca-100"
-                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                : "border-slate-200 bg-superficie text-slate-700 hover:border-slate-300"
             }`}
           >
             {o.rotulo}

@@ -24,6 +24,8 @@ const ana: ProfileInput = {
   horas_sentado: 8,
   sobe_escadas: false,
   pratica_atividade: false,
+  gestante_lactante: false,
+  condicao_saude: false,
 };
 
 describe("LocalRepository — recálculo a cada check-in", () => {
@@ -77,14 +79,63 @@ describe("LocalRepository — recálculo a cada check-in", () => {
     expect(await repo.listWeightLogs()).toHaveLength(0);
   });
 
-  it("água e missões", async () => {
+  it("ajuste adaptativo entra nas calorias e é persistido", async () => {
+    const antes = await repo.saveProfile(ana);
+    const p = await repo.setAjuste(-100, "2026-10-08");
+    expect(p.calorias_meta).toBe(antes.calorias_meta - 100);
+    expect(p).toMatchObject({ ajuste_kcal: -100, ultimo_ajuste_em: "2026-10-08" });
+    expect((await repo.addWeightLog(69, "2026-10-09")).ajuste_kcal).toBe(-100);
+  });
+
+  it("gestante: plano em manutenção (sem déficit)", async () => {
+    const p = await repo.saveProfile({ ...ana, gestante_lactante: true });
+    expect(p.calorias_meta).toBe(1953); // = gasto total
+  });
+
+  it("água: lista do dia e totais por dia", async () => {
     await repo.saveProfile(ana);
     const a = await repo.addWater(250, "2026-10-08");
     await repo.addWater(250, "2026-10-08");
+    await repo.addWater(500, "2026-10-07");
     await repo.deleteWater(a.id);
     expect(await repo.listWaterLogs("2026-10-08")).toHaveLength(1);
-    const [h] = await repo.replaceHabits([{ tipo: "movimento", descricao_habito: "Caminhar" }]);
-    const feito = await repo.setHabitDone(h!.id, true, "2026-10-08");
-    expect(feito).toMatchObject({ concluido_hoje: true, data_conclusao: "2026-10-08" });
+    expect(await repo.listWaterTotals("2026-10-01")).toEqual([
+      { data: "2026-10-07", total: 500 },
+      { data: "2026-10-08", total: 250 },
+    ]);
+  });
+
+  it("missões do dia: regravar mantém as concluídas", async () => {
+    await repo.saveProfile(ana);
+    const m = (id: string) => ({ missao_id: id, nivel: 1, tipo: "movimento" as const, descricao_habito: id });
+    const [a] = await repo.setDayHabits("2026-10-08", [m("a"), m("b")]);
+    await repo.setHabitDone(a!.id, true);
+    const novas = await repo.setDayHabits("2026-10-08", [m("a"), m("c")]);
+    expect(novas.map((h) => [h.missao_id, h.concluido_hoje])).toEqual([
+      ["a", true],
+      ["c", false],
+    ]);
+    await repo.setDayHabits("2026-10-09", [m("x")]);
+    expect(await repo.listHabits("2026-10-09")).toHaveLength(1);
+    expect(await repo.listHabits("2026-10-01")).toHaveLength(3);
+  });
+
+  it("comida: totais de proteína e calorias por dia", async () => {
+    await repo.saveProfile(ana);
+    await repo.addFood({ nome: "Ovo", proteina_g: 7, calorias: 73 }, "2026-10-08");
+    const f = await repo.addFood({ nome: "Frango", proteina_g: 32, calorias: 159 }, "2026-10-08");
+    expect(await repo.listFoodTotals("2026-10-01")).toEqual([{ data: "2026-10-08", proteina_g: 39, calorias: 232 }]);
+    await repo.deleteFood(f.id);
+    expect(await repo.listFood("2026-10-08")).toHaveLength(1);
+  });
+
+  it("medidas e exportação/apagar tudo", async () => {
+    await repo.saveProfile(ana);
+    await repo.addMeasurement({ data: "2026-10-08", cintura_cm: 88, quadril_cm: 102 });
+    expect(await repo.listMeasurements()).toHaveLength(1);
+    const exp = await repo.exportAll();
+    expect(exp).toHaveProperty("measurements");
+    await repo.deleteAll();
+    expect(await repo.getProfile()).toBeNull();
   });
 });

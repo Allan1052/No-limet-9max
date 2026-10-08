@@ -14,6 +14,8 @@ export interface FormPerfil {
   horas_sentado: string;
   sobe_escadas: boolean;
   pratica_atividade: boolean;
+  gestante_lactante: boolean;
+  condicao_saude: boolean;
 }
 
 export type ErrosForm = Partial<Record<keyof FormPerfil, string>>;
@@ -31,6 +33,8 @@ const vazio: FormPerfil = {
   horas_sentado: "8",
   sobe_escadas: false,
   pratica_atividade: false,
+  gestante_lactante: false,
+  condicao_saude: false,
 };
 
 export function deProfile(p: ProfileInput): FormPerfil {
@@ -52,7 +56,10 @@ export function validarBasico(f: FormPerfil): ErrosForm {
   const e: ErrosForm = {};
   if (!f.nome.trim()) e.nome = "Como podemos te chamar?";
   const idade = paraNumero(f.idade);
-  e.idade = faixa("idade", idade, "Idade") ?? (Number.isInteger(idade) ? undefined : "Idade em anos inteiros");
+  e.idade =
+    Number.isFinite(idade) && idade > 0 && idade < LIMITES.idade.min
+      ? "O app é para maiores de 18 anos. Em fase de crescimento, emagrecer precisa de acompanhamento médico."
+      : (faixa("idade", idade, "Idade") ?? (Number.isInteger(idade) ? undefined : "Idade em anos inteiros"));
   e.altura_cm = faixa("altura_cm", paraNumero(f.altura_cm), "Altura em cm");
   e.peso_inicial = faixa("peso_kg", paraNumero(f.peso_inicial), "Peso em kg");
   return limpar(e);
@@ -78,6 +85,9 @@ export function paraInput(f: FormPerfil): ProfileInput {
     horas_sentado: paraNumero(f.horas_sentado),
     sobe_escadas: f.sobe_escadas,
     pratica_atividade: f.pratica_atividade,
+    // Gestação/amamentação só se aplica ao sexo feminino.
+    gestante_lactante: f.sexo === "feminino" && f.gestante_lactante,
+    condicao_saude: f.condicao_saude,
   };
 }
 

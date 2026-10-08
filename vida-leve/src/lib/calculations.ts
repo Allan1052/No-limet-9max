@@ -1,4 +1,4 @@
-import type { DadosCorporais, NivelAtividade, PlanoMetas, Sexo } from "./types";
+import type { DadosCorporais, ModoPlano, NivelAtividade, PlanoMetas, Sexo } from "./types";
 
 /**
  * Funções puras de cálculo. A MESMA lógica está espelhada em SQL no trigger
@@ -13,6 +13,12 @@ export const G_PROTEINA_POR_KG = 1.8;
 export const DEFICIT_PADRAO_KCAL = 450;
 export const DEFICIT_MIN_KCAL = 400;
 export const DEFICIT_MAX_KCAL = 500;
+
+/** Limite do ajuste automático do recálculo adaptativo (kcal). */
+export const AJUSTE_MAX_KCAL = 300;
+
+/** Abaixo deste IMC o app não propõe déficit (só manutenção). */
+export const IMC_MIN_DEFICIT = 18.5;
 
 /** Piso calórico: nunca recomendar abaixo disso sem acompanhamento profissional. */
 export const PISO_CALORICO: Readonly<Record<Sexo, number>> = {
@@ -31,7 +37,8 @@ export const FATOR_ATIVIDADE: Readonly<Record<NivelAtividade, number>> = {
 export const LIMITES = {
   peso_kg: { min: 30, max: 350 },
   altura_cm: { min: 120, max: 230 },
-  idade: { min: 16, max: 100 },
+  // Menores de 18 estão em crescimento: dieta com déficit só com acompanhamento.
+  idade: { min: 18, max: 100 },
   horas_sentado: { min: 0, max: 18 },
 } as const;
 
@@ -66,17 +73,32 @@ export function calcularGastoTotal(tmb: number, nivel: NivelAtividade): number {
   return Math.round(tmb * FATOR_ATIVIDADE[nivel]);
 }
 
+export interface OpcoesCalorias {
+  deficit?: number;
+  /** Ajuste do recálculo adaptativo, limitado a ±300 kcal. */
+  ajuste_kcal?: number;
+  modo?: ModoPlano;
+}
+
 /**
- * Calorias para déficit seguro. O déficit fica na faixa 400–500 kcal, mas a meta
- * nunca desce do piso por sexo — se o piso "come" o déficit, o déficit encolhe.
+ * Calorias para déficit seguro. O déficit fica na faixa 400–500 kcal (mais o
+ * ajuste adaptativo), mas a meta nunca desce do piso por sexo — se o piso
+ * "come" o déficit, o déficit encolhe. Em manutenção não há déficit.
  */
 export function calcularCaloriasMeta(
   gastoTotal: number,
   sexo: Sexo,
-  deficit: number = DEFICIT_PADRAO_KCAL,
+  { deficit = DEFICIT_PADRAO_KCAL, ajuste_kcal = 0, modo = "deficit" }: OpcoesCalorias = {},
 ): { calorias_meta: number; deficit_aplicado: number } {
-  const alvo = Math.min(DEFICIT_MAX_KCAL, Math.max(DEFICIT_MIN_KCAL, deficit));
-  const calorias = Math.max(PISO_CALORICO[sexo], gastoTotal - alvo);
+  let base: number;
+  if (modo === "manutencao") {
+    base = gastoTotal;
+  } else {
+    const alvo = Math.min(DEFICIT_MAX_KCAL, Math.max(DEFICIT_MIN_KCAL, deficit));
+    const ajuste = Math.min(AJUSTE_MAX_KCAL, Math.max(-AJUSTE_MAX_KCAL, Math.round(ajuste_kcal)));
+    base = gastoTotal - alvo + ajuste;
+  }
+  const calorias = Math.max(PISO_CALORICO[sexo], base);
   return { calorias_meta: calorias, deficit_aplicado: Math.max(0, gastoTotal - calorias) };
 }
 
@@ -119,15 +141,34 @@ export function classificarIMC(imc: number): ClassificacaoIMC {
   return { classe: "obesidade_3", rotulo: "Obesidade grau III", cor: "bg-red-200 text-red-900" };
 }
 
+export interface OpcoesPlano {
+  ajuste_kcal?: number;
+  gestante_lactante?: boolean;
+}
+
+/**
+ * Manutenção (sem déficit) quando emagrecer não é indicado sem acompanhamento:
+ * gestante/amamentando ou IMC abaixo de 18,5.
+ */
+export function definirModo(imc: number, gestante_lactante: boolean): ModoPlano {
+  return gestante_lactante || imc < IMC_MIN_DEFICIT ? "manutencao" : "deficit";
+}
+
 /**
  * Recálculo completo do plano. Chamado no onboarding e a CADA novo check-in de
  * peso — é o "coração" do recálculo adaptativo.
  */
-export function recalcularPlano(dados: DadosCorporais, nivel: NivelAtividade): PlanoMetas {
+export function recalcularPlano(
+  dados: DadosCorporais,
+  nivel: NivelAtividade,
+  { ajuste_kcal = 0, gestante_lactante = false }: OpcoesPlano = {},
+): PlanoMetas {
   validarDadosCorporais(dados);
   const tmb = calcularTMB(dados);
   const gasto_total = calcularGastoTotal(tmb, nivel);
-  const { calorias_meta, deficit_aplicado } = calcularCaloriasMeta(gasto_total, dados.sexo);
+  const imc = calcularIMC(dados.peso_kg, dados.altura_cm);
+  const modo = definirModo(imc, gestante_lactante);
+  const { calorias_meta, deficit_aplicado } = calcularCaloriasMeta(gasto_total, dados.sexo, { ajuste_kcal, modo });
   return {
     tmb,
     gasto_total,
@@ -135,7 +176,8 @@ export function recalcularPlano(dados: DadosCorporais, nivel: NivelAtividade): P
     deficit_aplicado,
     meta_agua_ml: calcularMetaAgua(dados.peso_kg),
     meta_proteina_g: calcularMetaProteina(dados.peso_kg),
-    imc: calcularIMC(dados.peso_kg, dados.altura_cm),
+    imc,
+    modo,
   };
 }
 

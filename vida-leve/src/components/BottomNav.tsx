@@ -1,9 +1,10 @@
-import { Home, Scale, UserRound, type LucideIcon } from "lucide-react";
+import { Apple, Home, TrendingDown, UserRound, type LucideIcon } from "lucide-react";
 import { useAppStore, type Aba } from "../store/useAppStore";
 
 const ITENS: { aba: Aba; rotulo: string; Icone: LucideIcon }[] = [
   { aba: "inicio", rotulo: "Hoje", Icone: Home },
-  { aba: "checkin", rotulo: "Check-in", Icone: Scale },
+  { aba: "comida", rotulo: "Comida", Icone: Apple },
+  { aba: "progresso", rotulo: "Progresso", Icone: TrendingDown },
   { aba: "perfil", rotulo: "Perfil", Icone: UserRound },
 ];
 
@@ -11,7 +12,7 @@ export function BottomNav() {
   const aba = useAppStore((s) => s.aba);
   const irPara = useAppStore((s) => s.irPara);
   return (
-    <nav className="pb-seguro fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/90 backdrop-blur">
+    <nav className="pb-seguro fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-superficie/90 backdrop-blur">
       <ul className="mx-auto flex max-w-md">
         {ITENS.map(({ aba: alvo, rotulo, Icone }) => {
           const ativo = aba === alvo;

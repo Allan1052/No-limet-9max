@@ -2,7 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paleta em variáveis (r g b). O tema escuro (classe .dark no <html>) só troca
+   os valores — ver tailwind.config.js. */
 @layer base {
+  :root {
+    color-scheme: light;
+    --superficie: 255 255 255;
+    --slate-50: 248 250 252;
+    --slate-100: 241 245 249;
+    --slate-200: 226 232 240;
+    --slate-300: 203 213 225;
+    --slate-400: 148 163 184;
+    --slate-500: 100 116 139;
+    --slate-600: 71 85 105;
+    --slate-700: 51 65 85;
+    --slate-800: 30 41 59;
+    --slate-900: 15 23 42;
+    --marca-50: 236 253 245;
+    --marca-100: 209 250 229;
+    --marca-200: 167 243 208;
+    --marca-700: 4 120 87;
+    --marca-800: 6 95 70;
+    --sky-50: 240 249 255;
+    --sky-100: 224 242 254;
+    --sky-200: 186 230 253;
+    --sky-700: 3 105 161;
+    --sky-800: 7 89 133;
+    --orange-50: 255 247 237;
+    --orange-100: 255 237 213;
+    --orange-800: 154 52 18;
+    --rose-50: 255 241 242;
+    --rose-100: 255 228 230;
+    --rose-700: 190 18 60;
+    --violet-50: 245 243 255;
+    --violet-100: 237 233 254;
+    --violet-700: 109 40 217;
+    --amber-50: 255 251 235;
+    --amber-100: 254 243 199;
+    --amber-200: 253 230 138;
+    --amber-700: 180 83 9;
+    --amber-800: 146 64 14;
+    --amber-900: 120 53 15;
+    --red-50: 254 242 242;
+    --red-100: 254 226 226;
+    --red-200: 254 202 202;
+    --red-700: 185 28 28;
+    --red-800: 153 27 27;
+    --red-900: 127 29 29;
+    --emerald-100: 209 250 229;
+    --emerald-800: 6 95 70;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --superficie: 22 30 46;
+    --slate-50: 11 17 32;
+    --slate-100: 30 41 59;
+    --slate-200: 51 65 85;
+    --slate-300: 71 85 105;
+    --slate-400: 100 116 139;
+    --slate-500: 148 163 184;
+    --slate-600: 203 213 225;
+    --slate-700: 226 232 240;
+    --slate-800: 241 245 249;
+    --slate-900: 248 250 252;
+    --marca-50: 6 46 36;
+    --marca-100: 6 78 59;
+    --marca-200: 6 95 70;
+    --marca-700: 110 231 183;
+    --marca-800: 167 243 208;
+    --sky-50: 8 47 73;
+    --sky-100: 12 74 110;
+    --sky-200: 7 89 133;
+    --sky-700: 125 211 252;
+    --sky-800: 186 230 253;
+    --orange-50: 67 20 7;
+    --orange-100: 124 45 18;
+    --orange-800: 253 186 116;
+    --rose-50: 76 5 25;
+    --rose-100: 136 19 55;
+    --rose-700: 253 164 175;
+    --violet-50: 46 16 101;
+    --violet-100: 76 29 149;
+    --violet-700: 196 181 253;
+    --amber-50: 69 26 3;
+    --amber-100: 120 53 15;
+    --amber-200: 146 64 14;
+    --amber-700: 252 211 77;
+    --amber-800: 253 230 138;
+    --amber-900: 254 243 199;
+    --red-50: 69 10 10;
+    --red-100: 127 29 29;
+    --red-200: 153 27 27;
+    --red-700: 252 165 165;
+    --red-800: 254 202 202;
+    --red-900: 254 226 226;
+    --emerald-100: 6 78 59;
+    --emerald-800: 167 243 208;
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
   }
@@ -19,13 +117,13 @@
 
 @layer components {
   .cartao {
-    @apply rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70;
+    @apply rounded-3xl bg-superficie p-5 shadow-sm ring-1 ring-slate-200/70;
   }
   .rotulo {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
   .campo {
-    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition
+    @apply w-full rounded-2xl border border-slate-200 bg-superficie px-4 py-3 text-base text-slate-900 outline-none transition
       placeholder:text-slate-400 focus:border-marca-500 focus:ring-4 focus:ring-marca-100;
   }
   .botao {
@@ -33,15 +131,38 @@
       active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .botao-primario {
-    @apply botao bg-marca-600 text-white shadow-sm shadow-marca-600/30 hover:bg-marca-700;
+    @apply botao bg-marca-600 text-white shadow-sm shadow-marca-600/30 hover:brightness-110;
   }
   .botao-secundario {
     @apply botao bg-slate-100 text-slate-800 hover:bg-slate-200;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
   }
   .pt-seguro {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
   .pb-seguro {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animar-surgir {
+  animation: surgir 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-surgir {
+    animation: none;
   }
 }

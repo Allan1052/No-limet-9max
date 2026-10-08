@@ -1,12 +1,17 @@
-import { ArrowLeft, ArrowRight, Droplets, Flame, Leaf, Loader2, Beef, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Beef, Droplets, Flame, HeartPulse, Leaf, Loader2, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
-import { CamposBasicos, CamposRotina } from "../components/CamposPerfil";
+import { Aviso } from "../components/Aviso";
+import { CamposBasicos, CamposRotina, CamposSaude } from "../components/CamposPerfil";
 import { paraInput, useProfileForm, validarBasico, validarRotina } from "../components/useProfileForm";
 import { classificarIMC, recalcularPlano } from "../lib/calculations";
-import { gerarMissoes } from "../lib/habits";
+import { hojeISO } from "../lib/dates";
+import { gerarMissoesDoDia } from "../lib/habits";
+import { alertasDeSaude } from "../lib/seguranca";
+import type { Profile } from "../lib/types";
 import { useAppStore } from "../store/useAppStore";
 
-const PASSOS = ["Sobre você", "Sua rotina", "Seu plano"] as const;
+const PASSOS = ["Sobre você", "Sua rotina", "Sua saúde", "Seu plano"] as const;
+const ULTIMO = PASSOS.length - 1;
 
 export function Onboarding() {
   const salvarPerfil = useAppStore((s) => s.salvarPerfil);
@@ -15,13 +20,15 @@ export function Onboarding() {
   const [salvando, setSalvando] = useState(false);
 
   const previa = useMemo(() => {
-    if (passo < 2) return null;
+    if (passo < ULTIMO) return null;
     const input = paraInput(form);
     const plano = recalcularPlano(
       { peso_kg: input.peso_inicial, altura_cm: input.altura_cm, idade: input.idade, sexo: input.sexo },
       input.nivel_atividade,
+      { gestante_lactante: input.gestante_lactante },
     );
-    return { input, plano, missoes: gerarMissoes(input) };
+    const alertas = alertasDeSaude({ ...input, peso_atual: input.peso_inicial } as Profile);
+    return { input, plano, alertas, missoes: gerarMissoesDoDia(input, hojeISO(), "previa") };
   }, [passo, form]);
 
   const avancar = async () => {
@@ -30,7 +37,7 @@ export function Onboarding() {
       setErros(e);
       return;
     }
-    if (passo < 2) {
+    if (passo < ULTIMO) {
       setPasso(passo + 1);
       window.scrollTo({ top: 0 });
       return;
@@ -39,6 +46,8 @@ export function Onboarding() {
     await salvarPerfil(paraInput(form), true);
     setSalvando(false);
   };
+
+  const virgula = (n: number, casas = 1) => n.toFixed(casas).replace(".", ",");
 
   return (
     <div className="pt-seguro mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-6">
@@ -61,33 +70,47 @@ export function Onboarding() {
       <main className="flex-1">
         {passo === 0 && <CamposBasicos form={form} erros={erros} set={set} />}
         {passo === 1 && <CamposRotina form={form} erros={erros} set={set} />}
-        {passo === 2 && previa && (
+        {passo === 2 && (
+          <div className="space-y-5">
+            <Aviso tipo="info" icone={<HeartPulse className="h-5 w-5" />}>
+              Duas perguntas rápidas para o plano ser seguro para você. As respostas ficam só com você.
+            </Aviso>
+            <CamposSaude form={form} erros={erros} set={set} />
+          </div>
+        )}
+        {passo === ULTIMO && previa && (
           <div className="space-y-4">
             <p className="text-slate-600">
-              Pronto, {previa.input.nome.split(" ")[0]}! Estas são suas metas iniciais. Elas se ajustam sozinhas a cada
-              check-in de peso.
+              Pronto, {previa.input.nome.split(" ")[0]}! Estas são suas metas iniciais. Elas se ajustam sozinhas a cada check-in — e,
+              com o tempo, ao seu ritmo real.
             </p>
+            {previa.alertas.map((a) => (
+              <Aviso key={a.id} tipo={a.tipo} icone={<HeartPulse className="h-5 w-5" />}>
+                {a.texto}
+              </Aviso>
+            ))}
             <div className="grid grid-cols-2 gap-3">
               <Meta Icone={Flame} cor="text-orange-500 bg-orange-50" rotulo="Calorias/dia" valor={`${previa.plano.calorias_meta}`} sufixo="kcal" />
-              <Meta Icone={Droplets} cor="text-sky-500 bg-sky-50" rotulo="Água/dia" valor={(previa.plano.meta_agua_ml / 1000).toFixed(1).replace(".", ",")} sufixo="L" />
-              <Meta Icone={Beef} cor="text-rose-500 bg-rose-50" rotulo="Proteína/dia" valor={`${previa.plano.meta_proteina_g}`} sufixo="g" />
-              <Meta Icone={Sparkles} cor="text-violet-500 bg-violet-50" rotulo="IMC" valor={previa.plano.imc.toFixed(1).replace(".", ",")} sufixo={classificarIMC(previa.plano.imc).rotulo} />
+              <Meta Icone={Droplets} cor="text-sky-500 bg-sky-50" rotulo="Água/dia" valor={virgula(previa.plano.meta_agua_ml / 1000)} sufixo="litros" />
+              <Meta Icone={Beef} cor="text-rose-500 bg-rose-50" rotulo="Proteína/dia" valor={`${previa.plano.meta_proteina_g}`} sufixo="gramas" />
+              <Meta Icone={Sparkles} cor="text-violet-500 bg-violet-50" rotulo="IMC" valor={virgula(previa.plano.imc)} sufixo={classificarIMC(previa.plano.imc).rotulo} />
             </div>
             <div className="cartao text-sm text-slate-600">
-              Metabolismo basal: <b>{previa.plano.tmb} kcal</b> · gasto estimado: <b>{previa.plano.gasto_total} kcal</b> ·
-              déficit: <b>{previa.plano.deficit_aplicado} kcal</b>
+              Metabolismo basal: <b>{previa.plano.tmb} kcal</b> · gasto estimado: <b>{previa.plano.gasto_total} kcal</b> ·{" "}
+              {previa.plano.modo === "manutencao" ? <b>plano de manutenção (sem déficit)</b> : <>déficit: <b>{previa.plano.deficit_aplicado} kcal</b></>}
             </div>
             <div className="cartao">
-              <h2 className="mb-2 font-semibold">Suas primeiras missões</h2>
+              <h2 className="mb-1 font-semibold">Missões de hoje</h2>
+              <p className="mb-2 text-xs text-slate-500">Mudam todo dia e ficam mais desafiadoras conforme você conclui.</p>
               <ul className="list-inside list-disc space-y-1 text-sm text-slate-600">
-                {previa.missoes.slice(0, 4).map((m) => (
-                  <li key={m.descricao_habito}>{m.descricao_habito}</li>
+                {previa.missoes.map((m) => (
+                  <li key={m.missao_id}>{m.descricao_habito}</li>
                 ))}
               </ul>
             </div>
             <p className="text-xs text-slate-400">
-              Estimativas educativas. Não substituem nutricionista ou médico — procure um profissional se tiver
-              condições de saúde, estiver grávida ou amamentando.
+              Estimativas educativas, uma semana por vez. Não substituem nutricionista ou médico. Ritmo saudável: perder de 0,5% a 1% do
+              peso por semana.
             </p>
           </div>
         )}
@@ -100,7 +123,7 @@ export function Onboarding() {
           </button>
         )}
         <button type="button" className="botao-primario flex-1" onClick={avancar} disabled={salvando}>
-          {salvando ? <Loader2 className="h-5 w-5 animate-spin" /> : passo === 2 ? "Começar" : "Continuar"}
+          {salvando ? <Loader2 className="h-5 w-5 animate-spin" /> : passo === ULTIMO ? "Começar" : "Continuar"}
           {!salvando && <ArrowRight className="h-5 w-5" />}
         </button>
       </footer>
