@@ -19,12 +19,33 @@ export interface BuyIn {
 }
 
 // Grade de buy-ins inspirada na do GGPoker.
+/**
+ * A escada de buy-ins.
+ *
+ * ⚠️ $1, $2 e $3 entraram em 13/10/2026 junto da REGRA DE BANCA
+ * (`train/banca.ts`). Com os $300 iniciais e 100 buy-ins de reserva, o teto é
+ * $3 — e o menor torneio do app era $5. Sem estes três degraus a regra tornaria
+ * o app injogável no dia 1. São buy-ins reais de micro online, não invenção.
+ *
+ * $215 e $530 entraram pelo mesmo motivo, no outro extremo: o salto de $109
+ * direto para $1.000 era de 9×, e com a regra de banca ele seria inatravessável
+ * (de $10.900 para $100.000 de banca, sem degrau no meio).
+ *
+ * Nenhum dos cinco muda a faixa didática nem o ranking: `tierForBuyIn` põe
+ * 1/2/3 em "micro" (≤5) e 215/530 em "alta" (entre 55 e 1000), exatamente como
+ * os buy-ins que já existiam ali.
+ */
 export const BUY_INS: BuyIn[] = [
+  { label: "$1", value: 1 },
+  { label: "$2", value: 2 },
+  { label: "$3", value: 3 },
   { label: "$5", value: 5 },
   { label: "$11", value: 11 },
   { label: "$22", value: 22 },
   { label: "$55", value: 55 },
   { label: "$109", value: 109 },
+  { label: "$215", value: 215 },
+  { label: "$530", value: 530 },
   // Elite (desbloqueáveis) — o topo da escada. Ver tournament/eliteUnlock.ts.
   { label: "$1.000", value: 1000 },
   { label: "$10.300", value: 10300 },

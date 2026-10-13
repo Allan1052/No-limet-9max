@@ -6,6 +6,8 @@
 //   - Circuito: 10 etapas fixas, só a partir do início, valendo ranking.
 // Os dois convivem: dá pra estar no meio do circuito e treinar do mesmo jeito.
 import { useState, useEffect } from "react";
+import { BancaStrip } from "./BancaStrip";
+import { carregarBanca, liberado, faltaParaLiberar } from "../train/banca";
 import {
   BUY_INS,
   BLIND_LEVELS,
@@ -77,9 +79,30 @@ export function TournamentSetup({
   const eliteWins = loadAllEliteWins();
   const unlocked = (v: number) => isBuyInUnlocked(v, eliteWins);
   /** Seleciona um buy-in; se estiver travado, mostra o requisito. */
+  // A BANCA (train/banca.ts) é lida no mount e relida quando a aba volta ao
+  // foco — o saldo muda no fim de cada torneio, em outra tela.
+  const [banca, setBanca] = useState(() => carregarBanca());
+  useEffect(() => {
+    const refresh = () => setBanca(carregarBanca());
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+  /** A regra da banca permite este buy-in? Sem banca ligada, permite tudo. */
+  const bancaPermite = (v: number) => !banca || liberado(v, banca.saldo);
+
   const pickBuyIn = (v: number) => {
     if (!unlocked(v)) {
       alert(`🔒 Torneio de elite bloqueado.\n\n${unlockRequirement(v)}.`);
+      return;
+    }
+    if (banca && !bancaPermite(v)) {
+      const falta = faltaParaLiberar(v, banca.saldo);
+      alert(
+        `🏦 A sua banca não cobre este buy-in.\n\n` +
+          `A regra são 100 buy-ins de reserva: para jogar $${v} você precisa de ` +
+          `$${v * 100}, e a sua banca está em $${Math.round(banca.saldo)}.\n\n` +
+          `Faltam $${Math.round(falta)}.`,
+      );
       return;
     }
     setBuyIn(v);
@@ -193,21 +216,30 @@ export function TournamentSetup({
             </div>
           ) : null}
 
+          <BancaStrip banca={banca} onMudou={setBanca} />
+
           <div className="t-field circuit-buyin panel">
             <label>Faixa didática (fichas simuladas)</label>
             <div className="t-btns">
               {BUY_INS.map((b) => {
                 const locked = !unlocked(b.value);
+                const semBanca = !locked && !bancaPermite(b.value);
                 return (
                   <button
                     key={b.value}
                     className={`tab ${buyIn === b.value ? "active" : ""}`}
                     onClick={() => pickBuyIn(b.value)}
-                    title={locked ? "Faixa avançada — requisito de estudo ainda não cumprido" : ""}
-                    style={locked ? { opacity: 0.55 } : undefined}
+                    title={
+                      locked
+                        ? "Faixa avançada — requisito de estudo ainda não cumprido"
+                        : semBanca && banca
+                          ? `A regra pede $${b.value * 100} de banca — faltam $${Math.round(faltaParaLiberar(b.value, banca.saldo))}`
+                          : ""
+                    }
+                    style={locked || semBanca ? { opacity: 0.55 } : undefined}
                   >
                     {didacticBand(b.value)}
-                    {locked ? " 🔒" : ""}
+                    {locked ? " 🔒" : semBanca ? " 🏦" : ""}
                   </button>
                 );
               })}

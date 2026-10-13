@@ -14,6 +14,30 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-13 — Claude — A BANCA: o app passa a impor a regra dos 100 buy-ins
+
+- **O que é.** Na tela de inscrição tem agora uma tira de **banca**. Você liga a
+  regra, começa com **$300**, e o app **só deixa você se inscrever** em torneios
+  que a banca cobre **100 vezes**. Com $300, o teto é **$3**.
+- **Sobe sozinho conforme você ganha.** $500 libera o $5, $1.100 libera o $11,
+  $10.900 libera o $109. Os buy-ins acima aparecem com 🏦 e dizem quanto falta.
+- **O prêmio volta para a banca** no fim de cada torneio, e a inscrição é
+  debitada quando você entra.
+- **Buy-ins novos: $1, $2, $3** (e $215, $530 lá em cima). Sem eles a regra
+  travaria o app no dia 1: o menor torneio era $5, e $300 só dá para $3.
+  Os $215/$530 cobrem o salto de $109 direto para $1.000, que era de 9×.
+- **⚠️ A regra é dura, e é de propósito.** Com $300 exatos você joga um $3 e a
+  banca cai para $297 — aí $3 pede $300 de novo e a regra **te manda descer
+  para $2 na hora**. É o aperto que a gestão de banca de verdade impõe. Foi
+  isso que você pediu com "a regra certinho".
+- **O app não esconde que 100 é pouco.** A tira diz, com todas as letras: 100
+  buy-ins é a regra de bolso do MTT, mas **o seu próprio histórico aponta 834**
+  para a variância que você viveu. Aqui são 100 porque o que se treina é o
+  hábito e não há dinheiro real em jogo.
+- **Dá para desligar.** Com a regra desligada, o app volta a ser exatamente o
+  que era — nenhum buy-in travado.
+- **Onde:** aba de jogo, na tela de inscrição, acima da escolha de faixa.
+
 ## 2026-10-13 — Claude — Campos do circuito maiores + o PUXÃO DE ORELHA
 
 ### 1. O circuito agora espelha o mundo que você joga

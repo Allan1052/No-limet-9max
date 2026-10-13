@@ -1,0 +1,41 @@
+/* A TIRA DA BANCA — na tela de inscrição, acima da escolha de faixa. */
+.banca{ display:flex; flex-direction:column; gap:9px; }
+.banca-rot{
+  font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--gold, #e6c454);
+}
+.banca-topo{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.banca-saldo{
+  font-size:30px; font-weight:800; line-height:1.05; letter-spacing:-.02em;
+  color:var(--ink, #ece9e0); font-variant-numeric:tabular-nums;
+}
+.banca-teto{ text-align:right; }
+.banca-teto-rot{
+  display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted, #9aa39a); margin-bottom:2px;
+}
+.banca-teto b{
+  font-size:20px; font-weight:800; color:var(--gold, #e6c454);
+  font-variant-numeric:tabular-nums;
+}
+.banca-teto b.banca-nada{ color:var(--bad, #d9705f); font-size:15px; }
+.banca-barra{ height:8px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden; }
+.banca-barra-fill{
+  height:100%; border-radius:999px;
+  background:linear-gradient(90deg,#c9a227,#ecd07a);
+  transition:width .35s ease;
+}
+.banca-texto{ margin:0; font-size:13px; line-height:1.55; color:var(--muted, #9aa39a); }
+.banca-texto b{ color:var(--ink, #ece9e0); }
+.banca-pos{ color:var(--good, #7fc48b) !important; }
+.banca-neg{ color:var(--bad, #d9705f) !important; }
+.banca-nota{
+  margin:0; padding-top:8px; border-top:1px dashed rgba(230,196,84,.22);
+  font-size:11.5px; line-height:1.5; color:var(--muted, #9aa39a); opacity:.9;
+}
+.banca-nota b{ color:var(--ink, #ece9e0); opacity:1; }
+.banca-acoes{ display:flex; gap:8px; }
+.banca-acoes .btn{ flex:1; }
+.banca-btn{ width:100%; }
+.banca-quebrou{ border-color:rgba(217,112,95,.45); }
+@media (prefers-reduced-motion: reduce){ .banca-barra-fill{ transition:none; } }

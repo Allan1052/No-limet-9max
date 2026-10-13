@@ -9,6 +9,7 @@ import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./Lazy
 import { MissionToast } from "../ui/MissionToast";
 import { PuxaoToast } from "../ui/PuxaoToast";
 import type { Puxao } from "../feedback/puxaoDeOrelha";
+import { carregarBanca, debitarInscricao, creditarPremio, liberado } from "../train/banca";
 import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -164,6 +165,9 @@ export function App() {
       const key = `${s.buyIn}:${s.mode}:${s.finishPlace}:${s.cash}`;
       if (summaryRef.current !== key) {
         summaryRef.current = key;
+        // O prêmio volta para a banca. `summaryRef` já garante uma vez só por
+        // torneio — o mesmo guarda que protege o resultado de ser duplicado.
+        creditarPremio(s.cash);
         addTournamentResult({
           finishPlace: s.finishPlace,
           entrants: s.entrants,
@@ -726,6 +730,12 @@ export function App() {
           }}
           onDiscard={discardTournament}
           onStart={(cfg) => {
+            // A BANCA IMPÕE AQUI. Sem banca ligada, `debitarInscricao` devolve
+            // null e o app segue como sempre foi — por isso a checagem é do
+            // saldo, não do retorno.
+            const banca = carregarBanca();
+            if (banca && !liberado(cfg.buyIn, banca.saldo)) return;
+            if (banca) debitarInscricao(cfg.buyIn);
             startTournament(cfg);
             setView("play");
           }}
