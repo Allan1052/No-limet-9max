@@ -7,6 +7,8 @@ import { Replayer } from "../ui/Replayer";
 import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./LazyViews";
 import { MissionToast } from "../ui/MissionToast";
+import { PuxaoToast } from "../ui/PuxaoToast";
+import type { Puxao } from "../feedback/puxaoDeOrelha";
 import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -259,6 +261,15 @@ export function App() {
   const la = legalActions(t);
   const heroTurn = controller.isHeroTurn();
   const handOver = controller.phase === "handOver";
+  // O PUXÃO DE ORELHA: o controller calcula no fim da mão, a tela consome aqui.
+  // É "consumir" e não "ler" de propósito — lido uma vez, some; senão o mesmo
+  // aviso voltaria a cada render.
+  const [puxao, setPuxao] = useState<Puxao | null>(null);
+  useEffect(() => {
+    if (!handOver) return;
+    const p = controller.consumirPuxaoDeOrelha();
+    if (p) setPuxao(p);
+  }, [handOver, controller]);
   // A barra de baixo some durante a mão (na mesa), pra os controles de ação
   // (Raise/All-in, % e slider) ficarem com espaço total sem a nav atrapalhando.
   // Ela volta entre as mãos e nas outras telas.
@@ -1080,6 +1091,7 @@ export function App() {
       {sozinho && view === "play" ? null : (
         <>
           <MissionToast missions={missionToasts} onDismiss={dismissMissionToasts} />
+          <PuxaoToast puxao={puxao} onDismiss={() => setPuxao(null)} />
           {isXpUnlocked() ? (
             <AchievementToastPopup toasts={xpToasts} onDismiss={dismissXpToasts} />
           ) : null}

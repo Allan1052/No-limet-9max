@@ -37,22 +37,50 @@ export interface CircuitStage {
 }
 
 /**
- * As 10 etapas. A progressão de inscritos foi calibrada para que:
- *   - cravar só o Main Event valha ~1/5 do circuito completo (mata o farm)
- *   - as etapas pequenas continuem valendo a pena (5 menores = 5.397 pts)
+ * As 10 etapas.
+ *
+ * ---------------------------------------------------------------------------
+ * CAMPOS RECALIBRADOS EM 13/10/2026 — por medição, não por gosto.
+ *
+ * O Allan: *"o circuito, as inscrições deles é para poucos jogadores, eu fiquei
+ * muito bitolado."* Ele tinha razão, e o número provou: o campo médio REAL dele
+ * no PokerStars é **279** jogadores, e CINCO das dez etapas (30/60/100/180) eram
+ * MENORES que isso. Metade do circuito treinava um mundo menor que a vida real
+ * dele. O campo médio do irmão, que tem ROI 7,6× maior, é **1.446**.
+ *
+ * Antes de subir os números eu conferi se campo maior deixaria o torneio mais
+ * longo — seria um custo alto. NÃO deixa, e por dois motivos independentes:
+ *
+ *   1. MEDIDO (sim/_campoRun.test.ts, 4 torneios por tamanho): 83 mãos com 60
+ *      inscritos, 119 com 3.000. Sem tendência de crescimento.
+ *   2. PELA FÓRMULA: `attritionPerHand` encolhe o campo por PROPORÇÃO
+ *      (remaining × rate), então o número de mãos até sobrar 15% do campo é o
+ *      mesmo para 100 e para 10.000 inscritos — ~70 mãos nos dois casos.
+ *
+ * O que campo maior MUDA é o que importa: a escada de prêmio fica mais longa,
+ * a bolha pesa mais e o 1º lugar vale muitas vezes mais. É exatamente o eixo
+ * em que o histórico do Allan ficou para trás.
+ *
+ * ⚠️ O progresso do circuito é salvo por ÍNDICE de etapa (1..10), não por
+ * número de inscritos — ver `progressKey`. Mudar os campos não apaga nada do
+ * que já foi cravado.
+ * ---------------------------------------------------------------------------
+ *
+ * A progressão continua calibrada para que:
+ *   - cravar só o Main Event valha uma fração do circuito completo (mata o farm)
  *   - vencer valha 20x o min-cash em qualquer etapa (padrão WSOP pós-2018)
  */
 const RAW_STAGES: Array<{ name: string; entrants: number }> = [
-  { name: "Etapa 1 · Abertura", entrants: 30 },
-  { name: "Etapa 2 · Regional", entrants: 60 },
-  { name: "Etapa 3 · Nacional", entrants: 100 },
-  { name: "Etapa 4 · Desafio", entrants: 180 },
-  { name: "Etapa 5 · Elite", entrants: 300 },
-  { name: "Etapa 6 · Milhar", entrants: 500 },
-  { name: "Etapa 7 · Continental", entrants: 800 },
-  { name: "Etapa 8 · Mundial", entrants: 1200 },
-  { name: "Etapa 9 · Championship", entrants: 1600 },
-  { name: "Etapa 10 · Main Event", entrants: 2000 },
+  { name: "Etapa 1 · Abertura", entrants: 150 },
+  { name: "Etapa 2 · Regional", entrants: 300 }, // o campo médio real do Allan (279)
+  { name: "Etapa 3 · Nacional", entrants: 500 },
+  { name: "Etapa 4 · Desafio", entrants: 750 },
+  { name: "Etapa 5 · Milhar", entrants: 1000 },
+  { name: "Etapa 6 · Elite", entrants: 1500 }, // o campo médio do irmão (1.446)
+  { name: "Etapa 7 · Continental", entrants: 2200 },
+  { name: "Etapa 8 · Mundial", entrants: 3500 },
+  { name: "Etapa 9 · Championship", entrants: 6000 },
+  { name: "Etapa 10 · Main Event", entrants: 10000 },
 ];
 
 export const CIRCUIT_STAGES: CircuitStage[] = RAW_STAGES.map((s, i) => ({

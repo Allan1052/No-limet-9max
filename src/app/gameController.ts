@@ -79,6 +79,7 @@ import { recordProgress } from "../train/progress";
 import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
 import { registrarNoAlvo } from "../train/alvo";
+import { lerPuxaoDeOrelha, type DecisaoDaJanela, type Puxao } from "../feedback/puxaoDeOrelha";
 import type { PositionalRecord } from "../train/positionTendency";
 import type { DecisaoComparavel } from "../tournament/comparativo";
 import { anotar, dossieVazio, lerOHeroi, type DossieDoHeroi, type LeituraFalada } from "../bots/leituraDoHeroi";
@@ -418,6 +419,14 @@ export class GameController {
    *  14/09/2026: "um comparativo da forma que eu joguei às cegas e da forma que
    *  o aplicativo pede"). Guarda também se a mão correu sem dica. */
   private sessionComparativo: DecisaoComparavel[] = [];
+  // ---- O PUXÃO DE ORELHA (feedback/puxaoDeOrelha.ts) --------------------
+  // Janela do TORNEIO ATUAL, da decisão mais antiga para a mais nova. Vive
+  // aqui e não no localStorage de propósito: o aviso é sobre como você está
+  // jogando ESTE torneio, não sobre a sua carreira.
+  private janelaDoPuxao: DecisaoDaJanela[] = [];
+  private maosDesdeOPuxao = Number.MAX_SAFE_INTEGER; // o primeiro aviso não espera
+  private avisosDePuxao = 0;
+  private puxaoAtual?: Puxao;
   /**
    * ✨ O QUE A MESA SABE SOBRE VOCÊ (15/09/2026).
    *
@@ -583,6 +592,11 @@ export class GameController {
     this.sessionReview = [];
     this.sessionDecisions = [];
     this.sessionComparativo = [];
+    // O puxão é sobre ESTE torneio: janela e contadores recomeçam do zero.
+    this.janelaDoPuxao = [];
+    this.maosDesdeOPuxao = Number.MAX_SAFE_INTEGER;
+    this.avisosDePuxao = 0;
+    this.puxaoAtual = undefined;
     this.sessaoComDica = { total: 0, certas: 0 };
     this.dossieHeroi = dossieVazio();
     this.dossieDaSessao = dossieVazio();
@@ -1171,6 +1185,12 @@ export class GameController {
       // O ALVO (ciclo fechado de acumulação). Não faz nada quando não há ciclo
       // aberto, e para de contar sozinho quando a barra enche — ver train/alvo.ts.
       registrarNoAlvo({ adviceFam: item.adviceFam, heroFam: item.heroFam, semDica });
+      // Janela do puxão de orelha. O aviso só é CALCULADO no fim da mão
+      // (finishHand) — no meio de uma decisão ele atrapalharia em vez de ajudar.
+      this.janelaDoPuxao.push({
+        pediaEscalar: item.adviceFam === "aggro",
+        escalou: item.heroFam === "aggro",
+      });
       if (semDica) {
         this.sessaoSozinho.total++;
         if (decisionCorrect) this.sessaoSozinho.certas++;
@@ -1707,8 +1727,50 @@ export class GameController {
     return lines.join("\n");
   }
 
+  /**
+   * O PUXÃO DE ORELHA, avaliado no FIM de cada mão.
+   *
+   * Pedido do Allan (13/10/2026): *"se eu passar um tempo e não estiver indo
+   * bem, tiver muito tight demais, receber uma mensagem tipo um puxão de
+   * orelha."* A régua mora em `feedback/puxaoDeOrelha.ts`; aqui só se junta o
+   * que o controller já sabe.
+   *
+   * ⚠️ NÃO fala no modo "Jogar sozinho". O modo existe para medir o jogo dele
+   * SEM ajuda — e o alvo usa justamente o número "sem dica" como o placar de
+   * verdade. Um aviso ali contaminaria a própria medição.
+   */
+  private avaliarPuxaoDeOrelha(): void {
+    this.maosDesdeOPuxao++;
+    if (!this.dicasLigadas) return;
+    const heroP = this.table.players[this.heroSeat];
+    if (!heroP || heroP.status === "out") return;
+    const bbUnit = this.table.bigBlind || 1;
+    const puxao = lerPuxaoDeOrelha({
+      janela: this.janelaDoPuxao,
+      heroBB: (heroP.stack + heroP.committed) / bbUnit,
+      stage: this.tournament?.stage ?? "inicio",
+      maosDesdeOUltimo: this.maosDesdeOPuxao,
+      avisosNoTorneio: this.avisosDePuxao,
+    });
+    if (!puxao) return;
+    this.puxaoAtual = puxao;
+    this.avisosDePuxao++;
+    this.maosDesdeOPuxao = 0;
+  }
+
+  /**
+   * O aviso pendente, se houver. A tela LÊ e CONSOME: lido uma vez, some —
+   * senão o mesmo puxão reapareceria a cada render.
+   */
+  consumirPuxaoDeOrelha(): Puxao | undefined {
+    const p = this.puxaoAtual;
+    this.puxaoAtual = undefined;
+    return p;
+  }
+
   private finishHand(): void {
     this.phase = "handOver";
+    this.avaliarPuxaoDeOrelha();
     // Congela o histórico da mão para o replayer (modo estudo: revela cartas).
     const holeCards: Record<number, Card[]> = {};
     const names: Record<number, string> = {};

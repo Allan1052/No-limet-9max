@@ -14,6 +14,50 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-13 — Claude — Campos do circuito maiores + o PUXÃO DE ORELHA
+
+### 1. O circuito agora espelha o mundo que você joga
+
+- **O problema que você apontou estava certo, e o número provou.** Seu campo
+  médio real no PokerStars é **279 jogadores** — e **cinco das dez etapas**
+  (30, 60, 100, 180) eram **menores que isso**. Metade do circuito treinava um
+  mundo menor que a sua vida real.
+- **Os campos novos:** 150 · **300** · 500 · 750 · 1.000 · **1.500** · 2.200 ·
+  3.500 · 6.000 · **10.000**. A etapa 2 fica no seu campo médio real (279) e a
+  etapa 6 no campo médio do seu irmão (1.446).
+- **Antes de subir, conferi se ia alongar o torneio — não alonga.** Medido:
+  83 mãos com 60 inscritos, 119 com 3.000, sem tendência. E a fórmula explica:
+  o campo encolhe por *proporção*, então o número de mãos até a bolha é o
+  mesmo para 100 e para 10.000 (~70 mãos).
+- **O que campo maior muda** é a escada de prêmio: mais longa, bolha mais
+  pesada, 1º lugar valendo muito mais. É o eixo em que o seu histórico ficou
+  para trás.
+- **Nada do que você já cravou foi perdido** — o progresso é salvo por número
+  da etapa, não por quantidade de inscritos.
+
+### 2. O puxão de orelha, durante o torneio
+
+- **O que é.** No fim de uma mão, se você vier passando os spots em que o
+  padrão manda escalar, aparece uma faixa: *"Acorda. Nos últimos 6 spots em
+  que o padrão mandava escalar, você escalou em 1. Com 14bb o blind já come o
+  seu stack a cada volta."*
+- **Quando ele fala.** Precisa de **três coisas ao mesmo tempo**: 6 spots
+  recentes para olhar, 5 deles passados, e a fase pesando (≤25bb, ou bolha, ou
+  mesa final). 5 falhas em 6 acontece por acaso ~1,1% das vezes — ele não
+  dispara por azar.
+- **Ele cutuca para os DOIS lados.** Se você escalar onde o padrão não pedia,
+  vem o aviso contrário: *"Segura."* Sem essa metade, o app estaria te
+  ensinando a agredir sempre — o vazamento oposto.
+- **Ele não vira spam:** no máximo **3 avisos por torneio** e 15 mãos entre um
+  e outro.
+- **Não é "você está jogando apertado".** Ele mede quantas vezes você discordou
+  do **padrão** na direção passiva — e o padrão já tem o ICM dentro. Por isso
+  ele não te manda abrir o jogo na bolha quando apertar é o certo.
+- **No modo "Jogar sozinho" ele fica calado**, de propósito: esse modo existe
+  para medir o seu jogo sem ajuda, e o Alvo usa justamente o número "sem dica"
+  como placar de verdade.
+- **Onde:** na mesa, entre mãos.
+
 ## 2026-10-13 — Claude — O ALVO: a primeira coisa no app que TERMINA
 
 - **O que é.** Um card novo na aba **Hoje**: um alvo de **100 spots de
