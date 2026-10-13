@@ -78,6 +78,7 @@ import { recordTournamentWin } from "../tournament/eliteUnlock";
 import { recordProgress } from "../train/progress";
 import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
+import { registrarNoAlvo } from "../train/alvo";
 import type { PositionalRecord } from "../train/positionTendency";
 import type { DecisaoComparavel } from "../tournament/comparativo";
 import { anotar, dossieVazio, lerOHeroi, type DossieDoHeroi, type LeituraFalada } from "../bots/leituraDoHeroi";
@@ -1167,6 +1168,9 @@ export class GameController {
       const semDica = !this.maoTeveDica;
       item.semDica = semDica;
       registrarDecisaoSozinho(semDica, decisionCorrect);
+      // O ALVO (ciclo fechado de acumulação). Não faz nada quando não há ciclo
+      // aberto, e para de contar sozinho quando a barra enche — ver train/alvo.ts.
+      registrarNoAlvo({ adviceFam: item.adviceFam, heroFam: item.heroFam, semDica });
       if (semDica) {
         this.sessaoSozinho.total++;
         if (decisionCorrect) this.sessaoSozinho.certas++;

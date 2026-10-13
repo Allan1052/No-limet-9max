@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 import { useState, useEffect } from "react";
 import { DailyHand } from "./DailyHand";
+import { AlvoCard } from "./AlvoCard";
 import { getTrainingDayStatus } from "../train/streak";
 import { buildDailyScenario } from "../train/daily";
 import { useT } from "../i18n";
@@ -68,6 +69,11 @@ export function HojeView({ setView }: { setView: (v: AppView) => void }) {
       </div>
 
       <DailyHand />
+
+      {/* O ALVO vem DEPOIS da mão do dia: a mão do dia é o hábito (loop), o
+          alvo é o ciclo que termina. São coisas diferentes e não se misturam —
+          o alvo não entra na streak nem a streak empurra o alvo. */}
+      <AlvoCard />
 
       <button className="btn hoje-shortcut" onClick={() => openDailyIn1x1(setView)}>
         <span>🎯 {t("hoje.analyze")}</span>

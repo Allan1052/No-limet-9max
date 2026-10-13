@@ -14,6 +14,33 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-13 — Claude — O ALVO: a primeira coisa no app que TERMINA
+
+- **O que é.** Um card novo na aba **Hoje**: um alvo de **100 spots de
+  acumulação**. Ele enche uma barra enquanto você joga torneio normal, e
+  **acaba**. Quando acaba, mostra o seu placar e some da tela.
+- **Por que isto e não outra coisa.** Comparando o histórico do Allan com o do
+  irmão (bbru156), os dois **sobrevivem igual** — ITM 23,5% × 23,6%, e o Allan
+  joga até mais campo (57,8% × 55,0%) e termina tarde mais vezes (13,3% ×
+  12,5%). A taxa de rake também é a mesma. Sobra um diagnóstico só: **sobrevive
+  bem, acumula mal**.
+- **O que ele conta.** Só as decisões em que o padrão manda **escalar**. Ele
+  não conta torneios: pela régua do motor são **4 a 9 torneios** para encher.
+- **A trava que impede o alvo de estragar o seu jogo.** Tem um **contra-placar**:
+  toda vez que você escala e o padrão NÃO pedia, isso é registrado como falha.
+  Sem isso, um alvo de acumulação ensinaria a agredir sempre — o vazamento
+  oposto. A barra não anda quando você exagera.
+- **Ele não promete o que não pode.** No fim, compara a primeira metade com a
+  segunda — mas **só chama de evolução quando a diferença passa de ~18 pontos**,
+  que é o ruído de uma amostra de 100 spots. Abaixo disso ele diz, com todas as
+  letras, que não dá para concluir nada.
+- **Por que ele é diferente de tudo que já tem.** O app já tinha streak,
+  missões, campanha, XP e conquistas — e mesmo assim o projeto ficou 26 dias
+  parado. O problema não era falta de "volte amanhã": é que **nada no app
+  terminava**. O alvo não vira streak, não vira missão diária e **não propõe o
+  próximo quando acaba**. Começar outro é decisão sua, do zero.
+- **Onde:** aba **Hoje**, logo abaixo da Mão do dia.
+
 ## 2026-09-17 — Claude — A dica do Review saiu do esconderijo
 
 - **A dica não depende mais de você terminar a mão.** Antes, para ler a
