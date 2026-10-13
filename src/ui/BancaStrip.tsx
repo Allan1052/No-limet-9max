@@ -17,9 +17,36 @@ import {
   retratoDaBanca,
   type Banca,
 } from "../train/banca";
+import { retratoDaRuina, type GravidadeDaRuina } from "../train/ruina";
 import "./bancaStrip.css";
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("pt-BR")}`;
+
+/**
+ * A LINHA DA RUÍNA — o número que teria mudado a decisão dos $70.
+ *
+ * O Allan (13/10/2026) descreveu três depósitos jogados inteiros em torneios de
+ * $7–$11 e zerados: 6 a 10 buy-ins de reserva. A simulação com os números dele
+ * diz que isso quebra em 89–93% das vezes. Não é azar, é a conta — e a conta
+ * só serve se estiver na tela ANTES da inscrição.
+ */
+const COR_DA_RUINA: Record<GravidadeDaRuina, string> = {
+  tranquilo: "ruina-ok",
+  apertado: "ruina-atencao",
+  perigoso: "ruina-ruim",
+  quase_certo: "ruina-ruim",
+};
+
+function LinhaDaRuina({ saldo, buyIn }: { saldo: number; buyIn: number }) {
+  const r = retratoDaRuina(saldo, buyIn);
+  const bi = r.buyIns >= 10 ? Math.round(r.buyIns) : Math.round(r.buyIns * 10) / 10;
+  return (
+    <p className={`banca-ruina ${COR_DA_RUINA[r.gravidade]}`}>
+      Jogando <b>{usd(buyIn)}</b> com esta banca você tem <b>{bi} buy-ins</b> de reserva —
+      chance de zerar: <b>{r.dentroDaFaixaMedida ? `${r.risco}%` : r.risco >= 50 ? `mais de ${r.risco}%` : `menos de ${Math.max(r.risco, 1)}%`}</b>.
+    </p>
+  );
+}
 
 export function BancaStrip({
   banca,
@@ -86,6 +113,8 @@ export function BancaStrip({
               }}
             />
           </div>
+          {r.teto !== undefined ? <LinhaDaRuina saldo={r.saldo} buyIn={r.teto} /> : null}
+
           <p className="banca-texto">
             {r.proximo ? (
               <>

@@ -13,6 +13,20 @@ const appSource = readFileSync(new URL("../app/App.tsx", import.meta.url), "utf8
 const tourSource = readFileSync(new URL("./Tournament.tsx", import.meta.url), "utf8");
 const stripSource = readFileSync(new URL("./BancaStrip.tsx", import.meta.url), "utf8");
 
+/**
+ * Tira comentários antes de procurar texto proibido — senão o teste lê a PROSA
+ * que explica a regra como se fosse violação dela. Mesma armadilha já pega em
+ * `alvoTemFim.test.ts`: aqui o comentário da linha da ruína cita os "depósitos"
+ * do Allan, e "depósito" está na lista de palavras que a TELA não pode usar.
+ */
+function semComentarios(src: string): string {
+  return src
+    .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^[ \t]*\/\/.*$/gm, " ");
+}
+const stripCodigo = semComentarios(stripSource);
+
 describe("A tela obedece a regra", () => {
   it("o torneio NÃO começa quando a banca não cobre o buy-in", () => {
     expect(appSource).toContain("if (banca && !liberado(cfg.buyIn, banca.saldo)) return;");
@@ -47,6 +61,20 @@ describe("A tela obedece a regra", () => {
   });
 });
 
+describe("A linha da ruína", () => {
+  it("mostra a chance de zerar ANTES da inscrição, não depois", () => {
+    expect(stripCodigo).toContain("retratoDaRuina");
+    expect(stripCodigo).toContain("chance de zerar");
+    expect(stripCodigo).toContain("buy-ins</b> de reserva");
+  });
+
+  it("fora da faixa medida fala em 'mais de' / 'menos de', não num número exato", () => {
+    expect(stripCodigo).toContain("dentroDaFaixaMedida");
+    expect(stripCodigo).toContain("mais de");
+    expect(stripCodigo).toContain("menos de");
+  });
+});
+
 describe("A tira da banca é honesta sobre a própria regra", () => {
   it("diz que 100 é a regra de bolso e mostra o número medido", () => {
     expect(stripSource).toContain("RESERVA_MEDIDA_ALLAN");
@@ -66,7 +94,7 @@ describe("A tira da banca é honesta sobre a própria regra", () => {
     // que NÃO há dinheiro real em jogo, que é o oposto do risco. O que não pode
     // existir é promessa de ganho ou linguagem de saque.
     for (const proibido of ["lucro garantido", "sacar", "retirada", "depositar", "depósito"]) {
-      expect(stripSource).not.toContain(proibido);
+      expect(stripCodigo).not.toContain(proibido);
     }
     expect(stripSource).toContain("não há\n        dinheiro real em jogo");
   });

@@ -14,6 +14,31 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-13 — Claude — A chance de ZERAR, medida, antes da inscrição
+
+- **O que mudou.** A tira da banca agora mostra, em cima do buy-in que você vai
+  jogar: *"Jogando $11 com esta banca você tem 6,4 buy-ins de reserva — chance
+  de zerar: 93%."* Verde, amarelo ou vermelho conforme o tamanho do buraco.
+- **De onde sai o número.** Simulação de Monte Carlo com a **escada de prêmio
+  real do motor**, campo 279 (o seu campo médio), rake 10,29% (o seu) e um
+  jogador calibrado em **dois números medidos seus**: ITM de 23,5% e ROI de
+  3,84%.
+- **A tabela medida:**
+
+  | Banca (buy-ins) | Chance de zerar |
+  |---|---|
+  | 6 | **93%** |
+  | 10 | **89%** |
+  | 20 | 77% |
+  | 50 | 50% |
+  | 100 (a regra) | **19%** |
+  | 200 | 1% |
+  | 500+ | ~0% |
+
+- **Ele não inventa fora da faixa simulada.** Acima de 834 ou abaixo de 6
+  buy-ins ele fala "mais de" / "menos de" em vez de cuspir um número exato.
+- **Onde:** aba de jogo, na tira da banca, antes de escolher a faixa.
+
 ## 2026-10-13 — Claude — A BANCA: o app passa a impor a regra dos 100 buy-ins
 
 - **O que é.** Na tela de inscrição tem agora uma tira de **banca**. Você liga a

@@ -39,3 +39,16 @@
 .banca-btn{ width:100%; }
 .banca-quebrou{ border-color:rgba(217,112,95,.45); }
 @media (prefers-reduced-motion: reduce){ .banca-barra-fill{ transition:none; } }
+
+/* A LINHA DA RUÍNA — o número medido, com cor pelo tamanho do buraco. */
+.banca-ruina{
+  margin:0; padding:9px 11px; border-radius:9px;
+  font-size:12.5px; line-height:1.5;
+  background:rgba(255,255,255,.05);
+  color:var(--muted, #9aa39a);
+}
+.banca-ruina b{ color:var(--ink, #ece9e0); }
+.banca-ruina.ruina-ok{ border-left:3px solid var(--good, #7fc48b); }
+.banca-ruina.ruina-atencao{ border-left:3px solid var(--warn, #e6c454); }
+.banca-ruina.ruina-ruim{ border-left:3px solid var(--bad, #d9705f); }
+.banca-ruina.ruina-ruim b{ color:var(--bad, #d9705f); }
