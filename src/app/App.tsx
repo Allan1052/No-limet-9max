@@ -10,6 +10,7 @@ import { MissionToast } from "../ui/MissionToast";
 import { PuxaoToast } from "../ui/PuxaoToast";
 import type { Puxao } from "../feedback/puxaoDeOrelha";
 import { carregarBanca, debitarInscricao, creditarPremio, liberado } from "../train/banca";
+import { registrarTorneio } from "../train/sessao";
 import { AchievementsPanel } from "./LazyViews";
 import { SessionHistoryPanel } from "../ui/SessionHistoryPanel";
 import type { FeedbackItem } from "../feedback/analyzer";
@@ -168,6 +169,9 @@ export function App() {
         // O prêmio volta para a banca. `summaryRef` já garante uma vez só por
         // torneio — o mesmo guarda que protege o resultado de ser duplicado.
         creditarPremio(s.cash);
+        // A SESSÃO conta o torneio em BUY-INS: (prêmio − inscrição) ÷ buy-in.
+        // Sem sessão aberta a chamada é inócua.
+        registrarTorneio(s.buyIn > 0 ? (s.cash - s.buyIn) / s.buyIn : 0);
         addTournamentResult({
           finishPlace: s.finishPlace,
           entrants: s.entrants,

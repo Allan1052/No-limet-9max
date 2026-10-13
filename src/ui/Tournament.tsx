@@ -7,6 +7,7 @@
 // Os dois convivem: dá pra estar no meio do circuito e treinar do mesmo jeito.
 import { useState, useEffect } from "react";
 import { BancaStrip } from "./BancaStrip";
+import { SessaoCard } from "./SessaoCard";
 import { carregarBanca, liberado, faltaParaLiberar } from "../train/banca";
 import {
   BUY_INS,
@@ -217,6 +218,10 @@ export function TournamentSetup({
           ) : null}
 
           <BancaStrip banca={banca} onMudou={setBanca} />
+
+          {/* A BANCA cuida do mês; a SESSÃO cuida do dia. O Allan joga 1× por
+              mês, então o dia é a unidade que ele realmente vive. */}
+          <SessaoCard />
 
           <div className="t-field circuit-buyin panel">
             <label>Faixa didática (fichas simuladas)</label>

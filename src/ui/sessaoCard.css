@@ -1,0 +1,80 @@
+/* O PLANO DA SESSÃO — na tela de inscrição, abaixo da banca. */
+.sessao{ display:flex; flex-direction:column; gap:10px; }
+.sessao-rot{
+  font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--gold, #e6c454);
+}
+.sessao-titulo{
+  margin:0; font-size:18px; font-weight:800; line-height:1.25; color:var(--ink, #ece9e0);
+}
+.sessao-texto{ margin:0; font-size:13.5px; line-height:1.55; color:var(--muted, #9aa39a); }
+.sessao-texto b{ color:var(--ink, #ece9e0); }
+.sessao-nota{
+  margin:0; padding-top:9px; border-top:1px dashed rgba(230,196,84,.22);
+  font-size:12px; line-height:1.55; color:var(--muted, #9aa39a); opacity:.92;
+}
+.sessao-nota b{ color:var(--ink, #ece9e0); opacity:1; }
+.sessao-btn{ width:100%; }
+.sessao-pos{ color:var(--good, #7fc48b); }
+.sessao-neg{ color:var(--bad, #d9705f); }
+
+/* escolha do tamanho */
+.sessao-tamanhos{ display:flex; gap:8px; }
+.sessao-chip{
+  flex:1; padding:11px 0; border-radius:10px; cursor:pointer;
+  border:1px solid rgba(230,196,84,.22); background:rgba(255,255,255,.04);
+  color:var(--muted, #9aa39a); font-size:16px; font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.sessao-chip.on{
+  border-color:rgba(230,196,84,.6); background:rgba(230,196,84,.14);
+  color:var(--gold, #e6c454);
+}
+
+/* a faixa medida */
+.sessao-faixa{ padding:12px 12px 11px; border-radius:11px; background:rgba(255,255,255,.05); }
+.sessao-faixa-rot{
+  font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted, #9aa39a); margin-bottom:10px;
+}
+.sessao-faixa-rot span{ font-weight:400; text-transform:none; letter-spacing:0; opacity:.8; }
+.sessao-escala{ display:flex; align-items:center; gap:9px; }
+.sessao-ponta{
+  font-size:12.5px; font-weight:700; color:var(--ink, #ece9e0);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.sessao-trilho{
+  position:relative; flex:1; height:10px; border-radius:999px;
+  background:rgba(255,255,255,.07); overflow:hidden;
+}
+.sessao-meio{
+  position:absolute; left:18%; right:18%; top:0; bottom:0;
+  background:linear-gradient(90deg, rgba(201,162,39,.35), rgba(236,208,122,.5), rgba(201,162,39,.35));
+}
+.sessao-mediana{
+  position:absolute; left:50%; top:-2px; bottom:-2px; width:2px;
+  background:var(--ink, #ece9e0); opacity:.85;
+}
+.sessao-legenda{ margin:9px 0 0; font-size:12.5px; line-height:1.55; color:var(--muted, #9aa39a); }
+.sessao-legenda b{ color:var(--ink, #ece9e0); }
+
+/* durante */
+.sessao-linha{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.sessao-contagem{ font-size:13px; color:var(--muted, #9aa39a); font-variant-numeric:tabular-nums; }
+.sessao-contagem b{ font-size:20px; font-weight:800; color:var(--gold, #e6c454); }
+.sessao-barra{ height:9px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden; }
+.sessao-barra-fill{
+  height:100%; border-radius:999px;
+  background:linear-gradient(90deg,#c9a227,#ecd07a); transition:width .35s ease;
+}
+
+/* fim */
+.sessao-fim{ border-color:rgba(230,196,84,.45); background:rgba(230,196,84,.07); }
+.sessao-fora{ border-color:rgba(217,112,95,.4); }
+.sessao-veredito{
+  padding:12px 13px; border-radius:10px; background:rgba(255,255,255,.05);
+  font-size:13px; line-height:1.55; color:var(--muted, #9aa39a);
+}
+.sessao-veredito b{ display:block; margin-bottom:3px; font-size:13.5px; color:var(--ink, #ece9e0); }
+
+@media (prefers-reduced-motion: reduce){ .sessao-barra-fill{ transition:none; } }

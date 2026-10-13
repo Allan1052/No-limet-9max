@@ -14,6 +14,31 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-13 — Claude — O PLANO DA SESSÃO: o dia para de ser veredito
+
+- **Por que isto existe.** A banca cuida do mês. Mas você joga **uma vez por
+  mês** — então a unidade que você vive é o **dia**. E a medição mostrou que o
+  resultado de um dia não diz nada: o desvio padrão de UM torneio é 3,39
+  buy-ins contra um lucro esperado de 0,046. **O ruído é 73× o sinal.**
+- **Antes de jogar:** você escolhe o tamanho da sessão (5, 10, 20 ou 40
+  torneios) e o app mostra a **faixa normal medida**: *"8 em cada 10 sessões de
+  10 torneios caem entre −7 e +12 buy-ins. A típica dá −1, e 52% terminam no
+  vermelho."*
+- **Durante:** só o contador. **Nenhum veredito no meio** — ali o número ainda
+  é ruído puro.
+- **No fim:** em que percentil o seu dia caiu, e a frase que importa: *"O acaso
+  explica esse dia sozinho."* Mesmo um dia fora da faixa não vira julgamento do
+  seu jogo.
+- **⚠️ O achado mais duro, e ele está na tela.** No PokerStars, com o rake de
+  ~10%, **a sessão típica de um jogador ganhador é NEGATIVA em qualquer
+  tamanho** — 5, 10, 40 ou 100 torneios. O rake não deixa a mediana virar. No
+  app, sem rake, ela só vira positiva a partir de ~20 torneios.
+- **De onde saem os números.** 200.000 sessões simuladas por tamanho, com a
+  escada de prêmio real do motor, campo 279 e um jogador calibrado em dois
+  números seus (ITM 23,5% e ROI). São **duas réguas** — a do app (sem rake) e a
+  do PokerStars — e o veredito usa a do mundo onde a sessão aconteceu.
+- **Onde:** aba de jogo, na tela de inscrição, logo abaixo da banca.
+
 ## 2026-10-13 — Claude — A chance de ZERAR, medida, antes da inscrição
 
 - **O que mudou.** A tira da banca agora mostra, em cima do buy-in que você vai
