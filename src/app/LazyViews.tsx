@@ -7,6 +7,7 @@ import { lazy, type ComponentType } from "react";
 export const IcmCalculator = lazy(() => import("../ui/IcmCalculator").then((m) => ({ default: m.IcmCalculator })));
 export const UltraTrainer = lazy(() => import("../ui/UltraTrainer").then((m) => ({ default: m.UltraTrainer })));
 export const StreetTrainer = lazy(() => import("../ui/StreetTrainer").then((m) => ({ default: m.StreetTrainer })));
+export const SpotQueDivideView = lazy(() => import("../ui/SpotQueDivideView").then((m) => ({ default: m.SpotQueDivideView })));
 export const DrillView = lazy(() => import("../ui/DrillView").then((m) => ({ default: m.DrillView })));
 export const HandLab = lazy(() => import("../ui/HandLab").then((m) => ({ default: m.HandLab })));
 export const CampaignView = lazy(() => import("../ui/CampaignView").then((m) => ({ default: m.CampaignView })));

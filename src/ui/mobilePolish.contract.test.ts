@@ -108,7 +108,14 @@ describe("Rodada 4 - detalhes de mesa estilo GG com identidade Call ou Fold", ()
   });
 
   it("abre Treinar no hub de treino e não direto na mesa", () => {
-    expect(navTsx).toContain('views: ["treino", "play", "torneio", "campanha", "ultra", "ft", "drill"]');
+    // Guarda a INTENÇÃO, não a lista literal: o hub pode ganhar telas novas
+    // (ganhou "divide" em 14/10/2026) sem que isto quebre. O que não pode
+    // mudar é "treino" ser a PRIMEIRA — é ela que abre quando se toca em Treinar.
+    const hub = navTsx.match(/id: "treinar",[^\]]*views: \[([^\]]*)\]/);
+    expect(hub).not.toBeNull();
+    const views = hub![1].split(",").map((v: string) => v.trim().replace(/"/g, ""));
+    expect(views[0]).toBe("treino");
+    expect(views).toContain("play");
   });
 
   it("força atualização com feedback visível, revalidação do SW e limpeza de caches", () => {

@@ -14,6 +14,38 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-14 — Claude — O SPOT QUE DIVIDE: pós-flop difícil, mão inteira à vista
+
+- **Você reclamou certo:** os spots do Alvo eram todos triviais. Fui medir e
+  **a minha primeira hipótese estava errada** — achei que bastava filtrar os
+  óbvios, mas a medição mostrou que **nenhum spot óbvio passava** no Alvo
+  (obvia: 0 · interessante: 152 · excepcional: 15).
+- **A causa real é estrutural:** num torneio, **87% das decisões são pré-flop**
+  (869 de 994, em 10 torneios). Pós-flop difícil aparece **~9 vezes no torneio
+  inteiro**. O fluxo natural nunca ia te dar volume de flop/turn/river.
+- **Então os spots precisaram ser montados.** Nasceu a tela **"O spot que
+  divide"**, na aba **Treinar**: seis situações de pós-flop onde a decisão é
+  genuinamente disputada — bluff-catcher no river, set under set, top pair
+  contra shove no turn, ICM na bolha, SPR crítico e blocker no river.
+- **A mão inteira aparece:** contexto do torneio, stacks, e a ação rua por rua
+  até o momento da decisão. Você escolhe **sem ver conta nenhuma**, como na mesa.
+- **Depois vem a conta de verdade:** sua chance de ganhar sai do Monte Carlo do
+  motor (o mesmo `equityHandVsRange` que já existia), e o preço é aritmética do
+  pote.
+- **E a pergunta que decide o spot:** *"ele precisa estar blefando em 76% das
+  vezes para o seu call empatar — e o range estimado tem 37%."* Esse número é a
+  pergunta que gera o debate no poker, e ele é calculado, não opinado.
+- **⚠️ Esta tela NÃO dá veredito, e isso é de propósito.** O range do vilão é
+  estimativa; num spot disputado a resposta muda com ela. Dizer "o certo era
+  call" seria vender como medida uma coisa que é leitura. O app mostra a conta,
+  diz o que inclina para cada lado, e devolve a decisão para você. Tem teste
+  guardando que nenhuma versão futura passe a dar resposta.
+- **Sobre as mãos famosas que você pediu:** procurei, e não achei fonte
+  confiável o bastante para reproduzir cartas, stacks e nomes sem errar
+  detalhe. Então os spots são os **arquétipos** que geram o debate, não cópias
+  de mãos célebres — ensinam mais e são verificáveis.
+- **Onde:** aba **Treinar** → **O spot que divide**.
+
 ## 2026-10-13 — Claude — O PLANO DA SESSÃO: o dia para de ser veredito
 
 - **Por que isto existe.** A banca cuida do mês. Mas você joga **uma vez por

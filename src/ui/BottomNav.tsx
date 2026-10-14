@@ -28,6 +28,7 @@ export type AppView =
   | "perfil"
   | "drill"
   | "street"
+  | "divide"
   | "ft";
 
 type Hub = {
@@ -44,7 +45,7 @@ export const HUBS: Hub[] = [
   { id: "hoje", icon: "🏠", labelKey: "nav.today", views: ["hoje"] },
   // Rodada 4: Treinar abre primeiro a vitrine de treinos. A mesa continua disponível
   // como opção do hub, mas nunca captura o usuário automaticamente.
-  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "play", "torneio", "campanha", "ultra", "ft", "drill"] },
+  { id: "treinar", icon: "🎯", labelKey: "nav.train", views: ["treino", "play", "torneio", "campanha", "ultra", "ft", "drill", "divide"] },
   { id: "estudar", icon: "📚", labelKey: "nav.study", views: ["suamao", "anatomia", "ranges", "aprenda", "icm"] },
   { id: "perfil", icon: "☰", label: "Perfil", views: ["perfil", "ranking", "missoes", "importar"] },
 ];
@@ -57,6 +58,7 @@ const SUB_LABEL: Record<AppView, TransKey> = {
   ultra: "nav.sub.ultra",
   drill: "nav.sub.drill",
   street: "nav.sub.street",
+  divide: "nav.sub.divide",
   ft: "nav.sub.ft",
   suamao: "nav.sub.suamao",
   campanha: "nav.sub.campanha",

@@ -42,6 +42,7 @@ import {
   UltraTrainer,
   StreetTrainer,
   DrillView,
+  SpotQueDivideView,
   HandLab,
   CampaignView,
   TrainView,
@@ -685,6 +686,8 @@ export function App() {
         ) : (
           <DevLockedPlaceholder onGo={() => setView("treino")} />
         )
+      ) : view === "divide" ? (
+        <Suspense><SpotQueDivideView /></Suspense>
       ) : view === "ft" ? (
         <Suspense><FinalTableTrainer /></Suspense>
       ) : view === "suamao" ? (
