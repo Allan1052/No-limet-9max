@@ -1,0 +1,58 @@
+/* A BARRA DE MESAS — faixa fina no alto do feltro. Só existe com 2+ mesas. */
+.bdm{
+  position:relative;
+  display:flex; align-items:center; gap:8px;
+  padding:6px 8px;
+  border-radius:12px;
+  border:1px solid rgba(230,196,84,.2);
+  background:rgba(10,18,14,.82);
+}
+.bdm-lista{ display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; }
+.bdm-mesa{
+  flex:1; min-width:62px;
+  display:flex; align-items:center; gap:7px;
+  padding:6px 8px; border-radius:9px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:var(--muted, #9aa39a);
+}
+.bdm-mesa:disabled{ opacity:.45; cursor:default; }
+.bdm-mesa.atual{
+  border-color:rgba(230,196,84,.6);
+  background:rgba(230,196,84,.14);
+  color:var(--gold, #e6c454);
+}
+/* A mesa com menos bb: onde a decisão pesa mais. Não é "é a sua vez". */
+.bdm-mesa.apertada{ border-color:rgba(217,112,95,.5); }
+.bdm-n{
+  flex:none; width:17px; height:17px; border-radius:5px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800;
+  background:rgba(255,255,255,.1); color:inherit;
+}
+.bdm-mesa.atual .bdm-n{ background:rgba(230,196,84,.3); }
+.bdm-info{ display:flex; flex-direction:column; line-height:1.15; min-width:0; }
+.bdm-info b{ font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; color:inherit; }
+.bdm-info i{ font-style:normal; font-size:9px; letter-spacing:.06em; text-transform:uppercase; opacity:.75; }
+.bdm-mesa.apertada .bdm-info b{ color:var(--bad, #d9705f); }
+
+.bdm-prox{
+  flex:none; padding:7px 10px; border-radius:9px; cursor:pointer;
+  border:1px solid rgba(230,196,84,.35); background:rgba(230,196,84,.1);
+  color:var(--gold, #e6c454); font-size:11px; font-weight:800;
+  letter-spacing:.05em; white-space:nowrap;
+}
+.bdm-prox:disabled{ opacity:.4; cursor:default; }
+.bdm-aviso{
+  position:absolute; left:0; right:0; top:100%; margin-top:4px;
+  text-align:center; font-size:10.5px; color:var(--muted, #9aa39a); opacity:.85;
+}
+
+/* Em tela cheia a barra flutua sobre o feltro, abaixo do topo. */
+@media (max-width: 860px), (orientation: landscape) and (max-height: 560px){
+  .app:has(.play) .bdm{
+    position:absolute !important;
+    top:calc(42px + env(safe-area-inset-top, 0px));
+    left:8px; right:8px; z-index:19;
+  }
+}

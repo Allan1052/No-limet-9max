@@ -14,6 +14,32 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-16 — Claude — QUATRO MESAS: vários torneios abertos ao mesmo tempo
+
+- **O que mudou.** Agora dá para ter **até 4 torneios abertos**. Dentro da mesa
+  aparece uma **barra no alto** com todas elas, mostrando o seu stack em bb e a
+  fase de cada uma. Um toque leva de uma para a outra, e cada mesa continua
+  exatamente de onde parou.
+- **Como abrir a segunda:** saia da mesa (sem desistir do torneio), volte à tela
+  de inscrição e comece outro. O torneio anterior continua salvo. A tela de
+  inscrição agora mostra **"Suas mesas (2 de 4)"**.
+- **A barra destaca a mesa mais apertada** — a que tem menos big blinds, em
+  vermelho. É onde a decisão pesa mais.
+- **⚠️ Duas honestidades que estão escritas na tela:**
+  1. **Nada roda em paralelo.** O app é por turnos: as outras mesas ficam
+     *congeladas esperando você*, não jogando sozinhas. Por isso a barra não
+     diz "é a sua vez na mesa 2" — seria mentira.
+  2. **A troca só acontece ENTRE MÃOS.** O save do app não guarda o meio de uma
+     mão, então pular no meio apagaria a mão. O botão trava e explica, em vez
+     de você descobrir perdendo fichas.
+- **Seus torneios antigos não se perderam.** O formato antigo guardava um
+  torneio por faixa de buy-in; na primeira abertura o app **migra** tudo para
+  mesas, automaticamente e uma vez só.
+- **O que isso destrava:** dois torneios do **mesmo buy-in** ao mesmo tempo —
+  que o formato antigo não permitia, e que a regra de banca tornou comum (com
+  teto de $3, é tudo $3).
+- **Onde:** na mesa, barra do alto. E na tela de inscrição, "Suas mesas".
+
 ## 2026-10-14 — Claude — O SPOT QUE DIVIDE: pós-flop difícil, mão inteira à vista
 
 - **Você reclamou certo:** os spots do Alvo eram todos triviais. Fui medir e

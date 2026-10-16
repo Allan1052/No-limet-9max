@@ -8,6 +8,7 @@ import { TournamentSummary } from "../ui/TournamentSummary";
 import { IcmCalculator, TournamentSetup, RangeGrid, MissionsPanel } from "./LazyViews";
 import { MissionToast } from "../ui/MissionToast";
 import { PuxaoToast } from "../ui/PuxaoToast";
+import { BarraDeMesas } from "../ui/BarraDeMesas";
 import type { Puxao } from "../feedback/puxaoDeOrelha";
 import { carregarBanca, debitarInscricao, creditarPremio, liberado } from "../train/banca";
 import { registrarTorneio } from "../train/sessao";
@@ -127,9 +128,13 @@ export function App() {
     dismissSummary,
     progress,
     resetProgress,
-    savedTournaments,
-    resumeTournament,
-    discardTournament,
+    mesas,
+    mesaAtual,
+    podeTrocarDeMesa,
+    proximaMesa: proximaMesaAberta,
+    irParaMesa,
+    retomarMesa,
+    fecharMesaPorId,
     missions,
     missionCounts,
     resetMissions,
@@ -730,12 +735,12 @@ export function App() {
         <Suspense><RangeGrid /></Suspense>
       ) : view === "torneio" ? (
         <Suspense><TournamentSetup
-          saved={savedTournaments()}
-          onResume={(buyIn) => {
-            resumeTournament(buyIn);
+          saved={mesas()}
+          onResume={(mesaId) => {
+            retomarMesa(mesaId);
             setView("play");
           }}
-          onDiscard={discardTournament}
+          onDiscard={fecharMesaPorId}
           onStart={(cfg) => {
             // A BANCA IMPÕE AQUI. Sem banca ligada, `debitarInscricao` devolve
             // null e o app segue como sempre foi — por isso a checagem é do
@@ -749,6 +754,19 @@ export function App() {
         /></Suspense>
       ) : (
         <div className="play">
+          {/* AS MESAS: só aparece com 2+ torneios abertos. Nada roda em
+              paralelo — as outras estão congeladas esperando, e a troca só
+              vale entre mãos (ver app/mesas.ts). */}
+          <BarraDeMesas
+            mesas={mesas()}
+            atualId={mesaAtual()}
+            podeTrocar={podeTrocarDeMesa()}
+            onIr={(id) => irParaMesa(id)}
+            onProxima={() => {
+              const alvo = proximaMesaAberta();
+              if (alvo) irParaMesa(alvo.id);
+            }}
+          />
           <SessionProgressStrip summary={progress()} tournament={controller.tournamentProgress()} />
           {heroTurn && hint ? (
             <div

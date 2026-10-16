@@ -22,6 +22,17 @@ import {
   type ProgressState,
 } from "./progress";
 import { saveSlot, loadSlot, removeSlot, listSlots } from "./tournamentSlots";
+import {
+  MAX_MESAS,
+  abrirMesa,
+  carregarMesa,
+  fecharMesa,
+  listarMesas,
+  mesasVivas,
+  migrarSlotsAntigos,
+  proximaMesa,
+  salvarMesa,
+} from "./mesas";
 import { recordTournamentDecision } from "../train/decisionStats";
 import { syncEliteWins } from "../lib/eliteSync";
 import { getNickname } from "../lib/nickname";
@@ -49,16 +60,23 @@ import { zerarPlacarSozinho } from "../train/soloMode";
  * Salva o torneio ATUAL entre mãos, no slot da sua faixa de buy-in (para
  * retomar depois), ou limpa esse slot quando o torneio acaba.
  */
-function persist(g: GameController): void {
+function persist(g: GameController, mesaId: string | null): void {
   const tourney = g.tournament;
   if (!tourney) return;
   if (g.tournamentOver) {
-    removeSlot(tourney.buyIn);
+    // Torneio acabou: a mesa fecha e some da barra. O resultado já foi gravado
+    // em outro lugar (resultsLog); o save é só o "continuar de onde parou".
+    if (mesaId) fecharMesa(mesaId);
+    removeSlot(tourney.buyIn); // limpa também o formato antigo, por garantia
     return;
   }
+  // ⚠️ Só no handOver: o snapshot não guarda o meio de uma mão (`restore()`
+  // devolve sempre em handOver), então salvar no meio perderia a mão.
   if (g.phase === "handOver") {
     const snap = g.snapshot();
-    if (snap) saveSlot(snap);
+    if (!snap) return;
+    if (mesaId) salvarMesa(mesaId, snap);
+    else saveSlot(snap);
   }
 }
 
@@ -76,6 +94,17 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   const ref = useRef<GameController | null>(null);
   // Rastreia a variante que o controller atual foi criado com.
   const variantRef = useRef<string>(opts?.variant ?? "holdem");
+  // ---- AS MESAS (app/mesas.ts) ----
+  // Qual das mesas abertas está na tela. `null` = jogando fora do sistema de
+  // mesas (o caminho antigo, que continua funcionando).
+  const mesaAtualRef = useRef<string | null>(null);
+  // Migra, uma vez só, os torneios salvos no formato antigo (um por buy-in).
+  // Sem isto, quem já tinha torneio em andamento abriria o app sem mesa nenhuma.
+  const migrouRef = useRef(false);
+  if (!migrouRef.current) {
+    migrouRef.current = true;
+    migrarSlotsAntigos();
+  }
 
   // Aplica um evento às missões, salva e enfileira as recém-concluídas (aviso).
   const fireMission = (e: MissionEvent) => {
@@ -261,7 +290,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden" && ref.current) {
-        persist(ref.current);
+        persist(ref.current, mesaAtualRef.current);
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
@@ -282,7 +311,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       const delay = quiet ? 720 : 1050;
       const id = setTimeout(() => {
         g.botStep();
-        persist(g);
+        persist(g, mesaAtualRef.current);
         force();
       }, delay);
       return () => clearTimeout(id);
@@ -295,7 +324,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     controller: g,
     heroAct: (a: Action) => {
       g.heroAct(a);
-      persist(g);
+      persist(g, mesaAtualRef.current);
       force();
     },
     newHand: () => {
@@ -308,7 +337,7 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
         return;
       }
       g.newHand();
-      persist(g);
+      persist(g, mesaAtualRef.current);
       force();
     },
     resetStats: () => {
@@ -316,13 +345,18 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
       force();
     },
     startTournament: (cfg: TournamentConfig) => {
+      // Cada torneio iniciado é uma MESA. Se já há quatro abertas, `abrirMesa`
+      // devolve null e o torneio roda sem mesa (como era antes) — melhor do que
+      // recusar silenciosamente o start.
+      const mesa = abrirMesa(cfg.buyIn);
+      mesaAtualRef.current = mesa?.id ?? null;
       g.configureTournament(cfg);
-      persist(g);
+      persist(g, mesaAtualRef.current);
       force();
     },
     setLevel: (idx: number) => {
       g.setBlindLevel(idx);
-      persist(g);
+      persist(g, mesaAtualRef.current);
       force();
     },
     dismissSummary: () => {
@@ -333,6 +367,71 @@ export function useGame(userSubscriptionLevel: UserSubscriptionLevel, opts?: Gam
     },
     // Lista dos torneios salvos (um por faixa de buy-in), para a tela de setup.
     savedTournaments: () => listSlots(),
+
+    // ---- AS MESAS: até quatro torneios abertos, um na tela por vez --------
+    mesas: () => mesasVivas(),
+    mesaAtual: () => mesaAtualRef.current,
+    /** Há vaga para abrir outro torneio? */
+    podeAbrirMesa: () => listarMesas().length < MAX_MESAS,
+    /**
+     * Trocar de mesa só vale ENTRE MÃOS. O snapshot do controller não guarda o
+     * meio de uma mão, então pular agora apagaria a mão em andamento. A tela
+     * usa isto para desabilitar o botão em vez de perder fichas do jogador.
+     */
+    podeTrocarDeMesa: () => g.phase === "handOver" && !g.tournamentOver,
+    proximaMesa: () => proximaMesa(mesaAtualRef.current),
+    /**
+     * Leva para outra mesa: salva a atual, restaura a outra. Devolve false
+     * quando a troca não é segura (no meio de uma mão) ou a mesa não tem save.
+     */
+    irParaMesa: (id: string) => {
+      if (id === mesaAtualRef.current) return true;
+      if (g.phase !== "handOver" || g.tournamentOver) return false;
+      const destino = carregarMesa(id);
+      if (!destino || destino.v !== 1) return false;
+      // Salva a mesa que está saindo ANTES de trocar — senão o progresso dela
+      // desde o último handOver se perde.
+      persist(g, mesaAtualRef.current);
+      try {
+        g.restore(destino);
+      } catch {
+        return false; // snapshot inválido: fica onde estava
+      }
+      mesaAtualRef.current = id;
+      force();
+      return true;
+    },
+    /** Fecha uma mesa pelo id, de fora dela (pela tela de inscrição). */
+    fecharMesaPorId: (id: string) => {
+      fecharMesa(id);
+      if (mesaAtualRef.current === id) {
+        mesaAtualRef.current = null;
+        g.tournament = null;
+        g.tournamentOver = false;
+      }
+      force();
+    },
+    /** Desiste da mesa atual: fecha, apaga o save e volta para o setup. */
+    fecharMesaAtual: () => {
+      if (mesaAtualRef.current) fecharMesa(mesaAtualRef.current);
+      mesaAtualRef.current = null;
+      g.tournament = null;
+      g.tournamentOver = false;
+      force();
+    },
+    /** Retoma uma MESA pelo id (o caminho novo). */
+    retomarMesa: (id: string) => {
+      const snap = carregarMesa(id);
+      if (snap && snap.v === 1) {
+        try {
+          g.restore(snap);
+          mesaAtualRef.current = id;
+        } catch {
+          /* snapshot inválido */
+        }
+      }
+      force();
+    },
     resumeTournament: (buyIn: number) => {
       const snap = loadSlot(buyIn);
       if (snap && snap.v === 1) {

@@ -21,7 +21,7 @@ import {
 } from "../tournament/structure";
 import type { TournamentConfig, TournamentState } from "../app/gameController";
 import type { FieldStatus } from "../tournament/field";
-import type { SlotMeta } from "../app/tournamentSlots";
+import { MAX_MESAS, type MesaViva } from "../app/mesas";
 import { CircuitPicker } from "./CircuitPicker";
 import { NicknamePrompt } from "./NicknamePrompt";
 import { getNickname, restoreNickname } from "../lib/nickname";
@@ -54,9 +54,14 @@ export function TournamentSetup({
   onDiscard,
 }: {
   onStart: (cfg: TournamentConfig) => void;
-  saved?: SlotMeta[];
-  onResume?: (buyIn: number) => void;
-  onDiscard?: (buyIn: number) => void;
+  /**
+   * As MESAS abertas (até quatro). Antes isto era um save por faixa de buy-in;
+   * desde 16/10/2026 cada torneio é uma mesa com id próprio, então dá para ter
+   * dois torneios do MESMO buy-in abertos ao mesmo tempo.
+   */
+  saved?: MesaViva[];
+  onResume?: (mesaId: string) => void;
+  onDiscard?: (mesaId: string) => void;
 }) {
   const [buyIn, setBuyIn] = useState(11);
   const [entrants, setEntrants] = useState(500);
@@ -166,10 +171,11 @@ export function TournamentSetup({
   const stageInfo = STAGES[stage];
   const level = BLIND_LEVELS[stageInfo.levelIndex];
   const avgBB = stageInfo.avgBB;
-  const savedBuyIns = new Set(saved.map((s) => s.buyIn));
+  const comSave = saved.filter((s) => s.temSave);
+  const savedBuyIns = new Set(comSave.map((s) => s.buyIn));
   // Torneio do Circuito em andamento nesta faixa (para "Continuar" e para avisar
   // antes de sobrescrever ao começar uma etapa nova).
-  const circuitResume = saved.find((s) => s.buyIn === buyIn && s.mode === "circuito");
+  const circuitResume = comSave.find((s) => s.buyIn === buyIn && s.mode === "circuito");
   const icmLabel =
     stageInfo.icm === "final" ? "Mesa final (ICM cheio)"
       : stageInfo.icm === "bubble" ? "Bolha (pressão de ICM)"
@@ -205,13 +211,19 @@ export function TournamentSetup({
                 <b>🔄 Torneio salvo — continue de onde parou</b>
                 <small>
                   {circuitResume.circuitStage ? `Etapa ${circuitResume.circuitStage} · ` : ""}
-                  {didacticBand(circuitResume.buyIn)} · {STAGES[circuitResume.stage].label} ·{" "}
-                  {Math.round(circuitResume.heroStack / circuitResume.bb)}bb ·{" "}
-                  {circuitResume.fieldRemaining.toLocaleString("en-US")}/
-                  {circuitResume.entrants.toLocaleString("en-US")} vivos
+                  {didacticBand(circuitResume.buyIn)}
+                  {circuitResume.stage ? <> · {STAGES[circuitResume.stage].label}</> : null}
+                  {circuitResume.heroBB !== undefined ? <> · {circuitResume.heroBB}bb</> : null}
+                  {circuitResume.fieldRemaining !== undefined && circuitResume.entrants !== undefined ? (
+                    <>
+                      {" · "}
+                      {circuitResume.fieldRemaining.toLocaleString("en-US")}/
+                      {circuitResume.entrants.toLocaleString("en-US")} vivos
+                    </>
+                  ) : null}
                 </small>
               </div>
-              <button className="btn primary" onClick={() => onResume?.(circuitResume.buyIn)}>
+              <button className="btn primary" onClick={() => onResume?.(circuitResume.id)}>
                 Continuar
               </button>
             </div>
@@ -285,25 +297,39 @@ export function TournamentSetup({
         <>
       {saved.length > 0 ? (
         <div className="panel saved-panel">
-          <h3>Torneios salvos ({saved.length})</h3>
+          <h3>
+            Suas mesas ({saved.length} de {MAX_MESAS})
+          </h3>
           <div className="legend" style={{ marginBottom: 8 }}>
-            Um torneio salvo por faixa didática — volte a qualquer um de onde parou.
+            Até {MAX_MESAS} torneios abertos ao mesmo tempo. Dentro da mesa, a barra do
+            alto leva de um para o outro — <b>entre as mãos</b>, nunca no meio de uma.
           </div>
-          {saved.map((s) => (
-            <div key={s.buyIn} className="saved-row">
+          {saved.map((s, i) => (
+            <div key={s.id} className="saved-row">
               <div className="saved-info">
-                <b>{didacticBand(s.buyIn)}</b> · {STAGES[s.stage].label} · {Math.round(s.heroStack / s.bb)}bb
+                <b>Mesa {i + 1}</b> · {didacticBand(s.buyIn)}
+                {s.temSave && s.stage ? <> · {STAGES[s.stage].label}</> : null}
+                {s.heroBB !== undefined ? <> · {s.heroBB}bb</> : null}
                 <br />
                 <small>
-                  {s.fieldRemaining.toLocaleString("en-US")} / {s.entrants.toLocaleString("en-US")} vivos
+                  {s.temSave && s.fieldRemaining !== undefined && s.entrants !== undefined ? (
+                    <>
+                      {s.fieldRemaining.toLocaleString("en-US")} /{" "}
+                      {s.entrants.toLocaleString("en-US")} vivos
+                    </>
+                  ) : (
+                    <>mesa aberta, nenhuma mão jogada ainda</>
+                  )}
                 </small>
               </div>
               <div className="saved-actions">
-                <button className="btn primary" onClick={() => onResume?.(s.buyIn)}>
-                  Continuar
-                </button>
-                <button className="btn tiny" onClick={() => onDiscard?.(s.buyIn)}>
-                  descartar
+                {s.temSave ? (
+                  <button className="btn primary" onClick={() => onResume?.(s.id)}>
+                    Continuar
+                  </button>
+                ) : null}
+                <button className="btn tiny" onClick={() => onDiscard?.(s.id)}>
+                  fechar
                 </button>
               </div>
             </div>
