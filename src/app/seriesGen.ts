@@ -942,7 +942,7 @@ export function buildFourFasesInstagramCaption(spec: HandLabSpec): string {
     "",
     "Alguém já te falou sobre isso? Em qual fase você mais fica na dúvida?",
     "",
-    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · sem dinheiro real.",
+    "Call ou Fold · app gratuito de estudo de poker MTT 8 e 9-max · sem dinheiro real.",
     "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
   ].join("\n");
 }
@@ -961,7 +961,7 @@ export function buildSingleQuizCaption(spec: HandLabSpec, context: SingleQuizCon
     "Comenta sua decisão antes de olhar a resposta.",
     "A explicação vem depois, em comentário separado.",
     "",
-    "Card gerado dentro do próprio app Call ou Fold · estudo gratuito de poker MTT 9-max · fichas simuladas · sem dinheiro real.",
+    "Card gerado dentro do próprio app Call ou Fold · estudo gratuito de poker MTT 8 e 9-max · fichas simuladas · sem dinheiro real.",
     "#poker #pokerbrasil #pokerestrategia #MTT #calloufold",
   ].join("\n");
 }
@@ -983,7 +983,7 @@ export function buildSingleAnswerCaption(spec: HandLabSpec): string {
     "Você faria igual neste spot? O contexto muda a decisão.",
     "Card gerado dentro do próprio app a partir da análise desta mão.",
     "",
-    "Call ou Fold · app gratuito de estudo de poker MTT 9-max · fichas simuladas · sem dinheiro real.",
+    "Call ou Fold · app gratuito de estudo de poker MTT 8 e 9-max · fichas simuladas · sem dinheiro real.",
     "#poker #pokerbrasil #pokerestrategia #MTT #GTO #ICM #calloufold",
   ].filter(Boolean).join("\n");
 }

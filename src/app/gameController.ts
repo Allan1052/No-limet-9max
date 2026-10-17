@@ -79,6 +79,12 @@ import { recordProgress } from "../train/progress";
 import { registrarDecisao as registrarDecisaoSozinho } from "../train/soloMode";
 import { recordPositionResult } from "../train/positionStats";
 import { registrarNoAlvo } from "../train/alvo";
+import {
+  TAMANHO_PADRAO,
+  botsNaMesa,
+  ehTamanhoValido,
+  type TamanhoDaMesa,
+} from "../tournament/tamanhoDaMesa";
 import { lerPuxaoDeOrelha, type DecisaoDaJanela, type Puxao } from "../feedback/puxaoDeOrelha";
 import type { PositionalRecord } from "../train/positionTendency";
 import type { DecisaoComparavel } from "../tournament/comparativo";
@@ -136,6 +142,11 @@ export interface TournamentConfig {
   buyIn: number;
   entrants: number;
   stage: Stage;
+  /**
+   * Cadeiras na mesa: 8 ou 9. Padrão 9 (os MTTs regulares do PokerStars).
+   * 8 é o formato do GGPoker e dos Turbo/PKO. Ver tournament/tamanhoDaMesa.ts.
+   */
+  tamanhoDaMesa?: TamanhoDaMesa;
   /** Mãos por nível antes de as blinds subirem (0 = não sobem sozinhas). */
   handsPerLevel?: number;
   /** Variante: "holdem" (padrão) ou "omaha" (PLO). */
@@ -262,6 +273,13 @@ export interface GameSnapshot {
   handLog?: HandHistory[];
   /** Variante do jogo salva ("holdem" ou "omaha"). */
   variant?: "holdem" | "omaha";
+  /**
+   * Cadeiras da mesa (8 ou 9). Guardado explicitamente porque `seats` encolhe
+   * conforme o campo busta — derivar do tamanho do array faria um 8-max virar
+   * 9-max ao retomar. Ausente nos saves anteriores a 17/10/2026, que eram
+   * todos 9-max.
+   */
+  tamanhoDaMesa?: TamanhoDaMesa;
   savedAt: string;
 }
 
@@ -419,6 +437,12 @@ export class GameController {
    *  14/09/2026: "um comparativo da forma que eu joguei às cegas e da forma que
    *  o aplicativo pede"). Guarda também se a mão correu sem dica. */
   private sessionComparativo: DecisaoComparavel[] = [];
+  /** Cadeiras da mesa do torneio atual (8 ou 9). Ver tournament/tamanhoDaMesa.ts. */
+  private tamanhoDaMesa: TamanhoDaMesa = TAMANHO_PADRAO;
+  /** Quantas cadeiras a mesa deste torneio tem. */
+  get cadeirasDaMesa(): TamanhoDaMesa {
+    return this.tamanhoDaMesa;
+  }
   // ---- O PUXÃO DE ORELHA (feedback/puxaoDeOrelha.ts) --------------------
   // Janela do TORNEIO ATUAL, da decisão mais antiga para a mais nova. Vive
   // aqui e não no localStorage de propósito: o aviso é sobre como você está
@@ -532,9 +556,13 @@ export class GameController {
     this.nomesJaUsados = new Set<string>();
 
     // Monta o CAMPO conforme o buy-in: micro = mais peixe, alto = mais regular.
+    // O TAMANHO DA MESA é escolha do jogador (8 ou 9). O herói ocupa um
+    // assento; os outros são bots. `PROFILES.length` é 8, então 9-max usa todos
+    // e 8-max usa 7 — `buildFieldSeats` já sorteia o campo pelo buy-in.
+    this.tamanhoDaMesa = ehTamanhoValido(cfg.tamanhoDaMesa) ? cfg.tamanhoDaMesa : TAMANHO_PADRAO;
     this.seatDefs = [
       { name: this.heroName(), isHero: true },
-      ...buildFieldSeats(cfg.buyIn, PROFILES.length, this.rng),
+      ...buildFieldSeats(cfg.buyIn, botsNaMesa(this.tamanhoDaMesa), this.rng),
     ];
 
     const avgChips = stageInfo.avgBB * level.bb;
@@ -568,15 +596,17 @@ export class GameController {
       handsThisLevel: 0,
       fieldRemaining,
       bubbleBurst: Math.round(fieldRemaining) <= ladder.length,
-      finalTableFormed: Math.round(fieldRemaining) <= 9,
-      tables: Math.max(1, Math.ceil(fieldRemaining / 9)),
-      tableId: 1 + Math.floor(this.rng() * Math.max(1, Math.ceil(fieldRemaining / 9))),
+      finalTableFormed: Math.round(fieldRemaining) <= this.tamanhoDaMesa,
+      tables: Math.max(1, Math.ceil(fieldRemaining / this.tamanhoDaMesa)),
+      tableId:
+        1 +
+        Math.floor(this.rng() * Math.max(1, Math.ceil(fieldRemaining / this.tamanhoDaMesa))),
       mode: cfg.mode ?? "livre",
       circuitStage: cfg.circuitStage,
     };
     // Avisos chamativos: se já começa na mesa final (Treino Livre), não anuncia
     // a formação dela — só o heads-up quando chegar a 2.
-    this.finalTableAnnounced = Math.round(fieldRemaining) <= 9;
+    this.finalTableAnnounced = Math.round(fieldRemaining) <= this.tamanhoDaMesa;
     this.headsUpAnnounced = false;
     this.phase = "handOver";
     this.lastHand = null;
@@ -735,7 +765,8 @@ export class GameController {
 
   /**
    * Table balancing como no online (GGPoker/PokerStars). Com N vivos há
-   * ceil(N/9) mesas de 9-max; cada uma fica com ~ceil(N/mesas) jogadores.
+   * ceil(N/cadeiras) mesas do tamanho escolhido; cada uma fica com
+   * ~ceil(N/mesas) jogadores.
    * Quando o campo encolhe a ponto de caber em MENOS mesas, uma mesa "quebra"
    * e há movimentação: com chance 1/mesas a mesa do herói é a que quebra e ele
    * é REALOCADO (adversários novos); senão, a mesa dele recebe/solta gente para
@@ -750,8 +781,8 @@ export class GameController {
     if (this.tournament.finalTableFormed) return 0;
 
     const remaining = Math.max(1, Math.round(this.tournament.fieldRemaining));
-    const tables = Math.max(1, Math.ceil(remaining / 9));
-    const target = Math.min(9, Math.ceil(remaining / tables));
+    const tables = Math.max(1, Math.ceil(remaining / this.tamanhoDaMesa));
+    const target = Math.min(this.tamanhoDaMesa, Math.ceil(remaining / tables));
     const prevTables = this.tournament.tables ?? tables;
 
     // Uma mesa quebrou (o campo agora cabe em menos mesas)? Isso gera
@@ -766,7 +797,7 @@ export class GameController {
     this.tournament.tables = tables;
 
     const active = this.table.players.filter((p) => p.stack > 0).length;
-    if (remaining <= 9 && active >= remaining) {
+    if (remaining <= this.tamanhoDaMesa && active >= remaining) {
       this.tournament.finalTableFormed = true;
       if (!this.finalTableAnnounced) {
         this.finalTableAnnounced = true;
@@ -821,7 +852,7 @@ export class GameController {
     }
     const alive = this.table.players.filter((p) => p.stack > 0).length;
     // Vitória: só o herói tem fichas na mesa final (campo global já ≤ 9).
-    if (alive < 2 && (!this.tournament || Math.round(this.tournament.fieldRemaining) <= 9)) {
+    if (alive < 2 && (!this.tournament || Math.round(this.tournament.fieldRemaining) <= this.tamanhoDaMesa)) {
       if (this.tournament) {
         this.tournamentFinishPlace = 1;
         this.tournamentResult = "campeao";
@@ -1397,7 +1428,7 @@ export class GameController {
       const villainRangePct = ctx.raiserPosition
         ? rangePercent(rfiRange(ctx.raiserPosition))
         : undefined;
-      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % 9], betLevelFaced: ctx.betLevelFaced, villainRangePct,
+      return { kind: "preflop", action: d.action, reason: d.reason, mix: d.mix, effectiveBB: ctx.effectiveBB, nBet: d.nBet, stageLabel: this.tournament?.stage ?? undefined, heroPosition: positionLabels[seat % this.tamanhoDaMesa], betLevelFaced: ctx.betLevelFaced, villainRangePct,
         // Verdadeiro por construção: com stack curto o motor decide por
         // push/fold; acima disso, pela range da posição.
         origem: ctx.effectiveBB <= 12 ? "pushFold" : "range",
@@ -1452,7 +1483,7 @@ export class GameController {
       effectiveBB: effChips / bb,
       potBB: ctx.potSize / bb,
       stageLabel: this.tournament?.stage ?? undefined,
-      heroPosition: positionLabels[seat % 9],
+      heroPosition: positionLabels[seat % this.tamanhoDaMesa],
       betSizePct,
       betSizeBB,
     };
@@ -1635,6 +1666,7 @@ export class GameController {
         events: h.events.map(({ seats, ...ev }) => { void seats; return ev; }),
       })),
       variant: this.table.variant,
+      tamanhoDaMesa: this.tamanhoDaMesa,
       savedAt: new Date().toISOString(),
     };
   }
@@ -1664,6 +1696,8 @@ export class GameController {
     );
     this.stats = {};
     for (const p of this.table.players) this.stats[p.seat] = snap.stats[p.seat] ?? emptyStats();
+    // Save anterior a 17/10/2026 não tem o campo: era tudo 9-max.
+    this.tamanhoDaMesa = ehTamanhoValido(snap.tamanhoDaMesa) ? snap.tamanhoDaMesa : TAMANHO_PADRAO;
     this.tournament = snap.tournament;
     this.payouts = snap.payouts;
     this.heroRatings = snap.heroRatings;

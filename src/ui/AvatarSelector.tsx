@@ -272,7 +272,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           <h1 className="onboarding-title">Call ou Fold</h1>
         </div>
         <p className="onboarding-subtitle">
-          Simulador de torneio NLHE 9-max<br />
+          Simulador de torneio NLHE 8 e 9-max<br />
           Feito por um recreativo, para recreativos
         </p>
 

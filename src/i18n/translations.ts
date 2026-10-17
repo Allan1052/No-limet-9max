@@ -607,7 +607,7 @@ export const TRANSLATIONS = {
     "nav.sub.ft": "Mesa Final",
   },
   es: {
-    "app.subtitle": "· NLHE 9-max · herramienta de estudio",
+    "app.subtitle": "· NLHE 8/9-max · herramienta de estudio",
     "tab.play": "Jugar",
     "msg.newHandHint": "Haz clic en “Nueva mano” para empezar.",
     "msg.tourneyConfigured": "Torneo configurado — {stage}. Haz clic en “Nueva mano”.",
@@ -1194,7 +1194,7 @@ export const TRANSLATIONS = {
     "ft.restart": "Reiniciar",
   },
   en: {
-    "app.subtitle": "· NLHE 9-max · study tool",
+    "app.subtitle": "· NLHE 8/9-max · study tool",
     "tab.play": "Play",
     "msg.newHandHint": "Click “New hand” to start.",
     "msg.tourneyConfigured": "Tournament set — {stage}. Click “New hand”.",

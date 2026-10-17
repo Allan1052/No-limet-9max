@@ -22,6 +22,14 @@ import {
 import type { TournamentConfig, TournamentState } from "../app/gameController";
 import type { FieldStatus } from "../tournament/field";
 import { MAX_MESAS, type MesaViva } from "../app/mesas";
+import {
+  TAMANHOS,
+  ondeSeUsa,
+  rotuloDoTamanho,
+  salvarTamanhoPreferido,
+  tamanhoPreferido,
+  type TamanhoDaMesa,
+} from "../tournament/tamanhoDaMesa";
 import { CircuitPicker } from "./CircuitPicker";
 import { NicknamePrompt } from "./NicknamePrompt";
 import { getNickname, restoreNickname } from "../lib/nickname";
@@ -67,6 +75,13 @@ export function TournamentSetup({
   const [entrants, setEntrants] = useState(500);
   const [stage, setStage] = useState<Stage>("inicio");
   const [speed, setSpeed] = useState<Speed>("normal");
+  // CADEIRAS NA MESA (8 ou 9). Lembra a última escolha — ver
+  // tournament/tamanhoDaMesa.ts para o porquê de ser escolha e não constante.
+  const [cadeiras, setCadeiras] = useState<TamanhoDaMesa>(() => tamanhoPreferido());
+  const escolherCadeiras = (n: TamanhoDaMesa) => {
+    setCadeiras(n);
+    salvarTamanhoPreferido(n);
+  };
   const [gameType, setGameType] = useState<"nlhe" | "plo">("nlhe");
   const [omahaUnlocked, setOmahaUnlocked] = useState<boolean>(() => {
     return localStorage.getItem("omaha_dev_unlock") === "true";
@@ -140,6 +155,7 @@ export function TournamentSetup({
       entrants: stageEntrants,
       stage: "inicio",
       handsPerLevel: SPEED_HANDS[speed],
+      tamanhoDaMesa: cadeiras,
       variant: "holdem",
       mode: "circuito",
       circuitStage: stageIndex,
@@ -420,6 +436,23 @@ export function TournamentSetup({
         </div>
 
         <div className="t-field">
+          <label>Cadeiras na mesa</label>
+          <div className="t-btns">
+            {TAMANHOS.map((n) => (
+              <button
+                key={n}
+                className={`tab ${cadeiras === n ? "active" : ""}`}
+                onClick={() => escolherCadeiras(n)}
+                title={ondeSeUsa(n)}
+              >
+                {rotuloDoTamanho(n)}
+              </button>
+            ))}
+          </div>
+          <span className="t-suffix">{ondeSeUsa(cadeiras)}</span>
+        </div>
+
+        <div className="t-field">
           <label>Velocidade</label>
           <div className="t-btns">
             {(Object.keys(SPEED_HANDS) as Speed[]).map((s) => (
@@ -455,6 +488,7 @@ export function TournamentSetup({
               entrants: Math.max(2, entrants),
               stage,
               handsPerLevel: SPEED_HANDS[speed],
+      tamanhoDaMesa: cadeiras,
               variant: gameType === "plo" ? "omaha" : "holdem",
               mode: "livre",
             });

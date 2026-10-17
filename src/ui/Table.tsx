@@ -1,4 +1,4 @@
-// Mesa 9-max: assentos ao redor do oval, board, botão do dealer e uma camada
+// Mesa de torneio (8 ou 9 cadeiras): assentos ao redor do oval, board, botão do dealer e uma camada
 // de informação SOBRE a mesa (posição no torneio, blinds, dica e atalhos) —
 // tudo concentrado aqui para caber na tela sem rolagem.
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -154,7 +154,8 @@ export function PokerTable({
     return match ? match[1] : '/';
   }
   const reveal = table.handOver;
-  // Anel de assentos do tamanho da mesa (9-max no jogo, N no review importado).
+  // Anel de assentos do tamanho da mesa — já dinâmico: 8 ou 9 no jogo (ver
+  // tournament/tamanhoDaMesa.ts) e N no review de torneio importado.
   const ring = seatRing(table.players.length);
 
   const [sweeps, setSweeps] = useState<Array<{ id: string; from: { top: string; left: string }; amount: number }>>([]);

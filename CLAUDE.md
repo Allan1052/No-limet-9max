@@ -9,7 +9,8 @@ como estão; a comunicação com ele é em português.)
 
 ## Sobre o produto
 Call ou Fold (calloufold.com.br) — app PWA **gratuito** de ESTUDO de poker
-NLHE/MTT 9-max, para o jogador recreativo brasileiro. Sem dinheiro real.
+NLHE/MTT **8 ou 9-max** (escolha do jogador, desde 17/10/2026), para o jogador
+recreativo brasileiro. Sem dinheiro real.
 Posicionamento humilde: "feito por um recreativo, uma mão por vez". NÃO se vende
 como solver GTO profissional nem como diagnóstico estatístico definitivo.
 

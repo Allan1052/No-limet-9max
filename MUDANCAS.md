@@ -14,6 +14,32 @@
 - Onde: (aba/tela do app, ex.: Torneio, Hoje, Perfil).
 ```
 
+## 2026-10-17 — Claude — Mesa de 8 OU 9 cadeiras, por escolha
+
+- **Você pediu para padronizar em 8. Eu pesquisei antes e a conclusão foi
+  outra** — e ela vem dos seus próprios números.
+- **O que confirmei:** o GGPoker usa mesmo 8-max em boa parte dos MTTs. Mas o
+  **PokerStars**, onde você joga, mantém **9-max nos MTTs regulares**; lá o
+  8-max aparece em **Turbo e PKO**.
+- **E o seu SharkScope diz que 50,3% do seu volume é TURBO.** Ou seja: você vê
+  8 cadeiras em metade dos torneios que joga, no PokerStars mesmo, **sem que
+  nada tenha "padronizado"**. Fixar o app em 8 erraria justamente nos
+  regulares — trocaria um erro por outro.
+- **Então virou escolha.** Na tela de montar torneio tem um campo novo,
+  **"Cadeiras na mesa"**: 8-max ou 9-max. O app lembra a sua última escolha, e
+  mostra onde cada formato é a realidade.
+- **O que já estava pronto e barateou tudo:** o app **já** distribuía as
+  posições pelo número de jogadores presentes — com 8 na mesa ele simplesmente
+  não usa a posição mais early (UTG) e começa em UTG1, sozinho. E a mesa visual
+  já era dinâmica.
+- **O SELO GTO continua 61/61.** Ele valida a range de cada POSIÇÃO, não o
+  número de cadeiras: a range do CO é a range do CO, com 8 ou com 9 na mesa.
+- **Retomar uma mesa não troca o formato.** O tamanho fica gravado no save; os
+  torneios salvos antes de hoje continuam 9-max, que é o que eles eram.
+- **Testado jogando:** 6 torneios 8-max inteiros, todos terminaram
+  normalmente (86,7 mãos por torneio, contra 106 no 9-max).
+- **Onde:** Treinar → montar torneio → "Cadeiras na mesa".
+
 ## 2026-10-16 — Claude — QUATRO MESAS: vários torneios abertos ao mesmo tempo
 
 - **O que mudou.** Agora dá para ter **até 4 torneios abertos**. Dentro da mesa
